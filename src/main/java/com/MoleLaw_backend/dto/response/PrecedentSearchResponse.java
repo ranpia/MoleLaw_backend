@@ -1,5 +1,6 @@
-package com.MoleLaw_backend.dto;
+package com.MoleLaw_backend.dto.response;
 
+import com.MoleLaw_backend.dto.PrecedentInfo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
