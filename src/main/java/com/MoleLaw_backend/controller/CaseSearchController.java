@@ -1,8 +1,8 @@
 package com.MoleLaw_backend.controller;
 
 import com.MoleLaw_backend.dto.PrecedentInfo;
-import com.MoleLaw_backend.dto.PrecedentSearchRequest;
-import com.MoleLaw_backend.service.CaseSearchService;
+import com.MoleLaw_backend.dto.request.PrecedentSearchRequest;
+import com.MoleLaw_backend.service.law.CaseSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

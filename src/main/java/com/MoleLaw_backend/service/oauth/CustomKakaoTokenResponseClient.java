@@ -1,4 +1,4 @@
-package com.MoleLaw_backend.config.oauth;
+package com.MoleLaw_backend.service.oauth;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;

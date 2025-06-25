@@ -2,11 +2,11 @@ package com.MoleLaw_backend.service;
 
 import com.MoleLaw_backend.domain.entity.User;
 import com.MoleLaw_backend.domain.repository.UserRepository;
-import com.MoleLaw_backend.dto.AuthResponse;
-import com.MoleLaw_backend.dto.LoginRequest;
-import com.MoleLaw_backend.dto.SignupRequest;
-import com.MoleLaw_backend.config.JwtUtil;
-import com.MoleLaw_backend.dto.UserResponse;
+import com.MoleLaw_backend.dto.response.AuthResponse;
+import com.MoleLaw_backend.dto.request.LoginRequest;
+import com.MoleLaw_backend.dto.request.SignupRequest;
+import com.MoleLaw_backend.service.security.JwtUtil;
+import com.MoleLaw_backend.dto.response.UserResponse;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.MolelawException;
 import lombok.RequiredArgsConstructor;

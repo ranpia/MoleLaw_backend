@@ -1,4 +1,4 @@
-package com.MoleLaw_backend.service;
+package com.MoleLaw_backend.service.law;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,4 +1,4 @@
-package com.MoleLaw_backend.dto;
+package com.MoleLaw_backend.dto.response;
 
 import com.MoleLaw_backend.exception.ErrorResponse;
 import lombok.AllArgsConstructor;

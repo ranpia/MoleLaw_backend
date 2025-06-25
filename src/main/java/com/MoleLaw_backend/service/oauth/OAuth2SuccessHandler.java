@@ -1,6 +1,6 @@
-package com.MoleLaw_backend.config.oauth;
+package com.MoleLaw_backend.service.oauth;
 
-import com.MoleLaw_backend.config.JwtUtil;
+import com.MoleLaw_backend.service.security.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

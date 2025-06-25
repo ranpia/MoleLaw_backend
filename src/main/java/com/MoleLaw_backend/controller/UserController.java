@@ -1,6 +1,10 @@
 package com.MoleLaw_backend.controller;
 
-import com.MoleLaw_backend.dto.*;
+import com.MoleLaw_backend.dto.request.LoginRequest;
+import com.MoleLaw_backend.dto.request.SignupRequest;
+import com.MoleLaw_backend.dto.response.ApiResponse;
+import com.MoleLaw_backend.dto.response.AuthResponse;
+import com.MoleLaw_backend.dto.response.UserResponse;
 import com.MoleLaw_backend.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement; // ✅ 추가
 import lombok.RequiredArgsConstructor;

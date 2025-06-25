@@ -1,8 +1,8 @@
-package com.MoleLaw_backend.service;
+package com.MoleLaw_backend.service.law;
 
 import com.MoleLaw_backend.dto.PrecedentInfo;
-import com.MoleLaw_backend.dto.PrecedentSearchRequest;
-import com.MoleLaw_backend.dto.PrecedentSearchResponse;
+import com.MoleLaw_backend.dto.request.PrecedentSearchRequest;
+import com.MoleLaw_backend.dto.response.PrecedentSearchResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

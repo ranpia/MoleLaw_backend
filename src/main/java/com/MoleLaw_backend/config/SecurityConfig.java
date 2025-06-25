@@ -1,8 +1,8 @@
 package com.MoleLaw_backend.config;
 
-import com.MoleLaw_backend.config.oauth.CustomOAuth2UserService;
-import com.MoleLaw_backend.config.oauth.OAuth2SuccessHandler;
-import com.MoleLaw_backend.config.security.JwtAuthenticationFilter;
+import com.MoleLaw_backend.service.oauth.CustomOAuth2UserService;
+import com.MoleLaw_backend.service.oauth.OAuth2SuccessHandler;
+import com.MoleLaw_backend.service.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,11 +18,7 @@ import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationC
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
-import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.util.LinkedMultiValueMap;

@@ -1,7 +1,7 @@
 package com.MoleLaw_backend.controller;
 
 import lombok.RequiredArgsConstructor;
-import com.MoleLaw_backend.service.LawSearchService;
+import com.MoleLaw_backend.service.law.LawSearchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

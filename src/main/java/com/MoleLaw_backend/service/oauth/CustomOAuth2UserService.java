@@ -1,4 +1,4 @@
-package com.MoleLaw_backend.config.oauth;
+package com.MoleLaw_backend.service.oauth;
 
 import com.MoleLaw_backend.domain.entity.User;
 import com.MoleLaw_backend.domain.repository.UserRepository;

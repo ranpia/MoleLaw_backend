@@ -1,4 +1,4 @@
-package com.MoleLaw_backend.dto;
+package com.MoleLaw_backend.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

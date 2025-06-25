@@ -1,4 +1,4 @@
-package com.MoleLaw_backend.config;
+package com.MoleLaw_backend.service.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

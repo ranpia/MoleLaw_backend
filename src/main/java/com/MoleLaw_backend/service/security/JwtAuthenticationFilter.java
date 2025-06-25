@@ -1,6 +1,5 @@
-package com.MoleLaw_backend.config.security;
+package com.MoleLaw_backend.service.security;
 
-import com.MoleLaw_backend.config.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

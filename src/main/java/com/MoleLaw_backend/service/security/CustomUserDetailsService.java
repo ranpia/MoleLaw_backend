@@ -1,4 +1,4 @@
-package com.MoleLaw_backend.config.security;
+package com.MoleLaw_backend.service.security;
 
 import com.MoleLaw_backend.domain.entity.User;
 import com.MoleLaw_backend.domain.repository.UserRepository;
