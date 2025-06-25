@@ -1,2 +1,5 @@
 openai:
   api-key: dummy-key-for-test
+
+openlaw:
+  api-key: dummy-key-for-test

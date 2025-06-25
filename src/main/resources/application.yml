@@ -3,9 +3,9 @@ spring:
     import: optional:file:.env[.properties]
 
   datasource:
-    url: jdbc:mysql://localhost:3306/molelawdb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
-    username: dev
-    password: devpass
+    url: jdbc:mysql://molelaw-db.cpqukyis8rth.ap-northeast-2.rds.amazonaws.com:3306/molelawdb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: molelaw
+    password: molelaw123
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -65,3 +65,8 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
+openai:
+  api-key: ${OPENAI_API_KEY}
+
+openlaw:
+  api-key: ${OC_KEY}

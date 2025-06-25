@@ -1,5 +1,6 @@
 package com.MoleLaw_backend;
 
+import com.MoleLaw_backend.service.ExtractKeyword;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
