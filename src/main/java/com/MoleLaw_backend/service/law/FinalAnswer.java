@@ -2,6 +2,7 @@ package com.MoleLaw_backend.service.law;
 
 import com.MoleLaw_backend.dto.PrecedentInfo;
 import com.MoleLaw_backend.dto.request.PrecedentSearchRequest;
+import com.MoleLaw_backend.dto.response.AnswerResponse;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.GptApiException;
 import com.MoleLaw_backend.exception.OpenLawApiException;
@@ -31,7 +32,7 @@ public class FinalAnswer {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public String getFinalAnswer(String query) {
+    public AnswerResponse getAnswer(String query) {
         // 1. 키워드 추출
         List<String> keywords = extractKeyword.extractKeywords(query);
 
@@ -119,11 +120,40 @@ public class FinalAnswer {
 
             List<Map<String, Object>> choices = (List<Map<String, Object>>) body.get("choices");
             Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-            return (String) message.get("content");
+            String gptContent = (String) message.get("content");
+            String infoMarkdown = buildMarkdownInfo(lawResults, precedentResults);
+
+            return new AnswerResponse(gptContent, infoMarkdown);
 
         } catch (Exception e) {
             log.error("[GPT] 응답 생성 실패: {}", e.getMessage(), e);
             throw new GptApiException(ErrorCode.GPT_API_FAILURE, e);
         }
     }
+
+    private String buildMarkdownInfo(List<Map<String, Object>> laws, List<PrecedentInfo> precedents) {
+        StringBuilder md = new StringBuilder();
+
+        md.append("## 📚 관련 법령\n\n");
+        for (Map<String, Object> law : laws) {
+            String name = (String) law.get("법령명한글");
+            String summary = (String) law.getOrDefault("조문내용", "");
+            md.append("- **").append(name).append("**\n");
+            if (!summary.isBlank()) {
+                md.append("  - ").append(summary).append("\n");
+            }
+        }
+
+        md.append("\n---\n\n");
+        md.append("## ⚖️ 관련 판례\n\n");
+        for (PrecedentInfo p : precedents) {
+            md.append("- **").append(p.getCaseName()).append("**\n");
+            md.append("  - 사건번호: ").append(p.getCaseNumber()).append("\n");
+            md.append("  - 선고일: ").append(p.getDecisionDate())
+                    .append(" / 법원: ").append(p.getCourtName()).append("\n");
+        }
+
+        return md.toString();
+    }
+
 }
