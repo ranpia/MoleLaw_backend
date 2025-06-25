@@ -2,17 +2,21 @@ package com.MoleLaw_backend.service.law;
 
 import com.MoleLaw_backend.dto.PrecedentInfo;
 import com.MoleLaw_backend.dto.request.PrecedentSearchRequest;
+import com.MoleLaw_backend.exception.ErrorCode;
+import com.MoleLaw_backend.exception.GptApiException;
+import com.MoleLaw_backend.exception.OpenLawApiException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.*;
 
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FinalAnswer {
@@ -50,24 +54,26 @@ public class FinalAnswer {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("[LawSearch] 키워드 '{}' 처리 중 오류: {}", keyword, e.getMessage(), e);
+                // 검색 실패해도 무시하고 다음 키워드로 진행
             }
         }
 
         // 3. 판례 검색
         List<PrecedentInfo> precedentResults = new ArrayList<>();
         for (String lawName : uniqueLawNames) {
-            PrecedentSearchRequest req = new PrecedentSearchRequest();
-            req.setQuery(lawName);
             try {
+                PrecedentSearchRequest req = new PrecedentSearchRequest();
+                req.setQuery(lawName);
                 List<PrecedentInfo> precedents = caseSearchService.searchCases(req);
                 precedentResults.addAll(precedents);
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (OpenLawApiException e) {
+                log.warn("[CaseSearch] 법령 '{}' 기반 판례 조회 실패: {}", lawName, e.getMessage());
+                // 특정 판례 실패는 무시하고 전체 응답 생성 진행
             }
         }
 
-        // 4. GPT 응답 생성 프롬프트 구성
+        // 4. 프롬프트 구성
         StringBuilder prompt = new StringBuilder();
         prompt.append("사용자 질문: ").append(query).append("\n\n");
         prompt.append("다음은 관련 법령 및 판례 정보입니다. 이를 참고해 사용자 질문에 대해 명확하고 친절하게 답변해주세요.\n\n");
@@ -83,11 +89,11 @@ public class FinalAnswer {
                     .append(p.getDecisionDate()).append(", ").append(p.getCourtName()).append(")\n");
         }
 
-        // 5. GPT API 호출
+        // 5. GPT API 요청
         Map<String, Object> requestBody = Map.of(
                 "model", "gpt-4",
                 "messages", List.of(
-                        Map.of("role", "system", "content", "당신은 법에 관련하여 도움이 필요한 이용자를 도와주는 입장의 법률 전문가이며, 법령과 판례를 참고하여 일반 사용자의 질문에 친절하고 명확하게 답변합니다. 하단에는 마크다운 형식으로 관련 법령과 판례를 정리합니다. 또한 유저에게 대화하는 부분과 정보를 제공하는 부분을 구분자를 두어 분리합니다. 정보 제공 부분에는 시도가능한 해결책, 관련 법령(예시 : 무슨무슨 법 몇조), 판례를 제공합니다."),
+                        Map.of("role", "system", "content", "당신은 법률 전문가입니다. 관련 법령 및 판례를 참고하여 사용자 질문에 대해 친절하고 명확하게 답변해주세요."),
                         Map.of("role", "user", "content", prompt.toString())
                 ),
                 "temperature", 0.5
@@ -107,15 +113,17 @@ public class FinalAnswer {
             );
 
             Map<String, Object> body = response.getBody();
-            if (body == null) return "GPT 응답을 가져올 수 없습니다.";
+            if (body == null || body.get("choices") == null) {
+                throw new GptApiException(ErrorCode.GPT_EMPTY_RESPONSE, "OpenAI 응답이 비어 있음");
+            }
 
             List<Map<String, Object>> choices = (List<Map<String, Object>>) body.get("choices");
             Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
             return (String) message.get("content");
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return "GPT 응답 생성 중 오류가 발생했습니다.";
+            log.error("[GPT] 응답 생성 실패: {}", e.getMessage(), e);
+            throw new GptApiException(ErrorCode.GPT_API_FAILURE, e);
         }
     }
 }

@@ -3,14 +3,20 @@ package com.MoleLaw_backend.service.law;
 import com.MoleLaw_backend.dto.PrecedentInfo;
 import com.MoleLaw_backend.dto.request.PrecedentSearchRequest;
 import com.MoleLaw_backend.dto.response.PrecedentSearchResponse;
+import com.MoleLaw_backend.exception.ErrorCode;
+import com.MoleLaw_backend.exception.OpenLawApiException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CaseSearchServiceImpl implements CaseSearchService {
@@ -20,32 +26,40 @@ public class CaseSearchServiceImpl implements CaseSearchService {
     @Value("${openlaw.api-key}")
     private String oc;
 
-    private static final String BASE_URL = "http://www.law.go.kr";
-
     @Override
     public List<PrecedentInfo> searchCases(PrecedentSearchRequest request) {
-        PrecedentSearchResponse response = webClientBuilder.build()
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .scheme("http")
-                        .host("www.law.go.kr")
-                        .path("/DRF/lawSearch.do")
-                        .queryParam("OC", oc)
-                        .queryParam("target", "prec")
-                        .queryParam("type", "JSON")
-                        .queryParam("JO", request.getQuery())
-                        .build())
-                .retrieve()
-                .bodyToMono(PrecedentSearchResponse.class)
-                .block();
+        try {
+            PrecedentSearchResponse response = webClientBuilder.build()
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("http")
+                            .host("www.law.go.kr")
+                            .path("/DRF/lawSearch.do")
+                            .queryParam("OC", oc)
+                            .queryParam("target", "prec")
+                            .queryParam("type", "JSON")
+                            .queryParam("JO", request.getQuery())
+                            .build())
+                    .retrieve()
+                    .bodyToMono(PrecedentSearchResponse.class)
+                    .block();
 
-        if (response == null || response.getPrecSearch() == null) {
-            throw new RuntimeException("❌ PrecSearch 응답이 없습니다");
+            if (response == null || response.getPrecSearch() == null) {
+                throw new OpenLawApiException(
+                        ErrorCode.OPENLAW_INVALID_RESPONSE,
+                        "응답이 null이거나 precSearch가 없습니다"
+                );
+            }
+
+            return Optional.ofNullable(response.getPrecSearch().getPrec())
+                    .orElse(List.of());
+
+        } catch (WebClientResponseException e) {
+            log.error("[OpenLaw] 응답 오류: status={} body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, e);
+        } catch (WebClientRequestException e) {
+            log.error("[OpenLaw] 요청 실패: message={}", e.getMessage());
+            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, e);
         }
-
-        List<PrecedentInfo> precList = Optional.ofNullable(response.getPrecSearch().getPrec())
-                .orElse(List.of()); // 빈 리스트 반환 (예외 아님)
-
-        return precList;
     }
 }
