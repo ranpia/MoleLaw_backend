@@ -1,3 +1,6 @@
+server:
+  forward-headers-strategy: framework
+
 spring:
   config:
     import: optional:file:.env[.properties]
@@ -52,18 +55,14 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
-springdoc:
-  api-docs:
-    enabled: true
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    tryItOutEnabled: true
-    operationsSorter: method
-    tagsSorter: alpha
-
-server:
-  forward-headers-strategy: framework
+  springdoc:
+    api-docs:
+      path: /v3/api-docs
+    swagger-ui:
+      path: /swagger-ui.html
+      operationsSorter: method
+      tagsSorter: alpha
+      tryItOutEnabled: true
 
 logging:
   level:
