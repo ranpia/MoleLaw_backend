@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 
+import java.util.List;
+
 @Configuration
 @SecurityScheme(
         name = "BearerAuth",
@@ -23,13 +25,14 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
                 @Server(url = "http://localhost:8080", description = "개발 로컬 환경")
         }
 )
-
-
 public class SwaggerConfig {
 
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
+                .servers(List.of(
+                        new io.swagger.v3.oas.models.servers.Server().url("https://team-moleback.store")  // 💡 여기만 풀네임!
+                ))
                 .info(new Info()
                         .title("MoleLaw API")
                         .description("MoleLaw 백엔드 API 문서입니다.")
