@@ -1,6 +1,3 @@
-server:
-  forward-headers-strategy: native
-
 spring:
   config:
     import: optional:file:.env[.properties]
@@ -59,7 +56,6 @@ spring:
     api-docs:
       path: /v3/api-docs
     swagger-ui:
-      oauth2-redirect-url: https://team-moleback.store/swagger-ui/oauth2-redirect.html
       path: /swagger-ui.html
       operationsSorter: method
       tagsSorter: alpha
