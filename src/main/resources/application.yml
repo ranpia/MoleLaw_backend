@@ -54,12 +54,16 @@ spring:
 
   springdoc:
     api-docs:
+      enabled: true
       path: /v3/api-docs
     swagger-ui:
-      path: /swagger-ui.html
+      path: /swagger-ui
       operationsSorter: method
       tagsSorter: alpha
       tryItOutEnabled: true
+
+server:
+  forward-headers-strategy: framework
 
 logging:
   level:
