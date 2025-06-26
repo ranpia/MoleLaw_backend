@@ -53,6 +53,7 @@ spring:
             user-name-attribute: id
 
   springdoc:
+    server-url: https://team-moleback.store
     api-docs:
       path: /v3/api-docs
     swagger-ui:
