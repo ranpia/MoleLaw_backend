@@ -57,11 +57,10 @@ spring:
       enabled: true
       path: /v3/api-docs
     swagger-ui:
-      path: /swagger-ui
+      path: /swagger-ui.html
+      tryItOutEnabled: true
       operationsSorter: method
       tagsSorter: alpha
-      tryItOutEnabled: true
-
 server:
   forward-headers-strategy: framework
 
