@@ -18,12 +18,6 @@ public class ChatController {
 
     private final ChatService chatService;
 
-    @PostMapping
-    public ChatRoomResponse createRoom(@AuthenticationPrincipal User user,
-                                       @RequestBody ChatRoomRequest request) {
-        return chatService.createChatRoom(user, request);
-    }
-
     @GetMapping
     public List<ChatRoomResponse> getMyRooms(@AuthenticationPrincipal User user) {
         return chatService.getMyChatRooms(user);
@@ -54,6 +48,4 @@ public class ChatController {
         chatService.saveBulkMessages(user, request);
         return ResponseEntity.ok().build();
     }
-
-
 }
