@@ -1,3 +1,6 @@
+server:
+  forward-headers-strategy: framework
+
 spring:
   config:
     import: optional:file:.env[.properties]
@@ -53,7 +56,6 @@ spring:
             user-name-attribute: id
 
   springdoc:
-    server-url: https://team-moleback.store
     api-docs:
       path: /v3/api-docs
     swagger-ui:
