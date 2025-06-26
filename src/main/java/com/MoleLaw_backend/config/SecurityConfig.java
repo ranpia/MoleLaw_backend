@@ -56,9 +56,7 @@ public class SecurityConfig {
                                 "/login/**",
                                 "/oauth2/**"
                         ).permitAll()
-                        .anyRequest().permitAll()
-                );
-                        /*.anyRequest().authenticated()
+                        .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
@@ -68,7 +66,6 @@ public class SecurityConfig {
                         )
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-*/
         return http.build();
     }
 
