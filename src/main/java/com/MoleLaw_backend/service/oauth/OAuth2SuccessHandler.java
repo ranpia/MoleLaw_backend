@@ -29,6 +29,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                                         Authentication authentication)
             throws IOException, ServletException {
 
+        System.out.println("✅ [OAuth2SuccessHandler] 동작 시작"); // 🔥 로그 확인
+
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
 
@@ -49,7 +51,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
 
         // 프론트엔드 페이지로 리다이렉트
-        response.sendRedirect("https://team-mole.shop/oauth/success"); // 실제 프론트 주소로 수정
+        response.sendRedirect("https://www.team-mole.shop/Main"); // 실제 프론트 주소로 수정
     }
 
 }
