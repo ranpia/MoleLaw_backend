@@ -23,19 +23,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
-            throws ServletException, IOException, IOException {
+            throws ServletException, IOException {
 
         String token = jwtUtil.resolveToken(request);
 
-        // 루프 방지 및 토큰 유효성 검사
+        System.out.println("🛡️ JwtAuthenticationFilter 진입");
+        System.out.println("🛡️ 요청 URI: " + request.getRequestURI());
+        System.out.println("🛡️ 토큰: " + token);
+
         if (token != null && jwtUtil.validateToken(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                String userId = jwtUtil.getUserIdFromToken(token);
+                System.out.println("🛡️ 사용자 ID: " + userId);
 
-            String userId = jwtUtil.getUserIdFromToken(token);
-            UsernamePasswordAuthenticationToken authentication = jwtUtil.getAuthentication(userId);
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                UsernamePasswordAuthenticationToken authentication = jwtUtil.getAuthentication(userId);
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (Exception e) {
+                System.out.println("❌ JWT 인증 중 예외 발생: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
 
         filterChain.doFilter(request, response);
@@ -44,12 +52,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-
-        // ⭐ 모든 OAuth2 관련 경로를 확실히 제외 (여기 포함 안되면 재귀 발생 가능)
-        return path.startsWith("/oauth2/") ||
-                path.startsWith("/login/oauth2/") ||
-                path.startsWith("/oauth2/callback/") ||
-                path.startsWith("/oauth2/authorization/");
+        return path.startsWith("/swagger")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/oauth2/")
+                || path.startsWith("/login/oauth2/")
+                || path.equals("/api/auth/logout");
     }
 }
-
