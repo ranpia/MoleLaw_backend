@@ -116,7 +116,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // 와일드카드 대신 구체적인 Origin 명시
-        config.setAllowedOrigins(List.of("https://team-moleback.store"));
+        config.setAllowedOrigins(List.of("https://team-mole.shop"));
 
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
