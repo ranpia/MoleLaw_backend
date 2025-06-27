@@ -1,5 +1,6 @@
 package com.MoleLaw_backend.service.oauth;
 
+import com.MoleLaw_backend.service.security.CookieUtil;
 import com.MoleLaw_backend.service.security.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +18,10 @@ import java.io.IOException;
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
+    private final CookieUtil cookieUtil;
+
+    private static final String COOKIE_NAME = "token";
+    private static final boolean IS_SECURE = true; // HTTPS 환경이면 true, 로컬 테스트면 false
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -32,15 +37,17 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             return;
         }
 
+        // JWT 발급
         String token = jwtUtil.generateToken(email);
         System.out.println("✅ OAuth2 로그인 성공, JWT 발급: " + token);
 
+        // 쿠키에 JWT 설정
+        cookieUtil.addJwtCookie(response, COOKIE_NAME, token, IS_SECURE);
+
+        // 인증 속성 초기화
         clearAuthenticationAttributes(request);
 
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"token\": \"" + token + "\"}");
-        response.getWriter().flush();  // 추가
-        response.getWriter().close();
+        // 프론트엔드 페이지로 리다이렉트
+        response.sendRedirect("https://team-mole.shop/oauth/success"); // 실제 프론트 주소로 수정
     }
 }
