@@ -11,4 +11,5 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     Optional<Message> findFirstByChatRoomIdOrderByTimestampAsc(Long chatRoomId);
 
+    long countByChatRoomId(Long chatRoomId);
 }
