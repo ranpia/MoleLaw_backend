@@ -3,6 +3,7 @@ package com.MoleLaw_backend.config;
 import com.MoleLaw_backend.service.oauth.CustomOAuth2UserService;
 import com.MoleLaw_backend.service.oauth.OAuth2SuccessHandler;
 import com.MoleLaw_backend.service.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,34 +44,44 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {})
+                .cors(cors -> {}) // corsConfigurationSource() 사용
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs",
-                                "/swagger-ui.html",
-                                "/api/auth/signup",
-                                "/api/auth/login",
-                                "/api/auth/logout",
-                                "/login/**",
-                                "/oauth2/**"
+                                "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html",
+                                "/api/auth/signup", "/api/auth/login", "/api/auth/logout",
+                                "/login/**", "/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
+
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
-                        .tokenEndpoint(token -> token
-                                .accessTokenResponseClient(customAccessTokenResponseClient())
-                        )
+                        .tokenEndpoint(token -> token.accessTokenResponseClient(customAccessTokenResponseClient()))
                 )
+
+                // ✅ 폼 로그인/로그아웃 비활성화
+                .formLogin(form -> form.disable())
+                .logout(logout -> logout.disable())
+
+                // ✅ 인증 실패 시 401 반환
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                )
+
+                // ✅ JWT 필터 등록
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 
     @Bean
     public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> customAccessTokenResponseClient() {
