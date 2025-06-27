@@ -64,12 +64,23 @@ public class JwtUtil {
     }
 
     public String resolveToken(HttpServletRequest request) {
+        // 1. Authorization 헤더 우선
         String bearer = request.getHeader("Authorization");
         if (bearer != null && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }
+        // 2. 쿠키에서 "token" 찾기
+        if (request.getCookies() != null) {
+            for (var cookie : request.getCookies()) {
+                if ("token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
         return null;
     }
+
 
     public UsernamePasswordAuthenticationToken getAuthentication(String email) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
