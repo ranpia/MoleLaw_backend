@@ -49,7 +49,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // 인증 속성 초기화
         clearAuthenticationAttributes(request);
 
+
         // 프론트엔드 페이지로 리다이렉트
         response.sendRedirect("https://www.team-mole.shop/Main"); // 실제 프론트 주소로 수정
     }
+
 }
