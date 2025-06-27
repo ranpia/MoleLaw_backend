@@ -37,10 +37,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         clearAuthenticationAttributes(request);
 
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"token\": \"" + token + "\"}");
-        response.getWriter().flush();  // 추가
-        response.getWriter().close();
+        // ✅ 프론트엔드 주소로 리디렉션하면서 토큰 전달
+        String redirectUrl = "https://team-mole.shop/oauth2/success?token=" + token;
+        response.sendRedirect(redirectUrl);
     }
+
 }
