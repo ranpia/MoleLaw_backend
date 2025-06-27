@@ -21,15 +21,14 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.net.URI;
 import java.util.Collections;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -52,7 +51,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/v3/api-docs",
                                 "/swagger-ui.html",
-                                "/api/auth/**",
+                                "/api/auth/signup",
+                                "/api/auth/login",
                                 "/login/**",
                                 "/oauth2/**"
                         ).permitAll()
@@ -66,6 +66,7 @@ public class SecurityConfig {
                         )
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
@@ -76,7 +77,6 @@ public class SecurityConfig {
         client.setRequestEntityConverter(request -> {
             ClientRegistration registration = request.getClientRegistration();
 
-            // ✅ Spring Security가 계산해준 redirectUri 사용
             String redirectUri = request.getAuthorizationExchange()
                     .getAuthorizationRequest()
                     .getRedirectUri();
@@ -85,8 +85,7 @@ public class SecurityConfig {
             body.add(OAuth2ParameterNames.GRANT_TYPE, "authorization_code");
             body.add(OAuth2ParameterNames.CLIENT_ID, registration.getClientId());
             body.add(OAuth2ParameterNames.CLIENT_SECRET, registration.getClientSecret());
-            body.add(OAuth2ParameterNames.CODE, request.getAuthorizationExchange()
-                    .getAuthorizationResponse().getCode());
+            body.add(OAuth2ParameterNames.CODE, request.getAuthorizationExchange().getAuthorizationResponse().getCode());
             body.add(OAuth2ParameterNames.REDIRECT_URI, redirectUri);
 
             HttpHeaders headers = new HttpHeaders();
@@ -94,13 +93,11 @@ public class SecurityConfig {
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
             URI uri = URI.create(registration.getProviderDetails().getTokenUri());
-
             return new RequestEntity<>(body, headers, HttpMethod.POST, uri);
         });
 
         return client;
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -115,10 +112,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("*"); // 또는 http://localhost:3000 등
+        config.addAllowedOriginPattern("*");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
-        config.setAllowCredentials(true); // 인증 정보 허용
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

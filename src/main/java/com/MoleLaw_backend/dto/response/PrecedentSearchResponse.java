@@ -1,6 +1,7 @@
 package com.MoleLaw_backend.dto.response;
 
 import com.MoleLaw_backend.dto.PrecedentInfo;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +19,8 @@ public class PrecedentSearchResponse {
     @Setter
     public static class PrecSearch {
 
-        @JsonProperty("prec") // ❗ 필수: 실제 JSON 키가 "prec"
+        @JsonProperty("prec")
+        @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY) // ✅ 이 부분!
         private List<PrecedentInfo> prec;
 
         @JsonProperty("키워드")
@@ -34,7 +36,3 @@ public class PrecedentSearchResponse {
         private int totalCnt;
     }
 }
-
-
-
-
