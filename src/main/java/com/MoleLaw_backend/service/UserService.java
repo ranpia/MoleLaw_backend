@@ -39,7 +39,7 @@ public class UserService {
 
         // JWT 발급 후 쿠키로 설정
         String token = jwtUtil.generateToken(user.getEmail());
-        cookieUtil.addJwtCookie(response, "jwt", token, true);  // secure=true (배포 환경 기준)
+        cookieUtil.addJwtCookie(response, "token", token, true);  // secure=true (배포 환경 기준)
     }
 
 
@@ -54,7 +54,7 @@ public class UserService {
         String token = jwtUtil.generateToken(user.getEmail());
 
         // JWT 쿠키에 설정
-        cookieUtil.addJwtCookie(response, "jwt", token, true);
+        cookieUtil.addJwtCookie(response, "token", token, true);
     }
 
 
