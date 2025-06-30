@@ -28,11 +28,9 @@ public class ChatService {
     /**
      * 🔸 채팅방 생성
      */
-    public ChatRoom createChatRoom(Long userId, String title) {
-        User userProxy = entityManager.getReference(User.class, userId);
-
+    public ChatRoom createChatRoom(User user, String title) {
         ChatRoom chatRoom = ChatRoom.builder()
-                .user(userProxy)
+                .user(user)
                 .title(title)
                 .build();
 
@@ -114,7 +112,7 @@ public class ChatService {
         }
 
         // 2. ChatRoom 생성 (userId만으로 프록시 연결)
-        ChatRoom chatRoom = createChatRoom(user.getId(), title);  // ⬅️ Entity 반환 메서드
+        ChatRoom chatRoom = createChatRoom(user, title);  // ⬅️ Entity 반환 메서드
 
         // 3. 사용자 메시지 저장
         messageRepository.save(Message.builder()
