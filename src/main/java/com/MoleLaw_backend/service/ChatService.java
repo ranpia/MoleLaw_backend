@@ -102,13 +102,14 @@ public class ChatService {
      * ✅ 새로운 채팅방 생성 + GPT로 제목 + 답변 동시 생성 + 저장
      */
     public List<MessageResponse> createRoomAndAsk(User user, FirstMessageRequest request) {
-        // GPT 호출: 제목과 답변 함께 생성
-        GptTitleAnswerResponse gptResponse = gptService.generateTitleAndAnswer(request.getContent());
+//        // GPT 호출: 제목과 답변 함께 생성
+//        GptTitleAnswerResponse gptResponse = gptService.generateTitleAndAnswer(request.getContent());
 
         // 채팅방 생성 (GPT가 만든 제목 사용)
         ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.builder()
                 .user(user)
-                .title(gptResponse.getTitle())
+//                .title(gptResponse.getTitle())
+                .title(gptService.generateTitle(request.getContent()))
                 .build());
 
         // 사용자 질문 저장
@@ -119,10 +120,15 @@ public class ChatService {
                 .build());
 
         // GPT 답변 저장
+
+        AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent());
+        String combined = "답변:\n" + answerResponse.getAnswer() + "\n\n관련 정보:\n" + answerResponse.getInfo();
+
         messageRepository.save(Message.builder()
                 .chatRoom(chatRoom)
                 .sender(Message.Sender.BOT)
-                .content(EncryptUtil.encrypt(gptResponse.getAnswer()))
+//                .content(EncryptUtil.encrypt(gptResponse.getAnswer()))
+                .content(EncryptUtil.encrypt(combined))
                 .build());
 
         return getMessages(chatRoom.getId());
