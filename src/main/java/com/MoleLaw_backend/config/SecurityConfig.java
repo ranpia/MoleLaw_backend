@@ -126,16 +126,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // 와일드카드 대신 구체적인 Origin 명시
-        config.setAllowedOrigins(List.of("https://team-mole.shop", "https://www.team-mole.shop", "http://localhost:5173"));
-
+        // ✅ 운영 프론트 주소만 허용
+        config.setAllowedOrigins(List.of(
+                "https://team-molefront.store",
+                "https://www.team-molefront.store"
+        ));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(true);  // ✅ 쿠키 주고받기 위해 필수
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
 
 }

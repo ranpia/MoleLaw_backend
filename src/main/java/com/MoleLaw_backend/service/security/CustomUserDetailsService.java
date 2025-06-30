@@ -15,16 +15,26 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("해당 이메일을 찾을 수 없습니다: " + email));
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        // identifier는 "email:provider" 형식
+        String[] parts = identifier.split(":");
+        if (parts.length != 2) {
+            throw new UsernameNotFoundException("올바르지 않은 사용자 식별자입니다: " + identifier);
+        }
+
+        String email = parts[0];
+        String provider = parts[1];
+
+        User user = userRepository.findByEmailAndProvider(email, provider)
+                .orElseThrow(() -> new UsernameNotFoundException("해당 이메일을 찾을 수 없습니다: " + identifier));
 
         String password = (user.getPassword() == null || user.getPassword().isEmpty()) ? "{noop}" : user.getPassword();
 
         return org.springframework.security.core.userdetails.User
-                .withUsername(user.getEmail())
-                .password(password) // "{noop}" 넣어야 Security 검증 통과
+                .withUsername(email + ":" + provider) // 토큰의 subject와 동일하게
+                .password(password)
                 .authorities("ROLE_USER")
                 .build();
     }
+
 }
