@@ -6,7 +6,7 @@ import com.MoleLaw_backend.dto.response.ApiResponse;
 import com.MoleLaw_backend.dto.response.AuthResponse;
 import com.MoleLaw_backend.dto.response.UserResponse;
 import com.MoleLaw_backend.service.UserService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement; // ✅ 추가
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,6 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-
     public ResponseEntity<?> signup(@RequestBody SignupRequest request) {
         AuthResponse response = userService.signup(request);
         return ResponseEntity.ok(response);
@@ -29,8 +28,8 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
-        userService.login(request, response);
-        return ResponseEntity.ok().build();
+        AuthResponse authResponse = userService.login(request, response);
+        return ResponseEntity.ok(authResponse);
     }
 
     @GetMapping("/me")
@@ -50,7 +49,6 @@ public class UserController {
         UserResponse user = userService.getUserByEmailAndProvider(email, provider);
         return ResponseEntity.ok(ApiResponse.success(user));
     }
-
 
     @PostMapping("/reissue")
     public ResponseEntity<AuthResponse> reissue(@CookieValue(name = "refreshToken") String refreshToken) {

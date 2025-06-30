@@ -5,10 +5,12 @@ import com.MoleLaw_backend.domain.repository.UserRepository;
 import com.MoleLaw_backend.dto.response.AuthResponse;
 import com.MoleLaw_backend.dto.request.LoginRequest;
 import com.MoleLaw_backend.dto.request.SignupRequest;
-import com.MoleLaw_backend.service.security.JwtUtil;
 import com.MoleLaw_backend.dto.response.UserResponse;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.MolelawException;
+import com.MoleLaw_backend.service.security.CookieUtil;
+import com.MoleLaw_backend.service.security.JwtUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final CookieUtil cookieUtil;
 
     public AuthResponse signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -53,6 +56,17 @@ public class UserService {
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), "local");
 
         return new AuthResponse(accessToken, refreshToken);
+    }
+
+    // ✅ 오버로딩된 메서드: 쿠키 저장 포함
+    public AuthResponse login(LoginRequest request, HttpServletResponse response) {
+        AuthResponse authResponse = login(request);
+
+        // ✅ 쿠키 저장
+        cookieUtil.addJwtCookie(response, "accessToken", authResponse.getAccessToken(), true);
+        cookieUtil.addJwtCookie(response, "refreshToken", authResponse.getRefreshToken(), true);
+
+        return authResponse;
     }
 
     public UserResponse getUserByEmail(String email) {
