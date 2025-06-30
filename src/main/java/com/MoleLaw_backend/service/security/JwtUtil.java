@@ -20,24 +20,41 @@ import java.util.Date;
 public class JwtUtil {
 
     @Value("${jwt.secret}")
-    private String secretKey;
+    private String secretKeyRaw;
 
-    private final UserDetailsService userDetailsService;
     private Key key;
-    private final long EXPIRATION = 1000 * 60 * 60 * 24; // 24시간
+    private final UserDetailsService userDetailsService;
+
+    private final long ACCESS_EXPIRATION = 1000 * 60 * 15;       // 15분
+    private final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
 
     @PostConstruct
     public void init() {
-        this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-        System.out.println("✅ JwtUtil 초기화 완료");
+        this.key = Keys.hmacShaKeyFor(secretKeyRaw.getBytes(StandardCharsets.UTF_8));
+        System.out.println("✅ JwtUtil 초기화 완료 (key ready)");
     }
 
-    public String generateToken(String userId) {
+    public String generateAccessToken(String email, String provider) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + ACCESS_EXPIRATION);
+
         return Jwts.builder()
-                .setSubject(userId)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(key)
+                .setSubject(email + ":" + provider)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(String email, String provider) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + REFRESH_EXPIRATION);
+
+        return Jwts.builder()
+                .setSubject(email + ":" + provider)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -75,4 +92,10 @@ public class JwtUtil {
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
+
+    public String[] getEmailAndProviderFromToken(String token) {
+        String subject = getUserIdFromToken(token); // ex: "user@naver.com:google"
+        return subject.split(":");
+    }
+
 }

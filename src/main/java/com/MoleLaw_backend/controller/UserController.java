@@ -21,8 +21,8 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody SignupRequest request) {
-        String token = userService.signup(request);
-        return ResponseEntity.ok().body(token); // 토큰 반환
+        AuthResponse response = userService.signup(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -38,4 +38,11 @@ public class UserController {
         UserResponse user = userService.getUserByEmail(email);
         return ResponseEntity.ok(ApiResponse.success(user));
     }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<AuthResponse> reissue(@CookieValue(name = "refreshToken") String refreshToken) {
+        AuthResponse response = userService.reissue(refreshToken);
+        return ResponseEntity.ok(response);
+    }
+
 }
