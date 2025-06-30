@@ -22,10 +22,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtUtil jwtUtil;
     private final CookieUtil cookieUtil;
-    private final UserRepository userRepository; // ✅ 주입 필요
+    private final UserRepository userRepository;
 
-    private static final String COOKIE_NAME = "token";
-    private static final boolean IS_SECURE = true;
+    private static final boolean IS_SECURE = false; // 로컬이므로 false
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -50,18 +49,18 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             return;
         }
 
-        // ✅ Access + Refresh 동시 발급
+        // ✅ JWT 발급
         String accessToken = jwtUtil.generateAccessToken(email, provider);
         String refreshToken = jwtUtil.generateRefreshToken(email, provider);
 
-        // ✅ Access Token → 헤더
-        response.setHeader("Authorization", "Bearer " + accessToken);
+        // ✅ 쿠키 저장
+        cookieUtil.addJwtCookie(response, "accessToken", accessToken, false);
+        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, false);
 
-        // ✅ Refresh Token → 쿠키 (HttpOnly)
-        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, IS_SECURE);
-
-        // ✅ 리다이렉트
-        response.sendRedirect("https://www.team-mole.shop/Main");
+        // ✅ 강제적으로 헤더를 커밋하고 리다이렉트는 직접 HTML로 유도
+        response.setContentType("text/html;charset=UTF-8");
+        response.getWriter().write("<script>window.location.href='http://localhost:5173/Main';</script>");
+        response.getWriter().flush(); // flushBuffer 대신 getWriter().flush()
     }
 
 }

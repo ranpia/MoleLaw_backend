@@ -12,11 +12,13 @@ public class CookieUtil {
                 .httpOnly(true)
                 .secure(secure)
                 .path("/")
-                .sameSite("None") // SameSite=Lax 도 고려 가능
-                .maxAge(86400) // 1일
+                .sameSite("Lax") // 브라우저 보안 테스트 시 Lax로 바꿔도 OK
+                .maxAge(86400)
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
+
+        System.out.println("🍪 [쿠키 저장] name: " + name + " | secure=" + secure);
     }
 
     public void clearJwtCookie(HttpServletResponse response, String name, boolean secure) {
@@ -24,7 +26,7 @@ public class CookieUtil {
                 .httpOnly(true)
                 .secure(secure)
                 .path("/")
-                .sameSite("None")
+                .sameSite("Lax")
                 .maxAge(0)
                 .build();
 

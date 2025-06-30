@@ -61,7 +61,6 @@ public class UserService {
         return new UserResponse(user);
     }
 
-
     public AuthResponse reissue(String refreshToken) {
         if (!jwtUtil.validateToken(refreshToken)) {
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
@@ -71,10 +70,8 @@ public class UserService {
         String email = subjectParts[0];
         String provider = subjectParts[1];
 
-        // refreshToken이 유효하면 새 accessToken 발급
         String newAccessToken = jwtUtil.generateAccessToken(email, provider);
 
-        return new AuthResponse(newAccessToken, refreshToken); // refresh는 그대로 반환
+        return new AuthResponse(newAccessToken, refreshToken);
     }
-
 }
