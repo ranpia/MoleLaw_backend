@@ -6,7 +6,8 @@ import com.MoleLaw_backend.dto.response.ApiResponse;
 import com.MoleLaw_backend.dto.response.AuthResponse;
 import com.MoleLaw_backend.dto.response.UserResponse;
 import com.MoleLaw_backend.service.UserService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement; // ✅ 추가
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,15 +21,16 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
+
     public ResponseEntity<?> signup(@RequestBody SignupRequest request) {
         AuthResponse response = userService.signup(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        AuthResponse response = userService.login(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
+        userService.login(request, response);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
