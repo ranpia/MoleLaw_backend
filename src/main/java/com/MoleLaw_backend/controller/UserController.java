@@ -21,9 +21,10 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupRequest request, HttpServletResponse response) {
-        userService.signup(request, response);
-        return ResponseEntity.ok().build();
+
+    public ResponseEntity<?> signup(@RequestBody SignupRequest request) {
+        AuthResponse response = userService.signup(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -33,10 +34,27 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    @SecurityRequirement(name = "BearerAuth") // ✅ 추가
+    @SecurityRequirement(name = "BearerAuth")
     public ResponseEntity<ApiResponse<UserResponse>> getMyInfo() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserResponse user = userService.getUserByEmail(email);
+        String subject = SecurityContextHolder.getContext().getAuthentication().getName();
+        String[] parts = subject.split(":");
+
+        if (parts.length != 2) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.<UserResponse>error("잘못된 사용자 식별자입니다."));
+        }
+
+        String email = parts[0];
+        String provider = parts[1];
+
+        UserResponse user = userService.getUserByEmailAndProvider(email, provider);
         return ResponseEntity.ok(ApiResponse.success(user));
+    }
+
+
+    @PostMapping("/reissue")
+    public ResponseEntity<AuthResponse> reissue(@CookieValue(name = "refreshToken") String refreshToken) {
+        AuthResponse response = userService.reissue(refreshToken);
+        return ResponseEntity.ok(response);
     }
 }
