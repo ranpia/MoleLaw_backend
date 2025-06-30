@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.service.oauth;
 
+import com.MoleLaw_backend.domain.entity.User;
+import com.MoleLaw_backend.domain.repository.UserRepository;
 import com.MoleLaw_backend.service.security.CookieUtil;
 import com.MoleLaw_backend.service.security.JwtUtil;
 import jakarta.servlet.ServletException;
@@ -12,6 +14,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -19,9 +22,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtUtil jwtUtil;
     private final CookieUtil cookieUtil;
+    private final UserRepository userRepository;
 
-    private static final String COOKIE_NAME = "token";
-    private static final boolean IS_SECURE = true; // HTTPS 환경이면 true, 로컬 테스트면 false
+    private static final boolean IS_SECURE = true; // ✅ 운영 환경에서는 true
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -29,29 +32,42 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                                         Authentication authentication)
             throws IOException, ServletException {
 
-        System.out.println("✅ [OAuth2SuccessHandler] 동작 시작"); // 🔥 로그 확인
+        System.out.println("✅ [OAuth2SuccessHandler] 로그인 성공 핸들러 진입");
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
+        String provider = oAuth2User.getAttribute("provider");
 
-        if (email == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "이메일을 가져올 수 없습니다.");
+        System.out.println("📧 이메일: " + email);
+        System.out.println("🔗 제공자(provider): " + provider);
+
+        if (email == null || provider == null) {
+            System.out.println("❌ [OAuth2SuccessHandler] 이메일 또는 provider가 null입니다.");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "이메일 또는 provider를 가져올 수 없습니다.");
             return;
         }
 
-        // JWT 발급
-        String token = jwtUtil.generateToken(email);
-        System.out.println("✅ OAuth2 로그인 성공, JWT 발급: " + token);
+        Optional<User> userOpt = userRepository.findByEmailAndProvider(email, provider);
+        if (userOpt.isEmpty()) {
+            System.out.println("❌ [OAuth2SuccessHandler] 유저를 찾을 수 없습니다.");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "해당 유저가 존재하지 않습니다.");
+            return;
+        }
 
-        // 쿠키에 JWT 설정
-        cookieUtil.addJwtCookie(response, COOKIE_NAME, token, IS_SECURE);
+        // ✅ JWT 발급
+        String accessToken = jwtUtil.generateAccessToken(email, provider);
+        String refreshToken = jwtUtil.generateRefreshToken(email, provider);
 
-        // 인증 속성 초기화
-        clearAuthenticationAttributes(request);
+        System.out.println("🔐 accessToken 발급 완료: " + accessToken);
+        System.out.println("🔐 refreshToken 발급 완료: " + refreshToken);
 
+        // ✅ 쿠키 저장
+        cookieUtil.addJwtCookie(response, "accessToken", accessToken, IS_SECURE);
+        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, IS_SECURE);
 
-        // 프론트엔드 페이지로 리다이렉트
-        response.sendRedirect("https://www.team-mole.shop/Main"); // 실제 프론트 주소로 수정
+        // ✅ 운영 환경 리다이렉트 주소
+        String redirectUrl = "https://team-molefront.store/Main";
+        System.out.println("➡️ 리다이렉트 URL: " + redirectUrl);
+        response.sendRedirect(redirectUrl);
     }
-
 }

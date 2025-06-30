@@ -10,13 +10,15 @@ public class CookieUtil {
     public void addJwtCookie(HttpServletResponse response, String name, String token, boolean secure) {
         ResponseCookie cookie = ResponseCookie.from(name, token)
                 .httpOnly(true)
-                .secure(secure)
+                .secure(secure)  // ✅ 운영 서버에서 true
                 .path("/")
-                .sameSite("None") // SameSite=Lax 도 고려 가능
-                .maxAge(86400) // 1일
+                .sameSite("None")  // ✅ 크로스도메인 동작 위해 반드시 None
+                .maxAge(86400)
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
+
+        System.out.println("🍪 [쿠키 저장] name: " + name + " | secure=" + secure);
     }
 
     public void clearJwtCookie(HttpServletResponse response, String name, boolean secure) {

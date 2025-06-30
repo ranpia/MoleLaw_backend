@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -23,7 +24,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
-        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        String registrationId = userRequest.getClientRegistration().getRegistrationId(); // ex) "google", "kakao"
+
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
         final String email;
@@ -52,22 +54,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             }
         }
 
-        // ✅ 이메일 + provider 기준으로 사용자 조회
+        // ✅ 이메일 + provider 기준으로 사용자 조회 (String 기반)
         User user = userRepository.findByEmailAndProvider(email, registrationId)
                 .orElseGet(() -> userRepository.save(
                         User.builder()
                                 .email(email)
                                 .nickname(nickname)
                                 .password("") // 소셜 로그인은 패스워드 없음
-                                .provider(registrationId)
+                                .provider(registrationId) // ✅ String 그대로 저장
                                 .build()
                 ));
 
-        // 반환할 사용자 정보
-        Map<String, Object> customAttributes = Map.of(
-                "email", user.getEmail(),
-                "nickname", user.getNickname()
-        );
+        // ✅ OAuth2User에 전달할 속성 구성
+        Map<String, Object> customAttributes = new HashMap<>();
+        customAttributes.put("email", user.getEmail());
+        customAttributes.put("nickname", user.getNickname());
+        customAttributes.put("provider", user.getProvider()); // ✅ String
 
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
