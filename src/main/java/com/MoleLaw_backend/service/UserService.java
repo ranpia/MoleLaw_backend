@@ -5,10 +5,12 @@ import com.MoleLaw_backend.domain.repository.UserRepository;
 import com.MoleLaw_backend.dto.response.AuthResponse;
 import com.MoleLaw_backend.dto.request.LoginRequest;
 import com.MoleLaw_backend.dto.request.SignupRequest;
+import com.MoleLaw_backend.service.security.CookieUtil;
 import com.MoleLaw_backend.service.security.JwtUtil;
 import com.MoleLaw_backend.dto.response.UserResponse;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.MolelawException;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,8 +22,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final CookieUtil cookieUtil;
 
-    public String signup(SignupRequest request) {
+    public void signup(SignupRequest request, HttpServletResponse response) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         }
@@ -34,10 +37,13 @@ public class UserService {
 
         userRepository.save(user);
 
-        return jwtUtil.generateToken(user.getEmail());  // JWT 토큰 발급 후 반환
+        // JWT 발급 후 쿠키로 설정
+        String token = jwtUtil.generateToken(user.getEmail());
+        cookieUtil.addJwtCookie(response, "jwt", token, true);  // secure=true (배포 환경 기준)
     }
 
-    public AuthResponse login(LoginRequest request) {
+
+    public void login(LoginRequest request, HttpServletResponse response) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("해당 이메일이 존재하지 않습니다."));
 
@@ -46,8 +52,11 @@ public class UserService {
         }
 
         String token = jwtUtil.generateToken(user.getEmail());
-        return new AuthResponse(token);
+
+        // JWT 쿠키에 설정
+        cookieUtil.addJwtCookie(response, "jwt", token, true);
     }
+
 
     public UserResponse getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
