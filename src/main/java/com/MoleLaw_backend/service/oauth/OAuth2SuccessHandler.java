@@ -24,7 +24,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final CookieUtil cookieUtil;
     private final UserRepository userRepository;
 
-    private static final boolean IS_SECURE = false; // 로컬이므로 false
+    private static final boolean IS_SECURE = true; // ✅ 운영 환경에서는 true
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -32,19 +32,24 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                                         Authentication authentication)
             throws IOException, ServletException {
 
-        System.out.println("✅ [OAuth2SuccessHandler] 동작 시작");
+        System.out.println("✅ [OAuth2SuccessHandler] 로그인 성공 핸들러 진입");
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         String provider = oAuth2User.getAttribute("provider");
 
+        System.out.println("📧 이메일: " + email);
+        System.out.println("🔗 제공자(provider): " + provider);
+
         if (email == null || provider == null) {
+            System.out.println("❌ [OAuth2SuccessHandler] 이메일 또는 provider가 null입니다.");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "이메일 또는 provider를 가져올 수 없습니다.");
             return;
         }
 
         Optional<User> userOpt = userRepository.findByEmailAndProvider(email, provider);
         if (userOpt.isEmpty()) {
+            System.out.println("❌ [OAuth2SuccessHandler] 유저를 찾을 수 없습니다.");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "해당 유저가 존재하지 않습니다.");
             return;
         }
@@ -53,14 +58,16 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String accessToken = jwtUtil.generateAccessToken(email, provider);
         String refreshToken = jwtUtil.generateRefreshToken(email, provider);
 
+        System.out.println("🔐 accessToken 발급 완료: " + accessToken);
+        System.out.println("🔐 refreshToken 발급 완료: " + refreshToken);
+
         // ✅ 쿠키 저장
-        cookieUtil.addJwtCookie(response, "accessToken", accessToken, false);
-        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, false);
+        cookieUtil.addJwtCookie(response, "accessToken", accessToken, IS_SECURE);
+        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, IS_SECURE);
 
-        // ✅ 강제적으로 헤더를 커밋하고 리다이렉트는 직접 HTML로 유도
-        response.setContentType("text/html;charset=UTF-8");
-        response.getWriter().write("<script>window.location.href='http://localhost:5173/Main';</script>");
-        response.getWriter().flush(); // flushBuffer 대신 getWriter().flush()
+        // ✅ 운영 환경 리다이렉트 주소
+        String redirectUrl = "https://team-molefront.store/Main";
+        System.out.println("➡️ 리다이렉트 URL: " + redirectUrl);
+        response.sendRedirect(redirectUrl);
     }
-
 }

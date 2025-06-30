@@ -61,6 +61,12 @@ public class UserService {
         return new UserResponse(user);
     }
 
+    public UserResponse getUserByEmailAndProvider(String email, String provider) {
+        User user = userRepository.findByEmailAndProvider(email, provider)
+                .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
+        return new UserResponse(user);
+    }
+
     public AuthResponse reissue(String refreshToken) {
         if (!jwtUtil.validateToken(refreshToken)) {
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");

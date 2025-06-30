@@ -10,9 +10,9 @@ public class CookieUtil {
     public void addJwtCookie(HttpServletResponse response, String name, String token, boolean secure) {
         ResponseCookie cookie = ResponseCookie.from(name, token)
                 .httpOnly(true)
-                .secure(secure)
+                .secure(secure)  // ✅ 운영 서버에서 true
                 .path("/")
-                .sameSite("Lax") // 브라우저 보안 테스트 시 Lax로 바꿔도 OK
+                .sameSite("None")  // ✅ 크로스도메인 동작 위해 반드시 None
                 .maxAge(86400)
                 .build();
 
@@ -26,7 +26,7 @@ public class CookieUtil {
                 .httpOnly(true)
                 .secure(secure)
                 .path("/")
-                .sameSite("Lax")
+                .sameSite("None")
                 .maxAge(0)
                 .build();
 

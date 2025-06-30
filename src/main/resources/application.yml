@@ -26,7 +26,7 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
-            redirect-uri: http://localhost:8080/login/oauth2/code/google
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
             scope:
               - email
               - profile
@@ -34,7 +34,7 @@ spring:
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
             client-secret: ${KAKAO_CLIENT_SECRET}
-            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+            redirect-uri: "{baseUrl}/login/oauth2/code/kakao"
             authorization-grant-type: authorization_code
             client-authentication-method: POST
             scope:
@@ -73,7 +73,4 @@ jwt:
   secret: your-very-secret-jwt-key-should-be-long-enough-to-secure-it!
 
 openai:
-  api-key: ${OPENAI_API_KEY}
-
-openlaw:
-  api-key: ${OC_KEY}
+  api-key:
