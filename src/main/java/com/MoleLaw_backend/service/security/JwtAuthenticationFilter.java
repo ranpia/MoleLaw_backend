@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.service.security;
 
+import com.MoleLaw_backend.domain.entity.User;
+import com.MoleLaw_backend.domain.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -19,6 +22,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -51,17 +55,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && jwtUtil.validateToken(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                String userId = jwtUtil.getUserIdFromToken(token);
-                System.out.println("🛡️ 사용자 ID: " + userId);
+                String[] parts = jwtUtil.getEmailAndProviderFromToken(token);
+                String email = parts[0];
+                String provider = parts[1];
 
-                UsernamePasswordAuthenticationToken authentication = jwtUtil.getAuthentication(userId);
+                User user = userRepository.findByEmailAndProvider(email, provider)
+                        .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(user, null, null); // 권한 필요시 마지막 인자 추가
+
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
             } catch (Exception e) {
-                System.out.println("❌ JWT 인증 중 예외 발생: " + e.getMessage());
-                e.printStackTrace();
+                System.out.println("❌ JWT 인증 처리 실패: " + e.getMessage());
             }
         }
+
 
         filterChain.doFilter(request, response);
     }

@@ -29,6 +29,9 @@ public class ChatService {
      * 🔸 채팅방 생성
      */
     public ChatRoom createChatRoom(User user, String title) {
+        System.out.println("🔥 user 객체: " + user); // toString 재정의 안 했으면 클래스명@해시
+        System.out.println("🔥 user ID: " + (user != null ? user.getId() : "null"));
+
         ChatRoom chatRoom = ChatRoom.builder()
                 .user(user)
                 .title(title)
