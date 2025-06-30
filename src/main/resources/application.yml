@@ -73,4 +73,7 @@ jwt:
   secret: your-very-secret-jwt-key-should-be-long-enough-to-secure-it!
 
 openai:
-  api-key:
+  api-key: ${OPENAI_API_KEY}
+
+openlaw:
+  api-key: ${OC_KEY}

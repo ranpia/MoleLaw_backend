@@ -66,7 +66,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, IS_SECURE);
 
         // ✅ 운영 환경 리다이렉트 주소
-        String redirectUrl = "https://team-molefront.store/Main";
+        String redirectUrl = "https://team-mole.shop/Main";
         System.out.println("➡️ 리다이렉트 URL: " + redirectUrl);
         response.sendRedirect(redirectUrl);
     }
