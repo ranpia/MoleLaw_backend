@@ -10,6 +10,7 @@ import com.MoleLaw_backend.dto.response.AnswerResponse;
 import com.MoleLaw_backend.dto.response.GptTitleAnswerResponse;
 import com.MoleLaw_backend.service.law.FinalAnswer;
 import com.MoleLaw_backend.util.EncryptUtil;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,13 +25,16 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final FinalAnswer finalAnswer;
     private final GptService gptService;
-
+    private final EntityManager entityManager;
     /**
      * 🔸 채팅방 생성
      */
-    public ChatRoomResponse createChatRoom(User user, ChatRoomRequest request) {
+    public ChatRoomResponse createChatRoom(Long userId, ChatRoomRequest request) {
+        // 🔸 프록시 객체 (DB 조회 안 함, insert 시 user_id만 사용)
+        User userProxy = entityManager.getReference(User.class, userId);
+
         ChatRoom chatRoom = ChatRoom.builder()
-                .user(user)
+                .user(userProxy)
                 .title(request.getTitle())
                 .build();
 
