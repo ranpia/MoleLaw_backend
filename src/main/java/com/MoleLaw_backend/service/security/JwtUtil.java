@@ -25,7 +25,7 @@ public class JwtUtil {
     private Key key;
     private final UserDetailsService userDetailsService;
 
-    private final long ACCESS_EXPIRATION = 1000 * 60 * 15;       // 15분
+    private final long ACCESS_EXPIRATION = 1000 * 60 * 60;       // 15분
     private final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
 
     @PostConstruct

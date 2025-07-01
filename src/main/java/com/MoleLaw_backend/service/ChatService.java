@@ -77,7 +77,7 @@ public class ChatService {
         ChatRoom room = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
 
-        // 현재 질문 저장
+        // 질문 저장
         messageRepository.save(Message.builder()
                 .chatRoom(room)
                 .sender(Message.Sender.USER)
