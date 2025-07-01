@@ -69,8 +69,6 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
 
-jwt:
-  secret: ${JWT_SECRET}
 
 openai:
   api-key: ${OPENAI_API_KEY}

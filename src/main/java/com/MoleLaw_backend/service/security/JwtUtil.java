@@ -4,8 +4,6 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -13,16 +11,20 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
-@RequiredArgsConstructor
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String secretKeyRaw;
-
+    private final String secretKeyRaw;
     private Key key;
 
-    private final long ACCESS_EXPIRATION = 1000 * 60 * 15;       // 15분
+    private final long ACCESS_EXPIRATION = 1000 * 60 * 15;        // 15분
     private final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
+
+    public JwtUtil(org.springframework.core.env.Environment env) {
+        this.secretKeyRaw = env.getProperty("JWT_SECRET");
+        if (this.secretKeyRaw == null || this.secretKeyRaw.isBlank()) {
+            throw new IllegalArgumentException("❌ JWT_SECRET 환경변수가 설정되지 않았습니다.");
+        }
+    }
 
     @PostConstruct
     public void init() {
