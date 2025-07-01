@@ -6,9 +6,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -23,7 +20,6 @@ public class JwtUtil {
     private String secretKeyRaw;
 
     private Key key;
-    private final UserDetailsService userDetailsService;
 
     private final long ACCESS_EXPIRATION = 1000 * 60 * 15;       // 15분
     private final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
@@ -107,11 +103,6 @@ public class JwtUtil {
         }
 
         return null;
-    }
-
-    public UsernamePasswordAuthenticationToken getAuthentication(String email) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 
     public String[] getEmailAndProviderFromToken(String token) {
