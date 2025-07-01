@@ -7,9 +7,9 @@ import com.MoleLaw_backend.domain.repository.ChatRoomRepository;
 import com.MoleLaw_backend.domain.repository.MessageRepository;
 import com.MoleLaw_backend.dto.*;
 import com.MoleLaw_backend.dto.response.AnswerResponse;
-import com.MoleLaw_backend.dto.response.GptTitleAnswerResponse;
 import com.MoleLaw_backend.service.law.FinalAnswer;
 import com.MoleLaw_backend.util.EncryptUtil;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,18 +24,22 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final FinalAnswer finalAnswer;
     private final GptService gptService;
-
+    private final EntityManager entityManager;
     /**
      * 🔸 채팅방 생성
      */
-    public ChatRoomResponse createChatRoom(User user, ChatRoomRequest request) {
+    public ChatRoom createChatRoom(User user, String title) {
+        System.out.println("🔥 user 객체: " + user); // toString 재정의 안 했으면 클래스명@해시
+        System.out.println("🔥 user ID: " + (user != null ? user.getId() : "null"));
+
         ChatRoom chatRoom = ChatRoom.builder()
                 .user(user)
-                .title(request.getTitle())
+                .title(title)
                 .build();
 
-        return ChatRoomResponse.from(chatRoomRepository.save(chatRoom));
+        return chatRoomRepository.save(chatRoom);
     }
+
 
     /**
      * 🔸 사용자 채팅방 전체 목록 조회 (첫 메시지 복호화 포함)
@@ -80,17 +84,23 @@ public class ChatService {
                 .content(EncryptUtil.encrypt(request.getContent()))
                 .build());
 
-        // GPT 응답 생성 + 저장
+        // 채팅방 내 모든 메시지 조회 (최신순 정렬)
+        List<Message> messages = messageRepository.findByChatRoomOrderByCreatedAtAsc(room);
 
-        AnswerResponse answer;
-        // 첫 질문 / 후속 질문 구분
-        if (messageRepository.countByChatRoomId(chatRoomId) == 1) {
-            answer = finalAnswer.getAnswer(request.getContent());
-        } else {
-            answer = gptService.generateAnswer(request.getContent());
-        }
+        // 첫 번째 사용자 질문 찾기
+        String firstUserQuestion = messages.stream()
+                .filter(m -> m.getSender() == Message.Sender.USER)
+                .map(m -> EncryptUtil.decrypt(m.getContent()))
+                .findFirst()
+                .orElse(request.getContent()); // fallback: 현재 질문
 
+        // 마지막 사용자 질문 (방금 입력된 질문)
+        String lastUserQuestion = request.getContent();
 
+        // GPT 응답 생성 (첫 질문과 마지막 질문 전달)
+        AnswerResponse answer = gptService.generateAnswerWithContext(firstUserQuestion, lastUserQuestion);
+
+        // 응답 저장
         messageRepository.save(Message.builder()
                 .chatRoom(room)
                 .sender(Message.Sender.BOT)
@@ -98,51 +108,42 @@ public class ChatService {
                 .build());
     }
 
+
     /**
      * ✅ 새로운 채팅방 생성 + GPT로 제목 + 답변 동시 생성 + 저장
      */
     public List<MessageResponse> createRoomAndAsk(User user, FirstMessageRequest request) {
-        // GPT 호출: 제목과 답변 함께 생성
-        GptTitleAnswerResponse gptResponse = gptService.generateTitleAndAnswer(request.getContent());
+        // 1. GPT로 제목 생성
+        String title;
+        try {
+            title = gptService.generateTitle(request.getContent());
+        } catch (Exception e) {
+            title = "제목 없음";
+        }
 
-        // 채팅방 생성 (GPT가 만든 제목 사용)
-        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.builder()
-                .user(user)
-                .title(gptResponse.getTitle())
-                .build());
+        // 2. ChatRoom 생성 (userId만으로 프록시 연결)
+        ChatRoom chatRoom = createChatRoom(user, title);  // ⬅️ Entity 반환 메서드
 
-        // 사용자 질문 저장
+        // 3. 사용자 메시지 저장
         messageRepository.save(Message.builder()
-                .chatRoom(chatRoom)
+                .chatRoom(chatRoom)  // ✅ 반드시 ChatRoom 엔티티
                 .sender(Message.Sender.USER)
                 .content(EncryptUtil.encrypt(request.getContent()))
                 .build());
 
-        // GPT 답변 저장
+        // 4. GPT 응답 저장
+        AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent());
+        String combined = "답변:\n" + answerResponse.getAnswer() + "\n\n관련 정보:\n" + answerResponse.getInfo();
+
         messageRepository.save(Message.builder()
                 .chatRoom(chatRoom)
                 .sender(Message.Sender.BOT)
-                .content(EncryptUtil.encrypt(gptResponse.getAnswer()))
+                .content(EncryptUtil.encrypt(combined))
                 .build());
 
+        // 5. 메시지 목록 반환
         return getMessages(chatRoom.getId());
     }
 
-    /**
-     * 🔸 프론트에서 배열로 보낸 메시지들 bulk 저장
-     */
-    public void saveBulkMessages(User user, BulkChatSaveRequest request) {
-        ChatRoom room = chatRoomRepository.save(ChatRoom.builder()
-                .user(user)
-                .title(request.getTitle())
-                .build());
 
-        for (BulkChatSaveRequest.BulkMessage m : request.getMessages()) {
-            messageRepository.save(Message.builder()
-                    .chatRoom(room)
-                    .sender(Message.Sender.valueOf(m.getSender()))
-                    .content(EncryptUtil.encrypt(m.getContent()))
-                    .build());
-        }
-    }
 }
