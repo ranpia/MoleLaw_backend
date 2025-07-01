@@ -1,5 +1,6 @@
 package com.MoleLaw_backend.service.law;
 
+import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.GptApiException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,12 +24,17 @@ public class ExtractKeyword {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public List<String> extractKeywords(String userInput) {
+    public KeywordAndTitleResponse extractKeywords(String userInput) {
         try {
             String prompt = String.format("""
-            다음 문장에서 법적 판례 검색에 유용한 핵심 키워드 3~5개를 JSON 배열로 출력하세요.
+            다음 문장에서 법적 판례 검색에 유용한 핵심 키워드 3~5개와 해당 문장을 요약한 문장을 함께 JSON 형식으로 출력하세요.
+            JSON 형식 예시:
+            {
+              "keywords": ["부당해고", "근로자 권리"],
+              "summary": "이 사건은 부당해고와 근로자의 권리를 중심으로 다룹니다."
+            }
+            
             문장: "%s"
-            예시 출력: ["부당해고", "근로자 권리"]
             """, userInput);
 
             Map<String, Object> requestBody = Map.of(
@@ -57,9 +63,12 @@ public class ExtractKeyword {
                 throw new GptApiException(ErrorCode.GPT_EMPTY_RESPONSE, "GPT 키워드 응답이 비어 있음");
             }
 
-            String content = (String) ((Map<String, Object>) ((Map<String, Object>) ((List<?>) body.get("choices")).get(0)).get("message")).get("content");
-
-            return objectMapper.readValue(content, new TypeReference<List<String>>() {});
+            String content = (String) ((Map<String, Object>)
+                    ((Map<String, Object>)
+                            ((List<?>) body.get("choices")).get(0)
+                    ).get("message")
+            ).get("content");
+            return objectMapper.readValue(content, KeywordAndTitleResponse.class);
 
         } catch (Exception e) {
             throw new GptApiException(ErrorCode.GPT_API_FAILURE, "GPT 키워드 추출 실패", e);
