@@ -70,7 +70,7 @@ logging:
     org.springframework.security.oauth2: DEBUG
 
 jwt:
-  secret: your-very-secret-jwt-key-should-be-long-enough-to-secure-it!
+  secret: ${JWT_SECRET}
 
 openai:
   api-key: ${OPENAI_API_KEY}
