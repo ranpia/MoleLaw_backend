@@ -5,10 +5,13 @@ import com.MoleLaw_backend.domain.repository.UserRepository;
 import com.MoleLaw_backend.dto.response.AuthResponse;
 import com.MoleLaw_backend.dto.request.LoginRequest;
 import com.MoleLaw_backend.dto.request.SignupRequest;
-import com.MoleLaw_backend.service.security.JwtUtil;
 import com.MoleLaw_backend.dto.response.UserResponse;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.MolelawException;
+import com.MoleLaw_backend.service.security.CookieUtil;
+import com.MoleLaw_backend.service.security.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final CookieUtil cookieUtil;
 
     public AuthResponse signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -55,6 +59,32 @@ public class UserService {
         return new AuthResponse(accessToken, refreshToken);
     }
 
+    public AuthResponse login(LoginRequest request, HttpServletResponse response) {
+        AuthResponse authResponse = login(request);
+
+        cookieUtil.addJwtCookie(response, "accessToken", authResponse.getAccessToken(), true);
+        cookieUtil.addJwtCookie(response, "refreshToken", authResponse.getRefreshToken(), true);
+
+        return authResponse;
+    }
+
+    public AuthResponse reissue(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = cookieUtil.getTokenFromCookie(request, "refreshToken");
+
+        if (refreshToken == null || !jwtUtil.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        String[] subjectParts = jwtUtil.getEmailAndProviderFromToken(refreshToken);
+        String email = subjectParts[0];
+        String provider = subjectParts[1];
+
+        String newAccessToken = jwtUtil.generateAccessToken(email, provider);
+        cookieUtil.addJwtCookie(response, "accessToken", newAccessToken, true);
+
+        return new AuthResponse(newAccessToken, refreshToken);
+    }
+
     public UserResponse getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
@@ -65,19 +95,5 @@ public class UserService {
         User user = userRepository.findByEmailAndProvider(email, provider)
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
         return new UserResponse(user);
-    }
-
-    public AuthResponse reissue(String refreshToken) {
-        if (!jwtUtil.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
-        }
-
-        String[] subjectParts = jwtUtil.getEmailAndProviderFromToken(refreshToken);
-        String email = subjectParts[0];
-        String provider = subjectParts[1];
-
-        String newAccessToken = jwtUtil.generateAccessToken(email, provider);
-
-        return new AuthResponse(newAccessToken, refreshToken);
     }
 }
