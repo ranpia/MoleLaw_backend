@@ -111,18 +111,26 @@ public class GptService {
         }
     }
 
+    public AnswerResponse generateAnswerWithContext(String firstUserQuestion, String lastUserQuestion) {
+        String userPrompt = """
+        사용자가 처음 질문한 내용은 다음과 같습니다:
+        "%s"
+        
+        이 질문에는 참고할 법령과 판례 정보가 포함되어 있습니다.
 
-    public AnswerResponse generateAnswer(String userMessage) {
-        String prompt = """
-        당신은 법률 전문가 어시스턴트입니다. 사용자의 질문에 자연스럽고 유익한 대화를 이어가세요.
-        사용자 질문: %s
-        """.formatted(userMessage);
+        이후 사용자가 추가로 다음과 같이 질문했습니다:
+        "%s"
+        
+        이 두 질문을 종합하여, 초기 질문의 맥락(법령/판례 정보)을 유지하면서
+        후속 질문까지 반영하여 일관된 법률 상담을 제공해주세요.
+        답변은 친절하고 명확하게 작성해주세요.
+        """.formatted(firstUserQuestion, lastUserQuestion);
 
         Map<String, Object> requestBody = Map.of(
                 "model", "gpt-4",
                 "messages", List.of(
-                        Map.of("role", "system", "content", "당신은 법률 대화 어시스턴트입니다."),
-                        Map.of("role", "user", "content", prompt)
+                        Map.of("role", "system", "content", "당신은 법률 전문가 어시스턴트입니다."),
+                        Map.of("role", "user", "content", userPrompt)
                 )
         );
 
@@ -139,19 +147,20 @@ public class GptService {
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(response);
-            //return root.path("choices").get(0).path("message").path("content").asText();
-            //return parseJsonToGptTitleAnswerResponse(response);
-            return new AnswerResponse(root.path("choices").get(0).path("message").path("content").asText(), "");
+
+            return new AnswerResponse(
+                    root.path("choices").get(0).path("message").path("content").asText(),
+                    ""
+            );
 
         } catch (WebClientResponseException e) {
             log.error("GPT 응답 실패: {}", e.getResponseBodyAsString());
             throw new GptApiException(ErrorCode.GPT_API_FAILURE, e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("GPT 일반 대화 처리 중 예외", e);
-            throw new RuntimeException("GPT 일반 응답 파싱 실패", e);
+            log.error("GPT 연속질문 응답 처리 중 예외", e);
+            throw new RuntimeException("GPT 연속질문 응답 파싱 실패", e);
         }
     }
-
 
 
 //    private GptTitleAnswerResponse parseJsonToGptTitleAnswerResponse(String rawResponse) throws Exception {

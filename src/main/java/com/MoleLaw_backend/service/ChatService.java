@@ -77,30 +77,37 @@ public class ChatService {
         ChatRoom room = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
 
-        // 질문 저장
+        // 현재 질문 저장
         messageRepository.save(Message.builder()
                 .chatRoom(room)
                 .sender(Message.Sender.USER)
                 .content(EncryptUtil.encrypt(request.getContent()))
                 .build());
 
-        // GPT 응답 생성 + 저장
+        // 채팅방 내 모든 메시지 조회 (최신순 정렬)
+        List<Message> messages = messageRepository.findByChatRoomOrderByCreatedAtAsc(room);
 
-        AnswerResponse answer;
-        // 첫 질문 / 후속 질문 구분
-        if (messageRepository.countByChatRoomId(chatRoomId) == 1) {
-            answer = finalAnswer.getAnswer(request.getContent());
-        } else {
-            answer = gptService.generateAnswer(request.getContent());
-        }
+        // 첫 번째 사용자 질문 찾기
+        String firstUserQuestion = messages.stream()
+                .filter(m -> m.getSender() == Message.Sender.USER)
+                .map(m -> EncryptUtil.decrypt(m.getContent()))
+                .findFirst()
+                .orElse(request.getContent()); // fallback: 현재 질문
 
+        // 마지막 사용자 질문 (방금 입력된 질문)
+        String lastUserQuestion = request.getContent();
 
+        // GPT 응답 생성 (첫 질문과 마지막 질문 전달)
+        AnswerResponse answer = gptService.generateAnswerWithContext(firstUserQuestion, lastUserQuestion);
+
+        // 응답 저장
         messageRepository.save(Message.builder()
                 .chatRoom(room)
                 .sender(Message.Sender.BOT)
                 .content(EncryptUtil.encrypt(answer.getAnswer()))
                 .build());
     }
+
 
     /**
      * ✅ 새로운 채팅방 생성 + GPT로 제목 + 답변 동시 생성 + 저장
