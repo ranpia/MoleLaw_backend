@@ -85,15 +85,7 @@ public class ChatService {
                 .build());
 
         // GPT 응답 생성 + 저장
-
-        AnswerResponse answer;
-        // 첫 질문 / 후속 질문 구분
-        if (messageRepository.countByChatRoomId(chatRoomId) == 1) {
-            answer = finalAnswer.getAnswer(request.getContent());
-        } else {
-            answer = gptService.generateAnswer(request.getContent());
-        }
-
+        AnswerResponse answer = gptService.generateAnswer(request.getContent());
 
         messageRepository.save(Message.builder()
                 .chatRoom(room)
