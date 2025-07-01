@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -23,6 +24,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final JwtUtil jwtUtil;
     private final CookieUtil cookieUtil;
     private final UserRepository userRepository;
+
+    @Value("${frontend.uri}")
+    private String frontenduri;
 
     private static final boolean IS_SECURE = true; // ✅ 운영 환경에서는 true
 
@@ -66,7 +70,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, IS_SECURE);
 
         // ✅ 운영 환경 리다이렉트 주소
-        String redirectUrl = "https://team-mole.shop/Main";
+        String redirectUrl = frontenduri;
         System.out.println("➡️ 리다이렉트 URL: " + redirectUrl);
         response.sendRedirect(redirectUrl);
     }

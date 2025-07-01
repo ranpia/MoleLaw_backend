@@ -75,3 +75,6 @@ openai:
 
 openlaw:
   api-key: ${OC_KEY}
+
+frontend:
+  uri: https://team-mole.shop/Main
