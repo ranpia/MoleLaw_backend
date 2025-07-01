@@ -139,21 +139,4 @@ public class ChatService {
     }
 
 
-    /**
-     * 🔸 프론트에서 배열로 보낸 메시지들 bulk 저장
-     */
-    public void saveBulkMessages(User user, BulkChatSaveRequest request) {
-        ChatRoom room = chatRoomRepository.save(ChatRoom.builder()
-                .user(user)
-                .title(request.getTitle())
-                .build());
-
-        for (BulkChatSaveRequest.BulkMessage m : request.getMessages()) {
-            messageRepository.save(Message.builder()
-                    .chatRoom(room)
-                    .sender(Message.Sender.valueOf(m.getSender()))
-                    .content(EncryptUtil.encrypt(m.getContent()))
-                    .build());
-        }
-    }
 }
