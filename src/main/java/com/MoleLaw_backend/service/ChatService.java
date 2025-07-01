@@ -85,7 +85,7 @@ public class ChatService {
                 .build());
 
         // 채팅방 내 모든 메시지 조회 (최신순 정렬)
-        List<Message> messages = messageRepository.findByChatRoomOrderByCreatedAtAsc(room);
+        List<Message> messages = messageRepository.findByChatRoomIdOrderByTimestampAsc(chatRoomId);
 
         // 첫 번째 사용자 질문 찾기
         String firstUserQuestion = messages.stream()

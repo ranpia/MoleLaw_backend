@@ -1,6 +1,5 @@
 package com.MoleLaw_backend.domain.repository;
 
-import com.MoleLaw_backend.domain.entity.ChatRoom;
 import com.MoleLaw_backend.domain.entity.Message;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -14,5 +13,5 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     long countByChatRoomId(Long chatRoomId);
 
-    List<Message> findByChatRoomOrderByCreatedAtAsc(ChatRoom room);
+
 }
