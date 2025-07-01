@@ -7,6 +7,7 @@ import com.MoleLaw_backend.dto.response.AuthResponse;
 import com.MoleLaw_backend.dto.response.UserResponse;
 import com.MoleLaw_backend.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -50,9 +51,5 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(user));
     }
 
-    @PostMapping("/reissue")
-    public ResponseEntity<AuthResponse> reissue(@CookieValue(name = "refreshToken") String refreshToken) {
-        AuthResponse response = userService.reissue(refreshToken);
-        return ResponseEntity.ok(response);
-    }
+
 }
