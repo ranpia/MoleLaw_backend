@@ -59,12 +59,16 @@ public class JwtUtil {
     }
 
     public String getUserIdFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("토큰 파싱에 실패했습니다: " + e.getMessage());
+        }
     }
 
     public boolean validateToken(String token) {
@@ -74,22 +78,29 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("❌ 유효하지 않은 토큰: " + e.getMessage());
-            return false;
+        } catch (ExpiredJwtException e) {
+            System.out.println("⏰ 만료된 토큰입니다: " + e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            System.out.println("🚫 지원하지 않는 토큰입니다: " + e.getMessage());
+        } catch (MalformedJwtException e) {
+            System.out.println("❌ 잘못된 형식의 토큰입니다: " + e.getMessage());
+        } catch (SignatureException e) {
+            System.out.println("🔐 서명이 올바르지 않습니다: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("⚠️ 잘못된 요청입니다: " + e.getMessage());
         }
+        return false;
     }
 
     public String resolveToken(HttpServletRequest request) {
-        // 1. Authorization 헤더 우선
         String bearer = request.getHeader("Authorization");
         if (bearer != null && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }
-        // 2. 쿠키에서 "token" 찾기
+
         if (request.getCookies() != null) {
             for (var cookie : request.getCookies()) {
-                if ("token".equals(cookie.getName())) {
+                if ("accessToken".equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
@@ -97,7 +108,6 @@ public class JwtUtil {
 
         return null;
     }
-
 
     public UsernamePasswordAuthenticationToken getAuthentication(String email) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
@@ -108,5 +118,4 @@ public class JwtUtil {
         String subject = getUserIdFromToken(token); // ex: "user@naver.com:google"
         return subject.split(":");
     }
-
 }
