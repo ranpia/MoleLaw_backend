@@ -106,6 +106,9 @@ public class ChatService {
     }
 
     public List<MessageResponse> createRoomAndAsk(User user, FirstMessageRequest request) {
+        if (request.getContent().trim() == null || request.getContent().trim().isEmpty()) {
+            throw new MolelawException(ErrorCode.INVALID_REQUEST, "입력 내용 없음");
+        }
         KeywordAndTitleResponse keywordAndTitle;
         try {
             keywordAndTitle = extractKeyword.extractKeywords(request.getContent());
