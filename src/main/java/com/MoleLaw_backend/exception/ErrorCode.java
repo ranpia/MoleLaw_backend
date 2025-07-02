@@ -19,7 +19,10 @@ public enum ErrorCode {
     CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "채팅방을 찾을 수 없습니다."),
     UNAUTHORIZED_CHATROOM_ACCESS(HttpStatus.FORBIDDEN.value(), "본인의 채팅방이 아닙니다."),
     KEYWORD_EXTRACTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "키워드 추출에 실패했습니다."),
-    USER_NOT_AUTHENTICATED(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다.");
+    USER_NOT_AUTHENTICATED(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다."),
+    PASSWORD_FAIL(HttpStatus.BAD_REQUEST.value(), "비밀번호가 일치하지 않습니다."),
+    TOKEN_FAIL(HttpStatus.BAD_REQUEST.value(), "유효하지 않은 리프레시 토큰입니다."),
+    DUPLICATED_EMAIL(HttpStatus.BAD_REQUEST.value(), "이미 존재하는 이메일입니다.");
     private final int status;
     private final String message;
 

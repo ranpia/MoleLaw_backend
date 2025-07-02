@@ -27,8 +27,11 @@ public class UserService {
     private final CookieUtil cookieUtil;
 
     public AuthResponse signup(SignupRequest request) {
+//        if (userRepository.existsByEmail(request.getEmail())) {
+//            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+//        }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+            throw new MolelawException(ErrorCode.DUPLICATED_EMAIL);
         }
 
         User user = User.builder()
@@ -50,8 +53,11 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("해당 이메일이 존재하지 않습니다."));
 
+//        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+//            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+//        }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new MolelawException(ErrorCode.PASSWORD_FAIL);
         }
 
         // ✅ 여기서 provider를 반드시 명시
@@ -71,8 +77,11 @@ public class UserService {
     public AuthResponse reissue(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = cookieUtil.getTokenFromCookie(request, "refreshToken");
 
+//        if (refreshToken == null || !jwtUtil.validateToken(refreshToken)) {
+//            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
+//        }
         if (refreshToken == null || !jwtUtil.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
+            throw new MolelawException(ErrorCode.TOKEN_FAIL);
         }
 
         String[] subjectParts = jwtUtil.getEmailAndProviderFromToken(refreshToken);
