@@ -3,6 +3,7 @@ package com.MoleLaw_backend.controller;
 import com.MoleLaw_backend.domain.entity.User;
 import com.MoleLaw_backend.dto.*;
 import com.MoleLaw_backend.service.ChatService;
+import com.MoleLaw_backend.service.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,11 @@ public class ChatController {
     }
 
     @GetMapping("/{roomId}")
-    public List<MessageResponse> getMessages(@PathVariable Long roomId) {
-        return chatService.getMessages(roomId);
+    public List<MessageResponse> getMessages(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                             @PathVariable Long roomId) {
+        return chatService.getMessages(userDetails.getUser(), roomId);
     }
+
 
     @PostMapping("/{roomId}/messages")
     public void ask(@AuthenticationPrincipal User user,

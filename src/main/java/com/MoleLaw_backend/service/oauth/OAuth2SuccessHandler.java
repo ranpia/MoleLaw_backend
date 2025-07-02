@@ -41,7 +41,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
-        String provider = oAuth2User.getAttribute("provider");
+        String provider = oAuth2User.getAttribute("provider"); // 예: "google"
 
         System.out.println("📧 이메일: " + email);
         System.out.println("🔗 제공자(provider): " + provider);
@@ -52,12 +52,16 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             return;
         }
 
-        Optional<User> userOpt = userRepository.findByEmailAndProvider(email, provider);
-        if (userOpt.isEmpty()) {
-            System.out.println("❌ 해당 유저가 존재하지 않습니다.");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "해당 유저가 존재하지 않습니다.");
-            return;
-        }
+        // ✅ 유저가 존재하지 않으면 새로 저장
+        User user = userRepository.findByEmailAndProvider(email, provider)
+                .orElseGet(() -> {
+                    System.out.println("🆕 신규 유저 저장");
+                    User newUser = User.builder()
+                            .email(email)
+                            .provider(provider)
+                            .build();
+                    return userRepository.save(newUser);
+                });
 
         // ✅ JWT 발급
         String accessToken = jwtUtil.generateAccessToken(email, provider);
