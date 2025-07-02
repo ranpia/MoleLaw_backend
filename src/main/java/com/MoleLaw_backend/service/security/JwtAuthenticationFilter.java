@@ -46,9 +46,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        System.out.println("🛡️ JwtAuthenticationFilter 진입");
+        System.out.println("\n\n🛡️ JwtAuthenticationFilter 진입");
         System.out.println("🛡️ 요청 URI: " + request.getRequestURI());
-        System.out.println("🛡️ 토큰: " + token);
+        System.out.println("🛡️ 추출된 토큰: " + token + "\n");
 
         // ✅ 3. 토큰 검증 및 사용자 인증 설정
         if (token != null && jwtUtil.validateToken(token)
@@ -66,6 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             } catch (Exception e) {
                 System.out.println("❌ JWT 인증 처리 실패: " + e.getMessage());
+                e.printStackTrace();  // ✅ 오류 추적 로그
             }
         }
 
@@ -75,6 +76,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+
         return path.startsWith("/swagger")
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui")
@@ -82,6 +84,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/login/oauth2/")
                 || path.equals("/api/auth/login")
                 || path.equals("/api/auth/signup")
-                || path.equals("/api/auth/logout");
+                || path.equals("/api/auth/logout");  // ✅ "/api/auth/me" 절대 금지!
     }
 }
