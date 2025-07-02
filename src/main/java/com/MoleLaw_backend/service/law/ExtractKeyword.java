@@ -28,6 +28,7 @@ public class ExtractKeyword {
         try {
             String prompt = String.format("""
             다음 문장에서 법적 판례 검색에 유용한 핵심 키워드 3~5개와 해당 문장을 요약한 문장을 함께 JSON 형식으로 출력하세요.
+            단, 이때 키워드는 가능한 관련된 법명 위주로 뽑아낼 것. (예: 내가 부당해고를 당했어 -> 근로기준법)
             JSON 형식 예시:
             {
               "keywords": ["부당해고", "근로자 권리"],
