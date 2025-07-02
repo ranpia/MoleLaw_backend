@@ -31,6 +31,6 @@ public class Message {
     }
 
     public enum Sender {
-        USER, BOT
+        USER, BOT, INFO
     }
 }
