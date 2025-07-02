@@ -57,8 +57,11 @@ public class FinalAnswer {
                         }
                     }
                 }
+
+                if(lawArray.isEmpty()) System.out.printf("[LawSearch] 키워드 '%s' 처리 결과 비어있음", keyword);
             } catch (Exception e) {
-                log.error("[LawSearch] 키워드 '{}' 처리 중 오류: {}", keyword, e.getMessage(), e);
+//                log.error("[LawSearch] 키워드 '{}' 처리 중 오류: {}", keyword, e.getMessage(), e);
+                System.out.printf("[LawSearch] 키워드 '%s' 처리 중 오류: %s", keyword, e.getMessage());
                 // 검색 실패해도 무시하고 다음 키워드로 진행
             }
         }
@@ -72,7 +75,8 @@ public class FinalAnswer {
                 List<PrecedentInfo> precedents = caseSearchService.searchCases(req);
                 precedentResults.addAll(precedents);
             } catch (OpenLawApiException e) {
-                log.warn("[CaseSearch] 법령 '{}' 기반 판례 조회 실패: {}", lawName, e.getMessage());
+//                log.warn("[CaseSearch] 법령 '{}' 기반 판례 조회 실패: {}", lawName, e.getMessage());
+                System.out.printf("[CaseSearch] 법령 '%s' 기반 판례 조회 실패: %s", lawName, e.getMessage());
                 // 특정 판례 실패는 무시하고 전체 응답 생성 진행
             }
         }

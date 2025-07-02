@@ -106,6 +106,9 @@ public class ChatService {
     }
 
     public List<MessageResponse> createRoomAndAsk(User user, FirstMessageRequest request) {
+        if (request == null || request.getContent().trim().isEmpty()) {
+            throw new MolelawException(ErrorCode.INVALID_REQUEST, "입력 내용 없음");
+        }
         KeywordAndTitleResponse keywordAndTitle;
         try {
             keywordAndTitle = extractKeyword.extractKeywords(request.getContent());
@@ -123,12 +126,23 @@ public class ChatService {
 
         try {
             AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent(), keywordAndTitle.getKeywords());
-            String combined = "답변:\n" + answerResponse.getAnswer() + "\n\n관련 정보:\n" + answerResponse.getInfo();
+//            String combined = "답변:\n" + answerResponse.getAnswer() + "\n\n관련 정보:\n" + answerResponse.getInfo();
 
+//            messageRepository.save(Message.builder()
+//                    .chatRoom(chatRoom)
+//                    .sender(Message.Sender.BOT)
+//                    .content(EncryptUtil.encrypt(combined))
+//                    .build());
             messageRepository.save(Message.builder()
                     .chatRoom(chatRoom)
                     .sender(Message.Sender.BOT)
-                    .content(EncryptUtil.encrypt(combined))
+                    .content(EncryptUtil.encrypt(answerResponse.getAnswer()))
+                    .build());
+
+            messageRepository.save(Message.builder()
+                    .chatRoom(chatRoom)
+                    .sender(Message.Sender.INFO)
+                    .content(EncryptUtil.encrypt(answerResponse.getInfo()))
                     .build());
 
         } catch (Exception e) {
