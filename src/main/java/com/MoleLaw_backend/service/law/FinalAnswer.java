@@ -3,6 +3,7 @@ package com.MoleLaw_backend.service.law;
 import com.MoleLaw_backend.dto.PrecedentInfo;
 import com.MoleLaw_backend.dto.request.PrecedentSearchRequest;
 import com.MoleLaw_backend.dto.response.AnswerResponse;
+import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.GptApiException;
 import com.MoleLaw_backend.exception.OpenLawApiException;
@@ -32,9 +33,11 @@ public class FinalAnswer {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public AnswerResponse getAnswer(String query) {
-        // 1. 키워드 추출
-        List<String> keywords = extractKeyword.extractKeywords(query);
+    public AnswerResponse getAnswer(String query, List<String> keywords) {
+//        // 1. 키워드 추출
+//        KeywordAndTitleResponse result = extractKeyword.extractKeywords(query);
+//        List<String> keywords = result.getKeywords();
+//        String summaryTitle = result.getSummary();
 
         // 2. 법령 검색
         List<Map<String, Object>> lawResults = new ArrayList<>();

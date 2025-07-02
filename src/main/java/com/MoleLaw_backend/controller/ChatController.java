@@ -3,6 +3,7 @@ package com.MoleLaw_backend.controller;
 import com.MoleLaw_backend.domain.entity.User;
 import com.MoleLaw_backend.dto.*;
 import com.MoleLaw_backend.service.ChatService;
+import com.MoleLaw_backend.service.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,11 @@ public class ChatController {
     }
 
     @GetMapping("/{roomId}")
-    public List<MessageResponse> getMessages(@PathVariable Long roomId) {
-        return chatService.getMessages(roomId);
+    public List<MessageResponse> getMessages(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                             @PathVariable Long roomId) {
+        return chatService.getMessages(userDetails.getUser(), roomId);
     }
+
 
     @PostMapping("/{roomId}/messages")
     public void ask(@AuthenticationPrincipal User user,
@@ -41,11 +44,4 @@ public class ChatController {
         return chatService.createRoomAndAsk(user, request);
     }
 
-    @Operation(summary = "프론트 메시지 배열 저장", description = "프론트에서 전달된 메시지 배열을 암호화하여 DB에 저장합니다.")
-    @PostMapping("/bulk")
-    public ResponseEntity<Void> saveBulk(@AuthenticationPrincipal User user,
-                                         @RequestBody BulkChatSaveRequest request) {
-        chatService.saveBulkMessages(user, request);
-        return ResponseEntity.ok().build();
-    }
 }

@@ -4,11 +4,6 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -16,17 +11,20 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
-@RequiredArgsConstructor
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String secretKeyRaw;
-
+    private final String secretKeyRaw;
     private Key key;
-    private final UserDetailsService userDetailsService;
 
-    private final long ACCESS_EXPIRATION = 1000 * 60 * 15;       // 15분
+    private final long ACCESS_EXPIRATION = 1000 * 60 * 15;
     private final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
+
+    public JwtUtil(org.springframework.core.env.Environment env) {
+        this.secretKeyRaw = env.getProperty("JWT_SECRET");
+        if (this.secretKeyRaw == null || this.secretKeyRaw.isBlank()) {
+            throw new IllegalArgumentException("❌ JWT_SECRET 환경변수가 설정되지 않았습니다.");
+        }
+    }
 
     @PostConstruct
     public void init() {
@@ -59,12 +57,16 @@ public class JwtUtil {
     }
 
     public String getUserIdFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("토큰 파싱에 실패했습니다: " + e.getMessage());
+        }
     }
 
     public boolean validateToken(String token) {
@@ -74,22 +76,29 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("❌ 유효하지 않은 토큰: " + e.getMessage());
-            return false;
+        } catch (ExpiredJwtException e) {
+            System.out.println("⏰ 만료된 토큰입니다: " + e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            System.out.println("🚫 지원하지 않는 토큰입니다: " + e.getMessage());
+        } catch (MalformedJwtException e) {
+            System.out.println("❌ 잘못된 형식의 토큰입니다: " + e.getMessage());
+        } catch (SignatureException e) {
+            System.out.println("🔐 서명이 올바르지 않습니다: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("⚠️ 잘못된 요청입니다: " + e.getMessage());
         }
+        return false;
     }
 
     public String resolveToken(HttpServletRequest request) {
-        // 1. Authorization 헤더 우선
         String bearer = request.getHeader("Authorization");
         if (bearer != null && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }
-        // 2. 쿠키에서 "token" 찾기
+
         if (request.getCookies() != null) {
             for (var cookie : request.getCookies()) {
-                if ("token".equals(cookie.getName())) {
+                if ("accessToken".equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
@@ -98,15 +107,8 @@ public class JwtUtil {
         return null;
     }
 
-
-    public UsernamePasswordAuthenticationToken getAuthentication(String email) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-    }
-
     public String[] getEmailAndProviderFromToken(String token) {
         String subject = getUserIdFromToken(token); // ex: "user@naver.com:google"
         return subject.split(":");
     }
-
 }

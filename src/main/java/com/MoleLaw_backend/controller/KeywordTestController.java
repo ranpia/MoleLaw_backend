@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
 
 @RestController
 @RequestMapping("/api/test")
@@ -19,10 +18,10 @@ public class KeywordTestController {
 
     private final ExtractKeyword extractKeyword;
 
-    @Operation(summary = "GPT 키워드 추출", description = "질문을 입력하면 GPT가 키워드를 추출합니다.")
+    @Operation(summary = "GPT 키워드 및 요약 문장 추출", description = "질문을 입력하면 GPT가 키워드와 요약 문장을 추출합니다.")
     @PostMapping("/keywords")
-    public ResponseEntity<List<String>> getKeywords(@RequestBody QueryRequest request) {
-        List<String> keywords = extractKeyword.extractKeywords(request.getQuery());
-        return ResponseEntity.ok(keywords);
+    public ResponseEntity<KeywordAndTitleResponse> getKeywordsAndSummary(@RequestBody QueryRequest request) {
+        KeywordAndTitleResponse response = extractKeyword.extractKeywords(request.getQuery());
+        return ResponseEntity.ok(response);
     }
 }

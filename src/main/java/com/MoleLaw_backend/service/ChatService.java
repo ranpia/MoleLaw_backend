@@ -7,9 +7,12 @@ import com.MoleLaw_backend.domain.repository.ChatRoomRepository;
 import com.MoleLaw_backend.domain.repository.MessageRepository;
 import com.MoleLaw_backend.dto.*;
 import com.MoleLaw_backend.dto.response.AnswerResponse;
-import com.MoleLaw_backend.dto.response.GptTitleAnswerResponse;
+import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
+import com.MoleLaw_backend.exception.*;
+import com.MoleLaw_backend.service.law.ExtractKeyword;
 import com.MoleLaw_backend.service.law.FinalAnswer;
 import com.MoleLaw_backend.util.EncryptUtil;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,125 +27,114 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final FinalAnswer finalAnswer;
     private final GptService gptService;
+    private final EntityManager entityManager;
+    private final ExtractKeyword extractKeyword;
 
-    /**
-     * 🔸 채팅방 생성
-     */
-    public ChatRoomResponse createChatRoom(User user, ChatRoomRequest request) {
-        ChatRoom chatRoom = ChatRoom.builder()
+    public ChatRoom createChatRoom(User user, String title) {
+        if (user == null || user.getId() == null) {
+            throw new MolelawException(ErrorCode.USER_NOT_AUTHENTICATED);
+        }
+
+        return chatRoomRepository.save(ChatRoom.builder()
                 .user(user)
-                .title(request.getTitle())
-                .build();
-
-        return ChatRoomResponse.from(chatRoomRepository.save(chatRoom));
+                .title(title)
+                .build());
     }
 
-    /**
-     * 🔸 사용자 채팅방 전체 목록 조회 (첫 메시지 복호화 포함)
-     */
     public List<ChatRoomResponse> getMyChatRooms(User user) {
+        if (user == null || user.getId() == null) {
+            throw new MolelawException(ErrorCode.USER_NOT_AUTHENTICATED);
+        }
+
         return chatRoomRepository.findByUser(user).stream()
                 .map(room -> {
-                    Message firstMessage = messageRepository
+                    String preview = messageRepository
                             .findFirstByChatRoomIdOrderByTimestampAsc(room.getId())
-                            .orElse(null);
-
-                    String preview = firstMessage != null
-                            ? EncryptUtil.decrypt(firstMessage.getContent())
-                            : "(메시지 없음)";
-
+                            .map(m -> EncryptUtil.decrypt(m.getContent()))
+                            .orElse("(메시지 없음)");
                     return ChatRoomResponse.from(room, preview);
                 })
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 🔸 특정 채팅방 메시지 목록 조회 (복호화 포함)
-     */
-    public List<MessageResponse> getMessages(Long chatRoomId) {
-        return messageRepository.findByChatRoomIdOrderByTimestampAsc(chatRoomId)
-                .stream()
+    public List<MessageResponse> getMessages(User user, Long chatRoomId) {
+        ChatRoom room = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
+
+        if (room.getUser() == null || !room.getUser().getId().equals(user.getId())) {
+            throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
+        }
+
+        return messageRepository.findByChatRoomIdOrderByTimestampAsc(chatRoomId).stream()
                 .map(MessageResponse::from)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 🔸 기존 채팅방에 질문 → GPT 응답 저장
-     */
     public void askQuestion(User user, Long chatRoomId, MessageRequest request) {
         ChatRoom room = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+                .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
 
-        // 질문 저장
-        messageRepository.save(Message.builder()
-                .chatRoom(room)
-                .sender(Message.Sender.USER)
-                .content(EncryptUtil.encrypt(request.getContent()))
-                .build());
-
-        // GPT 응답 생성 + 저장
-
-        AnswerResponse answer;
-        // 첫 질문 / 후속 질문 구분
-        if (messageRepository.countByChatRoomId(chatRoomId) == 1) {
-            answer = finalAnswer.getAnswer(request.getContent());
-        } else {
-            answer = gptService.generateAnswer(request.getContent());
+        if (room.getUser() == null || !room.getUser().getId().equals(user.getId())) {
+            throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
         }
 
-
         messageRepository.save(Message.builder()
                 .chatRoom(room)
-                .sender(Message.Sender.BOT)
-                .content(EncryptUtil.encrypt(answer.getAnswer()))
-                .build());
-    }
-
-    /**
-     * ✅ 새로운 채팅방 생성 + GPT로 제목 + 답변 동시 생성 + 저장
-     */
-    public List<MessageResponse> createRoomAndAsk(User user, FirstMessageRequest request) {
-        // GPT 호출: 제목과 답변 함께 생성
-        GptTitleAnswerResponse gptResponse = gptService.generateTitleAndAnswer(request.getContent());
-
-        // 채팅방 생성 (GPT가 만든 제목 사용)
-        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.builder()
-                .user(user)
-                .title(gptResponse.getTitle())
-                .build());
-
-        // 사용자 질문 저장
-        messageRepository.save(Message.builder()
-                .chatRoom(chatRoom)
                 .sender(Message.Sender.USER)
                 .content(EncryptUtil.encrypt(request.getContent()))
                 .build());
 
-        // GPT 답변 저장
-        messageRepository.save(Message.builder()
-                .chatRoom(chatRoom)
-                .sender(Message.Sender.BOT)
-                .content(EncryptUtil.encrypt(gptResponse.getAnswer()))
-                .build());
+        List<Message> messages = messageRepository.findByChatRoomIdOrderByTimestampAsc(chatRoomId);
 
-        return getMessages(chatRoom.getId());
-    }
+        String firstUserQuestion = messages.stream()
+                .filter(m -> m.getSender() == Message.Sender.USER)
+                .map(m -> EncryptUtil.decrypt(m.getContent()))
+                .findFirst()
+                .orElse(request.getContent());
 
-    /**
-     * 🔸 프론트에서 배열로 보낸 메시지들 bulk 저장
-     */
-    public void saveBulkMessages(User user, BulkChatSaveRequest request) {
-        ChatRoom room = chatRoomRepository.save(ChatRoom.builder()
-                .user(user)
-                .title(request.getTitle())
-                .build());
+        try {
+            AnswerResponse answer = gptService.generateAnswerWithContext(firstUserQuestion, request.getContent());
 
-        for (BulkChatSaveRequest.BulkMessage m : request.getMessages()) {
             messageRepository.save(Message.builder()
                     .chatRoom(room)
-                    .sender(Message.Sender.valueOf(m.getSender()))
-                    .content(EncryptUtil.encrypt(m.getContent()))
+                    .sender(Message.Sender.BOT)
+                    .content(EncryptUtil.encrypt(answer.getAnswer()))
                     .build());
+        } catch (Exception e) {
+            throw new MolelawException(ErrorCode.GPT_API_FAILURE, "GPT 응답 생성 중 오류 발생", e);
         }
+    }
+
+    public List<MessageResponse> createRoomAndAsk(User user, FirstMessageRequest request) {
+        KeywordAndTitleResponse keywordAndTitle;
+        try {
+            keywordAndTitle = extractKeyword.extractKeywords(request.getContent());
+        } catch (Exception e) {
+            throw new MolelawException(ErrorCode.KEYWORD_EXTRACTION_FAILED, "입력 내용: " + request.getContent(), e);
+        }
+
+        ChatRoom chatRoom = createChatRoom(user, keywordAndTitle.getSummary());
+
+        messageRepository.save(Message.builder()
+                .chatRoom(chatRoom)
+                .sender(Message.Sender.USER)
+                .content(EncryptUtil.encrypt(request.getContent()))
+                .build());
+
+        try {
+            AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent(), keywordAndTitle.getKeywords());
+            String combined = "답변:\n" + answerResponse.getAnswer() + "\n\n관련 정보:\n" + answerResponse.getInfo();
+
+            messageRepository.save(Message.builder()
+                    .chatRoom(chatRoom)
+                    .sender(Message.Sender.BOT)
+                    .content(EncryptUtil.encrypt(combined))
+                    .build());
+
+        } catch (Exception e) {
+            throw new MolelawException(ErrorCode.GPT_API_FAILURE, "초기 GPT 응답 생성 실패", e);
+        }
+
+        return getMessages(user, chatRoom.getId());
     }
 }

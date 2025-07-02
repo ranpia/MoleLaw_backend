@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -24,7 +25,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final CookieUtil cookieUtil;
     private final UserRepository userRepository;
 
-    private static final boolean IS_SECURE = true; // ✅ 운영 환경에서는 true
+    @Value("${frontend.uri}")
+    private String frontenduri;
+
+    @Value("${cookie.secure:true}")
+    private boolean isSecure;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -36,23 +41,27 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
-        String provider = oAuth2User.getAttribute("provider");
+        String provider = oAuth2User.getAttribute("provider"); // 예: "google"
 
         System.out.println("📧 이메일: " + email);
         System.out.println("🔗 제공자(provider): " + provider);
 
         if (email == null || provider == null) {
-            System.out.println("❌ [OAuth2SuccessHandler] 이메일 또는 provider가 null입니다.");
+            System.out.println("❌ 이메일 또는 provider가 null입니다.");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "이메일 또는 provider를 가져올 수 없습니다.");
             return;
         }
 
-        Optional<User> userOpt = userRepository.findByEmailAndProvider(email, provider);
-        if (userOpt.isEmpty()) {
-            System.out.println("❌ [OAuth2SuccessHandler] 유저를 찾을 수 없습니다.");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "해당 유저가 존재하지 않습니다.");
-            return;
-        }
+        // ✅ 유저가 존재하지 않으면 새로 저장
+        User user = userRepository.findByEmailAndProvider(email, provider)
+                .orElseGet(() -> {
+                    System.out.println("🆕 신규 유저 저장");
+                    User newUser = User.builder()
+                            .email(email)
+                            .provider(provider)
+                            .build();
+                    return userRepository.save(newUser);
+                });
 
         // ✅ JWT 발급
         String accessToken = jwtUtil.generateAccessToken(email, provider);
@@ -62,12 +71,13 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         System.out.println("🔐 refreshToken 발급 완료: " + refreshToken);
 
         // ✅ 쿠키 저장
-        cookieUtil.addJwtCookie(response, "accessToken", accessToken, IS_SECURE);
-        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, IS_SECURE);
+        cookieUtil.addJwtCookie(response, "accessToken", accessToken, isSecure);
+        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, isSecure);
 
-        // ✅ 운영 환경 리다이렉트 주소
-        String redirectUrl = "https://team-mole.shop/Main";
-        System.out.println("➡️ 리다이렉트 URL: " + redirectUrl);
-        response.sendRedirect(redirectUrl);
+        // ✅ 리다이렉트
+        System.out.println("➡️ 리다이렉트 URL: " + frontenduri);
+        response.sendRedirect(frontenduri);
     }
 }
+
+
