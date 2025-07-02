@@ -12,6 +12,7 @@ import com.MoleLaw_backend.service.security.CookieUtil;
 import com.MoleLaw_backend.service.security.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -53,8 +54,9 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), "local");
-        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), "local");
+        // ✅ 여기서 provider를 반드시 명시
+        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getProvider());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getProvider());
 
         return new AuthResponse(accessToken, refreshToken);
     }
@@ -95,11 +97,23 @@ public class UserService {
         return new UserResponse(user);
     }
 
+    @Transactional
     public void deleteUser(String email, String provider) {
-        User user = userRepository.findByEmailAndProvider(email, provider)
-                .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
-        userRepository.delete(user);
-    }
-}
+        System.out.println("🧪 deleteUser 호출됨 → " + email + " / " + provider);
 
+        User user = userRepository.findByEmailAndProvider(email, provider)
+                .orElseThrow(() -> {
+                    System.out.println("❌ 유저를 찾을 수 없음 → email: " + email + ", provider: " + provider);
+                    return new MolelawException(ErrorCode.USER_NOT_FOUND, email + " / " + provider);
+                });
+
+        System.out.println("✅ 유저 조회 성공 → id: " + user.getId());
+
+        userRepository.deleteById(user.getId()); // 여기만 수정!
+
+        System.out.println("🗑️ 유저 삭제 완료");
+    }
+
+
+}
 
