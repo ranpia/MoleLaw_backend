@@ -33,11 +33,11 @@ public class FinalAnswer {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public AnswerResponse getAnswer(String query) {
-        // 1. 키워드 추출
-        KeywordAndTitleResponse result = extractKeyword.extractKeywords(query);
-        List<String> keywords = result.getKeywords();
-        String summaryTitle = result.getSummary();
+    public AnswerResponse getAnswer(String query, List<String> keywords) {
+//        // 1. 키워드 추출
+//        KeywordAndTitleResponse result = extractKeyword.extractKeywords(query);
+//        List<String> keywords = result.getKeywords();
+//        String summaryTitle = result.getSummary();
 
         // 2. 법령 검색
         List<Map<String, Object>> lawResults = new ArrayList<>();

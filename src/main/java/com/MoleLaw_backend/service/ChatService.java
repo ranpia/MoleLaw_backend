@@ -7,6 +7,8 @@ import com.MoleLaw_backend.domain.repository.ChatRoomRepository;
 import com.MoleLaw_backend.domain.repository.MessageRepository;
 import com.MoleLaw_backend.dto.*;
 import com.MoleLaw_backend.dto.response.AnswerResponse;
+import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
+import com.MoleLaw_backend.service.law.ExtractKeyword;
 import com.MoleLaw_backend.service.law.FinalAnswer;
 import com.MoleLaw_backend.util.EncryptUtil;
 import jakarta.persistence.EntityManager;
@@ -25,6 +27,7 @@ public class ChatService {
     private final FinalAnswer finalAnswer;
     private final GptService gptService;
     private final EntityManager entityManager;
+    private final ExtractKeyword extractKeyword;
     /**
      * 🔸 채팅방 생성
      */
@@ -113,16 +116,11 @@ public class ChatService {
      * ✅ 새로운 채팅방 생성 + GPT로 제목 + 답변 동시 생성 + 저장
      */
     public List<MessageResponse> createRoomAndAsk(User user, FirstMessageRequest request) {
-        // 1. GPT로 제목 생성
-        String title;
-        try {
-            title = gptService.generateTitle(request.getContent());
-        } catch (Exception e) {
-            title = "제목 없음";
-        }
+        // 1. 키워드와 제목 추출
+        KeywordAndTitleResponse KeywordAndTitle = extractKeyword.extractKeywords(request.getContent());
 
         // 2. ChatRoom 생성 (userId만으로 프록시 연결)
-        ChatRoom chatRoom = createChatRoom(user, title);  // ⬅️ Entity 반환 메서드
+        ChatRoom chatRoom = createChatRoom(user, KeywordAndTitle.getSummary());  // ⬅️ Entity 반환 메서드
 
         // 3. 사용자 메시지 저장
         messageRepository.save(Message.builder()
@@ -132,7 +130,7 @@ public class ChatService {
                 .build());
 
         // 4. GPT 응답 저장
-        AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent());
+        AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent(), KeywordAndTitle.getKeywords());
         String combined = "답변:\n" + answerResponse.getAnswer() + "\n\n관련 정보:\n" + answerResponse.getInfo();
 
         messageRepository.save(Message.builder()
