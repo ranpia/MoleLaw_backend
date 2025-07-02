@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -51,5 +52,42 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(user));
     }
 
+    @DeleteMapping("/me")
+    @SecurityRequirement(name = "BearerAuth")
+    public ResponseEntity<Void> deleteUser(HttpServletResponse response) {
+        String subject = SecurityContextHolder.getContext().getAuthentication().getName();
+        String[] parts = subject.split(":");
+
+        if (parts.length != 2) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String email = parts[0];
+        String provider = parts[1];
+
+        userService.deleteUser(email, provider);
+
+        // 쿠키 삭제
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader("Set-Cookie", accessCookie.toString());
+        response.addHeader("Set-Cookie", refreshCookie.toString());
+
+        return ResponseEntity.noContent().build();
+    }
 
 }

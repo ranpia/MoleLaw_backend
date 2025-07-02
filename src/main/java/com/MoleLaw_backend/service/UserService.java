@@ -61,10 +61,8 @@ public class UserService {
 
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
         AuthResponse authResponse = login(request);
-
         cookieUtil.addJwtCookie(response, "accessToken", authResponse.getAccessToken(), true);
         cookieUtil.addJwtCookie(response, "refreshToken", authResponse.getRefreshToken(), true);
-
         return authResponse;
     }
 
@@ -96,4 +94,12 @@ public class UserService {
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
         return new UserResponse(user);
     }
+
+    public void deleteUser(String email, String provider) {
+        User user = userRepository.findByEmailAndProvider(email, provider)
+                .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
+        userRepository.delete(user);
+    }
 }
+
+
