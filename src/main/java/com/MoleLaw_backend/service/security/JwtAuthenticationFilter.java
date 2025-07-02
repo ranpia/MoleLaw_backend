@@ -1,7 +1,6 @@
 package com.MoleLaw_backend.service.security;
 
-import com.MoleLaw_backend.domain.entity.User;
-import com.MoleLaw_backend.domain.repository.UserRepository;
+import com.MoleLaw_backend.service.security.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -10,8 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,8 +20,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
-
+    private final CustomUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -54,13 +50,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("🛡️ 요청 URI: " + request.getRequestURI());
         System.out.println("🛡️ 토큰: " + token);
 
+        // ✅ 3. 토큰 검증 및 사용자 인증 설정
         if (token != null && jwtUtil.validateToken(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                String userId = jwtUtil.getUserIdFromToken(token);  // email:provider
+                String userId = jwtUtil.getUserIdFromToken(token); // email:provider
                 System.out.println("🛡️ 사용자 ID: " + userId);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
+                CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(userId);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
@@ -71,7 +68,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 System.out.println("❌ JWT 인증 처리 실패: " + e.getMessage());
             }
         }
-
 
         filterChain.doFilter(request, response);
     }
