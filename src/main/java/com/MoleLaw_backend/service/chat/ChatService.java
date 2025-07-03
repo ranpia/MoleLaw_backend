@@ -7,10 +7,7 @@ import com.MoleLaw_backend.domain.repository.ChatRoomRepository;
 import com.MoleLaw_backend.domain.repository.MessageRepository;
 import com.MoleLaw_backend.dto.request.FirstMessageRequest;
 import com.MoleLaw_backend.dto.request.MessageRequest;
-import com.MoleLaw_backend.dto.response.AnswerResponse;
-import com.MoleLaw_backend.dto.response.ChatRoomResponse;
-import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
-import com.MoleLaw_backend.dto.response.MessageResponse;
+import com.MoleLaw_backend.dto.response.*;
 import com.MoleLaw_backend.exception.*;
 import com.MoleLaw_backend.service.law.*;
 import com.MoleLaw_backend.util.EncryptUtil;
@@ -108,10 +105,11 @@ public class ChatService {
         }
     }
 
-    public List<MessageResponse> createRoomAndAsk(User user, FirstMessageRequest request) {
+    public FirstMessageResponse createRoomAndAsk(User user, FirstMessageRequest request) {
         if (request == null || request.getContent().trim().isEmpty()) {
             throw new MolelawException(ErrorCode.INVALID_REQUEST, "입력 내용 없음");
         }
+
         KeywordAndTitleResponse keywordAndTitle;
         try {
             keywordAndTitle = extractKeyword.extractKeywords(request.getContent());
@@ -129,13 +127,7 @@ public class ChatService {
 
         try {
             AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent(), keywordAndTitle.getKeywords());
-//            String combined = "답변:\n" + answerResponse.getAnswer() + "\n\n관련 정보:\n" + answerResponse.getInfo();
 
-//            messageRepository.save(Message.builder()
-//                    .chatRoom(chatRoom)
-//                    .sender(Message.Sender.BOT)
-//                    .content(EncryptUtil.encrypt(combined))
-//                    .build());
             messageRepository.save(Message.builder()
                     .chatRoom(chatRoom)
                     .sender(Message.Sender.BOT)
@@ -152,6 +144,9 @@ public class ChatService {
             throw new MolelawException(ErrorCode.GPT_API_FAILURE, "초기 GPT 응답 생성 실패", e);
         }
 
-        return getMessages(user, chatRoom.getId());
+        return FirstMessageResponse.builder()
+                .roomId(chatRoom.getId())
+                .messages(getMessages(user, chatRoom.getId()))
+                .build();
     }
 }
