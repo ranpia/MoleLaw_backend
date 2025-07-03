@@ -156,7 +156,7 @@ public class UserController {
     )
     public ResponseEntity<Void> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                @RequestBody ChangePasswordRequest request) {
-        userService.changePassword(userDetails.getUsername(), userDetails.getProvider(), request);
+        userService.changePassword(userDetails.getEmail(), userDetails.getProvider(), request);
         return ResponseEntity.ok().build();
     }
 
@@ -168,7 +168,7 @@ public class UserController {
     )
     public ResponseEntity<Void> changeNickname(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                @RequestBody ChangeNicknameRequest request) {
-        userService.changeNickname(userDetails.getUsername(), userDetails.getProvider(), request);
+        userService.changeNickname(userDetails.getEmail(), userDetails.getProvider(), request);
         return ResponseEntity.ok().build();
     }
 }

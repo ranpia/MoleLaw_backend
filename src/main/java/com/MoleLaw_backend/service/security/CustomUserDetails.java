@@ -29,11 +29,15 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getEmail() + ":" + user.getProvider();
+        return user.getNickname();
     }
 
     public String getProvider(){
         return user.getProvider();
+    }
+
+    public String getEmail(){
+        return user.getEmail();
     }
 
     @Override public boolean isAccountNonExpired() { return true; }
