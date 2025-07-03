@@ -3,11 +3,14 @@ package com.MoleLaw_backend.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(
         name = "user",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"email", "provider"}) // ✅ 복합 유니크 키로 설정
+                @UniqueConstraint(columnNames = {"email", "provider"})
         }
 )
 @Getter
@@ -15,6 +18,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class User {
+
     @Id @GeneratedValue
     private Long id;
 
@@ -24,5 +28,9 @@ public class User {
 
     private String nickname;
 
-    private String provider; // "google", "kakao"
+    private String provider;
+
+    // ✅ ChatRoom 연관관계 추가
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatRoom> chatRooms = new ArrayList<>();
 }

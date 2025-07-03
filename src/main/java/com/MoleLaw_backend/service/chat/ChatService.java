@@ -1,16 +1,18 @@
-package com.MoleLaw_backend.service;
+package com.MoleLaw_backend.service.chat;
 
 import com.MoleLaw_backend.domain.entity.ChatRoom;
 import com.MoleLaw_backend.domain.entity.Message;
 import com.MoleLaw_backend.domain.entity.User;
 import com.MoleLaw_backend.domain.repository.ChatRoomRepository;
 import com.MoleLaw_backend.domain.repository.MessageRepository;
-import com.MoleLaw_backend.dto.*;
+import com.MoleLaw_backend.dto.request.FirstMessageRequest;
+import com.MoleLaw_backend.dto.request.MessageRequest;
 import com.MoleLaw_backend.dto.response.AnswerResponse;
+import com.MoleLaw_backend.dto.response.ChatRoomResponse;
 import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
+import com.MoleLaw_backend.dto.response.MessageResponse;
 import com.MoleLaw_backend.exception.*;
-import com.MoleLaw_backend.service.law.ExtractKeyword;
-import com.MoleLaw_backend.service.law.FinalAnswer;
+import com.MoleLaw_backend.service.law.*;
 import com.MoleLaw_backend.util.EncryptUtil;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
