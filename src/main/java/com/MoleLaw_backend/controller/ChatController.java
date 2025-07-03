@@ -1,7 +1,10 @@
 package com.MoleLaw_backend.controller;
 
-import com.MoleLaw_backend.dto.*;
-import com.MoleLaw_backend.service.ChatService;
+import com.MoleLaw_backend.dto.request.FirstMessageRequest;
+import com.MoleLaw_backend.dto.request.MessageRequest;
+import com.MoleLaw_backend.dto.response.ChatRoomResponse;
+import com.MoleLaw_backend.dto.response.MessageResponse;
+import com.MoleLaw_backend.service.chat.ChatService;
 import com.MoleLaw_backend.service.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +29,7 @@ public class ChatController {
     }
 
     @GetMapping("/{roomId}")
-    @Operation(summary = "채팅방 id 기반 채팅방 내 채팅 전체 조회", description = "sender로 구분 content에 내용")
+    @Operation(summary = "채팅방 id 기반 채팅방 내 채팅 전체 조회", description = "sender로 구분 json배열에 sender로 구분자, content에 내용")
     public List<MessageResponse> getMessages(@AuthenticationPrincipal CustomUserDetails userDetails,
                                              @PathVariable Long roomId) {
         return chatService.getMessages(userDetails.getUser(), roomId);

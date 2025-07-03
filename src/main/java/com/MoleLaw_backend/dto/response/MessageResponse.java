@@ -1,4 +1,4 @@
-package com.MoleLaw_backend.dto;
+package com.MoleLaw_backend.dto.response;
 
 import com.MoleLaw_backend.domain.entity.Message;
 import com.MoleLaw_backend.util.EncryptUtil;

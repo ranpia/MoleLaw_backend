@@ -1,7 +1,6 @@
-package com.MoleLaw_backend.service;
+package com.MoleLaw_backend.service.chat;
 
 import com.MoleLaw_backend.dto.response.AnswerResponse;
-import com.MoleLaw_backend.dto.response.GptTitleAnswerResponse;
 import com.MoleLaw_backend.exception.GptApiException;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
