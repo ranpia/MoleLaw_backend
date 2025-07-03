@@ -3,6 +3,7 @@ package com.MoleLaw_backend.controller;
 import com.MoleLaw_backend.dto.request.FirstMessageRequest;
 import com.MoleLaw_backend.dto.request.MessageRequest;
 import com.MoleLaw_backend.dto.response.ChatRoomResponse;
+import com.MoleLaw_backend.dto.response.FirstMessageResponse;
 import com.MoleLaw_backend.dto.response.MessageResponse;
 import com.MoleLaw_backend.service.chat.ChatService;
 import com.MoleLaw_backend.service.security.CustomUserDetails;
@@ -37,7 +38,7 @@ public class ChatController {
     }
 
     @PostMapping("/{roomId}/messages")
-    @Operation(summary = "해당 id 채팅방에 새로운 유저 질문 추가", description = "질문 추가 이후 답변 따로 없음")
+    @Operation(summary = "해당 id 채팅방에 새로운 유저 질문 추가", description = "질문 추가 이후 답변")
     public ResponseEntity<MessageResponse> ask(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                @PathVariable Long roomId,
                                                @RequestBody MessageRequest request) {
@@ -47,8 +48,8 @@ public class ChatController {
 
     @PostMapping("/first-message")
     @Operation(summary = "채팅방 생성 및 첫 질문 받는 컨트롤러", description = "유저 메시지와 봇의 메시지는 sender로 구분짓고 md파일 형식은 sender: info 형식으로 제공 ")
-    public List<MessageResponse> createAndAsk(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                              @RequestBody FirstMessageRequest request) {
-        return chatService.createRoomAndAsk(userDetails.getUser(), request);
+    public ResponseEntity<FirstMessageResponse> createAndAsk(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                             @RequestBody FirstMessageRequest request) {
+        return ResponseEntity.ok(chatService.createRoomAndAsk(userDetails.getUser(), request));
     }
 }
