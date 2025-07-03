@@ -28,9 +28,7 @@ public class CustomUserDetails implements UserDetails {
     }
 
     @Override
-    public String getUsername() {
-        return user.getNickname();
-    }
+    public String getUsername() { return user.getEmail()+":"+user.getProvider(); }
 
     public String getProvider(){
         return user.getProvider();
