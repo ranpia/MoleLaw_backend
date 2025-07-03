@@ -72,7 +72,7 @@ public class ChatService {
                 .collect(Collectors.toList());
     }
 
-    public void askQuestion(User user, Long chatRoomId, MessageRequest request) {
+    public MessageResponse askQuestion(User user, Long chatRoomId, MessageRequest request) {
         ChatRoom room = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
 
@@ -97,11 +97,12 @@ public class ChatService {
         try {
             AnswerResponse answer = gptService.generateAnswerWithContext(firstUserQuestion, request.getContent());
 
-            messageRepository.save(Message.builder()
+            Message botMessage = messageRepository.save(Message.builder()
                     .chatRoom(room)
                     .sender(Message.Sender.BOT)
                     .content(EncryptUtil.encrypt(answer.getAnswer()))
                     .build());
+            return MessageResponse.from(botMessage);
         } catch (Exception e) {
             throw new MolelawException(ErrorCode.GPT_API_FAILURE, "GPT 응답 생성 중 오류 발생", e);
         }
