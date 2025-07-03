@@ -9,6 +9,7 @@ import com.MoleLaw_backend.service.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,11 +37,12 @@ public class ChatController {
     }
 
     @PostMapping("/{roomId}/messages")
-    @Operation(summary = "해당 id 채팅방에 새로운 유저 질문 추가 및 답변", description = "sender로 구분지으며 생성일 기반 오름차순 조회")
-    public void ask(@AuthenticationPrincipal CustomUserDetails userDetails,
-                    @PathVariable Long roomId,
-                    @RequestBody MessageRequest request) {
-        chatService.askQuestion(userDetails.getUser(), roomId, request);
+    @Operation(summary = "해당 id 채팅방에 새로운 유저 질문 추가", description = "질문 추가 이후 답변 따로 없음")
+    public ResponseEntity<MessageResponse> ask(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                               @PathVariable Long roomId,
+                                               @RequestBody MessageRequest request) {
+        MessageResponse bot = chatService.askQuestion(userDetails.getUser(), roomId, request);
+        return ResponseEntity.ok(bot);
     }
 
     @PostMapping("/first-message")
