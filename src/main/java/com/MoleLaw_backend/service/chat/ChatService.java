@@ -145,7 +145,7 @@ public class ChatService {
         }
 
         return FirstMessageResponse.builder()
-                .roomId(chatRoom.getId())
+                .id(chatRoom.getId())
                 .messages(getMessages(user, chatRoom.getId()))
                 .build();
     }
