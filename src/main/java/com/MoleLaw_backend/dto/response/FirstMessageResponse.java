@@ -8,6 +8,6 @@ import java.util.List;
 @Getter
 @Builder
 public class FirstMessageResponse {
-    private Long roomId;
+    private Long id;
     private List<MessageResponse> messages;
 }
