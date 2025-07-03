@@ -2,6 +2,7 @@ package com.MoleLaw_backend.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,10 +16,10 @@ public class Message {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private com.MoleLaw_backend.domain.entity.ChatRoom chatRoom;
+    private ChatRoom chatRoom;
 
     @Enumerated(EnumType.STRING)
-    private Sender sender; // USER or BOT
+    private Sender sender;
 
     @Column(columnDefinition = "TEXT")
     private String content;

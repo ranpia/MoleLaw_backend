@@ -1,9 +1,11 @@
 package com.MoleLaw_backend.domain.entity;
 
-import com.MoleLaw_backend.domain.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -27,4 +29,8 @@ public class ChatRoom {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
+
+    // ✅ Message 연관관계 추가
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Message> messages = new ArrayList<>();
 }
