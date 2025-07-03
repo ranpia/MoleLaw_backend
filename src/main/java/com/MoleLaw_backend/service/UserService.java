@@ -118,7 +118,7 @@ public class UserService {
 
         System.out.println("✅ 유저 조회 성공 → id: " + user.getId());
 
-        userRepository.deleteById(user.getId()); // 여기만 수정!
+        userRepository.delete(user); // ✅ 이제 연관된 ChatRoom + Message 전부 삭제됨
 
         System.out.println("🗑️ 유저 삭제 완료");
     }
