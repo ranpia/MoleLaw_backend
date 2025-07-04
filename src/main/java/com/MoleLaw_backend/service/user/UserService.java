@@ -2,6 +2,8 @@ package com.MoleLaw_backend.service.user;
 
 import com.MoleLaw_backend.domain.entity.User;
 import com.MoleLaw_backend.domain.repository.UserRepository;
+import com.MoleLaw_backend.dto.request.ChangeNicknameRequest;
+import com.MoleLaw_backend.dto.request.ChangePasswordRequest;
 import com.MoleLaw_backend.dto.response.AuthResponse;
 import com.MoleLaw_backend.dto.request.LoginRequest;
 import com.MoleLaw_backend.dto.request.SignupRequest;
@@ -27,9 +29,6 @@ public class UserService {
     private final CookieUtil cookieUtil;
 
     public AuthResponse signup(SignupRequest request) {
-//        if (userRepository.existsByEmail(request.getEmail())) {
-//            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
-//        }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new MolelawException(ErrorCode.DUPLICATED_EMAIL);
         }
@@ -53,9 +52,6 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("해당 이메일이 존재하지 않습니다."));
 
-//        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-//            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-//        }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new MolelawException(ErrorCode.PASSWORD_FAIL);
         }
@@ -77,9 +73,6 @@ public class UserService {
     public AuthResponse reissue(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = cookieUtil.getTokenFromCookie(request, "refreshToken");
 
-//        if (refreshToken == null || !jwtUtil.validateToken(refreshToken)) {
-//            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
-//        }
         if (refreshToken == null || !jwtUtil.validateToken(refreshToken)) {
             throw new MolelawException(ErrorCode.TOKEN_FAIL);
         }
@@ -94,11 +87,6 @@ public class UserService {
         return new AuthResponse(newAccessToken, refreshToken);
     }
 
-    public UserResponse getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
-        return new UserResponse(user);
-    }
 
     public UserResponse getUserByEmailAndProvider(String email, String provider) {
         User user = userRepository.findByEmailAndProvider(email, provider)
@@ -121,6 +109,27 @@ public class UserService {
         userRepository.delete(user); // ✅ 이제 연관된 ChatRoom + Message 전부 삭제됨
 
         System.out.println("🗑️ 유저 삭제 완료");
+    }
+
+    @Transactional
+    public void changePassword(String email, String provider, ChangePasswordRequest request) {
+        User user = userRepository.findByEmailAndProvider(email, provider)
+                .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
+
+        if (!"local".equals(user.getProvider())) {
+            throw new MolelawException(ErrorCode.INVALID_PROVIDER, "비밀번호 변경은 소셜로그인 대상자에게 제공하지 않습니다.");
+        }
+
+        user.changePassword(passwordEncoder.encode(request.getNewPassword()));
+    }
+
+
+    @Transactional
+    public void changeNickname(String email, String provider, ChangeNicknameRequest request) {
+        User user = userRepository.findByEmailAndProvider(email, provider)
+                .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
+
+        user.changeNickname(request.getNewNickname());
     }
 
 
