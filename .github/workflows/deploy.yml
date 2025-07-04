@@ -46,6 +46,6 @@ jobs:
             docker run -d \
               --name molelaw \
               --env-file /home/ubuntu/.env \
-              -v /etc/localtime:/etc/localtime:ro \
+              -e TZ=Asia/Seoul \
               -p 8080:8080 \
               ${{ secrets.DOCKER_USER }}/molelaw-app:latest
