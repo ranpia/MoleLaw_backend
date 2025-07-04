@@ -40,7 +40,7 @@ public class UserController {
         // ✅ JWT 쿠키 설정
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", authResponse.getAccessToken())
                 .httpOnly(true)
-                .secure(false) // 로컬 환경은 false, 운영 시 true
+                .secure(IS_SECURE) // 로컬 환경은 false, 운영 시 true
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7)
                 .sameSite("Lax")
@@ -48,7 +48,7 @@ public class UserController {
 
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(false)
+                .secure(IS_SECURE)
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7)
                 .sameSite("Lax")
@@ -110,7 +110,7 @@ public class UserController {
                     .path("/")
                     .maxAge(0)
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(IS_SECURE)
                     .sameSite("Lax")
                     .build();
 
@@ -118,7 +118,7 @@ public class UserController {
                     .path("/")
                     .maxAge(0)
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(IS_SECURE)
                     .sameSite("Lax")
                     .build();
 
