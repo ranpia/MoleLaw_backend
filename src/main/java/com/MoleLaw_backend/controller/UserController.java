@@ -1,10 +1,13 @@
 package com.MoleLaw_backend.controller;
 
+import com.MoleLaw_backend.dto.request.ChangeNicknameRequest;
+import com.MoleLaw_backend.dto.request.ChangePasswordRequest;
 import com.MoleLaw_backend.dto.request.LoginRequest;
 import com.MoleLaw_backend.dto.request.SignupRequest;
 import com.MoleLaw_backend.dto.response.ApiResponse;
 import com.MoleLaw_backend.dto.response.AuthResponse;
 import com.MoleLaw_backend.dto.response.UserResponse;
+import com.MoleLaw_backend.service.security.CustomUserDetails;
 import com.MoleLaw_backend.service.user.UserService;
 import com.MoleLaw_backend.service.security.CookieUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +30,8 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final CookieUtil cookieUtil;
+    private static final boolean IS_SECURE = true;
 
     @PostMapping("/signup")
     public void signup(@RequestBody SignupRequest request, HttpServletResponse response) {
@@ -126,9 +132,6 @@ public class UserController {
         }
     }
 
-    private final CookieUtil cookieUtil;
-    private static final boolean IS_SECURE = true;
-
     @Operation(summary = "로그아웃", description = "JWT 기반 로그아웃 (쿠키 삭제)")
     @PostMapping(value = "/logout", consumes = MediaType.ALL_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<String>> logout(HttpServletResponse response) {
@@ -145,4 +148,27 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(authResponse));
     }
 
+    @PatchMapping("/password")
+    @Operation(
+            summary = "비밀번호 변경 (local 전용)",
+            description = "로그인한 local 사용자의 비밀번호를 새 비밀번호로 변경합니다.",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
+    public ResponseEntity<Void> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                               @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(userDetails.getEmail(), userDetails.getProvider(), request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/nickname")
+    @Operation(
+            summary = "닉네임 변경",
+            description = "로그인한 사용자의 닉네임을 새 닉네임으로 변경합니다.",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
+    public ResponseEntity<Void> changeNickname(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                               @RequestBody ChangeNicknameRequest request) {
+        userService.changeNickname(userDetails.getEmail(), userDetails.getProvider(), request);
+        return ResponseEntity.ok().build();
+    }
 }

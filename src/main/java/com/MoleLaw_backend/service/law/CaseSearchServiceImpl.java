@@ -38,6 +38,7 @@ public class CaseSearchServiceImpl implements CaseSearchService {
                             .queryParam("OC", oc)
                             .queryParam("target", "prec")
                             .queryParam("type", "JSON")
+                            .queryParam("display", 5)
                             .queryParam("JO", request.getQuery())
                             .build())
                     .retrieve()

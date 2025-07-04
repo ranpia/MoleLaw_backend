@@ -7,6 +7,7 @@ import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.GptApiException;
 import com.MoleLaw_backend.exception.OpenLawApiException;
+import com.MoleLaw_backend.util.MinistryCodeMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,51 +34,66 @@ public class FinalAnswer {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public AnswerResponse getAnswer(String query, List<String> keywords) {
-//        // 1. 키워드 추출
-//        KeywordAndTitleResponse result = extractKeyword.extractKeywords(query);
-//        List<String> keywords = result.getKeywords();
-//        String summaryTitle = result.getSummary();
+    public AnswerResponse getAnswer(String query, KeywordAndTitleResponse keywordInfo) {
+        List<String> keywords = keywordInfo.getKeywords();
+        String ministryName = keywordInfo.getMinistry();
+        String orgCode = MinistryCodeMapper.getCode(ministryName);
 
-        // 2. 법령 검색
         List<Map<String, Object>> lawResults = new ArrayList<>();
         Set<String> uniqueLawNames = new LinkedHashSet<>();
+
+        // 1. 법령 검색 (부처코드 있는 경우 우선)
         for (String keyword : keywords) {
             try {
-                String rawResult = lawSearchService.searchLawByKeyword(keyword);
-                JsonNode root = objectMapper.readTree(rawResult);
-                JsonNode lawArray = root.path("LawSearch").path("law");
+                String rawResult = (orgCode != null)
+                        ? lawSearchService.searchLawByKeyword(keyword, orgCode)
+                        : lawSearchService.searchLawByKeyword(keyword);
 
+                JsonNode lawArray = objectMapper.readTree(rawResult).path("LawSearch").path("law");
                 if (lawArray.isArray()) {
                     for (JsonNode law : lawArray) {
                         String name = law.path("법령명한글").asText();
                         if (uniqueLawNames.size() < 5 && uniqueLawNames.add(name)) {
-                            Map<String, Object> lawItem = objectMapper.convertValue(law, new TypeReference<>() {});
-                            lawResults.add(lawItem);
+                            lawResults.add(objectMapper.convertValue(law, new TypeReference<>() {}));
                         }
                     }
                 }
 
-                if(lawArray.isEmpty()) System.out.printf("[LawSearch] 키워드 '%s' 처리 결과 비어있음", keyword);
             } catch (Exception e) {
-//                log.error("[LawSearch] 키워드 '{}' 처리 중 오류: {}", keyword, e.getMessage(), e);
-                System.out.printf("[LawSearch] 키워드 '%s' 처리 중 오류: %s", keyword, e.getMessage());
-                // 검색 실패해도 무시하고 다음 키워드로 진행
+                System.out.printf("[LawSearch] 키워드 '%s' 처리 중 오류: %s\n", keyword, e.getMessage());
             }
         }
 
-        // 3. 판례 검색
+        // 2. 법령 결과 없을 경우 fallback
+        if (lawResults.isEmpty()) {
+            for (String keyword : keywords) {
+                try {
+                    String fallbackResult = lawSearchService.searchLawByKeyword(keyword);
+                    JsonNode lawArray = objectMapper.readTree(fallbackResult).path("LawSearch").path("law");
+                    if (lawArray.isArray()) {
+                        for (JsonNode law : lawArray) {
+                            String name = law.path("법령명한글").asText();
+                            if (uniqueLawNames.size() < 5 && uniqueLawNames.add(name)) {
+                                lawResults.add(objectMapper.convertValue(law, new TypeReference<>() {}));
+                            }
+                        }
+                    }
+
+                } catch (Exception e) {
+                    System.out.printf("[Fallback] 키워드 '%s' 부처 없이 검색 실패: %s\n", keyword, e.getMessage());
+                }
+            }
+        }
+
+        // 3. 판례 검색 (lawResults 기준)
         List<PrecedentInfo> precedentResults = new ArrayList<>();
         for (String lawName : uniqueLawNames) {
             try {
                 PrecedentSearchRequest req = new PrecedentSearchRequest();
                 req.setQuery(lawName);
-                List<PrecedentInfo> precedents = caseSearchService.searchCases(req);
-                precedentResults.addAll(precedents);
+                precedentResults.addAll(caseSearchService.searchCases(req));
             } catch (OpenLawApiException e) {
-//                log.warn("[CaseSearch] 법령 '{}' 기반 판례 조회 실패: {}", lawName, e.getMessage());
-                System.out.printf("[CaseSearch] 법령 '%s' 기반 판례 조회 실패: %s", lawName, e.getMessage());
-                // 특정 판례 실패는 무시하고 전체 응답 생성 진행
+                System.out.printf("[CaseSearch] '%s' 판례 조회 실패: %s\n", lawName, e.getMessage());
             }
         }
 
@@ -145,7 +161,11 @@ public class FinalAnswer {
         for (Map<String, Object> law : laws) {
             String name = (String) law.get("법령명한글");
             String summary = (String) law.getOrDefault("조문내용", "");
-            md.append("- **").append(name).append("**\n");
+            String rawLink = (String) law.get("법령상세링크");
+
+            String fullLink = "https://www.law.go.kr" + rawLink; // 공식 링크 구성
+
+            md.append("- [**").append(name).append("**](").append(fullLink).append(")\n");
             if (!summary.isBlank()) {
                 md.append("  - ").append(summary).append("\n");
             }
@@ -154,7 +174,8 @@ public class FinalAnswer {
         md.append("\n---\n\n");
         md.append("## ⚖️ 관련 판례\n\n");
         for (PrecedentInfo p : precedents) {
-            md.append("- **").append(p.getCaseName()).append("**\n");
+            md.append("- [**").append(p.getCaseName()).append("**](")
+                    .append("https://www.law.go.kr/precInfoP.do?precSeq=").append(p.getCaseId()).append(")\n");
             md.append("  - 사건번호: ").append(p.getCaseNumber()).append("\n");
             md.append("  - 선고일: ").append(p.getDecisionDate())
                     .append(" / 법원: ").append(p.getCourtName()).append("\n");
@@ -162,5 +183,6 @@ public class FinalAnswer {
 
         return md.toString();
     }
+
 
 }

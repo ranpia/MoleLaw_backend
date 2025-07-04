@@ -126,7 +126,7 @@ public class ChatService {
                 .build());
 
         try {
-            AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent(), keywordAndTitle.getKeywords());
+            AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent(), keywordAndTitle);
 
             messageRepository.save(Message.builder()
                     .chatRoom(chatRoom)

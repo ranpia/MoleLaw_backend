@@ -11,5 +11,4 @@ import java.util.List;
 @AllArgsConstructor
 public class QueryRequest {
     private String query;
-    private List<String> keywords;
 }
