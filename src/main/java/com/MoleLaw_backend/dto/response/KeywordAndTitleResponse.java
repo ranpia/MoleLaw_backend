@@ -12,4 +12,5 @@ import java.util.List;
 public class KeywordAndTitleResponse {
     private List<String> keywords;
     private String summary;
+    private String ministry;
 }
