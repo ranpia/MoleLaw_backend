@@ -161,7 +161,11 @@ public class FinalAnswer {
         for (Map<String, Object> law : laws) {
             String name = (String) law.get("법령명한글");
             String summary = (String) law.getOrDefault("조문내용", "");
-            md.append("- **").append(name).append("**\n");
+            String rawLink = (String) law.get("법령상세링크");
+
+            String fullLink = "https://www.law.go.kr" + rawLink; // 공식 링크 구성
+
+            md.append("- [**").append(name).append("**](").append(fullLink).append(")\n");
             if (!summary.isBlank()) {
                 md.append("  - ").append(summary).append("\n");
             }
@@ -170,7 +174,8 @@ public class FinalAnswer {
         md.append("\n---\n\n");
         md.append("## ⚖️ 관련 판례\n\n");
         for (PrecedentInfo p : precedents) {
-            md.append("- **").append(p.getCaseName()).append("**\n");
+            md.append("- [**").append(p.getCaseName()).append("**](")
+                    .append("https://www.law.go.kr/precInfoP.do?precSeq=").append(p.getCaseId()).append(")\n");
             md.append("  - 사건번호: ").append(p.getCaseNumber()).append("\n");
             md.append("  - 선고일: ").append(p.getDecisionDate())
                     .append(" / 법원: ").append(p.getCourtName()).append("\n");
@@ -178,5 +183,6 @@ public class FinalAnswer {
 
         return md.toString();
     }
+
 
 }
