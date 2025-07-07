@@ -118,7 +118,7 @@ public class SecurityConfig {
 
         config.setAllowedOriginPatterns(List.of("*")); // 모든 Origin 허용 (패턴 방식)
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setExposedHeaders(List.of("Set-Cookie", "Authorization")); // 쿠키와 토큰 노출
         config.setAllowCredentials(true); // 반드시 true 설정
 
