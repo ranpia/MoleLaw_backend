@@ -31,7 +31,7 @@ public class UserController {
 
     private final UserService userService;
     private final CookieUtil cookieUtil;
-    private static final boolean IS_SECURE = true;
+    private static final boolean IS_SECURE = false;
 
     @PostMapping("/signup")
     public void signup(@RequestBody SignupRequest request, HttpServletResponse response) {
