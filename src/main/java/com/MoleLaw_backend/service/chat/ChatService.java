@@ -12,6 +12,7 @@ import com.MoleLaw_backend.exception.*;
 import com.MoleLaw_backend.service.law.*;
 import com.MoleLaw_backend.util.EncryptUtil;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -149,4 +150,31 @@ public class ChatService {
                 .messages(getMessages(user, chatRoom.getId()))
                 .build();
     }
+
+    @Transactional
+    public void deleteChatRoom(User user, Long chatRoomId) {
+        try {
+            System.out.println("🧹 [삭제 시작] 사용자 ID: " + user.getId() + ", 채팅방 ID: " + chatRoomId);
+
+            ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                    .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
+
+            System.out.println("🔍 채팅방 소유자 ID: " + (chatRoom.getUser() != null ? chatRoom.getUser().getId() : "null"));
+            System.out.println("📦 메시지 개수: " + chatRoom.getMessages().size());
+
+            if (chatRoom.getUser() == null || !chatRoom.getUser().getId().equals(user.getId())) {
+                throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
+            }
+
+            chatRoomRepository.delete(chatRoom);
+            System.out.println("✅ 삭제 완료");
+
+        } catch (Exception e) {
+            System.out.println("❌ 예외 발생:");
+            e.printStackTrace(); // ✅ 콘솔에 전체 예외 출력
+            throw e; // 다시 던져서 글로벌 핸들러에서 처리되게
+        }
+    }
+
+
 }

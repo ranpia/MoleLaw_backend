@@ -8,6 +8,7 @@ import com.MoleLaw_backend.dto.response.MessageResponse;
 import com.MoleLaw_backend.service.chat.ChatService;
 import com.MoleLaw_backend.service.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -51,5 +52,13 @@ public class ChatController {
     public ResponseEntity<FirstMessageResponse> createAndAsk(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                              @RequestBody FirstMessageRequest request) {
         return ResponseEntity.ok(chatService.createRoomAndAsk(userDetails.getUser(), request));
+    }
+
+    @DeleteMapping("/chat-rooms/{chatRoomId}")
+    @Operation(summary = "내 채팅방 삭제", description = "내가 생성한 채팅방을 삭제합니다. 메시지도 함께 삭제됩니다.", security = @SecurityRequirement(name = "BearerAuth"))
+    public ResponseEntity<Void> deleteChatRoom(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                               @PathVariable Long chatRoomId) {
+        chatService.deleteChatRoom(userDetails.getUser(), chatRoomId);
+        return ResponseEntity.noContent().build();
     }
 }

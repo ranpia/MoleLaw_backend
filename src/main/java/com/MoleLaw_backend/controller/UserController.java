@@ -7,6 +7,7 @@ import com.MoleLaw_backend.dto.request.SignupRequest;
 import com.MoleLaw_backend.dto.response.ApiResponse;
 import com.MoleLaw_backend.dto.response.AuthResponse;
 import com.MoleLaw_backend.dto.response.UserResponse;
+import com.MoleLaw_backend.service.chat.ChatService;
 import com.MoleLaw_backend.service.security.CustomUserDetails;
 import com.MoleLaw_backend.service.user.UserService;
 import com.MoleLaw_backend.service.security.CookieUtil;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
+    private final ChatService chatService;
     private final UserService userService;
     private final CookieUtil cookieUtil;
     private static final boolean IS_SECURE = true;
@@ -171,4 +173,7 @@ public class UserController {
         userService.changeNickname(userDetails.getEmail(), userDetails.getProvider(), request);
         return ResponseEntity.ok().build();
     }
+
+
+
 }

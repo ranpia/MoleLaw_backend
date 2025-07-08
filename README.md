@@ -1,122 +1,222 @@
-# 🧑‍⚖️ LawMate Spring 협업 가이드
+# 📘 MoleLaw 기능 정의서
 
-Spring Boot 기반으로 진행되는 본 프로젝트의 팀 개발 시 협업 컨벤션입니다.
+## 🧩 핵심 개요
+
+- **서비스명**: MoleLaw (몰루로 묻고 법으로 답하다)
+- **설명**: 사용자의 법률 질문을 받아 GPT가 관련 법령 및 판례를 검색해 자동 응답하는 상담형 챗봇 서비스
+- **DB**: MySQL
+- **API 기반**: OpenLaw API (법령 / 판례)
 
 ---
 
-## 📁 패키지 구조 규칙
+## 🧱 핵심 Entity 구조 (RDB: MySQL)
+
+### 📄 User
+
+| 필드명      | 타입     | 제약조건                   | 설명                     |
+| -------- | ------ | ---------------------- | ---------------------- |
+| id       | Long   | PK                     | 사용자 ID                 |
+| email    | String | Unique(email+provider) | 이메일                    |
+| password | String |                        | 암호화 저장                 |
+| nickname | String |                        | 닉네임                    |
+| provider | String |                        | google / kakao / local |
+
+- 관계: `User 1 : N ChatRoom`
+
+### 📄 ChatRoom
+
+| 필드명       | 타입            | 제약조건 | 설명         |
+| --------- | ------------- | ---- | ---------- |
+| id        | Long          | PK   | 채팅방 ID     |
+| title     | String        |      | 요약 제목      |
+| user\_id  | FK → User(id) |      | 소유 유저      |
+| createdAt | LocalDateTime |      | 생성 시 자동 등록 |
+
+- 관계: `ChatRoom 1 : N Message`
+
+### 📄 Message
+
+| 필드명          | 타입                   | 제약조건  | 설명     |
+| ------------ | -------------------- | ----- | ------ |
+| id           | Long                 | PK    | 메시지 ID |
+| chatRoom\_id | FK → ChatRoom(id)    |       | 소속 채팅방 |
+| sender       | Enum (USER/BOT/INFO) |       | 보낸이 구분 |
+| content      | TEXT                 | 암호화됨  | 메시지 본문 |
+| timestamp    | LocalDateTime        | 자동 등록 | 생성 시각  |
+
+---
+
+## 🧠 기능 흐름도
+
+(※ 추후 draw.io 또는 Mermaid로 작성된 시퀀스 다이어그램 첨부 예정)
+
+---
+
+## 🪄 GPT 첫 응답 생성 흐름 
+###  0단계: 사용자 질문 → 유효성 검증 → 키워드 추출 → 채팅방 생성 → 질문 메시지 저장
+```mermaid
+sequenceDiagram
+  participant User
+  participant ChatController
+  participant ChatService
+  participant ExtractKeyword
+  participant EncryptUtil
+  participant MessageRepository
+
+  User->>ChatController: POST /api/chat-rooms/first-message (FirstMessageRequest)
+  ChatController->>ChatService: createRoomAndAsk(user, request)
+
+  Note over ChatService: 📥 요청 유효성 검사
+  ChatService->>ChatService: request.getContent().isEmpty?
+  alt 비어있을때
+    ChatService-->>Exception: MolelawException(INVALID_REQUEST)
+  end
+
+  Note over ChatService: 🔑 키워드 및 요약 추출
+  ChatService->>ExtractKeyword: extractKeywords(content)
+  ExtractKeyword-->>ChatService: KeywordAndTitleResponse
+
+  Note over ChatService: 🏠 채팅방 생성
+  ChatService->>ChatService: createChatRoom(user, summary)
+
+  Note over ChatService: 📝 사용자 메시지 저장
+  ChatService->>EncryptUtil: encrypt(content)
+  EncryptUtil-->>ChatService: encryptedMessage
+  ChatService->>MessageRepository: save(USER message)
 
 ```
-com.project.lawmate
-├── controller        # REST API 컨트롤러
-├── domain
-│   ├── entity        # JPA 엔티티 클래스
-│   └── repository    # JPA 레포지토리 인터페이스
-├── dto               # 요청/응답 DTO
-├── service           # 비즈니스 로직
-├── config            # 설정 클래스 (Security, Swagger 등)
-└── exception         # 커스텀 예외, 에러 응답 핸들러
+
+### 1단계: 키워드와 부처 기반 법령 검색 시퀀스
+
+```mermaid
+sequenceDiagram
+  participant ChatService
+  participant FinalAnswer
+  participant KeywordInfo (입력 DTO)
+  participant MinistryCodeMapper
+  participant LawSearchService
+
+  ChatService->>FinalAnswer: getAnswer(query, KeywordAndTitleResponse)
+
+  Note over FinalAnswer: 🔍 키워드 목록과 부처 이름 추출
+  FinalAnswer->>KeywordInfo: getKeywords()
+  FinalAnswer->>KeywordInfo: getMinistry()
+  FinalAnswer->>MinistryCodeMapper: getCode(ministryName)
+  MinistryCodeMapper-->>FinalAnswer: orgCode
+
+  Note over FinalAnswer: 🧾 키워드별 법령 검색 (orgCode 우선)
+
+  loop keywords
+    alt orgCode 있음
+      FinalAnswer->>LawSearchService: searchLawByKeyword(keyword, orgCode)
+    else fallback
+      FinalAnswer->>LawSearchService: searchLawByKeyword(keyword)
+    end
+    LawSearchService-->>FinalAnswer: raw JSON
+    FinalAnswer->>FinalAnswer: Json 파싱 및 최대 5건 저장
+  end
+
+```
+### 2단계: 판례 검색 및 gpt 응답 생성 시퀀스
+
+```mermaid
+sequenceDiagram
+  participant FinalAnswer
+  participant CaseSearchService
+  participant GptService
+  participant RestTemplate
+
+  Note over FinalAnswer: ⚖️ 법령명 기준으로 판례 조회
+
+  loop lawNames
+    FinalAnswer->>CaseSearchService: searchCases(lawName)
+    CaseSearchService-->>FinalAnswer: List<PrecedentInfo>
+  end
+
+  Note over FinalAnswer: 📜 GPT 프롬프트 구성 (질문 + 법령 + 판례 요약)
+
+  FinalAnswer->>FinalAnswer: buildPrompt(query, laws, precedents)
+
+  Note over FinalAnswer: 💬 GPT API 호출
+
+  FinalAnswer->>RestTemplate: POST /v1/chat/completions
+  RestTemplate-->>FinalAnswer: GPT 응답 (answer string)
+
+  FinalAnswer->>FinalAnswer: buildMarkdownInfo(laws, precedents)
+  FinalAnswer-->>ChatService: AnswerResponse(answer, infoMarkdown)
+```
+### 3단계: 메시지 저장 및 FirstMessageResponse 반환
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant ChatController
+  participant ChatService
+  participant FinalAnswer
+  participant MessageRepository
+  participant EncryptUtil
+
+  Note over ChatService: 🗃️ 채팅방 생성 및 사용자 메시지 저장
+  ChatService->>ChatService: createChatRoom(user, summary)
+  ChatService->>EncryptUtil: encrypt(userMessage)
+  EncryptUtil-->>ChatService: encryptedUserMessage
+  ChatService->>MessageRepository: save(USER message)
+
+  Note over ChatService: 🤖 GPT 응답 메시지 저장
+  ChatService->>FinalAnswer: getAnswer(query, keywordInfo)
+  FinalAnswer-->>ChatService: AnswerResponse(answer, info)
+
+  ChatService->>EncryptUtil: encrypt(answer)
+  EncryptUtil-->>ChatService: encryptedAnswer
+  ChatService->>MessageRepository: save(BOT message)
+
+  ChatService->>EncryptUtil: encrypt(infoMarkdown)
+  EncryptUtil-->>ChatService: encryptedInfo
+  ChatService->>MessageRepository: save(INFO message)
+
+  Note over ChatService: 📦 전체 메시지 조회 및 응답 생성
+  ChatService->>ChatService: getMessages(chatRoom.id)
+  ChatService-->>ChatController: FirstMessageResponse(id, messages[])
+
+  ChatController-->>User: 200 OK (FirstMessageResponse)
+
 ```
 
 ---
 
-## 📌 DTO 명명 규칙
+## ✅ 예외 처리
 
-| 유형     | 형식            | 예시                        |
-|--------|----------------|-----------------------------|
-| 요청 DTO | XxxRequest     | `LawQueryRequest`           |
-| 응답 DTO | XxxResponse    | `LawSearchResponse`         |
-| 내부 DTO | XxxDto         | `LawMatchDto`, `UserInfoDto` |
+- 모든 예외는 `MolelawException`을 통해 제어
+- `ErrorCode` 기반의 에러 메시지 일원화
 
----
-
-## 🔐 인증 방식
-
-- JWT 기반 인증 사용
-- 요청 헤더 형식:
-  ```http
-  Authorization: Bearer <ACCESS_TOKEN>
-  ```
-- 예외는 `@ControllerAdvice` 전역 처리
-- `ApiResponse<T>` 형태로 통일
-
----
-
-## 🚀 브랜치 전략
-
-| 브랜치명         | 용도            |
-|----------------|----------------|
-| `main`         | 운영 배포용       |
-| `dev`          | 통합 개발 브랜치   |
-| `feature/xxx`  | 기능별 브랜치     |
-
-> 예: `feature/law-search`, `feature/gpt-refine`
-
----
-
-## 💬 커밋 메시지 컨벤션 (Conventional Commits)
-
-| 태그     | 설명                         |
-|--------|----------------------------|
-| feat   | 새로운 기능 추가                |
-| fix    | 버그 수정                     |
-| refactor | 리팩토링 (기능 변화 없음)       |
-| docs   | 문서 추가/수정                |
-| test   | 테스트 코드 관련               |
-| chore  | 설정, 빌드파일, 기타 변경사항 등 |
-
-> 예: `feat: 법령 검색 기능 추가`
-
----
-
-## 🧪 Swagger 설정
-
-- 의존성: `springdoc-openapi-ui`
-- 접근 경로: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-
----
-
-## 🔐 환경 변수 예시 (.env 또는 application.yml)
-
-```yaml
-openai:
-  api-key: ${OPENAI_API_KEY}
-
-law:
-  api-url: ${LAW_API_URL}
+```java
+throw new MolelawException(ErrorCode.INVALID_REQUEST, "입력 없음");
 ```
 
-- `.env`는 Git에 업로드하지 않음 (`.gitignore` 필수)
+---
+
+## 🔐 인증 및 로그인 방식
+
+- `JWT` 기반 인증 (Access + Refresh)
+- 로그인 방식 3종:
+  - Google 소셜 로그인
+  - Kakao 소셜 로그인
+  - 자체 local 로그인
+- 회원가입 시 이메일+provider로 유일성 보장
+- JWT는 쿠키 기반 전달 (`httpOnly`, `secure`, `sameSite=Lax`)
 
 ---
 
-## 🔧 협업 툴
+## 📘 Swagger 기반 API 구조
 
-| 툴         | 용도                 |
-|------------|--------------------|
-| Notion     | 회의록, 명세서, 일정 정리   |
-| Postman    | API 테스트 및 문서 공유    |
-| ERDCloud   | DB 모델링           |
-| GitHub     | 코드 버전 관리 및 PR 리뷰  |
+(※ 컨트롤러 기준 정리된 전체 API 목록은 추후 부록에 포함)
+
+- `UserController`: 회원가입, 로그인, 로그아웃, 정보조회/수정/삭제, 토큰 재발급 등
+- `ChatController`: 채팅방 생성, 메시지 등록, 대화 흐름 등
 
 ---
 
-## 📅 작업 규칙
+## 🗃️ 저장소 및 관리 규칙
 
-- 코드 작성 전 `feature` 브랜치 생성 후 PR
-- 기능 완료 후 `dev` 브랜치로 merge
-- 주요 API 또는 로직은 **Swagger 문서화 or README에 예시 추가**
-
----
-
-## ✅ 프로젝트 핵심 컨벤션 요약
-
-- DTO 명확하게 나누기 (Request/Response/Dto)
-- API 응답 형식 통일
-- JWT 인증 통일
-- 브랜치/커밋 메시지 규칙 따르기
-- Swagger & Postman 문서화 병행
-
----
-
-🧠 *협업을 위한 기본은 “명확한 문서화와 일관된 규칙”입니다. 변경사항이 있으면 항상 README를 업데이트해주세요!*
+- 본 정의서는 프로젝트에 파일로 저장되며, 기능 추가/변경 시 지속적으로 업데이트됨
+- 모든 데이터는 MySQL에 저장되고, OpenLaw API 결과는 별도 저장하지 않음 (프롬프트 내 사용)
