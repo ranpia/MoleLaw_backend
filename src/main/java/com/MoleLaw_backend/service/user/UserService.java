@@ -29,7 +29,7 @@ public class UserService {
     private final CookieUtil cookieUtil;
 
     public AuthResponse signup(SignupRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailAndProvider(request.getEmail(), "local")) {
             throw new MolelawException(ErrorCode.DUPLICATED_EMAIL);
         }
 
