@@ -39,7 +39,7 @@
 | 필드명          | 타입                   | 제약조건  | 설명     |
 | ------------ | -------------------- | ----- | ------ |
 | id           | Long                 | PK    | 메시지 ID |
-| chatRoom\_id | FK → ChatRoom(id)    |       | 소속 채팅방 |
+| chat_room_id | FK → ChatRoom(id)    |       | 소속 채팅방 |
 | sender       | Enum (USER/BOT/INFO) |       | 보낸이 구분 |
 | content      | TEXT                 | 암호화됨  | 메시지 본문 |
 | timestamp    | LocalDateTime        | 자동 등록 | 생성 시각  |
