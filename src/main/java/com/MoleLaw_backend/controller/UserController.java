@@ -33,7 +33,7 @@ public class UserController {
     private final ChatService chatService;
     private final UserService userService;
     private final CookieUtil cookieUtil;
-    private static final boolean IS_SECURE = false;
+    private static final boolean IS_SECURE = true;
 
     @PostMapping("/signup")
     public void signup(@RequestBody SignupRequest request, HttpServletResponse response) {
