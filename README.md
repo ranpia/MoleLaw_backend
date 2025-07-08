@@ -65,11 +65,11 @@ sequenceDiagram
 
   UserController->>UserService: login(request, response)
 
-  UserService->>UserRepository: findByEmail(email)
+  UserService->>UserRepository: findByEmailAndProvider(email, "local")
   UserRepository-->>UserService: Optional<User>
 
   alt 유저 없음
-    UserService-->>UserController: throw IllegalArgumentException
+    UserService-->>UserController: throw MolelawException(USER_NOT_FOUND, "존재하지 않음")
     UserController-->>User: 400 Bad Request
   else 유저 존재
     UserService->>PasswordEncoder: matches(input, storedHash)
@@ -87,15 +87,16 @@ sequenceDiagram
 
       UserService-->>UserController: AuthResponse(accessToken, refreshToken)
 
-      UserController->>CookieUtil: addJwtCookie(response, "accessToken", accessToken, httpOnly=true)
+      UserController->>CookieUtil: addJwtCookie(response, "accessToken", accessToken, true)
       CookieUtil-->>UserController: OK
 
-      UserController->>CookieUtil: addJwtCookie(response, "refreshToken", refreshToken, httpOnly=true)
+      UserController->>CookieUtil: addJwtCookie(response, "refreshToken", refreshToken, true)
       CookieUtil-->>UserController: OK
 
-      UserController-->>User: Set-Cookie (accessToken, refreshToken)\n+ AuthResponse body
+      UserController-->>User: Set-Cookie + JSON(AuthResponse)
     end
   end
+
 
 ```
 
@@ -114,7 +115,7 @@ sequenceDiagram
 
   UserController->>UserService: signup(request)
 
-  UserService->>UserRepository: existsByEmail(email)
+  UserService->>UserRepository: existsByEmailAndProvider(email, "local")
   UserRepository-->>UserService: true/false
 
   alt 이메일 중복
@@ -135,16 +136,14 @@ sequenceDiagram
 
     UserService-->>UserController: AuthResponse(accessToken, refreshToken)
 
-    UserController->>CookieUtil: createCookie("accessToken", accessToken)
-    CookieUtil-->>UserController: HttpCookie (access)
+    UserController->>CookieUtil: addJwtCookie(response, "accessToken", accessToken, true)
+    CookieUtil-->>UserController: OK
 
-    UserController->>CookieUtil: createCookie("refreshToken", refreshToken)
-    CookieUtil-->>UserController: HttpCookie (refresh)
+    UserController->>CookieUtil: addJwtCookie(response, "refreshToken", refreshToken, true)
+    CookieUtil-->>UserController: OK
 
-    UserController-->>User: Set-Cookie (accessToken, refreshToken)
-    UserController-->>User: 302 Redirect to /Main
+    UserController-->>User: Set-Cookie + 302 Redirect to /Main
   end
-
 ```
 
 ### - GPT 첫 응답 생성 흐름 
