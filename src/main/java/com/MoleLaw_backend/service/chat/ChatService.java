@@ -12,6 +12,7 @@ import com.MoleLaw_backend.exception.*;
 import com.MoleLaw_backend.service.law.*;
 import com.MoleLaw_backend.util.EncryptUtil;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -149,4 +150,17 @@ public class ChatService {
                 .messages(getMessages(user, chatRoom.getId()))
                 .build();
     }
+
+    @Transactional
+    public void deleteChatRoom(User user, Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
+
+        if (!chatRoom.getUser().getId().equals(user.getId())) {
+            throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
+        }
+
+        chatRoomRepository.delete(chatRoom);
+    }
+
 }
