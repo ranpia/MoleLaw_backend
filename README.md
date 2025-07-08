@@ -48,12 +48,107 @@
 
 ## 🧠 기능 흐름도
 
-(※ 추후 draw.io 또는 Mermaid로 작성된 시퀀스 다이어그램 첨부 예정)
+### - 로그인 흐름
 
----
+#### 자체 로그인 로직
+```mermaid
+sequenceDiagram
+  participant User as 🧑 사용자
+  participant UserController
+  participant UserService
+  participant UserRepository
+  participant PasswordEncoder
+  participant JwtUtil
+  participant CookieUtil
 
-## 🪄 GPT 첫 응답 생성 흐름 
-###  0단계: 사용자 질문 → 유효성 검증 → 키워드 추출 → 채팅방 생성 → 질문 메시지 저장
+  User->>UserController: POST /login (LoginRequest)
+
+  UserController->>UserService: login(request, response)
+
+  UserService->>UserRepository: findByEmail(email)
+  UserRepository-->>UserService: Optional<User>
+
+  alt 유저 없음
+    UserService-->>UserController: throw IllegalArgumentException
+    UserController-->>User: 400 Bad Request
+  else 유저 존재
+    UserService->>PasswordEncoder: matches(input, storedHash)
+    PasswordEncoder-->>UserService: true/false
+
+    alt 비밀번호 불일치
+      UserService-->>UserController: throw MolelawException(PASSWORD_FAIL)
+      UserController-->>User: 401 Unauthorized
+    else 로그인 성공
+      UserService->>JwtUtil: generateAccessToken(email, provider)
+      JwtUtil-->>UserService: accessToken
+
+      UserService->>JwtUtil: generateRefreshToken(email, provider)
+      JwtUtil-->>UserService: refreshToken
+
+      UserService-->>UserController: AuthResponse(accessToken, refreshToken)
+
+      UserController->>CookieUtil: addJwtCookie(response, "accessToken", accessToken, httpOnly=true)
+      CookieUtil-->>UserController: OK
+
+      UserController->>CookieUtil: addJwtCookie(response, "refreshToken", refreshToken, httpOnly=true)
+      CookieUtil-->>UserController: OK
+
+      UserController-->>User: Set-Cookie (accessToken, refreshToken)\n+ AuthResponse body
+    end
+  end
+
+```
+
+#### 자체 회원가입 로직
+```mermaid
+sequenceDiagram
+  participant User as 🧑 사용자
+  participant UserController
+  participant UserService
+  participant UserRepository
+  participant PasswordEncoder
+  participant JwtUtil
+  participant CookieUtil
+
+  User->>UserController: POST /signup (SignupRequest)
+
+  UserController->>UserService: signup(request)
+
+  UserService->>UserRepository: existsByEmail(email)
+  UserRepository-->>UserService: true/false
+
+  alt 이메일 중복
+    UserService-->>UserController: throw MolelawException(DUPLICATED_EMAIL)
+    UserController-->>User: 409 Conflict
+  else 이메일 사용 가능
+    UserService->>PasswordEncoder: encode(password)
+    PasswordEncoder-->>UserService: hashedPassword
+
+    UserService->>UserRepository: save(User)
+    UserRepository-->>UserService: savedUser
+
+    UserService->>JwtUtil: generateAccessToken(email, "local")
+    JwtUtil-->>UserService: accessToken
+
+    UserService->>JwtUtil: generateRefreshToken(email, "local")
+    JwtUtil-->>UserService: refreshToken
+
+    UserService-->>UserController: AuthResponse(accessToken, refreshToken)
+
+    UserController->>CookieUtil: createCookie("accessToken", accessToken)
+    CookieUtil-->>UserController: HttpCookie (access)
+
+    UserController->>CookieUtil: createCookie("refreshToken", refreshToken)
+    CookieUtil-->>UserController: HttpCookie (refresh)
+
+    UserController-->>User: Set-Cookie (accessToken, refreshToken)
+    UserController-->>User: 302 Redirect to /Main
+  end
+
+```
+
+### - GPT 첫 응답 생성 흐름 
+####  0단계: 사용자 질문 → 유효성 검증 → 키워드 추출 → 채팅방 생성 → 질문 메시지 저장
 ```mermaid
 sequenceDiagram
   participant User
@@ -86,7 +181,7 @@ sequenceDiagram
 
 ```
 
-### 1단계: 키워드와 부처 기반 법령 검색 시퀀스
+#### 1단계: 키워드와 부처 기반 법령 검색 시퀀스
 
 ```mermaid
 sequenceDiagram
@@ -117,7 +212,7 @@ sequenceDiagram
   end
 
 ```
-### 2단계: 판례 검색 및 gpt 응답 생성 시퀀스
+#### 2단계: 판례 검색 및 gpt 응답 생성 시퀀스
 
 ```mermaid
 sequenceDiagram
@@ -145,7 +240,7 @@ sequenceDiagram
   FinalAnswer->>FinalAnswer: buildMarkdownInfo(laws, precedents)
   FinalAnswer-->>ChatService: AnswerResponse(answer, infoMarkdown)
 ```
-### 3단계: 메시지 저장 및 FirstMessageResponse 반환
+#### 3단계: 메시지 저장 및 FirstMessageResponse 반환
 
 ```mermaid
 sequenceDiagram
