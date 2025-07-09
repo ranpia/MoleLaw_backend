@@ -46,6 +46,9 @@
 
 ---
 
+
+---
+
 ## 🧠 로그인 흐름
 
 ### 자체 로그인 로직
@@ -569,7 +572,113 @@ sequenceDiagram
   ChatController-->>User: 200 OK (FirstMessageResponse)
 
 ```
+### 후속질문 로직
+- 두 질문(first + followup)을 합쳐서 프롬프트 구성 (formatted)
+- GPT에게 “법률 전문가처럼” 답변 요청
+- infoMarkdown은 이 흐름에서는 비어 있음
+- WebClient + ObjectMapper 기반의 응답 파싱 방식
+```mermaid
+sequenceDiagram
+  participant ChatService
+  participant GptService
+  participant WebClient
+  participant OpenAI API
+  participant ObjectMapper
 
+  Note over ChatService: 🔄 GPT에 첫 질문 + 후속 질문 함께 전달
+  ChatService->>GptService: generateAnswerWithContext(first, followup)
+
+  GptService->>WebClient: POST /v1/chat/completions
+  WebClient->>OpenAI API: Authorization + JSON(body)
+
+  OpenAI API-->>WebClient: JSON 응답
+  WebClient-->>GptService: response (string)
+
+  GptService->>ObjectMapper: readTree(response)
+  ObjectMapper-->>GptService: JsonNode
+
+  GptService-->>ChatService: AnswerResponse(answer)
+
+```
+
+### 채팅방 관련 로직
+
+- GET /api/chat-rooms:	사용자가 생성한 채팅방 목록 조회, 각 방의 id, title, createdAt, 미리보기 포함
+- GET /api/chat-rooms/{id}	특정 채팅방 내의 전체 메시지를 시간순으로 조회 (sender + content)
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant ChatController
+  participant ChatService
+  participant ChatRoomRepository
+  participant MessageRepository
+  participant EncryptUtil
+
+  Note over User, ChatController: 📥 [1] 전체 채팅방 리스트 조회
+
+  User->>ChatController: GET /api/chat-rooms
+  ChatController->>ChatService: getMyChatRooms(user)
+  ChatService->>ChatRoomRepository: findByUser(user)
+  ChatRoomRepository-->>ChatService: List<ChatRoom>
+
+  loop 각 ChatRoom
+    ChatService->>MessageRepository: findFirstByChatRoomIdOrderByTimestampAsc(id)
+    MessageRepository-->>ChatService: Optional<Message>
+    ChatService->>EncryptUtil: decrypt(message.content)
+    EncryptUtil-->>ChatService: 미리보기 문자열
+  end
+
+  ChatService-->>ChatController: List<ChatRoomResponse>
+  ChatController-->>User: 200 OK (채팅방 목록)
+
+  Note over User, ChatController: 📥 [2] 채팅방 내 메시지 전체 조회
+
+  User->>ChatController: GET /api/chat-rooms/{roomId}
+  ChatController->>ChatService: getMessages(user, roomId)
+
+  ChatService->>ChatRoomRepository: findById(roomId)
+  ChatRoomRepository-->>ChatService: Optional<ChatRoom>
+
+  alt 본인 채팅방일 경우
+    ChatService->>MessageRepository: findByChatRoomIdOrderByTimestampAsc(roomId)
+    loop 각 Message
+      ChatService->>EncryptUtil: decrypt(message.content)
+      EncryptUtil-->>ChatService: 복호화된 content
+    end
+    ChatService-->>ChatController: List<MessageResponse>
+    ChatController-->>User: 200 OK (채팅 내역)
+  else 잘못된 접근
+    ChatService-->>ChatController: MolelawException
+    ChatController-->>User: 403 FORBIDDEN (권한 없음)
+  end
+```
+- DELETE /api/chat-rooms/{id}	사용자가 생성한 채팅방을 삭제하고, 관련 메시지도 함께 삭제함. 성공 시 204 No Content 반환
+```mermaid
+sequenceDiagram
+  participant User
+  participant ChatController
+  participant ChatService
+  participant ChatRoomRepository
+
+  Note over User, ChatController: ❌ 채팅방 삭제 요청 (DELETE /api/chat-rooms/{chatRoomId})
+
+  User->>ChatController: DELETE /chat-rooms/{id}
+  ChatController->>ChatService: deleteChatRoom(user, chatRoomId)
+
+  ChatService->>ChatRoomRepository: findById(chatRoomId)
+  ChatRoomRepository-->>ChatService: Optional<ChatRoom>
+
+  alt 채팅방 존재 & 사용자 본인
+    ChatService->>ChatRoomRepository: delete(chatRoom)
+    ChatRoomRepository-->>ChatService: void
+    ChatService-->>ChatController: void
+    ChatController-->>User: 204 No Content
+  else 에러 발생
+    ChatService-->>ChatController: MolelawException
+    ChatController-->>User: ErrorResponse (권한 없음 or 채팅방 없음)
+  end
+```
 ---
 
 ## ✅ 예외 처리
