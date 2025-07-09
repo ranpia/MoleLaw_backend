@@ -50,7 +50,7 @@ public class UserService {
 
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
         User user = userRepository.findByEmailAndProvider(request.getEmail(), "local")
-                .orElseThrow(() -> new MolelawException(ErrorCode.DUPLICATED_EMAIL,"해당 이메일이 존재하지 않습니다."));
+                .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND,"해당 이메일이 존재하지 않습니다."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new MolelawException(ErrorCode.PASSWORD_FAIL);
