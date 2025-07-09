@@ -86,14 +86,14 @@ public class ChatService {
 
         List<Message> messages = messageRepository.findByChatRoomIdOrderByTimestampAsc(chatRoomId);
 
-        String firstUserQuestion = messages.stream()
-                .filter(m -> m.getSender() == Message.Sender.USER)
+        String firstBotQuestion = messages.stream()
+                .filter(m -> m.getSender() == Message.Sender.BOT)
                 .map(m -> EncryptUtil.decrypt(m.getContent()))
                 .findFirst()
                 .orElse(request.getContent());
 
         try {
-            AnswerResponse answer = gptService.generateAnswerWithContext(firstUserQuestion, request.getContent());
+            AnswerResponse answer = gptService.generateAnswerWithContext(firstBotQuestion, request.getContent());
 
             Message botMessage = messageRepository.save(Message.builder()
                     .chatRoom(room)
