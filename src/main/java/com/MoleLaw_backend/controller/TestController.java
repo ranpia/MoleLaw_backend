@@ -89,14 +89,8 @@ public class TestController {
 
     @PostMapping("/import")
     public ResponseEntity<String> importLaw(@RequestParam String name) {
-        Law law = lawSearchService.saveLawWithArticles(name);
-        return ResponseEntity.ok("저장 완료: " + law.getName());
+        List<Law> laws = lawSearchService.saveLawsWithArticles(name);
+        lawEmbeddingService.embedLaws(laws);
+        return ResponseEntity.ok("✅ 저장 및 벡터화 완료: " +laws.stream().map(Law::getId).toList());
     }
-
-    @PostMapping("/embed")
-    public ResponseEntity<String> embedLaw(@RequestParam Long lawId) {
-        lawEmbeddingService.embedAllChunksForLaw(lawId);
-        return ResponseEntity.ok("벡터화 완료");
-    }
-
 }

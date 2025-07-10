@@ -22,7 +22,7 @@ public class LawEmbedding {
     private LawChunk lawChunk;
 
     @Lob
-    @Column(name = "embedding_vector", nullable = false)
+    @Column(name = "embedding_vector", nullable = false, columnDefinition = "MEDIUMBLOB")
     private byte[] embeddingVector;  // float[] 직렬화된 형태
 
     @Column(name = "model_name")

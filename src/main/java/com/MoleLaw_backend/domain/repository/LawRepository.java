@@ -10,4 +10,6 @@ public interface LawRepository extends JpaRepository<Law, Long> {
     Optional<Law> findByName(String name);
 
     boolean existsByName(String name);
+
+    Optional<Law> findByNameAndLawCode(String lawName, String lawCode);
 }

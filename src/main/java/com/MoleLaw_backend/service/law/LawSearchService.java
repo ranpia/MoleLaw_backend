@@ -7,7 +7,6 @@ import com.MoleLaw_backend.domain.repository.LawRepository;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.OpenLawApiException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.net.URI;
 import java.util.Optional;
 
 
@@ -103,126 +107,196 @@ public class LawSearchService {
     }
 
     @Transactional
-    public Law saveLawWithArticles(String lawName) {
-        try {
-            String lawMst = getLawMstByName(lawName)
-                    .orElseThrow(() -> new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "법령 ID 조회 실패"));
+    public List<Law> saveLawsWithArticles(String lawName) {
+        List<String> mstList = getLawMstByName(lawName);
+        System.out.println("📄 조회된 Mst 목록: " + mstList);
 
-            JsonNode lawNode = getLawDetailByMst(lawMst);
+        if (mstList.isEmpty()) {
+            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "법령 MST 없음");
+        }
 
-            Law law = lawRepository.findByName(lawName)
-                    .orElseGet(() -> lawRepository.save(Law.builder()
-                            .name(lawName)
-                            .lawCode(lawNode.path("법령일련번호").asText())
-                            .department(lawNode.path("소관부처").path("content").asText())
-                            .build()));
+        List<Law> savedLaws = new ArrayList<>();
+        for (String mst : mstList) {
+            try {
+                Law law = saveSingleLawWithArticles(mst);
+                savedLaws.add(law);
+                System.out.println("✅ 저장 완료: " + law.getName() + " (ID: " + law.getId() + ")");
+            } catch (Exception e) {
+                System.err.println("❌ Mst 저장 실패 (" + mst + "): " + e.getMessage());
+            }
+        }
 
-            JsonNode articleRoot = lawNode.path("조문").path("조문단위");
-            if (articleRoot == null || !articleRoot.isArray()) {
-                throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "조문단위 없음");
+        return savedLaws;
+    }
+
+
+    public Law saveSingleLawWithArticles(String lawId) {
+        JsonNode lawNode = getLawDetailByMst(lawId);
+
+        String lawName = lawNode.path("기본정보").path("법령명_한글").asText();
+        String lawCode = lawNode.path("기본정보").path("법령ID").asText(); // ✅ 법령ID
+        String department = lawNode.path("기본정보").path("소관부처").path("content").asText(); // ✅ 부처명
+        System.out.println("🧾 법령명: " + lawName);
+        System.out.println("🧾 법령 코드: " + lawCode);
+        System.out.println("🏢 소관 부처: " + department);
+
+        // 중복 저장 방지
+        Law law = lawRepository.findByNameAndLawCode(lawName, lawCode)
+                .orElseGet(() -> lawRepository.save(Law.builder()
+                        .name(lawName)
+                        .lawCode(lawCode)
+                        .department(department)
+                        .build()));
+
+        JsonNode articleRoot = lawNode.path("조문").path("조문단위");
+        System.out.println("📜 조문단위 총 개수: " + (articleRoot.isArray() ? articleRoot.size() : "null 또는 배열 아님"));
+
+        if (!articleRoot.isArray()) {
+            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE,
+                    "조문단위 없음 - 응답 노드: " + lawNode.toPrettyString());
+        }
+
+        for (JsonNode article : articleRoot) {
+            String articleNo = article.path("조문번호").asText();
+            String articleContent = article.path("조문내용").asText("");
+
+            if (!articleContent.isBlank()) {
+                saveOrUpdateChunk(law, articleNo, null, 0, articleContent);
             }
 
-            for (JsonNode article : articleRoot) {
-                String articleNo = article.path("조문번호").asText();
-                String articleTitle = article.path("조문제목").asText(null);
-                String articleContent = article.path("조문내용").asText("");
+            JsonNode clauses = article.path("항");
+            if (clauses != null && clauses.isObject()) {
+                JsonNode hoArray = clauses.path("호");
+                if (hoArray != null && hoArray.isArray()) {
+                    for (JsonNode ho : hoArray) {
+                        String hoNo = ho.path("호번호").asText();
+                        String hoContent = ho.path("호내용").asText();
 
-                if (!articleContent.isBlank()) {
-                    saveChunk(law, articleNo, null, 0, articleContent);
-                }
+                        if (!hoContent.isBlank()) {
+                            saveOrUpdateChunk(law, articleNo, hoNo, 1, hoContent);
+                        }
 
-                // 항 처리
-                JsonNode clauses = article.path("항");
-                if (clauses.isObject()) {
-                    JsonNode hoArray = clauses.path("호");
-                    if (hoArray != null && hoArray.isArray()) {
-                        for (JsonNode ho : hoArray) {
-                            String hoNo = ho.path("호번호").asText();
-                            String hoContent = ho.path("호내용").asText();
+                        JsonNode mokArray = ho.path("목");
+                        if (mokArray != null && mokArray.isArray()) {
+                            for (JsonNode mok : mokArray) {
+                                String mokNo = mok.path("목번호").asText();
+                                String mokContent = mok.path("목내용").asText();
 
-                            if (!hoContent.isBlank()) {
-                                saveChunk(law, articleNo, hoNo, 1, hoContent);
-                            }
-
-                            // ✅ 목 처리
-                            JsonNode mokArray = ho.path("목");
-                            if (mokArray != null && mokArray.isArray()) {
-                                for (JsonNode mok : mokArray) {
-                                    String mokNo = mok.path("목번호").asText();
-                                    String mokContent = mok.path("목내용").asText();
-
-                                    if (!mokContent.isBlank()) {
-                                        saveChunk(law, articleNo, hoNo + "-" + mokNo, 2, mokContent);
-                                    }
+                                if (!mokContent.isBlank()) {
+                                    saveOrUpdateChunk(law, articleNo, hoNo + "-" + mokNo, 2, mokContent);
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+
+        return law;
+    }
 
 
-            return law;
 
-        } catch (Exception e) {
-            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "법령 본문 수집 실패", e);
+    private void saveOrUpdateChunk(Law law, String articleNo, String clauseNo, int index, String content) {
+        Optional<LawChunk> existing = lawChunkRepository
+                .findByLawAndArticleNumberAndClauseNumber(law, articleNo, clauseNo);
+
+        if (existing.isPresent()) {
+            LawChunk chunk = existing.get();
+            if (!chunk.getContentText().equals(content.trim())) {
+                chunk.setContentText(content.trim());
+                chunk.setChunkIndex(index);
+                chunk.setCreatedAt(LocalDateTime.now());
+                lawChunkRepository.save(chunk); // ✅ 내용 바뀐 경우에만 업데이트
+            }
+        } else {
+            LawChunk chunk = LawChunk.builder()
+                    .law(law)
+                    .articleNumber(articleNo)
+                    .clauseNumber(clauseNo)
+                    .chunkIndex(index)
+                    .contentText(content.trim())
+                    .build();
+            lawChunkRepository.save(chunk);
         }
     }
 
-    private void saveChunk(Law law, String articleNo, String clauseNo, int index, String content) {
-        LawChunk chunk = LawChunk.builder()
-                .law(law)
-                .articleNumber(articleNo)
-                .clauseNumber(clauseNo)
-                .chunkIndex(index)
-                .contentText(content.trim())
-                .build();
-        lawChunkRepository.save(chunk);
-    }
 
-    public Optional<String> getLawMstByName(String lawName) {
+    public List<String> getLawMstByName(String lawName) {
         try {
             String json = searchLawByKeyword(lawName);
             JsonNode node = objectMapper.readTree(json);
             JsonNode lawArr = node.path("LawSearch").path("law");
 
+            List<String> MstList = new ArrayList<>();
+
             if (lawArr.isArray()) {
                 for (JsonNode law : lawArr) {
-                    if (law.path("법령명한글").asText().equals(lawName)) {
-                        return Optional.of(law.path("법령ID").asText());
+                    String name = law.path("법령명한글").asText();
+                    if (name != null && name.startsWith(lawName)) {
+                        String Mst = law.path("법령일련번호").asText();
+                        if (!Mst.isBlank()) {
+                            MstList.add(Mst);
+                        }
                     }
                 }
             }
-            return Optional.empty();
+
+            return MstList;
+
         } catch (JsonProcessingException e) {
             throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "JSON 파싱 실패", e);
         }
     }
 
+
     public JsonNode getLawDetailByMst(String mst) {
         try {
-            JsonNode response = webClientBuilder.build()
+            URI uri = UriComponentsBuilder.newInstance()
+                    .scheme("http")
+                    .host("www.law.go.kr")
+                    .path("/DRF/lawService.do")
+                    .queryParam("OC", oc)
+                    .queryParam("target", "law")
+                    .queryParam("type", "JSON")
+                    .queryParam("MST", mst)
+                    .build(true)
+                    .toUri();
+
+            System.out.println("✅ 최종 URI: " + uri); // Postman URL과 정확히 비교
+
+            JsonNode response = webClientBuilder
+                    .codecs(config -> config.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+                    .build()
                     .get()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("http")
-                            .host("www.law.go.kr")
-                            .path("/DRF/lawService.do")
-                            .queryParam("OC", oc)
-                            .queryParam("target", "law")
-                            .queryParam("type", "JSON")
-                            .queryParam("MST", mst)
-                            .build())
+                    .uri(uri)
                     .retrieve()
                     .bodyToMono(JsonNode.class)
                     .block();
 
-            return response.path("법령");
+            JsonNode lawNode = response.path("법령");
+
+            if (lawNode.isMissingNode() || lawNode.isEmpty()) {
+                throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "법령 노드 없음 (MST=" + mst + ")");
+            }
+
+            return lawNode;
+
         } catch (WebClientResponseException e) {
+            System.err.println("❌ WebClient 응답 예외 발생:");
+            System.err.println(" - Status Code: " + e.getRawStatusCode());
+            System.err.println(" - Status Text: " + e.getStatusText());
+            System.err.println(" - Response Body: " + e.getResponseBodyAsString());
+            System.err.println(" - Headers: " + e.getHeaders());
             throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "본문 API 응답 오류", e);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "본문 API 예외", e);
         }
     }
+
+
+
 
 
 
