@@ -1,5 +1,6 @@
 package com.MoleLaw_backend.service.law;
 
+import com.MoleLaw_backend.domain.entity.LawChunk;
 import com.MoleLaw_backend.dto.PrecedentInfo;
 import com.MoleLaw_backend.dto.request.PrecedentSearchRequest;
 import com.MoleLaw_backend.dto.response.AnswerResponse;
@@ -8,6 +9,7 @@ import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.GptApiException;
 import com.MoleLaw_backend.exception.OpenLawApiException;
 import com.MoleLaw_backend.util.MinistryCodeMapper;
+import com.MoleLaw_backend.service.law.LawSimilarityService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class FinalAnswer {
     private final LawSearchService lawSearchService;
     private final CaseSearchService caseSearchService;
     private final ObjectMapper objectMapper;
+    private final LawSimilarityService lawSimilar;
 
     @Value("${openai.api-key}")
     private String apiKey;
@@ -42,58 +45,82 @@ public class FinalAnswer {
         List<Map<String, Object>> lawResults = new ArrayList<>();
         Set<String> uniqueLawNames = new LinkedHashSet<>();
 
-        // 1. 법령 검색 (부처코드 있는 경우 우선)
-        for (String keyword : keywords) {
-            try {
-                String rawResult = (orgCode != null)
-                        ? lawSearchService.searchLawByKeyword(keyword, orgCode)
-                        : lawSearchService.searchLawByKeyword(keyword);
+        // 백터 법령 머시깽이
+        List<LawChunk> topChunks = lawSimilar.findSimilarChunksWithFallback(query, 3);
+//        List<LawChunk> topChunks = lawSimilar.findSimilarChunks(query, 3);
 
-                JsonNode lawArray = objectMapper.readTree(rawResult).path("LawSearch").path("law");
-                if (lawArray.isArray()) {
-                    for (JsonNode law : lawArray) {
-                        String name = law.path("법령명한글").asText();
-                        if (uniqueLawNames.size() < 5 && uniqueLawNames.add(name)) {
-                            lawResults.add(objectMapper.convertValue(law, new TypeReference<>() {}));
-                        }
-                    }
-                }
+//        for (LawChunk law : topChunks) {
+//            try {
+//
+//            } catch (Exception e) {
+//                System.out.printf("처리 중 오류: %s\n", e.getMessage());
+//            }
+//        }
 
-            } catch (Exception e) {
-                System.out.printf("[LawSearch] 키워드 '%s' 처리 중 오류: %s\n", keyword, e.getMessage());
-            }
-        }
+//        // 1. 법령 검색 (부처코드 있는 경우 우선)
+//        for (String keyword : keywords) {
+//            try {
+//                String rawResult = (orgCode != null)
+//                        ? lawSearchService.searchLawByKeyword(keyword, orgCode)
+//                        : lawSearchService.searchLawByKeyword(keyword);
+//
+//                JsonNode lawArray = objectMapper.readTree(rawResult).path("LawSearch").path("law");
+//                if (lawArray.isArray()) {
+//                    for (JsonNode law : lawArray) {
+//                        String name = law.path("법령명한글").asText();
+//                        if (uniqueLawNames.size() < 5 && uniqueLawNames.add(name)) {
+//                            lawResults.add(objectMapper.convertValue(law, new TypeReference<>() {}));
+//                        }
+//                    }
+//                }
+//
+//            } catch (Exception e) {
+//                System.out.printf("[LawSearch] 키워드 '%s' 처리 중 오류: %s\n", keyword, e.getMessage());
+//            }
+//        }
+//
+//        // 2. 법령 결과 없을 경우 fallback
+//        if (lawResults.isEmpty()) {
+//            for (String keyword : keywords) {
+//                try {
+//                    String fallbackResult = lawSearchService.searchLawByKeyword(keyword);
+//                    JsonNode lawArray = objectMapper.readTree(fallbackResult).path("LawSearch").path("law");
+//                    if (lawArray.isArray()) {
+//                        for (JsonNode law : lawArray) {
+//                            String name = law.path("법령명한글").asText();
+//                            if (uniqueLawNames.size() < 5 && uniqueLawNames.add(name)) {
+//                                lawResults.add(objectMapper.convertValue(law, new TypeReference<>() {}));
+//                            }
+//                        }
+//                    }
+//
+//                } catch (Exception e) {
+//                    System.out.printf("[Fallback] 키워드 '%s' 부처 없이 검색 실패: %s\n", keyword, e.getMessage());
+//                }
+//            }
+//        }
 
-        // 2. 법령 결과 없을 경우 fallback
-        if (lawResults.isEmpty()) {
-            for (String keyword : keywords) {
-                try {
-                    String fallbackResult = lawSearchService.searchLawByKeyword(keyword);
-                    JsonNode lawArray = objectMapper.readTree(fallbackResult).path("LawSearch").path("law");
-                    if (lawArray.isArray()) {
-                        for (JsonNode law : lawArray) {
-                            String name = law.path("법령명한글").asText();
-                            if (uniqueLawNames.size() < 5 && uniqueLawNames.add(name)) {
-                                lawResults.add(objectMapper.convertValue(law, new TypeReference<>() {}));
-                            }
-                        }
-                    }
+//        // 3. 판례 검색 (lawResults 기준)
+//        List<PrecedentInfo> precedentResults = new ArrayList<>();
+//        for (String lawName : uniqueLawNames) {
+//            try {
+//                PrecedentSearchRequest req = new PrecedentSearchRequest();
+//                req.setQuery(lawName);
+//                precedentResults.addAll(caseSearchService.searchCases(req));
+//            } catch (OpenLawApiException e) {
+//                System.out.printf("[CaseSearch] '%s' 판례 조회 실패: %s\n", lawName, e.getMessage());
+//            }
+//        }
 
-                } catch (Exception e) {
-                    System.out.printf("[Fallback] 키워드 '%s' 부처 없이 검색 실패: %s\n", keyword, e.getMessage());
-                }
-            }
-        }
-
-        // 3. 판례 검색 (lawResults 기준)
+        // 3. 판례 검색 (lawChunk 기준)
         List<PrecedentInfo> precedentResults = new ArrayList<>();
-        for (String lawName : uniqueLawNames) {
+        for (LawChunk lc : topChunks) {
             try {
                 PrecedentSearchRequest req = new PrecedentSearchRequest();
-                req.setQuery(lawName);
+                req.setQuery(lc.getLaw().getName());
                 precedentResults.addAll(caseSearchService.searchCases(req));
             } catch (OpenLawApiException e) {
-                System.out.printf("[CaseSearch] '%s' 판례 조회 실패: %s\n", lawName, e.getMessage());
+                System.out.printf("[CaseSearch] 판례 조회 실패: %s\n", e.getMessage());
             }
         }
 
