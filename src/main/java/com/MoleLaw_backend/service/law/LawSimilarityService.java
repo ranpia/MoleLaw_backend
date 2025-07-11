@@ -43,29 +43,35 @@ public class LawSimilarityService {
     public List<LawChunk> findSimilarChunksWithFallback(String question, int topK) {
         List<LawChunk> chunks = findSimilarChunks(question, topK);
 
+        if (chunks.isEmpty()) return List.of();
+
         double topScore = cosineSimilarity(
                 embeddingService.generateEmbedding(question),
                 deserializeFloatArray(chunks.get(0).getEmbedding().getEmbeddingVector())
         );
 
         if (topScore < 0.75) {
-            System.out.println("📉 유사도 낮음: {"+topScore+"} → fallback 발동");
+            System.out.println("📉 유사도 낮음: " + topScore + " → fallback 발동");
 
-            // 1. GPT 또는 키워드 추출기로 법령명 추정
-            List<String> lawNames = extractKeyword.extractKeywords(question).getKeywords(); // 예: ["도로교통법"]
+            List<String> lawNames = extractKeyword.extractKeywords(question).getKeywords(); // GPT 키워드
 
-            // 2. 법령 수집 + chunk 저장 + 임베딩
             for (String lawName : lawNames) {
-                List<Law> saved = lawSearchService.saveLawsWithArticles(lawName);
-                lawEmbeddingService.embedLaws(saved);
+                try {
+                    List<Law> saved = lawSearchService.saveLawsWithArticles(lawName);
+                    lawEmbeddingService.embedLaws(saved);
+                    System.out.println("📘 fallback으로 새 법령 저장: " + lawName);
+                } catch (Exception e) {
+                    System.err.println("❌ fallback 실패 - lawName=" + lawName + ": " + e.getMessage());
+                }
             }
 
-            // 3. 다시 재탐색
+            // 재탐색 시도
             return findSimilarChunks(question, topK);
         }
 
         return chunks;
     }
+
 
 
     private float[] deserializeFloatArray(byte[] bytes) {
