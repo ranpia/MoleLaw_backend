@@ -1,8 +1,10 @@
 package com.MoleLaw_backend.service.law;
 
+import com.MoleLaw_backend.domain.entity.Law;
 import com.MoleLaw_backend.domain.entity.LawChunk;
 import com.MoleLaw_backend.domain.entity.LawEmbedding;
 import com.MoleLaw_backend.domain.repository.LawEmbeddingRepository;
+import com.MoleLaw_backend.domain.repository.LawRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,9 @@ public class LawSimilarityService {
 
     private final LawEmbeddingRepository lawEmbeddingRepository;
     private final EmbeddingService embeddingService;
+    private final ExtractKeyword extractKeyword;
+    private final LawSearchService lawSearchService;
+    private final LawEmbeddingService lawEmbeddingService;
 
     public List<LawChunk> findSimilarChunks(String question, int topK) {
         float[] queryVec = embeddingService.generateEmbedding(question);
@@ -34,6 +39,34 @@ public class LawSimilarityService {
                 .map(ScoredChunk::chunk)
                 .collect(Collectors.toList());
     }
+
+    public List<LawChunk> findSimilarChunksWithFallback(String question, int topK) {
+        List<LawChunk> chunks = findSimilarChunks(question, topK);
+
+        double topScore = cosineSimilarity(
+                embeddingService.generateEmbedding(question),
+                deserializeFloatArray(chunks.get(0).getEmbedding().getEmbeddingVector())
+        );
+
+        if (topScore < 0.75) {
+            System.out.println("📉 유사도 낮음: {"+topScore+"} → fallback 발동");
+
+            // 1. GPT 또는 키워드 추출기로 법령명 추정
+            List<String> lawNames = extractKeyword.extractKeywords(question).getKeywords(); // 예: ["도로교통법"]
+
+            // 2. 법령 수집 + chunk 저장 + 임베딩
+            for (String lawName : lawNames) {
+                List<Law> saved = lawSearchService.saveLawsWithArticles(lawName);
+                lawEmbeddingService.embedLaws(saved);
+            }
+
+            // 3. 다시 재탐색
+            return findSimilarChunks(question, topK);
+        }
+
+        return chunks;
+    }
+
 
     private float[] deserializeFloatArray(byte[] bytes) {
         try (var bais = new java.io.ByteArrayInputStream(bytes);
