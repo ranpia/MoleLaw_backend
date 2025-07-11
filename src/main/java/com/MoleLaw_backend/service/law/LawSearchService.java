@@ -233,7 +233,7 @@ public class LawSearchService {
             if (lawArr.isArray()) {
                 for (JsonNode law : lawArr) {
                     String name = law.path("법령명한글").asText();
-                    if (name != null && name.startsWith(lawName)) {
+                    if (name != null) {
                         String Mst = law.path("법령일련번호").asText();
                         if (!Mst.isBlank()) {
                             MstList.add(Mst);
