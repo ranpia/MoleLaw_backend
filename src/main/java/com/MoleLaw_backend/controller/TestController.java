@@ -1,5 +1,6 @@
 package com.MoleLaw_backend.controller;
 
+import com.MoleLaw_backend.domain.entity.Law;
 import com.MoleLaw_backend.dto.PrecedentInfo;
 import com.MoleLaw_backend.dto.request.FinalAnswerRequest;
 import com.MoleLaw_backend.dto.request.FirstMessageRequest;
@@ -8,10 +9,7 @@ import com.MoleLaw_backend.dto.request.QueryRequest;
 import com.MoleLaw_backend.dto.response.AnswerResponse;
 import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
 import com.MoleLaw_backend.dto.response.LawDto;
-import com.MoleLaw_backend.service.law.CaseSearchService;
-import com.MoleLaw_backend.service.law.ExtractKeyword;
-import com.MoleLaw_backend.service.law.FinalAnswer;
-import com.MoleLaw_backend.service.law.LawSearchService;
+import com.MoleLaw_backend.service.law.*;
 import com.MoleLaw_backend.service.security.CustomUserDetails;
 import com.MoleLaw_backend.util.LawParseUtil;
 import com.MoleLaw_backend.util.MinistryCodeMapper;
@@ -35,6 +33,7 @@ public class TestController {
     private final ExtractKeyword extractKeyword;
     private final FinalAnswer finalAnswer;
     private final CaseSearchService caseSearchService;
+    private final LawEmbeddingService lawEmbeddingService;
 
     @GetMapping("/lawsearch")
     @Operation(summary = "키워드 기반 법률제목 조회", description = "OpenLaw API 활용한 법률 조회")
@@ -86,5 +85,12 @@ public class TestController {
     public ResponseEntity<AnswerResponse> getAnswer(@RequestBody QueryRequest request) {
         KeywordAndTitleResponse response = extractKeyword.extractKeywords(request.getQuery());
         return ResponseEntity.ok(finalAnswer.getAnswer(request.getQuery(), response));
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<String> importLaw(@RequestParam String name) {
+        List<Law> laws = lawSearchService.saveLawsWithArticles(name);
+        lawEmbeddingService.embedLaws(laws);
+        return ResponseEntity.ok("✅ 저장 및 벡터화 완료: " +laws.stream().map(Law::getId).toList());
     }
 }

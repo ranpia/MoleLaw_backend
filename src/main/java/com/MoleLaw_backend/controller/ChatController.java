@@ -81,7 +81,7 @@ public class ChatController {
         return ResponseEntity.ok(chatService.createRoomAndAsk(userDetails.getUser(), request));
     }
 
-    @DeleteMapping("/chat-rooms/{chatRoomId}")
+    @DeleteMapping("/{chatRoomId}")
     @Operation(summary = "내 채팅방 삭제", description = "내가 생성한 채팅방을 삭제합니다. 메시지도 함께 삭제됩니다.", security = @SecurityRequirement(name = "BearerAuth"))
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "채팅방 삭제 성공"),
