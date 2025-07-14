@@ -5,48 +5,83 @@
 - **서비스명**: MoleLaw (몰루로 묻고 법으로 답하다)
 - **설명**: 사용자의 법률 질문을 받아 GPT가 관련 법령 및 판례를 검색해 자동 응답하는 상담형 챗봇 서비스
 - **DB**: MySQL
-- **API 기반**: OpenLaw API (법령 / 판례)
+- **API 기반**: OpenLaw API (법령 / 판례), OpenAI Api (gpt 응답 / 임베딩 벡터)
 
 ---
 
 ## 🧱 핵심 Entity 구조 (RDB: MySQL)
 
-### 📄 User
 
-| 필드명      | 타입     | 제약조건                   | 설명                     |
-| -------- | ------ | ---------------------- | ---------------------- |
-| id       | Long   | PK                     | 사용자 ID                 |
-| email    | String | Unique(email+provider) | 이메일                    |
-| password | String |                        | 암호화 저장                 |
-| nickname | String |                        | 닉네임                    |
-| provider | String |                        | google / kakao / local |
+```mermaid
+erDiagram
+  USER ||--o{ CHATROOM : has
+  CHATROOM ||--o{ MESSAGE : has
+  LAW ||--o{ LAWCHUNK : has
+  LAWCHUNK ||--|| LAWEMBEDDING : has
 
-- 관계: `User 1 : N ChatRoom`
+  USER {
+    Long id PK
+    String email "Unique (email + provider)"
+    String password
+    String nickname
+    String provider "google / kakao / local"
+  }
 
-### 📄 ChatRoom
+  CHATROOM {
+    Long id PK
+    String title
+    Long user_id FK
+    LocalDateTime createdAt
+  }
 
-| 필드명       | 타입            | 제약조건 | 설명         |
-| --------- | ------------- | ---- | ---------- |
-| id        | Long          | PK   | 채팅방 ID     |
-| title     | String        |      | 요약 제목      |
-| user\_id  | FK → User(id) |      | 소유 유저      |
-| createdAt | LocalDateTime |      | 생성 시 자동 등록 |
+  MESSAGE {
+    Long id PK
+    Long chat_room_id FK
+    Enum sender "USER / BOT / INFO"
+    Text content "암호화됨"
+    LocalDateTime timestamp
+  }
 
-- 관계: `ChatRoom 1 : N Message`
+  LAW {
+    Long id PK
+    String name "법령명(한글)"
+    String lawCode "법령ID (OpenLaw)"
+    String department "소관 부처"
+  }
 
-### 📄 Message
+  LAWCHUNK {
+    Long id PK
+    Long law_id FK
+    String articleNumber
+    String clauseNumber
+    Int chunkIndex "0=조문, 1=항, 2=목"
+    Text contentText
+    LocalDateTime createdAt
+  }
 
-| 필드명          | 타입                   | 제약조건  | 설명     |
-| ------------ | -------------------- | ----- | ------ |
-| id           | Long                 | PK    | 메시지 ID |
-| chat_room_id | FK → ChatRoom(id)    |       | 소속 채팅방 |
-| sender       | Enum (USER/BOT/INFO) |       | 보낸이 구분 |
-| content      | TEXT                 | 암호화됨  | 메시지 본문 |
-| timestamp    | LocalDateTime        | 자동 등록 | 생성 시각  |
+  LAWEMBEDDING {
+    Long id PK
+    Long chunk_id FK "Unique"
+    Blob embeddingVector "1536차원 float[] 직렬화"
+    String model
+    LocalDateTime createdAt
+  }
 
----
+```
 
+--- 
 
+##
+## 📦 MoleLaw 클래스 다이어그램
+
+아래는 MoleLaw 프로젝트의 주요 클래스 및 관계 구조입니다.
+
+![클래스 다이어그램](./docs/main.png)
+![클래스 다이어그램](./docs/jwt.png)
+![클래스 다이어그램](./docs/userandchat.png)
+![클래스 다이어그램](./docs/lawandgpt.png)
+![클래스 다이어그램](./docs/utill.png)
+![클래스 다이어그램](./docs/dto.png)
 ---
 
 ## 🧠 로그인 흐름
@@ -321,6 +356,145 @@ sequenceDiagram
     end
 ```
 
+--- 
+## 🧠 GPT 첫 응답 생성 흐름
+
+###  1단계: 사용자 질문 → 유효성 검증 → 키워드 추출 → 채팅방 생성 → 질문 메시지 저장
+- 사용자가 최초 질문을 입력하면, 서버는 요청 유효성 검사를 수행
+- 내용이 존재하면 ExtractKeyword를 통해 핵심 키워드 및 요약을 추출
+- 해당 정보를 바탕으로 채팅방을 생성
+- 사용자의 질문 메시지를 암호화 후 DB에 저장
+```mermaid
+sequenceDiagram
+  participant User
+  participant ChatController
+  participant ChatService
+  participant ExtractKeyword
+  participant EncryptUtil
+  participant ChatRoomRepository
+  participant MessageRepository
+
+  User->>ChatController: POST /api/chat-rooms/first-message
+  ChatController->>ChatService: createRoomAndAsk(user, request)
+
+  ChatService->>ChatService: validateRequest(request)
+  alt 유효하지 않음
+    ChatService-->>Exception: MolelawException(INVALID_REQUEST)
+  end
+
+  ChatService->>ExtractKeyword: extractKeywords(content)
+  ExtractKeyword-->>ChatService: KeywordAndTitleResponse(summary, keywords)
+
+  ChatService->>ChatService: createChatRoom(user, summary)
+  ChatService->>EncryptUtil: encrypt(userMessage)
+  EncryptUtil-->>ChatService: encryptedUserMessage
+  ChatService->>MessageRepository: save(USER message)
+
+```
+
+### 2단계: 법령 검색 및 온디맨드 임베딩 저장 (선택적 단계)
+단계	설명
+- ✅ 유사도 검색	질문을 벡터화하고 LawEmbeddingRepository 내 모든 조문과 cosine 비교
+- ⚠️ Fallback	Top-K이 비어있거나, 최상위 유사도 < 0.6일 경우 키워드 기반 법령 수집 및 임베딩
+- ⚖️ 판례 검색	lawName 기준으로 CaseSearchService.searchCases(...) 호출 (OpenLaw API 사용)
+- 🧠 GPT 요청	질문 + 법령 chunk + 판례 요약 → GPT-4 호출, 응답 파싱 후 AnswerResponse로 반환
+```mermaid
+sequenceDiagram
+  participant ChatService
+  participant FinalAnswer
+  participant LawSimilarityService
+  participant CaseSearchService
+  participant GptService
+  participant OpenAI GPT API
+
+  ChatService->>FinalAnswer: getAnswer(question, keywordInfo)
+
+  Note over FinalAnswer: 🔍 1. 유사 법령 조문 찾기
+  FinalAnswer->>LawSimilarityService: findSimilarChunksWithFallback(question, topK)
+
+Note over LawSimilarityService: ① 저장된 임베딩에서 cosine 유사도 계산
+  Note over LawSimilarityService: ② 유사도 부족하거나 없음 → fallback 실행
+  Note over LawSimilarityService: - 질문 키워드 기반으로 법령 검색 & 저장
+  Note over LawSimilarityService: - 조문을 임베딩하여 VectorStore에 추가
+  Note over LawSimilarityService: - 유사 chunk 재탐색
+
+LawSimilarityService-->>FinalAnswer: List<LawChunk>
+
+Note over FinalAnswer: ⚖️ 2. 관련 판례 검색
+FinalAnswer->>CaseSearchService: searchCases(lawName from chunks)
+
+CaseSearchService-->>FinalAnswer: List<PrecedentInfo>
+
+Note over FinalAnswer: 🧠 3. GPT 프롬프트 구성 및 응답 요청
+  Note over FinalAnswer: - 질문 + 관련 법령 + 판례로 prompt 구성
+  Note over FinalAnswer: - 시스템 프롬프트 포함
+  Note over FinalAnswer: - GPT-4 API 호출
+
+FinalAnswer->>GptService: generateAnswer(prompt)
+GptService->>OpenAI GPT API: POST /v1/chat/completions
+OpenAI GPT API-->>GptService: GPT 응답
+GptService-->>FinalAnswer: AnswerResponse(answer + infoMarkdown)
+
+  Note right of ChatService: AnswerResponse(answer, infoMarkdown)
+FinalAnswer-->>ChatService: AnswerResponse
+
+```
+#### 3단계: 메시지 저장 및 FirstMessageResponse 반환
+- ChatService는 사용자 질문과 GPT 응답을 각각 암호화하여 MessageRepository에 저장
+- 사용자 메시지: USER, GPT 답변: BOT, 관련 정보: INFO 메시지로 구분되어 저장됨
+- 모든 메시지를 채팅방 기준으로 조회한 후, FirstMessageResponse로 클라이언트에 응답
+```mermaid
+sequenceDiagram
+  participant User
+  participant ChatController
+  participant ChatService
+  participant MessageRepository
+  participant EncryptUtil
+
+  Note over ChatService: 🤖 2단계에서 받은 AnswerResponse(answer, info)
+
+  Note over ChatService: 🔐 AI 메시지(answer+info) 암호화 후 저장
+  ChatService->>EncryptUtil: encrypt(answer)
+  EncryptUtil-->>ChatService: encryptedAnswer
+  ChatService->>MessageRepository: save(BOT message)
+
+  ChatService->>EncryptUtil: encrypt(infoMarkdown)
+  EncryptUtil-->>ChatService: encryptedInfo
+  ChatService->>MessageRepository: save(INFO message)
+
+  Note over ChatService: 📦 전체 메시지 조회 및 응답 생성
+  ChatService->>MessageRepository: findAllByChatRoom(chatRoomId)
+  ChatService-->>ChatController: FirstMessageResponse(id, messages[])
+  ChatController-->>User: 200 OK (FirstMessageResponse)
+```
+### 후속질문 로직
+- 두 질문(first + followup)을 합쳐서 프롬프트 구성 (formatted)
+- GPT에게 “법률 전문가처럼” 답변 요청
+- infoMarkdown은 이 흐름에서는 비어 있음
+- WebClient + ObjectMapper 기반의 응답 파싱 방식
+```mermaid
+sequenceDiagram
+  participant ChatService
+  participant GptService
+  participant WebClient
+  participant OpenAI API
+  participant ObjectMapper
+
+  Note over ChatService: 🔄 GPT에 첫 질문 + 후속 질문 함께 전달
+  ChatService->>GptService: generateAnswerWithContext(first, followup)
+
+  GptService->>WebClient: POST /v1/chat/completions
+  WebClient->>OpenAI API: Authorization + JSON(body)
+
+  OpenAI API-->>WebClient: JSON 응답
+  WebClient-->>GptService: response (string)
+
+  GptService->>ObjectMapper: readTree(response)
+  ObjectMapper-->>GptService: JsonNode
+
+  GptService-->>ChatService: AnswerResponse(answer)
+
+```
 ---
 ## 국가법령정보센터(OpenLaw.api), gpt api 로직
 
@@ -352,62 +526,77 @@ sequenceDiagram
 ```
 
 ### 🧾 법령 검색 로직 (LawSearchService)
-- 키워드와 선택적 부처코드(orgCode)를 바탕으로 법령을 최대 4단계 fallback 전략으로 검색
-- WebClient를 통해 국가법령정보센터(OpenLaw) API에 요청
-- 검색 성공 조건은 JSON 응답 내에 "law" 키가 존재하는지 여부
 
+#### 🔍 1단계: 유사 법령 조문 찾기 (with fallback)
+✅ 핵심 기능 흐름 요약
+- 질문을 벡터로 임베딩하여 기존 LawEmbedding들과 cosine 유사도 비교
+
+- 결과가 없거나 유사도가 낮으면 → fallback: 키워드 기반 법령 검색 & 저장 & 재임베딩 후 재탐색
 ```mermaid
 sequenceDiagram
   participant FinalAnswer
+  participant LawSimilarityService
+  participant EmbeddingService
+  participant LawEmbeddingRepository
+  participant ExtractKeyword
   participant LawSearchService
-  participant WebClient
-  participant OpenLawAPI as 국가법령정보센터
+  participant LawEmbeddingService
+  participant OpenAI Embedding API
+  participant LawChunkRepository
 
-  Note over LawSearchService: 입력: keyword, (optional) orgCode
+  FinalAnswer->>LawSimilarityService: findSimilarChunksWithFallback(question, topK)
 
-  FinalAnswer->>LawSearchService: searchLawByKeyword(keyword, orgCode)
+  Note over LawSimilarityService: 🔸 질문을 벡터로 변환
+  LawSimilarityService->>EmbeddingService: generateEmbedding(question)
+  EmbeddingService-->>LawSimilarityService: queryVec
 
-  alt orgCode 존재
-    Note over LawSearchService: ① 제목 검색 + 부처코드
-    LawSearchService->>WebClient: trySearch(keyword, 1, orgCode)
-    WebClient->>OpenLawAPI: GET /lawSearch.do?search=1&org=...
-    OpenLawAPI-->>WebClient: JSON
-    WebClient-->>LawSearchService: response
-    alt 결과 있음
-      LawSearchService-->>FinalAnswer: JSON
-    else
-      Note over LawSearchService: ② 본문 검색 + 부처코드
-      LawSearchService->>WebClient: trySearch(keyword, 2, orgCode)
-      WebClient->>OpenLawAPI: GET /lawSearch.do?search=2&org=...
-      OpenLawAPI-->>LawSearchService: response
-      alt 결과 있음
-        LawSearchService-->>FinalAnswer: JSON
-      else
-        LawSearchService->>LawSearchService: fallback → searchLawByKeyword(keyword)
+  Note over LawSimilarityService: 🔸 기존 저장된 임베딩 로드 및 유사도 계산
+  LawSimilarityService->>LawEmbeddingRepository: findAll()
+  LawEmbeddingRepository-->>LawSimilarityService: List<LawEmbedding>
+
+  loop each LawEmbedding
+    LawSimilarityService->>LawSimilarityService: cosineSimilarity(queryVec, embeddingVec)
+  end
+
+  alt 유사도가 낮거나 chunks.isEmpty()
+    Note over LawSimilarityService: ⚠️ fallback 실행
+
+    LawSimilarityService->>ExtractKeyword: extractKeywords(question)
+    ExtractKeyword-->>LawSimilarityService: List<String> lawNames
+
+    loop for each lawName
+      LawSimilarityService->>LawSearchService: saveLawsWithArticles(lawName)
+      LawSearchService->>LawChunkRepository: save(LawChunk)
+      LawSearchService-->>LawSimilarityService: List<Law>
+
+      LawSimilarityService->>LawEmbeddingService: embedLaws(laws)
+      loop for each chunk
+        LawEmbeddingService->>OpenAI Embedding API: POST /v1/embeddings
+        OpenAI Embedding API-->>LawEmbeddingService: vector
+        LawEmbeddingService->>LawEmbeddingRepository: save(LawEmbedding)
       end
     end
-  else 부처 없음 or fallback
-    Note over LawSearchService: ③ 제목 검색 (부처 없이)
-    LawSearchService->>WebClient: trySearch(keyword, 1, null)
-    WebClient->>OpenLawAPI: GET /lawSearch.do?search=1
-    OpenLawAPI-->>LawSearchService: response
 
-    alt 결과 없음
-      Note over LawSearchService: ④ 본문 검색 (부처 없이)
-      LawSearchService->>WebClient: trySearch(keyword, 2, null)
-      WebClient->>OpenLawAPI: GET /lawSearch.do?search=2
-      OpenLawAPI-->>LawSearchService: response
-    end
-
-    LawSearchService-->>FinalAnswer: 최종 JSON 결과
+    Note over LawSimilarityService: 🔁 임베딩 저장 후 유사도 재탐색
+    LawSimilarityService->>LawSimilarityService: findSimilarChunks(...)
   end
+
+  LawSimilarityService-->>FinalAnswer: Top-N 유사 LawChunk 리스트
 
 ```
 
+
+
 ### ⚖️ 판례 검색 로직 (CaseSearchServiceImpl)
-- 입력된 법령명(JO)을 기반으로 국가법령정보센터 API에 판례 검색 요청
-- 결과는 JSON → PrecedentSearchResponse로 역직렬화
-- precSearch.prec가 비어있을 경우 빈 리스트 반환
+입력: 
+- 단일 법령명 (lawName)
+
+처리: 
+- WebClient를 통해 국가법령정보센터(OpenLaw)에 JO=법령명 쿼리 요청
+- 응답 JSON → PrecedentSearchResponse로 역직렬화
+
+출력: 
+- List<PrecedentInfo> 또는 빈 리스트
 
 ```mermaid
 sequenceDiagram
@@ -417,188 +606,84 @@ sequenceDiagram
   participant OpenLawAPI as 국가법령정보센터
 
   FinalAnswer->>CaseSearchService: searchCases(lawName)
-  CaseSearchService->>WebClient: GET /DRF/lawSearch.do?target=prec&JO=lawName
-  WebClient->>OpenLawAPI: 요청 (queryParam: JO=lawName, display=5)
-  OpenLawAPI-->>WebClient: JSON 응답 (PrecedentSearchResponse)
-  WebClient-->>CaseSearchService: response 객체
+  CaseSearchService->>WebClient: GET /DRF/lawSearch.do?target=prec&JO=lawName&display=5
+  WebClient->>OpenLawAPI: 요청 전송
+  OpenLawAPI-->>WebClient: JSON 응답
+  WebClient-->>CaseSearchService: PrecedentSearchResponse
 
-  alt 응답 valid + prec 존재
+  alt prec 항목 존재
     CaseSearchService-->>FinalAnswer: List<PrecedentInfo>
-  else 응답 누락 또는 prec 없음
+  else prec 없음 또는 응답 누락
     CaseSearchService-->>FinalAnswer: 빈 리스트
   end
 
 ```
 
-## 🧠 GPT 첫 응답 생성 흐름
+### 3단계: GPT 프롬프트 구성 및 응답 요청 (GptService)
 
-###  0단계: 사용자 질문 → 유효성 검증 → 키워드 추출 → 채팅방 생성 → 질문 메시지 저장
-- 사용자가 최초 질문을 입력하면, 서버는 요청 유효성 검사를 수행
-- 내용이 존재하면 ExtractKeyword를 통해 핵심 키워드 및 요약을 추출
-- 해당 정보를 바탕으로 채팅방을 생성
-- 사용자의 질문 메시지를 암호화 후 DB에 저장
-```mermaid
-sequenceDiagram
-  participant User
-  participant ChatController
-  participant ChatService
-  participant ExtractKeyword
-  participant EncryptUtil
-  participant MessageRepository
+✅ 기능 개요
 
-  User->>ChatController: POST /api/chat-rooms/first-message (FirstMessageRequest)
-  ChatController->>ChatService: createRoomAndAsk(user, request)
+입력: 
+- 질문 + 법령 chunk + 판례 목록
 
-  Note over ChatService: 📥 요청 유효성 검사
-  ChatService->>ChatService: request.getContent().isEmpty?
-  alt 비어있을때
-    ChatService-->>Exception: MolelawException(INVALID_REQUEST)
-  end
+처리:
 
-  Note over ChatService: 🔑 키워드 및 요약 추출
-  ChatService->>ExtractKeyword: extractKeywords(content)
-  ExtractKeyword-->>ChatService: KeywordAndTitleResponse
+- system prompt + user prompt(JSON 구성)
 
-  Note over ChatService: 🏠 채팅방 생성
-  ChatService->>ChatService: createChatRoom(user, summary)
+- OpenAI GPT API 호출 (chat/completions)
 
-  Note over ChatService: 📝 사용자 메시지 저장
-  ChatService->>EncryptUtil: encrypt(content)
-  EncryptUtil-->>ChatService: encryptedMessage
-  ChatService->>MessageRepository: save(USER message)
+응답 파싱: 
+- choices[0].message.content
 
-```
+출력: 
+- answer string → AnswerResponse(answer, infoMarkdown)로 반환
 
-### 1단계: 키워드와 부처 기반 법령 검색 시퀀스
-- 사용자 질문에서 추출한 키워드와 부처명을 기반으로 GPT 응답 전 필요한 법령 검색을 수행
-- 부처명이 존재하면 해당 부처의 orgCode를 조회하고, 그 코드와 키워드를 함께 이용해 정확도 높은 법령 검색
-- orgCode가 없는 경우에는 키워드만으로 fallback 검색
-- 검색된 결과는 JSON 파싱 후 최대 5건까지 저장됨
-```mermaid
-sequenceDiagram
-  participant ChatService
-  participant FinalAnswer
-  participant KeywordInfo (입력 DTO)
-  participant MinistryCodeMapper
-  participant LawSearchService
-
-  ChatService->>FinalAnswer: getAnswer(query, KeywordAndTitleResponse)
-
-  Note over FinalAnswer: 🔍 키워드 목록과 부처 이름 추출
-  FinalAnswer->>KeywordInfo: getKeywords()
-  FinalAnswer->>KeywordInfo: getMinistry()
-  FinalAnswer->>MinistryCodeMapper: getCode(ministryName)
-  MinistryCodeMapper-->>FinalAnswer: orgCode
-
-  Note over FinalAnswer: 🧾 키워드별 법령 검색 (orgCode 우선)
-
-  loop keywords
-    alt orgCode 있음
-      FinalAnswer->>LawSearchService: searchLawByKeyword(keyword, orgCode)
-    else fallback
-      FinalAnswer->>LawSearchService: searchLawByKeyword(keyword)
-    end
-    LawSearchService-->>FinalAnswer: raw JSON
-    FinalAnswer->>FinalAnswer: Json 파싱 및 최대 5건 저장
-  end
-
-```
-### 2단계: 판례 검색 및 gpt 응답 생성 시퀀스
-- 1단계에서 검색한 법령 이름 목록을 기준으로 관련된 판례 리스트를 조회
-- 조회된 법령 및 판례 정보를 바탕으로 GPT 입력용 프롬프트를 구성
-- OpenAI GPT API를 호출하여 최종 응답을 받아옴
-- 응답 문자열과 함께, 사용자에게 보여줄 요약 정보 (infoMarkdown)도 함께 구성하여 반환
 ```mermaid
 sequenceDiagram
   participant FinalAnswer
-  participant CaseSearchService
   participant GptService
   participant RestTemplate
+  participant OpenAI GPT API
 
-  Note over FinalAnswer: ⚖️ 법령명 기준으로 판례 조회
+  Note over FinalAnswer: 🧾 질문 + 관련 조문/판례로 프롬프트 구성
+  FinalAnswer->>GptService: generateAnswer(prompt)
 
-  loop lawNames
-    FinalAnswer->>CaseSearchService: searchCases(lawName)
-    CaseSearchService-->>FinalAnswer: List<PrecedentInfo>
-  end
+  Note over GptService: 📦 GPT 요청 JSON 구성
+  GptService->>RestTemplate: POST /v1/chat/completions
+  RestTemplate->>OpenAI GPT API: Authorization + JSON
 
-  Note over FinalAnswer: 📜 GPT 프롬프트 구성 (질문 + 법령 + 판례 요약)
+  OpenAI GPT API-->>RestTemplate: 응답 (choices[0].message.content)
+  RestTemplate-->>GptService: GPT 응답 JSON
 
-  FinalAnswer->>FinalAnswer: buildPrompt(query, laws, precedents)
-
-  Note over FinalAnswer: 💬 GPT API 호출
-
-  FinalAnswer->>RestTemplate: POST /v1/chat/completions
-  RestTemplate-->>FinalAnswer: GPT 응답 (answer string)
-
-  FinalAnswer->>FinalAnswer: buildMarkdownInfo(laws, precedents)
-  FinalAnswer-->>ChatService: AnswerResponse(answer, infoMarkdown)
+  Note over GptService: 🧪 응답 파싱 → answer 추출
+  GptService-->>FinalAnswer: answer string
 ```
-#### 3단계: 메시지 저장 및 FirstMessageResponse 반환
-- ChatService는 사용자 질문과 GPT 응답을 각각 암호화하여 MessageRepository에 저장
-- 사용자 메시지: USER, GPT 답변: BOT, 관련 정보: INFO 메시지로 구분되어 저장됨
-- 모든 메시지를 채팅방 기준으로 조회한 후, FirstMessageResponse로 클라이언트에 응답
-```mermaid
-sequenceDiagram
-  participant User
-  participant ChatController
-  participant ChatService
-  participant FinalAnswer
-  participant MessageRepository
-  participant EncryptUtil
 
-  Note over ChatService: 🗃️ 채팅방 생성 및 사용자 메시지 저장
-  ChatService->>ChatService: createChatRoom(user, summary)
-  ChatService->>EncryptUtil: encrypt(userMessage)
-  EncryptUtil-->>ChatService: encryptedUserMessage
-  ChatService->>MessageRepository: save(USER message)
+### 4단계: GPT 응답 보조 정보 구성 (buildMarkdownInfo)
+✅ 기능 개요
 
-  Note over ChatService: 🤖 GPT 응답 메시지 저장
-  ChatService->>FinalAnswer: getAnswer(query, keywordInfo)
-  FinalAnswer-->>ChatService: AnswerResponse(answer, info)
+입력: 
+- List<LawChunk>, List<PrecedentInfo>
 
-  ChatService->>EncryptUtil: encrypt(answer)
-  EncryptUtil-->>ChatService: encryptedAnswer
-  ChatService->>MessageRepository: save(BOT message)
+출력: 
+- Markdown 포맷 문자열 infoMarkdown
 
-  ChatService->>EncryptUtil: encrypt(infoMarkdown)
-  EncryptUtil-->>ChatService: encryptedInfo
-  ChatService->>MessageRepository: save(INFO message)
+용도: 
+- 사용자에게 GPT 응답과 함께 근거 정보를 구조화해 제공
 
-  Note over ChatService: 📦 전체 메시지 조회 및 응답 생성
-  ChatService->>ChatService: getMessages(chatRoom.id)
-  ChatService-->>ChatController: FirstMessageResponse(id, messages[])
+#### 구성 형식
+```markdown
+## 📚 관련 법령
 
-  ChatController-->>User: 200 OK (FirstMessageResponse)
+- [**법령명**](링크)
+  - 조문: n / 항: n / 내용: xxx
 
-```
-### 후속질문 로직
-- 두 질문(first + followup)을 합쳐서 프롬프트 구성 (formatted)
-- GPT에게 “법률 전문가처럼” 답변 요청
-- infoMarkdown은 이 흐름에서는 비어 있음
-- WebClient + ObjectMapper 기반의 응답 파싱 방식
-```mermaid
-sequenceDiagram
-  participant ChatService
-  participant GptService
-  participant WebClient
-  participant OpenAI API
-  participant ObjectMapper
+---
 
-  Note over ChatService: 🔄 GPT에 첫 질문 + 후속 질문 함께 전달
-  ChatService->>GptService: generateAnswerWithContext(first, followup)
+## ⚖️ 관련 판례
 
-  GptService->>WebClient: POST /v1/chat/completions
-  WebClient->>OpenAI API: Authorization + JSON(body)
-
-  OpenAI API-->>WebClient: JSON 응답
-  WebClient-->>GptService: response (string)
-
-  GptService->>ObjectMapper: readTree(response)
-  ObjectMapper-->>GptService: JsonNode
-
-  GptService-->>ChatService: AnswerResponse(answer)
-
+- [**사건명**](링크)
+  - 사건번호 / 선고일 / 법원명
 ```
 
 ### 채팅방 관련 로직
@@ -690,18 +775,62 @@ sequenceDiagram
 throw new MolelawException(ErrorCode.INVALID_REQUEST, "입력 없음");
 ```
 
+### ❗ MoleLaw 에러 코드 표
+| 코드명                            | HTTP 상태코드          | 설명                      |
+| ------------------------------ | ------------------ | ----------------------- |
+| `INVALID_REQUEST`              | 400                | 잘못된 요청입니다.              |
+| `UNAUTHORIZED`                 | 401                | 인증이 필요합니다.              |
+| `FORBIDDEN`                    | 403                | 접근 권한이 없습니다.            |
+| `NOT_FOUND`                    | 404                | 대상을 찾을 수 없습니다.          |
+| `INTERNAL_SERVER_ERROR`        | 500                | 서버 내부 오류입니다.            |
+| `OPENLAW_API_FAILURE`          | 502 (BAD\_GATEWAY) | 공공법령 API 통신에 실패했습니다.    |
+| `OPENLAW_INVALID_RESPONSE`     | 400                | 공공법령 API 응답이 올바르지 않습니다. |
+| `GPT_API_FAILURE`              | 500                | GPT 응답 생성 중 오류 발생       |
+| `GPT_EMPTY_RESPONSE`           | 500                | GPT 응답이 비어 있음           |
+| `USER_NOT_FOUND`               | 502 (BAD\_GATEWAY) | 해당 사용자를 찾을 수 없습니다.      |
+| `USER_ID_NULL`                 | 401                | 사용자 정보가 유효하지 않습니다.      |
+| `CHATROOM_NOT_FOUND`           | 404                | 채팅방을 찾을 수 없습니다.         |
+| `UNAUTHORIZED_CHATROOM_ACCESS` | 403                | 본인의 채팅방이 아닙니다.          |
+| `KEYWORD_EXTRACTION_FAILED`    | 500                | 키워드 추출에 실패했습니다.         |
+| `USER_NOT_AUTHENTICATED`       | 401                | 인증되지 않은 사용자입니다.         |
+| `PASSWORD_FAIL`                | 400                | 비밀번호가 일치하지 않습니다.        |
+| `TOKEN_FAIL`                   | 400                | 유효하지 않은 리프레시 토큰입니다.     |
+| `DUPLICATED_EMAIL`             | 400                | 이미 존재하는 이메일입니다.         |
+| `INVALID_PROVIDER`             | 400                | 잘못된 형식입니다.              |
+
 ---
 
 ## 🔐 인증 및 로그인 방식
 
 - `JWT` 기반 인증 (Access + Refresh)
-- 로그인 방식 3종:
-  - Google 소셜 로그인
-  - Kakao 소셜 로그인
-  - 자체 local 로그인
-- 회원가입 시 이메일+provider로 유일성 보장
-- JWT는 쿠키 기반 전달 (`httpOnly`, `secure`, `sameSite=Lax`)
+### 로그인 방식 3종:
 
+  | 방식     | 설명                |
+  | ------ | ----------------- |
+  | Local  | 이메일 + 비밀번호 기반 로그인 |
+  | Google | OAuth2 기반 소셜 로그인  |
+  | Kakao  | OAuth2 기반 소셜 로그인  |
+
+- `User.email + provider`로 유일성 보장 (Unique 복합 키)
+
+### ♻️ 리프레시 토큰 기반 재인증 구조
+
+| 항목                | 설명                                                     |
+| ----------------- |--------------------------------------------------------|
+| **Access Token**  | 15분 내외 유효 / 사용자 인증용 (`Authorization` 아님, `쿠키`에 저장됨)    |
+| **Refresh Token** | 7일\~30일 유효 / 자동 로그인 유지용 / 재발급 요청 시 사용 / 로그인 시 재발급      |
+| **저장 위치**         | 모두 쿠키로 클라이언트에 전달 (`httpOnly`, `secure`, `sameSite=Lax`) |
+| **재발급 로직**        | Access 만료 시, Refresh가 유효하면 서버가 Access를 재발급하여 응답        |
+
+### 🔁 인증 흐름 요약
+#### 로그인 성공 시
+- 서버가 Access, Refresh 토큰을 Set-Cookie로 전달
+#### 일반 요청 시
+- 클라이언트가 쿠키에 담긴 Access Token으로 인증
+#### Access 만료 시
+- 프론트엔드는 자동으로 /api/users/refresh 등으로 요청
+#### 서버는 Refresh가 유효하면 Access만 새로 발급
+- Refresh도 만료된 경우 → 재로그인 필요
 ---
 
 ## 📘 Swagger 기반 API 구조
