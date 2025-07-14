@@ -122,6 +122,14 @@ public class LawSearchService {
                 savedLaws.add(law);
                 System.out.println("✅ 저장 완료: " + law.getName() + " (ID: " + law.getId() + ")");
             } catch (Exception e) {
+                String message = e.getMessage();
+
+                // ✅ 중복 삽입 예외 메시지일 경우 별도 처리
+                if (message != null && message.contains("Duplicate entry")) {
+                    System.err.println("⚠️ 중복된 법령(MST=" + mst + "), 저장 건너뜀");
+                    continue;
+                }
+
                 System.err.println("❌ Mst 저장 실패 (" + mst + "): " + e.getMessage());
             }
         }

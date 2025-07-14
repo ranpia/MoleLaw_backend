@@ -33,7 +33,7 @@ public class LawEmbeddingService {
             for (LawChunk chunk : chunks) {
                 // 이미 임베딩된 경우 skip
                 if (chunk.getEmbedding() != null &&
-                        currentModel.equals(chunk.getEmbedding().getModelName())) {
+                        chunk.getEmbedding().getModelName().equals(currentModel)) {
                     continue;
                 }
 

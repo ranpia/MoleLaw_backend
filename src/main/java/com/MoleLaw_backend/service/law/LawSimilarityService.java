@@ -5,6 +5,8 @@ import com.MoleLaw_backend.domain.entity.LawChunk;
 import com.MoleLaw_backend.domain.entity.LawEmbedding;
 import com.MoleLaw_backend.domain.repository.LawEmbeddingRepository;
 import com.MoleLaw_backend.domain.repository.LawRepository;
+import com.MoleLaw_backend.exception.ErrorCode;
+import com.MoleLaw_backend.exception.OpenLawApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -43,14 +45,29 @@ public class LawSimilarityService {
     public List<LawChunk> findSimilarChunksWithFallback(String question, int topK) {
         List<LawChunk> chunks = findSimilarChunks(question, topK);
 
-        if (chunks.isEmpty()) return List.of();
+        // 청크 비어있는 경우
+        if (chunks.isEmpty()) {
+            List<String> lawNames = extractKeyword.extractKeywords(question).getKeywords(); // GPT 키워드
+            for (String lawName : lawNames) {
+                try {
+                    List<Law> saved = lawSearchService.saveLawsWithArticles(lawName);
+                    if (saved.isEmpty()) {
+                        throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "📭 조문이 포함된 법령이 없음: " + lawName);
+                    }
+                    lawEmbeddingService.embedLaws(saved);
+                    System.out.println("📘 fallback으로 새 법령 저장: " + lawName);
+                } catch (Exception e) {
+                    System.err.println("❌ fallback 실패 - lawName=" + lawName + ": " + e.getMessage());
+                }
+            }
+        }
 
         double topScore = cosineSimilarity(
                 embeddingService.generateEmbedding(question),
                 deserializeFloatArray(chunks.get(0).getEmbedding().getEmbeddingVector())
         );
 
-        if (topScore < 0.75) {
+        if (topScore < 0.6) {
             System.out.println("📉 유사도 낮음: " + topScore + " → fallback 발동");
 
             List<String> lawNames = extractKeyword.extractKeywords(question).getKeywords(); // GPT 키워드
