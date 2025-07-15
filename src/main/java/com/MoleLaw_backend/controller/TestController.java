@@ -2,11 +2,10 @@ package com.MoleLaw_backend.controller;
 
 import com.MoleLaw_backend.domain.entity.Law;
 import com.MoleLaw_backend.dto.PrecedentInfo;
-import com.MoleLaw_backend.dto.request.FinalAnswerRequest;
 import com.MoleLaw_backend.dto.request.FirstMessageRequest;
 import com.MoleLaw_backend.dto.request.PrecedentSearchRequest;
 import com.MoleLaw_backend.dto.request.QueryRequest;
-import com.MoleLaw_backend.dto.response.AnswerResponse;
+import com.MoleLaw_backend.dto.response.GptAnswerResponse;
 import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
 import com.MoleLaw_backend.dto.response.LawDto;
 import com.MoleLaw_backend.service.law.*;
@@ -82,7 +81,7 @@ public class TestController {
 
     @PostMapping("/answer")
     @Operation(summary = "gpt응답 테스트용 컨트롤러", description = "gpt 법률기반 응답 테스트")
-    public ResponseEntity<AnswerResponse> getAnswer(@RequestBody QueryRequest request) {
+    public ResponseEntity<GptAnswerResponse> getAnswer(@RequestBody QueryRequest request) {
         KeywordAndTitleResponse response = extractKeyword.extractKeywords(request.getQuery());
         return ResponseEntity.ok(finalAnswer.getAnswer(request.getQuery(), response));
     }

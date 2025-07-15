@@ -3,7 +3,7 @@ package com.MoleLaw_backend.service.law;
 import com.MoleLaw_backend.domain.entity.LawChunk;
 import com.MoleLaw_backend.dto.PrecedentInfo;
 import com.MoleLaw_backend.dto.request.PrecedentSearchRequest;
-import com.MoleLaw_backend.dto.response.AnswerResponse;
+import com.MoleLaw_backend.dto.response.GptAnswerResponse;
 import com.MoleLaw_backend.dto.response.KeywordAndTitleResponse;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.GptApiException;
@@ -35,7 +35,7 @@ public class FinalAnswer {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public AnswerResponse getAnswer(String query, KeywordAndTitleResponse keywordInfo) {
+    public GptAnswerResponse getAnswer(String query, KeywordAndTitleResponse keywordInfo) {
         List<String> keywords = keywordInfo.getKeywords();
         String ministryName = keywordInfo.getMinistry();
         String orgCode = MinistryCodeMapper.getCode(ministryName);
@@ -106,7 +106,7 @@ public class FinalAnswer {
             String gptContent = (String) message.get("content");
             String infoMarkdown = buildMarkdownInfo(topChunks, precedentResults);
 
-            return new AnswerResponse(gptContent, infoMarkdown);
+            return new GptAnswerResponse(gptContent, infoMarkdown);
 
         } catch (Exception e) {
             log.error("[GPT] 응답 생성 실패: {}", e.getMessage(), e);
