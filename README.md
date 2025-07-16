@@ -1,11 +1,30 @@
-# 📘 MoleLaw 기능 정의서
+# 📘 MoleLaw 기능 정의 요약
 
-## 🧩 핵심 개요
+## 🧩 프로젝트 개요
 
-- **서비스명**: MoleLaw (몰루로 묻고 법으로 답하다)
-- **설명**: 사용자의 법률 질문을 받아 GPT가 관련 법령 및 판례를 검색해 자동 응답하는 상담형 챗봇 서비스
-- **DB**: MySQL
-- **API 기반**: OpenLaw API (법령 / 판례), OpenAI Api (gpt 응답 / 임베딩 벡터)
+| 항목           | 내용                                                                 |
+|----------------|----------------------------------------------------------------------|
+| **서비스명**   | MoleLaw (몰루로 묻고 법으로 답하다)                                     |
+| **설명**       | 사용자의 법률 질문을 받아 GPT가 관련 법령 및 판례를 검색하여 자동 응답하는 상담형 챗봇 서비스 |
+| **DB**         | MySQL                                                                |
+| **언어/프레임워크** | Java 17 / Spring Boot 3.5.0                                          |
+| **외부 API**   | OpenLaw API (법령/판례), OpenAI API (GPT 응답, 임베딩 벡터 생성)         |
+
+---
+
+## ⚙️ 주요 기술 스택
+
+### 🔐 인증/보안
+- `spring-boot-starter-security`: 인증/인가 처리
+- `spring-boot-starter-oauth2-client`: Google/Kakao 소셜 로그인
+- JWT 관련:
+  - `jjwt-api`: JWT 생성/파싱/검증 API
+  - `jjwt-impl`: JWT 내부 동작 구현
+  - `jjwt-jackson`: JWT ↔ JSON 변환 (Jackson 연동)
+- 쿠키 기반 토큰 전달 (`httpOnly`, `secure`, `SameSite=Lax`)
+
+### 🧪 API 문서화
+- `springdoc-openapi-starter-webmvc-ui`: Swagger UI 자동 생성 (`/swagger-ui.html`)
 
 ---
 
@@ -68,10 +87,93 @@ erDiagram
   }
 
 ```
+- **User**: 이메일 + provider로 복합 고유성 보장
+- **ChatRoom**: 사용자별 채팅방
+- **Message**: 암호화된 메시지 저장 (USER / BOT / INFO)
+- **Law / LawChunk / LawEmbedding**: 법령, 조문 단위, 임베딩 벡터 저장
 
 --- 
 
-##
+## 🔐 로그인 및 인증 흐름
+
+### ✅ 로그인 방식
+| 방식     | 설명                     |
+|----------|--------------------------|
+| Local    | 이메일 + 비밀번호 로그인    |
+| Google   | OAuth2 기반 소셜 로그인   |
+| Kakao    | OAuth2 기반 소셜 로그인   |
+
+- 로그인/회원가입 시 Access + Refresh 토큰 발급
+- **Access Token**: 15분 유효
+- **Refresh Token**: 7~30일 유효 (재발급용)
+
+### 🔁 인증 동작 흐름
+1. 로그인 성공 시 토큰을 `Set-Cookie`로 전달
+2. 클라이언트는 쿠키의 AccessToken으로 인증
+3. 만료 시 /reissue 요청으로 재발급 시도
+4. Refresh까지 만료되면 재로그인 유도
+
+---
+
+## 🧠 챗봇 응답 처리 흐름
+
+### 1단계: 사용자 질문 수신
+- 키워드 추출 (ExtractKeyword)
+- 채팅방 생성 + 사용자 메시지 저장
+
+### 2단계: 관련 법령/판례 검색 및 GPT 호출
+- **LawSimilarityService**: 유사한 법령 조문 검색 (벡터 유사도 기반)
+  - 유사도 부족 시 키워드 기반 fallback 수행
+- **CaseSearchService**: 관련 판례 2~5개 검색
+- **GptService**: 질문 + 법령 + 판례 기반 GPT 프롬프트 구성 및 응답 생성
+
+### 3단계: 결과 저장 및 응답
+- GPT 응답(BOT), infoMarkdown(INFO)을 암호화 후 저장
+- 모든 메시지를 클라이언트에 FirstMessageResponse로 반환
+
+---
+
+## 🗃️ 채팅 관련 API 요약
+
+| 경로                        | 설명                             |
+|-----------------------------|----------------------------------|
+| `GET /api/chat-rooms`       | 사용자의 채팅방 리스트 조회          |
+| `GET /api/chat-rooms/{id}`  | 특정 채팅방 메시지 전체 조회         |
+| `POST /api/chat-rooms/first-message` | 첫 질문 입력 및 GPT 응답 생성  |
+| `POST /api/chat-rooms/followup` | 후속 질문 응답 요청              |
+| `DELETE /api/chat-rooms/{id}` | 채팅방 삭제 (메시지 포함)         |
+
+---
+
+## 🚨 공통 예외 처리
+
+- 모든 예외는 `MolelawException`으로 래핑
+- `ErrorCode` 열거형 기반 메시지 통일화
+
+| 코드명                            | HTTP 상태코드          | 설명                      |
+| ------------------------------ | ------------------ | ----------------------- |
+| `INVALID_REQUEST`              | 400                | 잘못된 요청입니다.              |
+| `UNAUTHORIZED`                 | 401                | 인증이 필요합니다.              |
+| `FORBIDDEN`                    | 403                | 접근 권한이 없습니다.            |
+| `NOT_FOUND`                    | 404                | 대상을 찾을 수 없습니다.          |
+| `INTERNAL_SERVER_ERROR`        | 500                | 서버 내부 오류입니다.            |
+| `OPENLAW_API_FAILURE`          | 502 (BAD\_GATEWAY) | 공공법령 API 통신에 실패했습니다.    |
+| `OPENLAW_INVALID_RESPONSE`     | 400                | 공공법령 API 응답이 올바르지 않습니다. |
+| `GPT_API_FAILURE`              | 500                | GPT 응답 생성 중 오류 발생       |
+| `GPT_EMPTY_RESPONSE`           | 500                | GPT 응답이 비어 있음           |
+| `USER_NOT_FOUND`               | 502 (BAD\_GATEWAY) | 해당 사용자를 찾을 수 없습니다.      |
+| `USER_ID_NULL`                 | 401                | 사용자 정보가 유효하지 않습니다.      |
+| `CHATROOM_NOT_FOUND`           | 404                | 채팅방을 찾을 수 없습니다.         |
+| `UNAUTHORIZED_CHATROOM_ACCESS` | 403                | 본인의 채팅방이 아닙니다.          |
+| `KEYWORD_EXTRACTION_FAILED`    | 500                | 키워드 추출에 실패했습니다.         |
+| `USER_NOT_AUTHENTICATED`       | 401                | 인증되지 않은 사용자입니다.         |
+| `PASSWORD_FAIL`                | 400                | 비밀번호가 일치하지 않습니다.        |
+| `TOKEN_FAIL`                   | 400                | 유효하지 않은 리프레시 토큰입니다.     |
+| `DUPLICATED_EMAIL`             | 400                | 이미 존재하는 이메일입니다.         |
+| `INVALID_PROVIDER`             | 400                | 잘못된 형식입니다.              |
+
+---
+
 ## 📦 MoleLaw 클래스 다이어그램
 
 아래는 MoleLaw 프로젝트의 주요 클래스 및 관계 구조입니다.
@@ -764,85 +866,5 @@ sequenceDiagram
     ChatController-->>User: ErrorResponse (권한 없음 or 채팅방 없음)
   end
 ```
----
 
-## ✅ 예외 처리
 
-- 모든 예외는 `MolelawException`을 통해 제어
-- `ErrorCode` 기반의 에러 메시지 일원화
-
-```java
-throw new MolelawException(ErrorCode.INVALID_REQUEST, "입력 없음");
-```
-
-### ❗ MoleLaw 에러 코드 표
-| 코드명                            | HTTP 상태코드          | 설명                      |
-| ------------------------------ | ------------------ | ----------------------- |
-| `INVALID_REQUEST`              | 400                | 잘못된 요청입니다.              |
-| `UNAUTHORIZED`                 | 401                | 인증이 필요합니다.              |
-| `FORBIDDEN`                    | 403                | 접근 권한이 없습니다.            |
-| `NOT_FOUND`                    | 404                | 대상을 찾을 수 없습니다.          |
-| `INTERNAL_SERVER_ERROR`        | 500                | 서버 내부 오류입니다.            |
-| `OPENLAW_API_FAILURE`          | 502 (BAD\_GATEWAY) | 공공법령 API 통신에 실패했습니다.    |
-| `OPENLAW_INVALID_RESPONSE`     | 400                | 공공법령 API 응답이 올바르지 않습니다. |
-| `GPT_API_FAILURE`              | 500                | GPT 응답 생성 중 오류 발생       |
-| `GPT_EMPTY_RESPONSE`           | 500                | GPT 응답이 비어 있음           |
-| `USER_NOT_FOUND`               | 502 (BAD\_GATEWAY) | 해당 사용자를 찾을 수 없습니다.      |
-| `USER_ID_NULL`                 | 401                | 사용자 정보가 유효하지 않습니다.      |
-| `CHATROOM_NOT_FOUND`           | 404                | 채팅방을 찾을 수 없습니다.         |
-| `UNAUTHORIZED_CHATROOM_ACCESS` | 403                | 본인의 채팅방이 아닙니다.          |
-| `KEYWORD_EXTRACTION_FAILED`    | 500                | 키워드 추출에 실패했습니다.         |
-| `USER_NOT_AUTHENTICATED`       | 401                | 인증되지 않은 사용자입니다.         |
-| `PASSWORD_FAIL`                | 400                | 비밀번호가 일치하지 않습니다.        |
-| `TOKEN_FAIL`                   | 400                | 유효하지 않은 리프레시 토큰입니다.     |
-| `DUPLICATED_EMAIL`             | 400                | 이미 존재하는 이메일입니다.         |
-| `INVALID_PROVIDER`             | 400                | 잘못된 형식입니다.              |
-
----
-
-## 🔐 인증 및 로그인 방식
-
-- `JWT` 기반 인증 (Access + Refresh)
-### 로그인 방식 3종:
-
-  | 방식     | 설명                |
-  | ------ | ----------------- |
-  | Local  | 이메일 + 비밀번호 기반 로그인 |
-  | Google | OAuth2 기반 소셜 로그인  |
-  | Kakao  | OAuth2 기반 소셜 로그인  |
-
-- `User.email + provider`로 유일성 보장 (Unique 복합 키)
-
-### ♻️ 리프레시 토큰 기반 재인증 구조
-
-| 항목                | 설명                                                     |
-| ----------------- |--------------------------------------------------------|
-| **Access Token**  | 15분 내외 유효 / 사용자 인증용 (`Authorization` 아님, `쿠키`에 저장됨)    |
-| **Refresh Token** | 7일\~30일 유효 / 자동 로그인 유지용 / 재발급 요청 시 사용 / 로그인 시 재발급      |
-| **저장 위치**         | 모두 쿠키로 클라이언트에 전달 (`httpOnly`, `secure`, `sameSite=Lax`) |
-| **재발급 로직**        | Access 만료 시, Refresh가 유효하면 서버가 Access를 재발급하여 응답        |
-
-### 🔁 인증 흐름 요약
-#### 로그인 성공 시
-- 서버가 Access, Refresh 토큰을 Set-Cookie로 전달
-#### 일반 요청 시
-- 클라이언트가 쿠키에 담긴 Access Token으로 인증
-#### Access 만료 시
-- 프론트엔드는 자동으로 /api/users/refresh 등으로 요청
-#### 서버는 Refresh가 유효하면 Access만 새로 발급
-- Refresh도 만료된 경우 → 재로그인 필요
----
-
-## 📘 Swagger 기반 API 구조
-
-(※ 컨트롤러 기준 정리된 전체 API 목록은 추후 부록에 포함)
-- `UserController`: 회원가입, 로그인, 로그아웃, 정보조회/수정/삭제, 토큰 재발급 등
-- `TestController`: 개발용 gpt 응답, 법령 api 테스트 등
-- `ChatController`: 채팅방 생성, 메시지 등록, 대화 흐름 등
-
----
-
-## 🗃️ 저장소 및 관리 규칙
-
-- 본 정의서는 프로젝트에 파일로 저장되며, 기능 추가/변경 시 지속적으로 업데이트됨
-- 모든 데이터는 MySQL에 저장되고, OpenLaw API 결과는 별도 저장하지 않음 (프롬프트 내 사용)
