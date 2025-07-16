@@ -11,8 +11,37 @@
 | **외부 API**   | OpenLaw API (법령/판례), OpenAI API (GPT 응답, 임베딩 벡터 생성)         |
 
 ---
+## 🧩 의존성 목록 (build.gradle 기준)
 
-## ⚙️ 주요 기술 스택
+### 🔧 Spring Boot Starters
+- `spring-boot-starter-data-jpa`: JPA 기반 ORM
+- `spring-boot-starter-security`: 로그인, 인증, 권한 관리
+- `spring-boot-starter-web`: 전통적인 MVC 웹 지원
+- `spring-boot-starter-webflux`: WebClient 기반 비동기 통신 지원
+- `spring-boot-starter-oauth2-client`: 소셜 로그인 (Google, Kakao 등)
+- `spring-boot-starter-validation`: javax 검증 어노테이션 처리
+
+### 🛠️ 추가 라이브러리
+- `me.paulschwarz:spring-dotenv`: .env 환경변수 지원
+- `com.fasterxml.jackson.core:jackson-databind`: JSON ↔ Java 객체 매핑
+
+### 📄 Swagger
+- `springdoc-openapi-starter-webmvc-ui:2.8.4`: Swagger UI 제공
+
+### 🔐 JWT 관련 (JJWT)
+- `jjwt-api:0.11.5`: JWT 생성/파싱/검증
+- `jjwt-impl:0.11.5`: JWT 내부 구현체
+- `jjwt-jackson:0.11.5`: JWT ↔ JSON 직렬화 지원
+
+### 🧪 테스트 / 개발 도구
+- `spring-boot-starter-test`, `spring-security-test`: 통합 테스트
+- `spring-boot-devtools`: 개발 환경 자동 재시작
+- `junit-platform-launcher`: 테스트 런타임
+- `lombok` + `annotationProcessor`: 보일러플레이트 제거
+
+### 🛢️ DB 관련
+- `mysql-connector-j:8.0.33`: MySQL 드라이버
+
 
 ### 🔐 인증/보안
 - `spring-boot-starter-security`: 인증/인가 처리
