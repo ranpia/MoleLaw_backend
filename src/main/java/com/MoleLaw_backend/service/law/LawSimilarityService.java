@@ -67,7 +67,7 @@ public class LawSimilarityService {
                 deserializeFloatArray(chunks.get(0).getEmbedding().getEmbeddingVector())
         );
 
-        if (topScore < 0.6) {
+        if (topScore < 0.5) {
             System.out.println("📉 유사도 낮음: " + topScore + " → fallback 발동");
 
             List<String> lawNames = extractKeyword.extractKeywords(question).getKeywords(); // GPT 키워드
