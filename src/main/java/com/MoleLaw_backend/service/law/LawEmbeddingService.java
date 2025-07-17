@@ -4,6 +4,8 @@ import com.MoleLaw_backend.domain.entity.Law;
 import com.MoleLaw_backend.domain.entity.LawChunk;
 import com.MoleLaw_backend.domain.entity.LawEmbedding;
 import com.MoleLaw_backend.domain.repository.LawChunkRepository;
+import com.MoleLaw_backend.domain.repository.LawEmbeddingRepository;
+import com.MoleLaw_backend.domain.repository.LawRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,7 @@ public class LawEmbeddingService {
 
     private final LawChunkRepository lawChunkRepository;
     private final EmbeddingService embeddingService;
+    private final LawEmbeddingRepository lawEmbeddingRepository;
 
     private static final String currentModel = "text-embedding-3-small";
 
@@ -40,6 +43,7 @@ public class LawEmbeddingService {
                 // 병렬 처리
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                     try {
+                        if (lawEmbeddingRepository.existsByLawChunk(chunk)) return;
                         float[] vec = embeddingService.generateEmbedding(chunk.getContentText());
                         byte[] serialized = serializeFloatArray(vec);
 
