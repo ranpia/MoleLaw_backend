@@ -116,7 +116,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("https://www.team-mole.shop")); // 모든 Origin 허용 (패턴 방식)
+        config.setAllowedOriginPatterns(List.of("*")); // 모든 Origin 허용 (패턴 방식)
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setExposedHeaders(List.of("Set-Cookie", "Authorization")); // 쿠키와 토큰 노출
