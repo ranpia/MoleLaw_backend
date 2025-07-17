@@ -169,7 +169,7 @@ erDiagram
 | `GET /api/chat-rooms`       | 사용자의 채팅방 리스트 조회          |
 | `GET /api/chat-rooms/{id}`  | 특정 채팅방 메시지 전체 조회         |
 | `POST /api/chat-rooms/first-message` | 첫 질문 입력 및 GPT 응답 생성  |
-| `POST /api/chat-rooms/followup` | 후속 질문 응답 요청              |
+| `POST /api/chat-rooms/{id}` | 후속 질문 응답 요청              |
 | `DELETE /api/chat-rooms/{id}` | 채팅방 삭제 (메시지 포함)         |
 
 ---
