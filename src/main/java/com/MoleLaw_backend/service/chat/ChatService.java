@@ -93,7 +93,7 @@ public class ChatService {
                 .orElse(request.getContent());
 
         try {
-            AnswerResponse answer = gptService.generateAnswerWithContext(firstBotQuestion, request.getContent());
+            GptAnswerResponse answer = gptService.generateAnswerWithContext(firstBotQuestion, request.getContent());
 
             Message botMessage = messageRepository.save(Message.builder()
                     .chatRoom(room)
@@ -127,18 +127,18 @@ public class ChatService {
                 .build());
 
         try {
-            AnswerResponse answerResponse = finalAnswer.getAnswer(request.getContent(), keywordAndTitle);
+            GptAnswerResponse gptAnswerResponse = finalAnswer.getAnswer(request.getContent(), keywordAndTitle);
 
             messageRepository.save(Message.builder()
                     .chatRoom(chatRoom)
                     .sender(Message.Sender.BOT)
-                    .content(EncryptUtil.encrypt(answerResponse.getAnswer()))
+                    .content(EncryptUtil.encrypt(gptAnswerResponse.getAnswer()))
                     .build());
 
             messageRepository.save(Message.builder()
                     .chatRoom(chatRoom)
                     .sender(Message.Sender.INFO)
-                    .content(EncryptUtil.encrypt(answerResponse.getInfo()))
+                    .content(EncryptUtil.encrypt(gptAnswerResponse.getInfo()))
                     .build());
 
         } catch (Exception e) {

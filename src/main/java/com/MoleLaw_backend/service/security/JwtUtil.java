@@ -17,7 +17,7 @@ public class JwtUtil {
     private final String secretKeyRaw;
     private Key key;
 
-    private final long ACCESS_EXPIRATION = 1000 * 60 * 15;
+    private final long ACCESS_EXPIRATION = 1000 * 60 * 15 * 60;
     private final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7;
 
     public JwtUtil(@Value("${jwt.secret}") String secretKeyRaw) {

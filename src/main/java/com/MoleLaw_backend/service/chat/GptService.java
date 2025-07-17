@@ -1,6 +1,6 @@
 package com.MoleLaw_backend.service.chat;
 
-import com.MoleLaw_backend.dto.response.AnswerResponse;
+import com.MoleLaw_backend.dto.response.GptAnswerResponse;
 import com.MoleLaw_backend.exception.GptApiException;
 import com.MoleLaw_backend.exception.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,7 +25,7 @@ public class GptService {
     @Value("${openai.api-key}")
     private String openAiApiKey;
 
-    public AnswerResponse generateAnswerWithContext(String firstBotQuestion, String lastUserQuestion) {
+    public GptAnswerResponse generateAnswerWithContext(String firstBotQuestion, String lastUserQuestion) {
         String userPrompt = """
         사용자가 처음 질문한 내용은 다음과 같습니다:
         "%s"
@@ -77,7 +77,7 @@ public class GptService {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(response);
 
-            return new AnswerResponse(
+            return new GptAnswerResponse(
                     root.path("choices").get(0).path("message").path("content").asText(),
                     ""
             );

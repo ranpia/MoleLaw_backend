@@ -12,7 +12,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MolelawException.class)
     public ResponseEntity<ApiResponse<?>> handleMolelawException(MolelawException ex) {
         ErrorCode errorCode = ex.getErrorCode();
-        ErrorResponse errorResponse = new ErrorResponse(errorCode);
+        ErrorResponse errorResponse = new ErrorResponse(errorCode, ex.getMessage());
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ApiResponse.error(errorResponse));

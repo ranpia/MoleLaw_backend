@@ -19,6 +19,12 @@ public class ErrorResponse {
         this.message = errorCode.getMessage();
     }
 
+    public ErrorResponse(ErrorCode errorCode, String errorMessage) {
+        this.status = errorCode.getStatus();
+        this.code = errorCode.name();
+        this.message = errorMessage;
+    }
+
     // ✅ 단순 메시지로도 생성 가능하도록 오버로드 (추가)
     public ErrorResponse(String message) {
         this.status = 400;
