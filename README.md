@@ -2,6 +2,8 @@
 
 로컬 MySQL·Qdrant 실행과 자원 설정은 [로컬 인프라 가이드](docker/README.md)를 참고하세요.
 
+현재 프로필·Spring AI 모델 호출 구성은 위 가이드와 [재구성 기준선](docs/backend-baseline.md)을 따릅니다. 아래 상세 흐름과 코드 예시는 재구성 전 구현 설명을 포함합니다.
+
 ## 🧩 프로젝트 개요
 
 | 항목           | 내용                                                                 |
@@ -42,7 +44,8 @@
 - `lombok` + `annotationProcessor`: 보일러플레이트 제거
 
 ### 🛢️ DB 관련
-- `mysql-connector-j:8.0.33`: MySQL 드라이버
+- `mysql-connector-j`: MySQL 드라이버, 버전은 Spring Boot BOM으로 관리
+- Spring AI `1.0.9`: `ChatClient`, OpenAI 모델·임베딩 및 Qdrant 저장소 연결
 
 
 ### 🔐 인증/보안

@@ -1,5 +1,35 @@
-openai:
-  api-key: dummy-key-for-test
+spring:
+  datasource:
+    url: jdbc:h2:mem:molelaw-test;MODE=MySQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  ai:
+    model:
+      chat: none
+      embedding: none
+    openai:
+      api-key: dummy-key-for-test
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-client
+            client-secret: test-google-secret
+          kakao:
+            client-id: test-kakao-client
+            client-secret: test-kakao-secret
 
 openlaw:
   api-key: dummy-key-for-test
+frontend:
+  uri: http://localhost:3000
+cookie:
+  secure: false
+jwt:
+  secret: test-only-jwt-secret-at-least-32-bytes-long

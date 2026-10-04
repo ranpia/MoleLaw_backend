@@ -1,0 +1,9 @@
+spring:
+  config:
+    activate:
+      on-profile: local & !test
+
+frontend:
+  uri: ${FRONTENDURI:http://localhost:3000}
+cookie:
+  secure: false

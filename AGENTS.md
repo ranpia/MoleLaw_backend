@@ -1,4 +1,4 @@
-﻿# Repository Guidelines
+# Repository Guidelines
 
 ## 프로젝트 구조와 모듈 구성
 MoleLaw는 법률 검색과 AI 채팅을 제공하는 Java 17 / Spring Boot 3.5 백엔드입니다. 소스는 `src/main/java/com/MoleLaw_backend/`에 있습니다.
@@ -22,6 +22,8 @@ JDK 17과 저장소에 포함된 Gradle Wrapper를 사용하세요. Windows 기�
 
 Unix에서는 `./gradlew`를 사용하세요. 실행 전에 MySQL 연결과 환경변수를 설정하세요. API 문서는 `/swagger-ui.html`에서 확인할 수 있습니다.
 
+기본 프로필은 `mysql`이며 MySQL `DataSource`가 `@Primary`입니다. `local` 프로필은 `mysql`과 `qdrant`를 함께 활성화합니다. 실행 설정은 루트 `.env.example`, DB 컨테이너 설정은 `docker/.env.compose.example`과 `docker/README.md`를 참고하세요. Qdrant는 JPA 데이터소스가 아닌 별도 `VectorStore`입니다.
+
 ## 코드 스타일과 이름 규칙
 새 Java 코드는 공백 4칸으로 들여쓰기하고, 기존 파일 수정 시 주변 스타일을 따르세요. 클래스는 PascalCase, 메서드와 필드는 camelCase, 상수는 UPPER_SNAKE_CASE를 사용하세요. 패키지 루트는 현재 `com.MoleLaw_backend`입니다.
 
@@ -30,7 +32,7 @@ Unix에서는 `./gradlew`를 사용하세요. 실행 전에 MySQL 연결과 환�
 ## 테스트 작성 기준
 JUnit Jupiter, Spring Boot Test, Mockito, Spring Security Test를 사용합니다. 테스트 클래스 이름은 `*Tests` 또는 `*Test`로 작성하고 메서드 이름에 검증할 동작을 드러내세요. 변경한 기능의 정상 동작, 권한 검사, 실패 경로를 검증하세요. 외부 OpenAI/OpenLaw 호출은 모킹하세요.
 
-기존 컨텍스트 테스트는 `test` 프로필을 사용합니다. 해당 프로필은 더미 API 키만 제공하므로 별도의 테스트 DB 설정이 필요합니다. 현재 커버리지 기준은 없습니다.
+컨텍스트 테스트는 `test` 프로필의 H2와 더미 인증 설정을 사용하고 `ChatModel`·`EmbeddingModel`을 모킹합니다. Docker·실제 API 키 없이 전체 테스트를 실행할 수 있습니다. `test`가 활성화되면 MySQL·Qdrant 설정은 적용하지 않습니다. H2 테스트는 실제 MySQL·Qdrant 통합 검증을 대체하지 않습니다. 현재 커버리지 기준은 없습니다.
 
 ## 커밋과 PR 작성 기준
 기존 이력의 `fix:`, `refactor:`, `docs:`, `readme:` 접두사와 간결한 한글 설명을 따르세요. PR에는 변경 목적, 변경된 동작, 관련 이슈와 검증 결과를 포함하세요. API 변경 시 요청·응답 예시를 제공하고 관련 문서를 갱신하세요.

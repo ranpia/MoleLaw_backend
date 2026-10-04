@@ -1,30 +1,43 @@
 package com.MoleLaw_backend;
 
-import com.MoleLaw_backend.service.law.ExtractKeyword;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest(properties = "spring.profiles.active=test")
+import javax.sql.DataSource;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@SpringBootTest
+@ActiveProfiles("test")
 class LawMateBackendApplicationTests {
 
-	@TestConfiguration
-	static class TestConfig {
-		@Bean
-		public ExtractKeyword extractKeyword() {
-			return Mockito.mock(ExtractKeyword.class);  // 또는 다른 Mock 구현체
-		}
-	}
+    @MockitoBean
+    private ChatModel chatModel;
+    @MockitoBean
+    private EmbeddingModel embeddingModel;
+    @Autowired
+    private DataSource dataSource;
+    @Autowired
+    private ChatClient chatClient;
 
-	@Autowired
-	private ExtractKeyword extractKeyword;
-
-	@Test
-	void contextLoads() {
-		// 테스트 가능
-	}
+    @Test
+    void contextLoadsWithoutExternalDatabaseOrModelCalls() throws Exception {
+        try (var connection = dataSource.getConnection()) {
+            assertTrue(connection.getMetaData().getURL().startsWith("jdbc:h2:mem:"));
+        }
+        assertNotNull(chatClient);
+        verify(chatModel, never()).call(any(Prompt.class));
+        verify(chatModel, never()).stream(any(Prompt.class));
+        verifyNoInteractions(embeddingModel);
+    }
 }
 

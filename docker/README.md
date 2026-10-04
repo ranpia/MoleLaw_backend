@@ -56,7 +56,24 @@ docker compose --env-file .env.compose down
 
 ## 애플리케이션 연결 범위
 
-이 변경은 DB 인프라 구성이다. 현재 기본 애플리케이션 설정은 원격 DB를 가리키므로 IDE 실행 환경변수로 다음 값을 명시해야 로컬 DB에 연결된다.
+애플리케이션 기본 프로필은 `mysql`이며 기본 MySQL 주소는 로컬 3307이다. MySQL `DataSource`에 `@Primary`를 지정하고 Qdrant는 별도 프로필의 `VectorStore`로 구성했다. 루트 `.env.example`을 `.env`로 복사해 OAuth·API 키·JWT 설정을 채우고, MySQL 비밀번호·Qdrant 키는 `docker/.env.compose`와 일치시킨다. 실제 비밀값은 커밋하지 않는다.
+
+| 프로필 | 구성 |
+| --- | --- |
+| 기본 / `mysql` | MySQL 기본 데이터소스, 스키마 기본 `validate` |
+| `qdrant` | Qdrant gRPC 클라이언트와 `VectorStore`; 애플리케이션에서는 `mysql,qdrant`로 사용 |
+| `local` | `mysql` + `qdrant`, 개발 DB 스키마 `update`, 로컬 쿠키 설정 |
+| `test` | H2, 더미 인증 설정, 모델 모킹; MySQL·Qdrant 구성 제외 |
+
+루트에서 로컬 애플리케이션을 실행한다. 테스트를 제외한 실행에는 DB 컨테이너가 필요하다.
+
+```powershell
+.\gradlew.bat bootRun --args="--spring.profiles.active=local"
+```
+
+`mysql`의 스키마 기본값은 `validate`이고 `local`에서는 `update`를 사용한다. `JPA_DDL_AUTO`로 명시적으로 변경할 수 있다. Flyway 마이그레이션은 아직 구현 전이므로 빈 개발 DB의 첫 실행에는 `local`을 사용한다. 기존 서비스의 지연 로딩 접근을 보존하기 위해 MySQL의 Open-in-View는 유지한다. 서비스 트랜잭션 정리는 별도 단계다.
+
+IDE에서 환경변수로 직접 연결을 덮어쓸 수도 있다.
 
 | 환경변수 | 로컬 값 |
 | --- | --- |
@@ -64,9 +81,17 @@ docker compose --env-file .env.compose down
 | `SPRING_DATASOURCE_USERNAME` | `.env.compose`의 `MYSQL_USER` 값 |
 | `SPRING_DATASOURCE_PASSWORD` | `.env.compose`의 `MYSQL_PASSWORD` 값 |
 
-OAuth·모델 API·JWT 등 기존 실행 설정도 필요하다. 현재 `ddl-auto: update`는 이 빈 개발용 DB에만 적용한다. 명시적인 local/test 프로필과 Flyway 마이그레이션은 다음 단계에서 구성한다. 기존 MySQL Connector/J `8.0.33`의 8.4 서버 연결·인증 호환성은 애플리케이션 연결 테스트에서 확인하고 드라이버 갱신 여부를 결정한다.
+MySQL Connector/J 버전은 Spring Boot BOM이 관리하도록 변경했다. 실제 MySQL 연결·인증 호환성은 별도 통합 검증 대상이다. `test` 프로필은 H2를 사용해 Docker와 실제 API 키 없이 전체 테스트를 실행할 수 있다.
 
-Qdrant 주소는 HTTP `127.0.0.1:6333`, gRPC `127.0.0.1:6334`이며 연결에 같은 API 키를 사용한다. 현재 백엔드에는 Qdrant 연동이 없으므로 이 컨테이너만 실행해도 기존 임베딩 테이블 검색이 자동으로 전환되지는 않는다. Spring AI 연결은 별도 구현 단계다.
+Qdrant 주소는 HTTP `127.0.0.1:6333`, gRPC `127.0.0.1:6334`이며 연결에 같은 API 키를 사용한다. `QDRANT_HOST`·`QDRANT_GRPC_PORT`·`QDRANT_API_KEY`·`QDRANT_COLLECTION`·`QDRANT_USE_TLS`로 클라이언트를 구성한다. 시작 시 컬렉션을 자동 생성하거나 임베딩 API를 호출하지 않는다. 실제 색인 작업에서 모델·차원을 확정하고 컬렉션을 준비해야 한다. Qdrant 빈 구성만으로 기존 MySQL 임베딩 테이블 검색이 자동으로 전환되지는 않는다.
+
+## 모델 호출 설정
+
+Spring Boot 3.5·Java 17을 유지하며 Spring AI 1.0.9 BOM을 사용한다. 최초 답변·후속 답변·키워드 추출은 공통 `AiChatService`의 `ChatClient`를 사용하고 임베딩은 `EmbeddingModel`을 사용한다. 시스템 지시와 키워드 프롬프트는 `src/main/resources/prompts`에 있다.
+
+`OPENAI_CHAT_MODEL`의 기본값은 기존 `gpt-4`, `OPENAI_EMBEDDING_MODEL`은 기존 `text-embedding-3-small`, `OPENAI_EMBEDDING_DIMENSIONS`는 1536이다. 모델이나 차원을 변경할 때는 두 설정과 Qdrant 컬렉션을 함께 검토하고 기존 임베딩을 재사용하지 않는다. Spring AI의 HTTP 시도는 최초 호출 포함 최대 2회이며 공통 RestClient 연결 타임아웃은 5초, 읽기 타임아웃은 30초다. `app.ai.connect-timeout-ms`·`app.ai.read-timeout-ms`로 조절할 수 있다. 이 값은 각 HTTP 호출의 제한으로 질문 처리 전체의 시간 예산과 구분한다. Qdrant gRPC 호출 기본 타임아웃은 5초다.
+
+후속 상담은 기존 최초 assistant 답변과 현재 user 질문을 역할별 메시지로 전달하는 단계다. 저장된 원문 근거·세션별 전체 대화 전달, 답변용 one-shot 예시, 최초 조회 상태 관리는 후속 구현 범위다.
 
 ## 같은 공유기의 다른 PC 사용
 
@@ -92,3 +117,6 @@ Compose 파일을 다른 PC로 복사해도 named volume 데이터는 따라가�
 - [Qdrant 릴리스](https://github.com/qdrant/qdrant/releases): 고정한 서버 버전.
 - [Qdrant 설정](https://qdrant.tech/documentation/operations/configuration/): 환경변수와 API 키 설정.
 - [Qdrant 저장소](https://qdrant.tech/documentation/manage-data/storage/): 컬렉션의 메모리·디스크 저장 전략.
+- [Spring AI 1.0 시작 가이드](https://docs.spring.io/spring-ai/reference/1.0/getting-started.html): Spring Boot 3.4·3.5 호환 범위와 BOM 구성.
+- [Spring AI ChatClient](https://docs.spring.io/spring-ai/reference/1.0/api/chatclient.html): 역할별 메시지와 구조화 응답.
+- [OpenAI 임베딩 가이드](https://developers.openai.com/api/docs/guides/embeddings): 기본 모델 차원과 차원 변경 옵션.
