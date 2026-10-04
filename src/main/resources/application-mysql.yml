@@ -1,0 +1,26 @@
+spring:
+  config:
+    activate:
+      on-profile: mysql & !test
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3307}/${MYSQL_DATABASE:molelawdb}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER:molelaw}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${MYSQL_POOL_SIZE:10}
+      connection-timeout: 5000
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    open-in-view: true
+    show-sql: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local & !test
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}

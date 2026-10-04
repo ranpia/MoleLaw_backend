@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.util.Optional;
 
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class LawSearchService {
 
@@ -271,8 +273,6 @@ public class LawSearchService {
                     .build(true)
                     .toUri();
 
-            System.out.println("✅ 최종 URI: " + uri); // Postman URL과 정확히 비교
-
             JsonNode response = webClientBuilder
                     .codecs(config -> config.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
                     .build()
@@ -291,14 +291,10 @@ public class LawSearchService {
             return lawNode;
 
         } catch (WebClientResponseException e) {
-            System.err.println("❌ WebClient 응답 예외 발생:");
-            System.err.println(" - Status Code: " + e.getRawStatusCode());
-            System.err.println(" - Status Text: " + e.getStatusText());
-            System.err.println(" - Response Body: " + e.getResponseBodyAsString());
-            System.err.println(" - Headers: " + e.getHeaders());
+            log.warn("법령 상세 조회 실패: status={}", e.getStatusCode().value());
             throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "본문 API 응답 오류", e);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("법령 상세 조회 실패: errorType={}", e.getClass().getSimpleName());
             throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "본문 API 예외", e);
         }
     }

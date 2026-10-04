@@ -1,62 +1,44 @@
 package com.MoleLaw_backend.service.law;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.MoleLaw_backend.exception.ErrorCode;
+import com.MoleLaw_backend.exception.GptApiException;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmbeddingService {
+    private final EmbeddingModel embeddingModel;
 
-    @Value("${openai.api-key}")
-    private String openaiKey;
+    @Getter
+    @Value("${spring.ai.openai.embedding.options.model}")
+    private String modelName;
 
-    private final WebClient webClient = WebClient.create("https://api.openai.com");
-
-    private static final String EMBEDDING_MODEL = "text-embedding-3-small";
+    @Value("${spring.ai.openai.embedding.options.dimensions}")
+    private int dimensions;
 
     public float[] generateEmbedding(String content) {
         try {
-            Map<String, Object> request = Map.of(
-                    "input", content,
-                    "model", EMBEDDING_MODEL
-            );
-
-            JsonNode response = webClient.post()
-                    .uri("/v1/embeddings")
-                    .header("Authorization", "Bearer " + openaiKey)
-                    .header("Content-Type", "application/json")
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(JsonNode.class)
-                    .block();
-
-            // ✅ 응답 구조 검사
-            if (response == null || !response.has("data")) {
-                throw new RuntimeException("OpenAI 응답 누락: " + response);
+            float[] vector = embeddingModel.embed(content);
+            if (vector == null || vector.length != dimensions) {
+                throw new GptApiException(ErrorCode.GPT_API_FAILURE, "임베딩 차원 불일치");
             }
-
-            JsonNode embeddingArray = response.path("data").get(0).path("embedding");
-
-            float[] result = new float[embeddingArray.size()];
-            for (int i = 0; i < embeddingArray.size(); i++) {
-                result[i] = (float) embeddingArray.get(i).asDouble();
+            for (float value : vector) {
+                if (!Float.isFinite(value)) {
+                    throw new GptApiException(ErrorCode.GPT_API_FAILURE, "유효하지 않은 임베딩 값");
+                }
             }
-            return result;
-
-        } catch (WebClientResponseException e) {
-            log.error("❌ OpenAI WebClient 오류: {}", e.getResponseBodyAsString());
-            throw new RuntimeException("OpenAI 임베딩 요청 실패", e);
+            return vector;
+        } catch (GptApiException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("❌ 임베딩 예외: {}", e.getMessage(), e);
-            throw new RuntimeException("임베딩 생성 중 오류", e);
+            log.warn("임베딩 생성 실패: errorType={}", e.getClass().getSimpleName());
+            throw new GptApiException(ErrorCode.GPT_API_FAILURE);
         }
     }
 }

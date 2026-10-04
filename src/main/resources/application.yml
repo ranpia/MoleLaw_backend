@@ -5,19 +5,30 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
-  datasource:
-    url: jdbc:mysql://molelaw-db.cpqukyis8rth.ap-northeast-2.rds.amazonaws.com:3306/molelawdb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: molelaw
-    password: molelaw123
-    driver-class-name: com.mysql.cj.jdbc.Driver
+  profiles:
+    default: mysql
+    group:
+      local:
+        - mysql
+        - qdrant
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-4}
+          temperature: 0.5
+      embedding:
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+          dimensions: ${OPENAI_EMBEDDING_DIMENSIONS:1536}
+    retry:
+      max-attempts: 2
+      backoff:
+        initial-interval: 500ms
+        max-interval: 1s
+
 
   security:
     oauth2:
@@ -66,12 +77,8 @@ springdoc:
 
 logging:
   level:
-    org.springframework.security: DEBUG
-    org.springframework.security.oauth2: DEBUG
+    org.springframework.security: INFO
 
-
-openai:
-  api-key: ${OPENAI_API_KEY}
 
 openlaw:
   api-key: ${OC_KEY}
@@ -83,4 +90,4 @@ cookie:
   secure: ${COOKIE_SECURE}
 
 jwt:
-  secret: 52839484E80003B48389B8BF09EBC8B18AAF3576789BB5146A165C8540C73B78
+  secret: ${JWT_SECRET}

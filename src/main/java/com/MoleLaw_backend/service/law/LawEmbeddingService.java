@@ -24,9 +24,8 @@ public class LawEmbeddingService {
     private final EmbeddingService embeddingService;
     private final LawEmbeddingRepository lawEmbeddingRepository;
 
-    private static final String currentModel = "text-embedding-3-small";
-
     public void embedLaws(List<Law> lawList) {
+        String currentModel = embeddingService.getModelName();
         ExecutorService executor = Executors.newFixedThreadPool(5); // 스레드 수 조절 가능
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 

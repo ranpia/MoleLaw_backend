@@ -1,0 +1,12 @@
+spring:
+  config:
+    activate:
+      on-profile: qdrant & !test
+
+app:
+  qdrant:
+    host: ${QDRANT_HOST:127.0.0.1}
+    port: ${QDRANT_GRPC_PORT:6334}
+    api-key: ${QDRANT_API_KEY}
+    collection-name: ${QDRANT_COLLECTION:law_chunks_v1}
+    use-tls: ${QDRANT_USE_TLS:false}

@@ -29,7 +29,6 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        System.out.println("🔑 로드된 secretKeyRaw: " + secretKeyRaw);
         this.key = Keys.hmacShaKeyFor(secretKeyRaw.getBytes(StandardCharsets.UTF_8));
         System.out.println("✅ JwtUtil 초기화 완료 (key ready)");
     }
