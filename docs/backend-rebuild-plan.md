@@ -48,6 +48,7 @@ API 요청 파라미터, 검색 순서, 응답 해석은 먼저 회귀 테스트
 - 스키마 변경은 Flyway 등 명시적인 마이그레이션으로 관리한다. 기존 데이터 초기화는 별도 작업으로 분리한다.
 - 기존 컨텍스트 테스트가 원격 DB에 연결되지 않도록 테스트 설정과 외부 호출을 격리한다.
 - 예상 실행 흐름: `docker compose up -d` → 로컬 프로필로 서버 실행 → 수집/색인 작업 → API 확인. 실제 명령은 구성 완료 후 확정한다.
+- DB 인프라 초안은 `docker/compose.yml`과 `docker/.env.compose.example`로 구성한다. `docker` 폴더에서 실제 DB 실행 명령은 `docker compose --env-file .env.compose up -d`이며 자원 예산·LAN 연결·검증 범위는 [로컬 인프라 가이드](../docker/README.md)를 따른다. 애플리케이션 프로필·마이그레이션·Qdrant 연동은 아직 별도 구현 단계다.
 
 ## 5. RAG 재설계
 ### 문서와 청크

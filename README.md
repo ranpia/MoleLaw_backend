@@ -1,5 +1,7 @@
 # 📘 MoleLaw 기능 정의 요약
 
+로컬 MySQL·Qdrant 실행과 자원 설정은 [로컬 인프라 가이드](docker/README.md)를 참고하세요.
+
 ## 🧩 프로젝트 개요
 
 | 항목           | 내용                                                                 |
