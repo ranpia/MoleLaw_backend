@@ -162,7 +162,7 @@ class LawSearchServiceTest {
 
     private void assertSearch(int index, String search, String org) {
         assertEquals("/DRF/lawSearch.do", requests.get(index).url().getPath());
-        assertEquals("law", parameter(index, "target"));
+        assertEquals("eflaw", parameter(index, "target"));
         assertEquals("JSON", parameter(index, "type"));
         assertEquals("test-key", parameter(index, "OC"));
         assertEquals(search, parameter(index, "search"));

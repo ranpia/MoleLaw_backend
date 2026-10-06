@@ -85,7 +85,7 @@ public class LawSearchService {
                             .host("www.law.go.kr")
                             .path("/DRF/lawSearch.do")
                             .queryParam("OC", oc)
-                            .queryParam("target", "law")
+                            .queryParam("target", "eflaw")
                             .queryParam("type", "JSON")
                             .queryParam("search", searchType)
                             .queryParam("query", keyword)

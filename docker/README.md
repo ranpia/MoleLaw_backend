@@ -71,6 +71,10 @@ docker compose --env-file .env.compose down
 .\gradlew.bat bootRun --args="--spring.profiles.active=local"
 ```
 
+현재 로컬 테스트는 HTTP(`http://localhost:8080`)로 실행하며 SSL과 쿠키의 `Secure` 속성을 비활성화한다. Google OAuth 콘솔에는 `http://localhost:8080/login/oauth2/code/google`을 리디렉션 URI로 등록한다. 외부 Google·모델 API 통신은 제공자의 HTTPS 주소를 사용한다.
+
+Kakao OAuth는 기본·로컬·테스트 프로필에서 제외되어 `KAKAO_CLIENT_ID`와 `KAKAO_CLIENT_SECRET`을 비워둘 수 있다. 나중에 필요하면 두 값을 입력하고 `local,kakao` 프로필로 실행한다.
+
 `mysql`의 스키마 기본값은 `validate`이고 `local`에서는 `update`를 사용한다. `JPA_DDL_AUTO`로 명시적으로 변경할 수 있다. Flyway 마이그레이션은 아직 구현 전이므로 빈 개발 DB의 첫 실행에는 `local`을 사용한다. 기존 서비스의 지연 로딩 접근을 보존하기 위해 MySQL의 Open-in-View는 유지한다. 서비스 트랜잭션 정리는 별도 단계다.
 
 IDE에서 환경변수로 직접 연결을 덮어쓸 수도 있다.

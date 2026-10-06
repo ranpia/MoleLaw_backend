@@ -20,7 +20,7 @@
 `LawSearchServiceTest`는 `WebClient`의 교환 함수를 대체해 외부 HTTP 호출·DB·모델 API 없이 실행한다.
 
 - 제목 + 소관부처 → 본문 + 소관부처 → 제목(부처 없음) → 본문(부처 없음) 순서와 첫 결과에서 종료.
-- `/DRF/lawSearch.do`의 `target=law`, `type=JSON`, `search`, `query`, `org`, `display=20`, `sort=lasc` 유지.
+- `/DRF/lawSearch.do`의 `target=eflaw`, `type=JSON`, `search`, `query`, `org`, `display=20`, `sort=lasc` 검증. 검색 target은 기존 `law`에서 `eflaw`로 변경했으며 실제 API 응답 호환성은 별도 통합 검증 대상이다.
 - 목록의 비어 있지 않은 법령일련번호(MST) 추출.
 - 외부 API 실패는 예외로 종료하며 무조건 검색을 계속하지 않음.
 - `/DRF/lawService.do`의 MST 상세 조회와 법령 노드 누락 시 실패.

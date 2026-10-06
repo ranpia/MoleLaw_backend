@@ -21,9 +21,6 @@ spring:
           google:
             client-id: test-google-client
             client-secret: test-google-secret
-          kakao:
-            client-id: test-kakao-client
-            client-secret: test-kakao-secret
 
 openlaw:
   api-key: dummy-key-for-test
