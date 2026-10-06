@@ -3,6 +3,10 @@ spring:
     activate:
       on-profile: local & !test
 
+server:
+  ssl:
+    enabled: false
+
 frontend:
   uri: ${FRONTENDURI:http://localhost:3000}
 cookie:
