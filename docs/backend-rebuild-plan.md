@@ -12,7 +12,7 @@
 - MessageChatMemoryAdvisor와 ChatMemory로 MySQL 채팅방 기록을 전달하고 대화 맥락을 유지하며 후속 상담을 제공한다.
 - 법령·판례 조회는 상담방의 최초 질문 처리에서만 수행한다. 후속 질문은 최초에 저장한 근거와 대화 내역으로 답변한다.
 - 중복 호출 코드, 과도한 서비스 책임, 불필요한 DTO·메서드와 로그를 정리한다.
-- 서버와 DB는 로컬에서 실행한다. 법령 API와 모델 API는 우선 외부 서비스를 사용한다. 로컬 LLM 도입은 별도 범위다.
+- 서버와 DB는 로컬에서 실행한다. 법령 API와 답변 모델은 우선 외부 서비스를 사용하고, 임베딩은 Ollama 로컬 모델을 비교한 뒤 선택한다. 로컬 답변 LLM 도입은 별도 범위다.
 - 기존 사용자·채팅 기능과 API 계약은 우선 유지한다. 변경이 필요하면 차이를 문서화한다.
 
 ### 최신 결정과 변경 요약
@@ -129,7 +129,19 @@ ETL은 독립된 책임으로 구현하고, 사전 수집 작업과 최초 질�
 - 최초 질문에서는 미수집 다음 페이지와 다른 법령 후보를 필요한 만큼 수집하고, 원문 저장 → 청킹 → 색인 → 재검색 결과를 같은 질문의 근거에 반영한다. 마지막 페이지나 새 후보 없음은 해당 탐색 조건의 종료로 처리하고 다른 조건을 검토한다. 전체 실행 예산이 소진되면 확보한 근거와 부족 상태를 저장한다. 완료된 상담방의 근거 스냅샷은 이후 추가 색인으로 교체하지 않는다.
 - 다중 페이지, 마지막 페이지, 빈 페이지, 중복 MST, 반복 응답, 총건수 변경, 중간 실패·재개, 호출 상한을 fixture 기반으로 검증한다. 고정 검색 라운드 제한은 두지 않고 ETL 페이지·API 호출·시간 예산과 탐색 진행을 함께 관리한다.
 
-### 문서와 청크
+### Ollama 임베딩 모델·청크 크기 비교 계획
+- 임베딩 비교군은 `bge-m3`(기본 1,024차원), `qwen3-embedding:0.6b`(기본 1,024차원), `embeddinggemma`(기본 768차원)로 둔다. 자원 여유가 있을 때 `qwen3-embedding:4b`를 추가 비교한다. 최종 모델·차원은 아직 확정하지 않는다.
+- 시작 후보는 `bge-m3` + 청크 목표 상한 512토큰 + 긴 조문 분할 중첩 64토큰 + 동시 임베딩 1개다. 이는 실험 시작안이며 현재 OpenAI 임베딩 설정·의존성·Compose를 이번 계획 수정에서 변경하지 않는다.
+- 1차는 같은 법령·동일 청크 본문과 평가 질문 30~50개로 모델 3개를 비교한다. 512토큰 기준 청크를 고정하고 각 모델의 실제 입력 토큰 수를 별도로 기록해 본문 차이가 모델 비교에 섞이지 않게 한다.
+- 2차는 선정한 모델로 청크 목표 상한 256/512/1,024토큰과 긴 조문 분할 중첩 32/64/128토큰을 비교한다. 조문 경계를 우선하며 짧은 조문은 그대로 유지한다. 중첩은 분할이 필요한 긴 조문에 적용한다.
+- 토큰 예산은 법령명·조문 제목·상위 맥락과 모델별 접두문을 포함한다. 모델별 토크나이저와 Ollama 실제 입력 한도를 확인하고 Spring AI 기본 토큰 계산을 해당 모델의 정확한 토큰 수로 간주하지 않는다. 입력이 잘리지 않았는지 검증한다.
+- 질문·문서의 모델별 권장 입력 형식을 적용한다. Qwen의 검색 질문 instruction과 EmbeddingGemma의 질문/문서 형식을 확인하며 BGE-M3의 sparse·multi-vector 기능이 Ollama 일반 임베딩 호출로 자동 제공된다고 전제하지 않는다. 초기 비교는 dense 벡터 검색으로 통일한다.
+- 모델·태그·digest·출력 차원·입력 형식·청킹 버전별로 Qdrant 컬렉션을 분리한다. 차원이 같아도 다른 모델 벡터를 섞지 않고 질문과 문서에 같은 모델·버전을 사용한다.
+- `topK=5/10`에서 Recall@K·무관한 결과 비율, 질문 임베딩 지연·전체 색인 시간·RAM/VRAM·벡터 저장량을 비교한다. 모델별 유사도 점수 분포가 다르므로 공통 임계값으로 우열을 판단하지 않는다.
+- 1인 로컬 실험은 법령 10~30개·청크 1만 개 이하부터 시작한다. 동일 하드웨어·동시성에서 모델 하나씩 로드하고 초기 로딩 시간과 준비된 상태의 지연을 구분한다. Ollama 실행 자원은 기존 Docker·JVM 예산에 별도로 포함하고 다운로드 크기를 실행 메모리로 해석하지 않는다.
+- 선정 후 Spring AI 1.0.9 Ollama EmbeddingModel 연결·프로필·환경변수와 컬렉션 준비를 구현한다. 답변 ChatClient의 외부 모델 설정과 분리하고 test 프로필은 Ollama 없이 모킹으로 실행한다. 모델 변경 시 문서 재임베딩과 활성 색인 전환을 검증한다.
+
+### 문서와 청크 구성 원칙
 - 법령명, 법령ID/MST, 조·항·호·목 경로, 원문 링크, 수집 시각을 보존한다. 시행일·개정 정보는 수집 가능 여부부터 확인한다.
 - 조문을 기본 단위로 삼고 긴 조문만 항·호 단위로 분할한다. 작은 하위 청크에는 상위 조문 제목과 필요한 맥락을 포함한다.
 - 검색용 본문과 표시용 원문을 구분한다. 안정적인 문서 ID와 내용 해시로 중복 저장을 방지한다.
@@ -240,7 +252,7 @@ RAG 기능 개발은 ETL부터 진행한다. 토큰 로그·용도 혼용·CORS/
 저장소 선택·최초 수집 허용·Advisor 도입은 확정 사항이며 다시 선택할 항목이 아니다.
 
 1. 초기 법령 분야·현행/연혁/시행예정 범위와 파서 보완 범위, 수집 완료 판정.
-2. 임베딩 모델·차원·거리 함수·청킹 토큰 수, 컬렉션·Payload 인덱스·활성 색인 전환 정책.
+2. Ollama 비교군 3개와 청크 256/512/1,024토큰 실험 후 임베딩 모델·차원·거리 함수·청킹 정책을 선정하고 컬렉션·Payload 인덱스·활성 색인 전환 정책을 확정한다.
 3. 답변 모델, 최초 질문의 시간·외부 호출·임베딩 예산, 근거 충분성 판정과 장시간 요청 응답 방식.
 4. 판례 목록 검색은 기존 최대 2회 제안을 확정 정책으로 보지 않는다. 필요 시 페이지·검색어를 확장하되 상세 조회·채택 건수와 실행 예산은 평가로 정한다.
 5. Advisor 저장소 어댑터의 읽기·쓰기·삭제 계약, 윈도우·토큰 상한, 성공 턴 확정·동시 요청·기존 기록 복원 방식.
@@ -252,6 +264,7 @@ RAG 기능 개발은 ETL부터 진행한다. 토큰 로그·용도 혼용·CORS/
 
 ## 11. 구현 상태와 다음 작업
 ### 이미 구현된 범위
+- [x] Redis 7.4.11-alpine Compose·비밀번호 인증·healthcheck·자원 상한·비영속 구성, 환경변수 예제와 Redis 인증·TTL·삭제 검증. Spring Redis 클라이언트·JWT 저장소 연동은 아직 미구현.
 - [x] MySQL @Primary·Qdrant VectorStore 프로필 분리, local 그룹과 H2 test 프로필.
 - [x] Spring AI 1.0.9 BOM·ChatClient·EmbeddingModel 통합, 공통 모델 오류·HTTP 타임아웃·최대 2회 시도 설정. 이 재시도 횟수는 최초 질문 수집 라운드 제한과 다르다.
 - [x] 법령 검색 순서·MST 상세 조회·기본 수집·동일 청크 중복 방지 테스트와 합성 fixture, 상세 URI·응답 원문 로그 제거.
@@ -259,10 +272,11 @@ RAG 기능 개발은 ETL부터 진행한다. 토큰 로그·용도 혼용·CORS/
 ### 남은 작업
 - [ ] 실제 법령 응답 샘플과 채팅 정상·권한·실패 기준선 확보.
 - [ ] 토큰 로그 제거·Access/Refresh 용도 분리·CORS/CSRF 정책 적용.
-- [ ] Redis Compose·프로필·환경변수·상태 확인과 MySQL 명시적 마이그레이션 준비.
+- [ ] Spring Redis 프로필·애플리케이션 환경변수·클라이언트와 MySQL 명시적 마이그레이션 준비. Compose Redis와 인프라 상태 검증은 완료.
 - [ ] 법령 원문·Document 메타데이터·청크 ID/해시·색인 작업 상태 모델 구현.
 - [ ] 다중 페이지·다른 법령 후보 수집, MST 중복 제거·실패 재개·예산 종료 구현.
 - [ ] Reader → 법령 구조 기반 Transformer → Qdrant writer 연결, 변경·삭제·버전 전환 검증.
+- [ ] Ollama 임베딩 후보 3개를 동일 청크로 비교하고 선정 모델의 청크 크기 3개를 비교한다. 품질·지연·자원 결과를 기록한 뒤 모델·차원을 확정하고 Spring AI 임베딩 설정을 전환한다.
 - [ ] Redis Access 등록·세션 확인·TTL·폐기와 MySQL Refresh 해시 저장·회전·재사용 탐지 구현.
 - [ ] 일반 로그인·가입·OAuth·재발급·로그아웃의 쿠키·응답·보안 정책 통합.
 - [ ] Qdrant 검색 전환과 최초 질문의 수집·ETL·재검색 조정 흐름 구현.
@@ -278,9 +292,11 @@ RAG 기능 개발은 ETL부터 진행한다. 토큰 로그·용도 혼용·CORS/
 ### 검증 이력과 현재 한계
 이전 문서에는 Docker 중지 상태에서 전체 테스트 20개와 build/JAR 패키징 통과가 기록되어 있다. 이는 당시 구현의 검증 이력이며 새 계획의 구현 완료나 이번 작업의 재실행 결과가 아니다.
 
-이번 최신화는 문서 변경만 포함한다. Redis·Refresh 테이블·ETL·Qdrant 실제 검색·Advisor·최초 근거 저장과 실제 외부 연결은 아직 구현·검증 완료로 표시하지 않는다. 기존 동작 기준은 [backend-baseline.md](backend-baseline.md), 인증 상세는 [jwt-security-review.md](jwt-security-review.md)를 참고한다.
+2026-10-07 Compose 인프라 검증에서 MySQL 사용자 쿼리, Qdrant 인증·임시 벡터 저장/검색, Redis 비인증 거부·인증 쓰기·TTL·삭제를 통과했다. Redis 인증 로직·Refresh 테이블·ETL·애플리케이션 Qdrant 검색·Advisor·최초 근거 저장과 실제 모델 연결은 아직 구현·검증 완료로 표시하지 않는다. 기존 동작 기준은 [backend-baseline.md](backend-baseline.md), 인증 상세는 [jwt-security-review.md](jwt-security-review.md)를 참고한다.
 
 ## 참고 문서
+- [Ollama BGE-M3](https://ollama.com/library/bge-m3), [Qwen3 Embedding](https://ollama.com/library/qwen3-embedding), [EmbeddingGemma](https://ollama.com/library/embeddinggemma): 임베딩 비교군과 설치 태그.
+- [BGE-M3 모델 카드](https://huggingface.co/BAAI/bge-m3), [Qwen3 0.6B 모델 카드](https://huggingface.co/Qwen/Qwen3-Embedding-0.6B), [EmbeddingGemma 모델 카드](https://huggingface.co/google/embeddinggemma-300m): 입력 형식·차원·토큰 한도 확인.
 - [Spring AI Advisors API](https://docs.spring.io/spring-ai/reference/api/advisors.html): MessageChatMemoryAdvisor와 conversation ID 기반 대화 전달. 구현은 1.0.9에서 확인한다.
 - [현행법령(시행일) 목록 조회 API](https://open.law.go.kr/LSO/openApi/guideResult.do?htmlName=lsEfYdListGuide): `target=eflaw`의 page·display·totalCnt와 현행/연혁/시행예정 필터.
 - [Spring AI ETL Pipeline](https://docs.spring.io/spring-ai/reference/api/etl-pipeline.html): DocumentReader·DocumentTransformer·DocumentWriter 구성. 실제 사용 API는 고정한 1.0.9에서 확인한다.

@@ -54,6 +54,39 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  redis:
+    image: redis:7.4.11-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env.compose}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        case "$$REDIS_PASSWORD" in
+          *[!a-zA-Z0-9_-]*|'') echo 'REDIS_PASSWORD must use letters, digits, underscore or hyphen.' >&2; exit 1 ;;
+        esac
+        umask 077
+        printf 'bind 0.0.0.0\nprotected-mode yes\nrequirepass %s\nsave ""\nappendonly no\nmaxmemory 128mb\nmaxmemory-policy noeviction\n' "$$REDIS_PASSWORD" > /data/redis.conf
+        chown redis:redis /data/redis.conf
+        exec /usr/local/bin/docker-entrypoint.sh redis-server /data/redis.conf
+    ports:
+      - "${DB_BIND_ADDRESS:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
+    tmpfs:
+      - /data:size=16m
+    cpus: ${REDIS_CPUS:-1.0}
+    mem_limit: ${REDIS_MEMORY_LIMIT:-256m}
+    healthcheck:
+      test: ["CMD-SHELL", 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -qx PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   mysql_data:
   qdrant_data:
