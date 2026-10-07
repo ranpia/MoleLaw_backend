@@ -18,13 +18,20 @@ try {
         $mysqlId = docker compose --env-file .env.compose ps -q mysql
         if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect MySQL container.' }
         $mysqlHealthy = $false
+        $redisId = docker compose --env-file .env.compose ps -q redis
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect Redis container.' }
+        $redisHealthy = $false
+        if ($redisId) {
+            $redisHealth = docker inspect --format '{{.State.Health.Status}}' $redisId
+            $redisHealthy = $LASTEXITCODE -eq 0 -and $redisHealth -eq 'healthy'
+        }
         if ($mysqlId) {
             $health = docker inspect --format '{{.State.Health.Status}}' $mysqlId
             $mysqlHealthy = $LASTEXITCODE -eq 0 -and $health -eq 'healthy'
         }
         try {
             $null = Invoke-RestMethod "$baseUri/collections" -Headers $headers -TimeoutSec 2
-            if ($mysqlHealthy) { $ready = $true; break }
+            if ($mysqlHealthy -and $redisHealthy) { $ready = $true; break }
         } catch { }
         Start-Sleep -Seconds 2
     }
@@ -34,6 +41,27 @@ try {
     $mysqlResult = $mysqlCheck | docker compose --env-file .env.compose exec -T mysql sh
     if ($LASTEXITCODE -ne 0 -or $mysqlResult[0] -ne '1') { throw 'MySQL query failed.' }
     Write-Output "MySQL authenticated SELECT 1 passed; version $($mysqlResult[1])"
+
+    $redisUnauthenticated = docker compose --env-file .env.compose exec -T redis redis-cli ping
+    if (($redisUnauthenticated -join ' ') -notmatch 'NOAUTH') { throw 'Redis did not reject missing password.' }
+    $redisProbe = @'
+set -eu
+export REDISCLI_AUTH="$REDIS_PASSWORD"
+probe="molelaw_probe_$(cat /proc/sys/kernel/random/uuid)"
+trap 'redis-cli DEL "$probe" >/dev/null' EXIT
+test "$(redis-cli PING)" = PONG
+test "$(redis-cli SET "$probe" probe EX 30 NX)" = OK
+test "$(redis-cli GET "$probe")" = probe
+ttl=$(redis-cli TTL "$probe")
+test "$ttl" -gt 0
+test "$ttl" -le 30
+redis-cli DEL "$probe" >/dev/null
+test "$(redis-cli EXISTS "$probe")" = 0
+'@
+    $redisProbeEncoded = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($redisProbe.Replace("`r`n", "`n")))
+    docker compose --env-file .env.compose exec -T redis sh -c "echo $redisProbeEncoded | base64 -d | sh"
+    if ($LASTEXITCODE -ne 0) { throw 'Redis authentication or TTL probe failed.' }
+    Write-Output 'Redis missing-password rejection, authenticated write, TTL and delete passed.'
 
     $unauthenticatedStatus = 0
     try {
