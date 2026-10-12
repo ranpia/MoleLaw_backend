@@ -82,6 +82,12 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 zero-shot RAG 기준선을 확보한 뒤 one-shot 답변 예시와 step-back 검색 전략을 각각 비교합니다. one-shot은 답변 예시 한 개를 넣는 방식이며 최종 답변 호출 횟수와는 다른 개념입니다.
 
+## 역할별 에이전트 도입 계획
+
+기본 ETL·RAG 이후 서버 오케스트레이터 아래 검색 계획·근거 검토·답변 역할을 순서대로 분리할 계획입니다. 인증·수집·ETL·예산·종료·출처 ID 검증·저장은 서버 코드가 담당하고, 모델은 검색어와 부족한 근거를 구조화해 제안합니다. 후속 상담은 Advisor와 최초 근거를 사용하며 검색 도구를 제공하지 않습니다.
+
+초기 비교안은 검색 계획에 `gpt-5.4-mini / low`, 근거 검토·최초 답변에 `gpt-5.4-mini / medium`, 어려운 사례의 품질 비교에 `gpt-5.4 / medium`입니다. 최종 선정은 아니며 Spring AI 1.0.9의 옵션 호환성·검색/답변 품질·지연·비용을 검증한 뒤 결정합니다. Ollama 임베딩 비교와는 별도입니다. 상세 역할 계약은 [재구축 계획](docs/backend-rebuild-plan.md)을 참고하세요.
+
 ## 인증 보안 개선 계획
 
 Access는 짧은 수명의 JWT를 유지하고 Redis의 활성 토큰·세션 상태를 매 요청 확인할 계획입니다. Redis 키가 없거나 장애가 발생하면 JWT 검증만으로 우회하지 않습니다. Refresh는 MySQL 별도 테이블에 원문 대신 해시를 저장하고 재발급 시 회전·재사용 탐지·폐기를 수행합니다.
@@ -189,12 +195,17 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 4. Qdrant 검색·최초 근거 스냅샷·판례 검증 연결
 5. Advisor 기반 후속 상담과 출처 검증
 6. 검색·답변 품질 비교와 기존 구현 정리
+7. 서버 오케스트레이터와 검색 계획·근거 검토 역할의 단계적 도입·모델별 추론 수준 평가
 
 상세 작업 순서·완료 조건·미정 정책은 [백엔드 재구축 계획](docs/backend-rebuild-plan.md)에 관리합니다. JWT에 상담방 목록을 넣는 방안은 검토 단계이며 현재 토큰 claim에 추가하는 것으로 확정하지 않았습니다.
 
 ## 관련 문서
 
 - [백엔드 재구축 계획](docs/backend-rebuild-plan.md)
+- [RAG·ETL 상세 계획](docs/plans/rag-etl.md)
+- [인증·보안 실행 계획](docs/plans/auth-security.md)
+- [오케스트레이션·모델 계획](docs/plans/orchestration-models.md)
+- [구현·검증 계획](docs/plans/delivery-validation.md)
 - [JWT 인증 보안 검토](docs/jwt-security-review.md)
 - [재구축 전 동작 기준선](docs/backend-baseline.md)
 - [로컬 인프라 실행·검증 가이드](docker/README.md)
