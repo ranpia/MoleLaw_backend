@@ -4,6 +4,9 @@ import com.MoleLaw_backend.domain.entity.User;
 import com.MoleLaw_backend.domain.repository.UserRepository;
 import com.MoleLaw_backend.service.security.CookieUtil;
 import com.MoleLaw_backend.service.security.JwtUtil;
+import com.MoleLaw_backend.service.security.AccessTokenService;
+import com.MoleLaw_backend.exception.MolelawException;
+import com.MoleLaw_backend.exception.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +27,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final JwtUtil jwtUtil;
     private final CookieUtil cookieUtil;
     private final UserRepository userRepository;
+    private final AccessTokenService accessTokenService;
 
     @Value("${frontend.uri}")
     private String frontenduri;
@@ -57,7 +61,18 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 });
 
         // ✅ JWT 발급
-        String accessToken = jwtUtil.generateAccessToken(email, provider);
+        String accessToken;
+        try {
+            accessToken = accessTokenService.issue(email, provider);
+        } catch (MolelawException e) {
+            if (e.getErrorCode() != ErrorCode.AUTH_STORE_UNAVAILABLE) {
+                throw e;
+            }
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"AUTH_STORE_UNAVAILABLE\"}");
+            return;
+        }
         String refreshToken = jwtUtil.generateRefreshToken(email, provider);
 
 

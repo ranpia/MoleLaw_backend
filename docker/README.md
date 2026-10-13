@@ -59,6 +59,33 @@ Windows 실행 정책이 verify.ps1을 차단하면 프로세스에만 예외를
 
 일반 `down`은 MySQL·Qdrant 볼륨을 보존한다. Redis는 재시작·재생성 시 인증 상태를 비운다. `down -v`는 DB·색인·스냅샷 볼륨까지 삭제하므로 데이터 초기화를 의도한 경우에만 사용한다. MySQL 초기화용 계정·비밀번호 변수는 빈 볼륨에서만 적용되므로 기존 볼륨의 비밀번호를 환경변수 변경만으로 바꿀 수 없다.
 
+## Redis Insight 로컬 모니터링
+
+키·TTL·메모리·Slow Log 확인은 선택적 `compose.insight.yml`의 Redis Insight 3.4.1을 사용한다. 기본 DB 실행에는 포함되지 않는다. 별도 UI 주소는 `http://localhost:5540`이며 127.0.0.1에만 바인딩한다. 컨테이너 간 접속 주소 `redis:6379`와 Compose 비밀번호로 `MoleLaw Local Redis` 연결을 사전 등록하므로 비밀번호를 UI에 다시 입력할 필요가 없다.
+
+먼저 Git에서 제외된 `docker/.env.compose`에 별도 무작위 `REDISINSIGHT_ENCRYPTION_KEY`를 설정한다. 이 키는 Insight에 저장되는 접속 비밀번호·히스토리 암호화에 사용하며 볼륨을 재사용할 때 같은 키를 유지한다. 현재 로컬 환경에는 키를 생성해 추가했다. 다른 환경에서는 아래를 `docker` 폴더에서 한 번 실행한다. 기존 키는 덮어쓰지 않는다.
+
+```powershell
+$insightEnvPath = Join-Path (Get-Location) '.env.compose'
+if ([System.IO.File]::ReadAllText($insightEnvPath) -notmatch '(?m)^REDISINSIGHT_ENCRYPTION_KEY=.+$') {
+    $insightBytes = New-Object byte[] 32
+    $insightRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try { $insightRng.GetBytes($insightBytes) } finally { $insightRng.Dispose() }
+    $insightKey = [BitConverter]::ToString($insightBytes).Replace('-', '')
+    $insightText = [System.IO.File]::ReadAllText($insightEnvPath)
+    $insightText = [regex]::Replace($insightText, '(?m)^REDISINSIGHT_ENCRYPTION_KEY=.*\r?\n?', '')
+    [System.IO.File]::WriteAllText($insightEnvPath, $insightText + "`r`nREDISINSIGHT_ENCRYPTION_KEY=$insightKey`r`n", [System.Text.UTF8Encoding]::new($false))
+}
+docker compose -f compose.yml -f compose.insight.yml --env-file .env.compose config --quiet
+docker compose -f compose.yml -f compose.insight.yml --env-file .env.compose up -d redisinsight
+```
+
+첫 접속 시 약관을 직접 확인한다. 연결을 열고 Browser에서 `molelaw:auth:access:*`를 검색하면 로그인 후 생성된 키, 감소하는 TTL, 로그아웃 후 키 삭제를 확인할 수 있다. 메모리 분석·Slow Log도 같은 도구에서 확인한다. 이 구성은 GUI이며 운영 지표의 장기 보관·알림은 Prometheus/Grafana를 별도로 구성해야 한다.
+
+UI 설정은 `redisinsight_data` 볼륨에 보존된다. Insight만 중지할 때는 `docker compose -f compose.yml -f compose.insight.yml --env-file .env.compose stop redisinsight`를 사용한다. 재실행은 위 `up` 명령을 사용한다. 기존 Redis를 재생성하지 않고 UI만 시작하려면 Redis healthy 확인 후 `up -d --no-deps redisinsight`를 사용한다.
+
+설치·암호화·사전 연결 변수는 [공식 Docker 안내](https://redis.io/docs/latest/operate/redisinsight/install/install-on-docker/)와 [설정 안내](https://redis.io/docs/latest/operate/redisinsight/configuration/)를 따른다.
+
 ## 애플리케이션 연결 범위
 
 애플리케이션 기본 프로필은 `mysql`이며 기본 MySQL 주소는 로컬 3307이다. MySQL `DataSource`에 `@Primary`를 지정하고 Qdrant는 별도 프로필의 `VectorStore`로 구성했다. 루트 `.env.example`을 `.env`로 복사해 OAuth·API 키·JWT 설정을 채우고, MySQL 비밀번호·Qdrant 키는 `docker/.env.compose`와 일치시킨다. 실제 비밀값은 커밋하지 않는다.
@@ -98,9 +125,11 @@ Qdrant 주소는 HTTP `127.0.0.1:6333`, gRPC `127.0.0.1:6334`이며 연결에 �
 
 Redis는 Access의 jti·로그인 세션 활성 상태를 위한 인프라다. 비밀번호 인증과 PING healthcheck를 적용하고 기본 바인딩은 127.0.0.1:6379다. 비밀번호는 프로세스 인자 대신 환경변수에서 읽어 컨테이너 tmpfs에 권한 600의 설정 파일로 작성한다. Docker 관리 권한이 있는 사용자는 환경변수를 볼 수 있으므로 실제 값이나 전체 compose config를 로그로 출력하지 않는다.
 
-RDB·AOF를 모두 끄고 /data는 tmpfs로 둔다. Redis 재시작 후 기존 Access 상태가 없어지면 인증을 거절하고 MySQL의 정상 Refresh로 새 상태를 발급하도록 애플리케이션을 구현할 예정이다. 자동 키 축출로 활성 인증 상태가 사라지지 않도록 noeviction을 사용하며 메모리 부족으로 등록이 실패하면 발급을 실패 처리해야 한다. TTL과 서버 세션 폐기는 애플리케이션 단계에서 구현한다.
+RDB·AOF를 모두 끄고 /data는 tmpfs로 둔다. Redis 재시작 후 기존 Access 상태가 없어지면 인증을 거절한다. 현재는 정상 Refresh JWT와 DB 사용자 확인으로 새 Access를 발급하며 MySQL 등록 Refresh·세션을 확인하는 최종 복구 정책은 후속 단계다. noeviction을 사용하며 메모리 부족 등 Redis 등록 실패는 503으로 처리하고 JWT를 전달하지 않는다. Access TTL과 전달된 Access 폐기를 구현했으며 전체 로그인 세션 폐기는 아직 없다.
 
-현재 Spring Redis 의존성·클라이언트·JWT 저장소는 아직 추가하지 않았다. 따라서 Compose Redis 기동이 현재 JWT 검증 동작을 변경하지 않는다. 연결 예정 값은 호스트 127.0.0.1, 포트 REDIS_PORT(기본 6379), 비밀번호 docker/.env.compose의 REDIS_PASSWORD다. LAN 사용 시 호스트와 방화벽을 맞추고 인증 명령도 평문 통신임을 고려한다.
+Spring Redis 클라이언트와 Access 저장소를 사용한다. 애플리케이션 `.env`에 `REDIS_HOST=127.0.0.1`, `REDIS_PORT=6379`, `REDIS_PASSWORD`(Compose와 같은 값), `REDIS_DATABASE=0`, `REDIS_SSL_ENABLED=false`를 설정한다. LAN 사용 시 호스트와 방화벽을 맞추고 인증 명령도 평문 통신임을 고려한다. TLS 제공 Redis에는 `REDIS_SSL_ENABLED=true`를 사용한다. 연결·명령 제한 시간은 각각 2초다.
+
+`molelaw:auth:access:{jti}`에 사용자 식별자와 JWT 만료까지의 TTL을 저장한다. 원문 JWT는 저장하지 않는다. 키 누락은 401, Redis 장애는 503이며 일반 인증 요청에서 키를 복원하지 않는다. 실제 클라이언트의 등록·TTL·사용자 일치·폐기는 루트에서 `.\gradlew.bat redisLiveTest`로 검증한다. 이 테스트는 고유 테스트 키만 정리하며 일반 test/CI에는 포함되지 않는다. 전체 Refresh·세션 폐기는 [인증 실행 계획](../docs/plans/auth-security.md)을 따른다.
 
 기존 .env.compose가 있으면 덮어쓰지 말고 REDIS_PASSWORD를 추가한다. 설정 확인은 docker compose --env-file .env.compose config --quiet로 수행한다. ./verify.ps1은 임시 키만 사용하고 원래 인증 상태를 변경하지 않는다.
 

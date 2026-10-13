@@ -2,6 +2,8 @@
 
 기준일: 2026-10-13. 구현된 내부 Tool과 앞으로 연결할 상담 기능을 구분한다. 전체 방향은 [재구축 요약](backend-rebuild-plan.md)을 따른다.
 
+인증 후속 작업: 보안 개선·Swagger·README 계약은 PR #1로 dev에 병합했고 `fix/auth-security`는 로컬·원격에서 삭제했다. `feat/redis-access-auth`는 해당 dev에서 분리한 Redis Access 개발 브랜치다. Access jti 등록·TTL·매 요청 확인·전달된 Access 폐기와 503 장애 처리를 구현했다. 테스트 95개·JAR·실제 Redis TTL/폐기를 검증했다. 로그인 세션·MySQL Refresh·전체 폐기는 아직 미구현이며 상세 전환·실행 계약은 [인증 실행 계획](plans/auth-security.md)의 Redis 구현 절을 따른다. 아래 API Tool 전달 이력과 별개이며 운영 배포는 실행하지 않았다.
+
 ## 브랜치 전달 방식
 
 API 기능은 `feat/legal-api-tools`에 커밋하고 `refactor/backend-rebuild`에 병합했다. 문서·실행 환경까지 포함한 최신 통합본을 `main`에 반영하고 같은 기준으로 `dev`를 생성한다. 기능 브랜치도 최신화해 보존한다. 로컬 `.codex/`와 모델 테스트 결과·비밀값은 전달 대상에서 제외한다.
