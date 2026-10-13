@@ -61,24 +61,27 @@ public class UserService {
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getProvider());
 
         AuthResponse authResponse=  new AuthResponse(accessToken, refreshToken);
-        cookieUtil.addJwtCookie(response, "accessToken", authResponse.getAccessToken(), true);
-        cookieUtil.addJwtCookie(response, "refreshToken", authResponse.getRefreshToken(), true);
+        cookieUtil.addJwtCookie(response, "accessToken", authResponse.getAccessToken());
+        cookieUtil.addJwtCookie(response, "refreshToken", authResponse.getRefreshToken());
         return authResponse;
     }
 
     public AuthResponse reissue(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = cookieUtil.getTokenFromCookie(request, "refreshToken");
 
-        if (refreshToken == null || !jwtUtil.validateToken(refreshToken)) {
+        if (refreshToken == null || !jwtUtil.validateRefreshToken(refreshToken)) {
             throw new MolelawException(ErrorCode.TOKEN_FAIL);
         }
 
-        String[] subjectParts = jwtUtil.getEmailAndProviderFromToken(refreshToken);
+        String[] subjectParts = jwtUtil.getEmailAndProviderFromRefreshToken(refreshToken);
         String email = subjectParts[0];
         String provider = subjectParts[1];
 
+        userRepository.findByEmailAndProvider(email, provider)
+                .orElseThrow(() -> new MolelawException(ErrorCode.TOKEN_FAIL));
+
         String newAccessToken = jwtUtil.generateAccessToken(email, provider);
-        cookieUtil.addJwtCookie(response, "accessToken", newAccessToken, true);
+        cookieUtil.addJwtCookie(response, "accessToken", newAccessToken);
 
         return new AuthResponse(newAccessToken, refreshToken);
     }

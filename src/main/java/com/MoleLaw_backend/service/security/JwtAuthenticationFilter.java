@@ -1,6 +1,6 @@
 package com.MoleLaw_backend.service.security;
 
-import com.MoleLaw_backend.service.security.CustomUserDetails;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -46,16 +47,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        System.out.println("\n\n🛡️ JwtAuthenticationFilter 진입");
-        System.out.println("🛡️ 요청 URI: " + request.getRequestURI());
-        System.out.println("🛡️ 추출된 토큰: " + token + "\n");
 
         // ✅ 3. 토큰 검증 및 사용자 인증 설정
-        if (token != null && jwtUtil.validateToken(token)
+        if (token != null && jwtUtil.validateAccessToken(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                String userId = jwtUtil.getUserIdFromToken(token); // email:provider
-                System.out.println("🛡️ 사용자 ID: " + userId);
+                String userId = jwtUtil.getUserIdFromAccessToken(token); // email:provider
 
                 CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(userId);
                 UsernamePasswordAuthenticationToken authentication =
@@ -64,9 +61,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            } catch (Exception e) {
-                System.out.println("❌ JWT 인증 처리 실패: " + e.getMessage());
-                e.printStackTrace();  // ✅ 오류 추적 로그
+            } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
+                SecurityContextHolder.clearContext();
             }
         }
 
