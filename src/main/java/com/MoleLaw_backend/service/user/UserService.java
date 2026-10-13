@@ -12,6 +12,7 @@ import com.MoleLaw_backend.exception.ErrorCode;
 import com.MoleLaw_backend.exception.MolelawException;
 import com.MoleLaw_backend.service.security.CookieUtil;
 import com.MoleLaw_backend.service.security.JwtUtil;
+import com.MoleLaw_backend.service.security.AccessTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -27,7 +28,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final CookieUtil cookieUtil;
+    private final AccessTokenService accessTokenService;
 
+    @Transactional
     public AuthResponse signup(SignupRequest request) {
         if (userRepository.existsByEmailAndProvider(request.getEmail(), "local")) {
             throw new MolelawException(ErrorCode.DUPLICATED_EMAIL);
@@ -42,7 +45,7 @@ public class UserService {
 
         userRepository.save(user);
 
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getProvider());
+        String accessToken = accessTokenService.issue(user.getEmail(), user.getProvider());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getProvider());
 
         return new AuthResponse(accessToken, refreshToken);
@@ -57,7 +60,7 @@ public class UserService {
         }
 
         // ✅ 여기서 provider를 반드시 명시
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getProvider());
+        String accessToken = accessTokenService.issue(user.getEmail(), user.getProvider());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getProvider());
 
         AuthResponse authResponse=  new AuthResponse(accessToken, refreshToken);
@@ -80,7 +83,7 @@ public class UserService {
         userRepository.findByEmailAndProvider(email, provider)
                 .orElseThrow(() -> new MolelawException(ErrorCode.TOKEN_FAIL));
 
-        String newAccessToken = jwtUtil.generateAccessToken(email, provider);
+        String newAccessToken = accessTokenService.issue(email, provider);
         cookieUtil.addJwtCookie(response, "accessToken", newAccessToken);
 
         return new AuthResponse(newAccessToken, refreshToken);

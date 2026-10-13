@@ -10,6 +10,7 @@ public enum ErrorCode {
     FORBIDDEN(403, "접근 권한이 없습니다."),
     NOT_FOUND(404, "대상을 찾을 수 없습니다."),
     INTERNAL_SERVER_ERROR(500, "서버 내부 오류입니다."),
+    AUTH_STORE_UNAVAILABLE(503, "인증 저장소를 사용할 수 없습니다. 잠시 후 다시 시도하세요."),
     OPENLAW_API_FAILURE(HttpStatus.BAD_GATEWAY.value(), "공공법령 API 통신에 실패했습니다"),
     OPENLAW_INVALID_RESPONSE(HttpStatus.BAD_REQUEST.value(), "공공법령 API 응답이 올바르지 않습니다"),
     GPT_API_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "GPT 응답 생성 중 오류 발생"),
