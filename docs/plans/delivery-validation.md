@@ -6,7 +6,7 @@
 
 완료된 기반은 Spring AI 1.0.9 ChatClient·EmbeddingModel 통합, MySQL/Qdrant 프로필 분리, H2 테스트 격리, 법령 회귀 fixture, MySQL/Qdrant/Redis Compose다. Redis 컨테이너 실행은 JWT 저장소 구현 완료를 의미하지 않는다.
 
-법령/판례 내부 Tool·검색 옵션·원문 스냅샷은 구현했다. CPU Ollama 실행 환경은 별도 검증했다. ETL·Spring Ollama 연동·애플리케이션 Qdrant 검색·Advisor·상담방 근거 스냅샷·새 인증 저장소·역할별 오케스트레이터는 미구현이다. 작업 완료는 코드와 해당 검증 결과가 함께 있을 때 표시한다.
+법령/판례 내부 Tool·검색 옵션·원문 스냅샷은 구현했다. CPU Ollama 실행 환경은 별도 검증했다. Redis Access jti 등록·TTL·인증·전달된 Access 폐기는 구현했다. ETL·Spring Ollama 연동·애플리케이션 Qdrant 검색·Advisor·상담방 근거 스냅샷·로그인 세션·MySQL Refresh·역할별 오케스트레이터는 미구현이다. 작업 완료는 코드와 해당 검증 결과가 함께 있을 때 표시한다.
 
 ## 단계와 완료 조건
 
