@@ -93,6 +93,66 @@ class LawSearchServiceTest {
     }
 
     @Test
+    void explicitPagePreservesFiltersAndEncodesQueryAsData() {
+        enqueue(FOUND);
+        service.searchPage("민법&org=999+{x}", 2, "100", 3, 50);
+        assertEquals("3", parameter(0, "page"));
+        assertEquals("50", parameter(0, "display"));
+        assertEquals("2", parameter(0, "search"));
+        assertEquals("100", parameter(0, "org"));
+        assertEquals("https", requests.get(0).url().getScheme());
+        assertEquals("민법&org=999+{x}", java.net.URLDecoder.decode(parameter(0, "query"), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void rejectsInvalidPageBeforeExternalCall() {
+        assertThrows(IllegalArgumentException.class, () -> service.searchPage("민법", 1, null, 0, 20));
+        assertThrows(IllegalArgumentException.class, () -> service.searchPage("민법", 1, null, 1, 101));
+        assertTrue(requests.isEmpty());
+    }
+
+    @Test
+    void passesLawIdentityKindAndCurrentStatusToOfficialApi() {
+        enqueue(FOUND);
+        service.searchPage("민법", 1, "1270000", 1, 20,
+                new com.MoleLaw_backend.dto.request.LawSearchFilters("001706", "A0002", 3, true));
+        assertEquals("001706", parameter(0, "LID"));
+        assertEquals("A0002", parameter(0, "knd"));
+        assertEquals("3", parameter(0, "nw"));
+        assertEquals("1270000", parameter(0, "org"));
+    }
+
+    @Test
+    void exactTitleSearchEncodesQuotedQueryAndOptionalDateAndSortFilters() {
+        enqueue(FOUND);
+        var filters = new com.MoleLaw_backend.dto.request.LawSearchFilters(
+                "001706", "A0002", 3, true, "efdes", "20200101~20261231", "20100101~20261231");
+        service.searchPage("민법", 1, "1270000", 2, 50, filters);
+        assertEquals("\"민법\"", java.net.URLDecoder.decode(parameter(0, "query"), StandardCharsets.UTF_8));
+        assertEquals("001706", parameter(0, "LID"));
+        assertEquals("A0002", parameter(0, "knd"));
+        assertEquals("3", parameter(0, "nw"));
+        assertEquals("efdes", parameter(0, "sort"));
+        assertEquals("20200101~20261231", parameter(0, "efYd"));
+        assertEquals("20100101~20261231", parameter(0, "ancYd"));
+    }
+
+    @Test
+    void rejectsInvalidSortAndCalendarRanges() {
+        for (String sort : new String[]{"unknown", "lasc&OC=other", ""}) {
+            assertThrows(IllegalArgumentException.class, () -> new com.MoleLaw_backend.dto.request.LawSearchFilters(
+                    null, null, null, false, sort, null, null));
+        }
+        for (String range : new String[]{"20260230~20260301", "20261231~20260101", "20260101", ""}) {
+            assertThrows(IllegalArgumentException.class, () -> new com.MoleLaw_backend.dto.request.LawSearchFilters(
+                    null, null, null, false, null, range, null));
+            assertThrows(IllegalArgumentException.class, () -> new com.MoleLaw_backend.dto.request.LawSearchFilters(
+                    null, null, null, false, null, null, range));
+        }
+        assertTrue(requests.isEmpty());
+    }
+
+    @Test
     void wrapsApiFailureWithoutContinuingFallbackSearch() {
         responses.add(ClientResponse.create(HttpStatus.SERVICE_UNAVAILABLE).build());
 
