@@ -11,6 +11,8 @@ import com.MoleLaw_backend.service.chat.ChatService;
 import com.MoleLaw_backend.service.security.CustomUserDetails;
 import com.MoleLaw_backend.service.user.UserService;
 import com.MoleLaw_backend.service.security.CookieUtil;
+import com.MoleLaw_backend.service.security.AccessTokenService;
+import com.MoleLaw_backend.service.security.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -41,6 +43,8 @@ public class UserController {
     private final ChatService chatService;
     private final UserService userService;
     private final CookieUtil cookieUtil;
+    private final AccessTokenService accessTokenService;
+    private final JwtUtil jwtUtil;
 
 
     @Operation(summary = "회원가입", description = "local 계정을 생성하고 두 JWT 쿠키와 성공 JSON을 반환합니다. 화면 이동은 프론트에서 처리합니다. 현재 Bean Validation 검사는 적용하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
@@ -134,15 +138,22 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "로그아웃", description = "인증 없이 호출할 수 있으며 두 JWT 쿠키를 삭제합니다. 서버 토큰 폐기는 아직 구현하지 않았습니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @Operation(summary = "로그아웃", description = "인증 없이 호출할 수 있으며 전달된 Access의 Redis 등록을 폐기한 뒤 두 JWT 쿠키를 삭제합니다. Bearer와 Access 쿠키가 다르면 둘 다 폐기합니다. 다른 Access와 Refresh 서버 폐기는 아직 지원하지 않아 복사된 Refresh로 재발급할 수 있습니다. Redis 폐기 실패는 503이며 성공으로 처리하지 않습니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
     @SecurityRequirements
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "쿠키 삭제 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = StringEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":\"로그아웃 되었습니다.\"}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "전달된 유효 Access 폐기 및 쿠키 삭제 성공", headers = @Header(name = "Set-Cookie", description = "accessToken Path=/ 및 refreshToken Path=/api/auth 삭제. 이전 Path=/ Refresh도 삭제", schema = @Schema(type = "string")), content = @Content(mediaType = "application/json", schema = @Schema(implementation = StringEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":\"로그아웃 되었습니다.\"}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
     })
     @PostMapping(value = "/logout", consumes = MediaType.ALL_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<String>> logout(HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request, HttpServletResponse response) {
+        // Revoke both presented Access tokens if Bearer and cookie differ.
+        String presentedToken = jwtUtil.resolveToken(request);
+        accessTokenService.revoke(presentedToken);
+        String cookieToken = cookieUtil.getTokenFromCookie(request, "accessToken");
+        if (!java.util.Objects.equals(presentedToken, cookieToken)) {
+            accessTokenService.revoke(cookieToken);
+        }
         cookieUtil.clearJwtCookie(response, "accessToken");
         cookieUtil.clearJwtCookie(response, "refreshToken");
         return ResponseEntity.ok(ApiResponse.success("로그아웃 되었습니다."));

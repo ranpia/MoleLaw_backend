@@ -12,7 +12,7 @@
 - [ ] 로그인·OAuth·로그아웃·브라우저 재실행 후 토큰과 쿠키 상태를 확인하고 필요한 경우 CSRF를 다시 조회한다. Access 쿠키는 강력 새로고침으로 삭제되지 않는다는 점을 구분한다.
 - [ ] 모든 변경 요청을 무조건 두 번 보내지 않는다. CSRF 필터에서 거절된 403은 작업이 실행되지 않지만, 성공 응답 유실·타임아웃 후 재시도는 중복 실행될 수 있다. CSRF 오류와 권한·Origin 오류를 구분하고 자동 재시도에는 상한을 둔다.
 
-상태: 1단계 즉시 개선 구현 (2026-10-13), 자동 테스트 검증 완료. Redis Compose 검증은 완료했지만 Spring Redis 연동·Refresh 테이블·회전·폐기는 미구현이다. 전체 순서는 [재구성 요약](../backend-rebuild-plan.md), 현재 코드의 문제·목표 구조는 [JWT 상세 검토](../jwt-security-review.md)를 따른다. 인증 정책 결정과 저장소 전환을 이 문서에서 추적한다.
+상태: 1단계 보안 개선과 Redis Access 등록·인증·전달된 Access 폐기 구현 (2026-10-13). 로그인 세션·사용자별 인덱스, Refresh 테이블·회전·전체 폐기는 미구현이다. 전체 순서는 [재구성 요약](../backend-rebuild-plan.md), 이전 코드의 문제·목표 구조는 [JWT 상세 검토](../jwt-security-review.md)를 따른다. 아래 세션·Refresh 정책은 목표이며 현재 동작은 마지막 구현 절을 참고한다.
 
 ## 범위와 확정 사항
 
@@ -57,7 +57,7 @@
 - [ ] 쿠키·CORS·CSRF와 일반 로그인/OAuth를 실제 브라우저에서 검증한다. 외부 저장소 없는 단위 테스트도 유지한다.
 - [ ] API 변경·전환 재로그인·키 교체·복구 절차를 문서화한다. 상담방 소유권 검사는 인증과 별도로 유지한다.
 
-## 1단계 구현과 프론트 전환 계약 (2026-10-13)
+## 1단계 구현과 프론트 전환 계약 (2026-10-13 당시)
 
 - 회원가입 성공은 `200`과 `{"success":true,"data":"회원가입 되었습니다."}` 및 JWT 쿠키를 반환한다. 기존 백엔드 `/Main` 리다이렉트는 제거했으며 프론트가 성공 응답을 받은 뒤 화면을 이동한다. 회원가입은 인증 없이 접근 가능하지만 CSRF 토큰과 Origin 정책은 적용한다.
 
@@ -82,3 +82,15 @@ Swagger Authorize에는 AccessCookie만 표시하며 Bearer, RefreshCookie, Csrf
 자동 처리 근거: https://springdoc.org/v2/properties.html 및 https://springdoc.org/faq.html. local/test의 CSRF 쿠키만 HttpOnly=false로 바꾸며 Secure/SameSite/Path 정책과 서버의 CSRF 검증은 유지한다. Swagger와 API는 같은 Origin을 사용한다. 별도 Origin의 프론트는 기존 JSON 토큰 조회와 헤더 전송 계약을 사용한다.
 
 운영 분리 규칙: 공통/main 배포 기본값은 Swagger UI·API docs·Swagger CSRF 자동 처리 비활성화다. 문서 경로는 local/test 외에서는 인증 여부와 무관하게 차단한다. local에서만 개발 편의 설정을 활성화하고 test는 문서 검증용 예외다. cookie.csrf-http-only는 기본 true이며 false는 local/test에서만 허용한다. 운영 프론트는 /api/auth/csrf JSON의 token을 메모리에서 읽어 헤더로 전송한다. 운영 배포에 local/test 프로필을 사용하지 않는다.
+
+## Redis Access 구현 (2026-10-13)
+
+- `AccessTokenService`를 통해 가입·로그인·OAuth·재발급의 Access를 발급한다. JWT에 고유 UUID `jti`를 넣고 `molelaw:auth:access:{jti}` → `email:provider`를 남은 JWT 수명으로 등록한다. `SET NX`와 만료를 한 명령으로 적용하며 JWT 원문·Refresh는 Redis에 저장하지 않는다. Access 15시간·Refresh 7일 수명과 JSON 계약은 유지한다.
+- 인증 필터는 서명·용도·만료·jti를 검증한 뒤 Redis의 사용자 일치를 확인하고 DB에서 사용자 존재를 확인한다. 키 누락·사용자 불일치·폐기는 401이다. 일반 요청에서 키를 자동 재등록하지 않는다. 탈퇴한 사용자는 DB 조회에서도 거절한다.
+- Redis 조회·등록·폐기 오류는 503 `AUTH_STORE_UNAVAILABLE`이다. 발급 등록 실패 시 JWT를 반환하지 않고 가입 DB 변경도 롤백한다. OAuth 등록 실패도 JWT 쿠키·리다이렉트 없이 503을 반환한다. JWT만으로 인증하는 대체 경로는 없다. CSRF 조회와 Refresh 재발급은 전달된 이전 Access의 Redis 조회를 생략하며 재발급의 새 Access 등록은 반드시 수행한다.
+- 로그아웃은 전달된 Bearer 및 Access 쿠키가 가리키는 jti를 폐기한 뒤 JWT 쿠키를 삭제한다. 다른 Access는 유지하고 Refresh 서버 폐기는 아직 없다. **복사된 Refresh로 로그아웃 후에도 새 Access를 받을 수 있으므로 전체 세션 로그아웃이 아니다.** Redis 폐기 실패는 503이며 성공/쿠키 삭제로 처리하지 않는다.
+- Redis 재시작·유실 후 기존 Access는 거절한다. 현재는 유효한 Refresh JWT와 DB 사용자 존재 확인으로 새 jti를 등록한다. MySQL의 등록된 Refresh·세션으로만 복구하는 최종 정책은 Refresh 저장소 구현 후 적용한다. jti 없는 기존 Access는 거절하며 정상 Refresh가 없으면 재로그인한다.
+- 연결 변수는 `.env.example`의 `REDIS_HOST/PORT/PASSWORD/DATABASE/SSL_ENABLED`다. 로컬은 Compose의 비밀번호와 일치시킨다. Redis 연결·명령 제한 시간은 각각 2초다. 운영 Redis 연결·네트워크·비밀값 설정은 배포 전 별도 준비하며 운영에 local/test를 사용하지 않는다.
+- 일반 테스트는 `src/test`의 대체 저장소 또는 모킹을 사용해 Docker 없이 실행한다. `redisLiveTest`는 환경변수 또는 Git 제외 `docker/.env.compose`로 로컬 Redis에 접속하고 고유 테스트 키만 생성·삭제한다. 전체 테스트 95개·bootJar 및 실제 Redis TTL·사용자 일치·폐기 검증을 통과했다. Swagger UI의 수동 브라우저 확인은 수행하지 않았다.
+
+후속 범위: MySQL Refresh 등록·해시·회전·재사용 탐지·폐기, 로그인 sessionId·사용자별 인덱스, 로그아웃·비밀번호 변경·탈퇴의 전체 세션 폐기, 두 저장소 부분 실패·복구, Access 15분 및 issuer/audience 정책. 이 단계의 Access jti 등록을 전체 인증 저장소 전환 완료로 간주하지 않는다.

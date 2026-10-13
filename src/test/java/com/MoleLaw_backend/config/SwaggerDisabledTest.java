@@ -21,6 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "springdoc.swagger-ui.csrf.enabled=false", "cookie.csrf-http-only=true"
 })
 @AutoConfigureMockMvc
+@org.springframework.context.annotation.Import(com.MoleLaw_backend.config.TestAccessTokenStoreConfig.class)
 @ActiveProfiles("test")
 class SwaggerDisabledTest {
     @MockitoBean ChatModel chatModel;

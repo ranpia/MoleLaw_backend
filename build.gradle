@@ -33,6 +33,7 @@ dependencyManagement {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
@@ -68,7 +69,16 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform { excludeTags 'openlaw-live' }
+	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live' }
+}
+
+tasks.register('redisLiveTest', Test) {
+    description = 'Verifies Access token registration, TTL and revocation against local Redis.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'redis-live' }
+    outputs.upToDateWhen { false }
 }
 
 tasks.register('openLawLiveTest', Test) {
