@@ -68,5 +68,15 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+	useJUnitPlatform { excludeTags 'openlaw-live' }
+}
+
+tasks.register('openLawLiveTest', Test) {
+    description = 'Calls the real OpenLaw API using OC_KEY or the local .env; no DB or model API required.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'openlaw-live' }
+    outputs.upToDateWhen { false }
+    testLogging { showStandardStreams = true }
 }
