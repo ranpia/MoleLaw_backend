@@ -214,4 +214,4 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 - [CPU Ollama 임베딩 테스트 이미지](docker/ollama/README.md)
 - [기여 가이드](AGENTS.md)
 
-기존 Dockerfile과 main 푸시 기반 EC2 배포 워크플로는 저장소에 남아 있습니다. 새 Redis 인증·ETL·Ollama 연동의 운영 배포 구성까지 완료한 상태는 아닙니다.
+`main`은 검증한 최신 통합본, `dev`는 기능 통합·테스트 브랜치로 사용합니다. `dev` push와 `dev`/`main` 대상 PR은 외부 API 키 없이 테스트·JAR 패키징을 실행합니다. EC2 배포는 `Deploy to EC2`를 main에서 수동 실행하며 push만으로 배포하지 않습니다. [개발 인수인계](docs/development-handoff.md)에 브랜치 운영·스키마·검증·후속 작업을 정리했습니다. 새 Redis 인증·ETL·Ollama 연동의 운영 배포 구성은 별도 준비가 필요합니다.
