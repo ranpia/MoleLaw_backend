@@ -1,0 +1,32 @@
+# Optional local GUI: combine with compose.yml; never expose this port publicly.
+services:
+  redisinsight:
+    image: redis/redisinsight:3.4.1
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      RI_REDIS_HOST: redis
+      RI_REDIS_PORT: "6379"
+      RI_REDIS_ALIAS: MoleLaw Local Redis
+      RI_REDIS_USERNAME: default
+      RI_REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env.compose}
+      RI_REDIS_DB: "0"
+      RI_ENCRYPTION_KEY: ${REDISINSIGHT_ENCRYPTION_KEY:?Set REDISINSIGHT_ENCRYPTION_KEY in .env.compose}
+      RI_ACCEPT_TERMS_AND_CONDITIONS: "false"
+      RI_LOG_LEVEL: warn
+    ports:
+      - "127.0.0.1:${REDISINSIGHT_PORT:-5540}:5540"
+    volumes:
+      - redisinsight_data:/data
+    cpus: ${REDISINSIGHT_CPUS:-1.0}
+    mem_limit: ${REDISINSIGHT_MEMORY_LIMIT:-512m}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  redisinsight_data:

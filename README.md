@@ -13,7 +13,7 @@
 - 최초 질문의 법령 유사도 검색·판례 목록 조회와 AI 답변 생성
 - USER·BOT·INFO 구분과 메시지 암호화 저장
 - JWT 인증과 상담방 소유권 검사
-- Swagger UI를 통한 API 확인
+- local 프로필의 Swagger UI를 통한 API 확인 (운영 비활성화)
 
 Kakao OAuth 설정은 별도 `kakao` 프로필로 분리되어 있습니다. 기본·로컬 실행에서는 Google 설정을 사용합니다.
 
@@ -26,10 +26,10 @@ Kakao OAuth 설정은 별도 `kakao` 프로필로 분리되어 있습니다. 기
 | 임베딩 | OpenAI 모델, MySQL 임베딩 테이블 저장 | Ollama 모델 비교 후 Spring AI ETL·Qdrant 색인으로 전환 |
 | 검색 | 전체 임베딩 조회 후 코사인 유사도 직접 계산 | Qdrant 벡터 검색·필터·중복 제거·조문 맥락 확장 |
 | 후속 상담 | 최초 assistant 답변과 현재 질문 전달 | MessageChatMemoryAdvisor로 채팅방 기록과 최초 원문 근거 전달 |
-| Access | 서버 등록 상태 확인 없는 JWT | Redis에 jti·로그인 세션 활성 상태와 TTL 관리 |
+| Access | JWT 서명·용도·만료 + Redis jti·사용자 일치 확인, 만료까지 TTL | 로그인 세션 활성 상태·사용자별 세션 인덱스 추가 |
 | Refresh | 서버 저장·회전 없이 쿠키와 JSON에 전달 | MySQL 별도 테이블에 해시·회전·폐기 이력 관리 |
 
-MySQL·Qdrant 프로필과 H2 테스트 구성, 공통 AI 호출, 기본 법령 수집 회귀 테스트는 구현되어 있습니다. Redis는 Compose와 인증·쓰기·TTL 검증까지 완료했으며 Spring Redis·JWT 연동은 아직 구현 전입니다.
+MySQL·Qdrant 프로필과 H2 테스트 구성, 공통 AI 호출, 기본 법령 수집 회귀 테스트는 구현되어 있습니다. Redis Access 등록·매 요청 확인·TTL·전달된 Access 폐기를 구현했습니다. 로그인 세션 관리와 MySQL Refresh 저장소는 후속 단계입니다.
 
 ## 목표 아키텍처
 
@@ -90,11 +90,11 @@ zero-shot RAG 기준선을 확보한 뒤 one-shot 답변 예시와 step-back 검
 
 ## 인증 보안 개선 계획
 
-Access는 짧은 수명의 JWT를 유지하고 Redis의 활성 토큰·세션 상태를 매 요청 확인할 계획입니다. Redis 키가 없거나 장애가 발생하면 JWT 검증만으로 우회하지 않습니다. Refresh는 MySQL 별도 테이블에 원문 대신 해시를 저장하고 재발급 시 회전·재사용 탐지·폐기를 수행합니다.
+Access는 JWT 검증과 Redis 등록 확인을 모두 통과해야 합니다. 가입·로그인·OAuth·재발급은 고유 `jti`와 사용자 식별자를 JWT 만료까지 Redis에 등록한 뒤 Access를 전달합니다. Redis에는 토큰 원문을 저장하지 않습니다. 키 누락·폐기는 401, 저장소 장애는 503 `AUTH_STORE_UNAVAILABLE`이며 JWT만으로 인증하거나 키를 자동 복원하지 않습니다. 로그인 세션 관리와 MySQL Refresh 해시 저장·회전·재사용 탐지는 후속 구현입니다.
 
-브라우저 Refresh는 HttpOnly 쿠키로 전달하고 JSON 응답에서는 제거할 예정입니다. Secure·SameSite·Path·수명 설정을 통일하며 Access/Refresh 용도 분리, 토큰 로그 제거, CORS 허용 목록과 CSRF 보호를 함께 적용합니다. 로그아웃은 서버 인증 상태를 폐기하지만 상담 기록은 보존합니다.
+Access/Refresh 용도 검증, 토큰·payload 로그 제거, 공통 쿠키 정책, 명시적 CORS 허용 목록과 CSRF 보호를 적용했습니다. 브라우저 Refresh는 HttpOnly 쿠키로 전달하며 로그인·재발급 JSON에도 아직 포함됩니다. 로그아웃은 전달된 Bearer와 Access 쿠키의 등록을 폐기한 뒤 인증 쿠키를 삭제하고 상담 기록을 보존합니다. 다른 Access와 Refresh는 폐기하지 않으므로 복사된 Refresh로 재발급할 수 있습니다. 전체 세션 폐기·Refresh JSON 제거는 후속 범위입니다.
 
-현재 Access 만료식은 **15시간**, Refresh는 **7일**이며 서버 폐기·회전은 아직 없습니다. Access **15분**은 재구축 초기 제안입니다. 현재 재발급 경로는 Access 인증을 요구하므로 만료 Access 없이 정상 Refresh로 재발급되도록 변경할 예정입니다. 세부 검토는 [JWT 보안 검토](docs/jwt-security-review.md)를 참고하세요.
+현재 Access 수명은 **15시간**, Refresh는 **7일**이며 Access **15분**은 재구축 초기 제안입니다. `POST /api/auth/reissue`는 **Access 인증 없이** 유효한 `refreshToken` 쿠키와 CSRF 토큰으로 호출합니다. Refresh 용도·서명·만료와 사용자 존재를 확인하고 Access만 새로 발급합니다. 용도 claim이 없는 기존 JWT는 거절하므로 재로그인이 필요합니다. 후속 설계와 이전 위험 분석은 [인증·보안 실행 계획](docs/plans/auth-security.md)과 [JWT 보안 검토](docs/jwt-security-review.md)를 참고하세요.
 
 ## 기술 구성과 디렉터리
 
@@ -109,24 +109,18 @@ Access는 짧은 수명의 JWT를 유지하고 Redis의 활성 토큰·세션 �
 
 ```text
 src/main/java/com/MoleLaw_backend/
-├── controller/          HTTP API
-├── service/
-│   ├── ai/              공통 AI 호출·프롬프트
-│   ├── chat/            상담방·메시지·후속 답변
-│   ├── law/             법령 수집·임베딩·검색·판례
-│   ├── security/        JWT·쿠키·인증 필터
-│   ├── oauth/           OAuth 로그인
-│   └── user/            사용자 관리
-├── domain/              JPA 엔티티·Repository
-├── dto/                 요청·응답 모델
-├── config/              저장소·보안·AI 설정
-├── exception/           공통 예외 처리
-└── util/                법령 파싱·메시지 암호화
+├── auth/                JWT·OAuth·CSRF·보안 설정
+├── user/                사용자·계정·프로필 관리
+├── chat/                상담방·메시지·상담 흐름
+├── law/                 법령·판례·원문·검색·임베딩
+└── common/              공통 응답·예외·설정·AI 호출
 src/main/resources/      프로필 설정·프롬프트
 src/test/                테스트·법령 응답 fixture
 docker/                  Compose·환경변수 예제·검증 스크립트
 docs/                    재구축 계획·기준선·보안 검토
 ```
+
+도메인 안에 필요한 controller·service·entity·repository·dto 계층을 둡니다. 코드 배치와 의존 관계 기준은 [도메인 구조 스킬](.agents/skills/domain-structure/SKILL.md)을 따릅니다. 설계와 구현 상태는 [문서 안내](docs/README.md)에서 확인할 수 있습니다.
 
 ## 로컬 실행
 
@@ -146,16 +140,22 @@ docker compose -f docker/compose.yml --env-file docker/.env.compose up -d
 .\gradlew.bat bootRun --args="--spring.profiles.active=local"
 ```
 
-기본 주소는 백엔드 `http://localhost:8080`, Swagger `http://localhost:8080/swagger-ui.html`, MySQL `127.0.0.1:3307`, Qdrant HTTP/gRPC `6333/6334`, Redis `6379`입니다.
+local 프로필의 주소는 백엔드 `http://localhost:8080`, Swagger `http://localhost:8080/swagger-ui.html`, MySQL `127.0.0.1:3307`, Qdrant HTTP/gRPC `6333/6334`, Redis `6379`입니다.
 
 | 프로필 | 현재 동작 |
 | --- | --- |
-| 기본 / mysql | MySQL @Primary 데이터소스, 스키마 validate |
-| local | mysql + qdrant, 개발 스키마 update, SSL 비활성화 |
+| 기본 / mysql | MySQL @Primary 데이터소스, 스키마 validate, Swagger UI·OpenAPI 비활성화 |
+| local | mysql + qdrant, 개발 스키마 update, SSL 비활성화, Swagger 활성화 |
 | test | H2·더미 인증·모델 모킹, 외부 저장소 없이 테스트 |
 | kakao | 필요한 경우 명시적으로 활성화하는 OAuth 설정 |
 
-현재 일반 로그인·가입·재발급의 쿠키 Secure는 true로 고정된 경로가 있어 로컬 설정이 모든 인증 경로에 적용되지는 않습니다. Redis·Ollama 애플리케이션 연동도 아직 없습니다. 준비 상태 검사·자원 예산·LAN 연결·데이터 보존 정책은 [로컬 인프라 가이드](docker/README.md)를 따릅니다.
+가입·로그인·재발급·OAuth·삭제에 공통 쿠키 정책을 적용합니다. 운영 기본값은 Secure=true·SameSite=None이며 local/test는 Secure=false·SameSite=Lax입니다. Access/Refresh는 모든 환경에서 HttpOnly이고 Path는 각각 `/`, `/api/auth`이며, 이전 Path=/ Refresh 쿠키는 발급·삭제 시 정리합니다. Ollama 애플리케이션 연동은 아직 없습니다. 준비 상태 검사·자원 예산·LAN 연결·데이터 보존 정책은 [로컬 인프라 가이드](docker/README.md)를 따릅니다.
+
+Redis 연결은 `.env`의 `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DATABASE`, `REDIS_SSL_ENABLED`로 설정합니다. 로컬 비밀번호는 `docker/.env.compose`와 일치시킵니다. 연결·명령 제한 시간은 각각 2초입니다. Redis 재시작으로 키가 유실되면 기존 Access는 거절되며 정상 Refresh와 CSRF 토큰으로 새 Access를 발급받아야 합니다. 기존 jti 없는 Access도 거절되므로 정상 Refresh가 없으면 재로그인합니다.
+
+로컬 키·TTL 모니터링은 선택적 Redis Insight를 사용합니다. 접속 주소는 `http://localhost:5540`이며 실행 방법은 [로컬 모니터링 안내](docker/README.md#redis-insight-로컬-모니터링)를 참고하세요.
+
+Swagger UI와 OpenAPI는 공통 설정에서 비활성화하고 문서 경로 접근도 차단합니다. `local`에서 개발용으로 활성화하며 `test`는 문서 검증용 예외입니다. 운영 배포에는 local/test 프로필을 사용하지 않습니다.
 
 ## 빌드와 검증
 
@@ -163,21 +163,24 @@ docker compose -f docker/compose.yml --env-file docker/.env.compose up -d
 .\gradlew.bat test
 .\gradlew.bat clean build
 .\gradlew.bat bootJar
+# 실행 중인 로컬 Redis 필요. 일반 test/CI에서는 제외됩니다.
+.\gradlew.bat redisLiveTest
 powershell -NoProfile -ExecutionPolicy Bypass -File docker/verify.ps1
 ```
 
 Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 없이 실행할 수 있습니다. H2 테스트는 실제 MySQL 통합 검증을 대체하지 않습니다. `verify.ps1`은 실행 중인 컨테이너의 MySQL 쿼리, Qdrant 인증·임시 벡터 검색, Redis 인증·임시 키 쓰기·TTL·삭제를 검사합니다.
 
-2026-10-07 인프라 검증은 세 서비스 모두 통과했습니다. 이전 기준선에는 테스트 20개와 JAR 빌드 통과가 기록되어 있습니다. ETL·Advisor·새 JWT 저장소·실제 모델 품질 검증은 별도 구현 후 진행할 예정입니다.
+2026-10-13 전체 자동 테스트 95개·JAR 생성과 실제 Redis의 TTL·사용자 일치·Access 폐기 검증을 통과했습니다. 일반 테스트는 테스트 전용 저장소 대체 구현·모킹을 사용하며 실제 Redis는 `redisLiveTest`로 별도 검증합니다. ETL·Advisor·MySQL Refresh·실제 모델 품질 검증은 별도 구현 후 진행할 예정입니다.
 
 ## 주요 API
 
 | 메서드·경로 | 설명 |
 | --- | --- |
-| POST /api/auth/signup | 회원가입 |
+| GET /api/auth/csrf | CSRF 쿠키 발급 및 JSON 토큰 조회 (Access 인증 불필요) |
+| POST /api/auth/signup | 회원가입: 200 성공 JSON과 JWT 쿠키 |
 | POST /api/auth/login | 로그인 |
 | GET /api/auth/me | 내 정보 조회 |
-| POST /api/auth/reissue | 토큰 재발급 |
+| POST /api/auth/reissue | Access 없이 Refresh 쿠키 + CSRF 토큰으로 재발급 |
 | POST /api/auth/logout | 로그아웃 |
 | GET /api/chat-rooms | 내 상담방 목록 |
 | GET /api/chat-rooms/{roomId} | 상담방 메시지 조회 |
@@ -185,13 +188,27 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 | POST /api/chat-rooms/{roomId}/messages | 후속 질문 |
 | DELETE /api/chat-rooms/{roomId} | 상담방·메시지 삭제 |
 
-질문 입력은 `{"content":"상담 질문"}`이며 최초 응답은 상담방 ID와 메시지 목록, 후속 응답은 BOT 메시지입니다. 세부 계약은 Swagger와 [재구축 기준선](docs/backend-baseline.md)을 참고하세요. Refresh 응답 제거·쿠키 정책·장시간 최초 질문 응답 방식은 구현 시 API 변경 사항으로 문서화합니다.
+질문 입력은 `{"content":"상담 질문"}`이며 최초 응답은 상담방 ID와 메시지 목록, 후속 응답은 BOT 메시지입니다. 현재 요청·응답 계약은 local Swagger에서 확인할 수 있습니다. [재구축 기준선](docs/backend-baseline.md)은 변경 전 동작 기록입니다. Refresh JSON 응답 제거·장시간 최초 질문 응답 방식은 후속 구현 범위입니다.
+
+### 회원가입과 CSRF 전달 계약
+
+회원가입 요청은 `{"email":"user@example.com","password":"Example-password-123!","nickname":"두더지"}`입니다. 성공 시 HTTP **200**, `Content-Type: application/json`, 두 JWT의 `Set-Cookie`와 다음 본문을 반환합니다. 기존 302 및 `/Main` 리다이렉트는 제거했으며 화면 이동은 프론트에서 처리합니다.
+
+```json
+{"success":true,"data":"회원가입 되었습니다."}
+```
+
+1. 인증 없이 `GET /api/auth/csrf`를 호출합니다. 응답은 `{"token":"<csrf-token>","headerName":"X-XSRF-TOKEN"}`이며 `XSRF-TOKEN` 쿠키와 `Cache-Control: no-store`를 함께 받습니다.
+2. 해당 쿠키를 유지하고 JSON의 `token`을 `X-XSRF-TOKEN` 헤더에 넣어 POST·PUT·PATCH·DELETE 요청을 보냅니다. 가입·로그인·재발급·로그아웃과 Bearer 인증 요청에도 필요합니다. 교차 Origin 프론트는 조회와 후속 요청 모두 `credentials: "include"`를 사용합니다.
+3. 운영 CSRF 쿠키는 HttpOnly이므로 JavaScript에서 쿠키를 읽지 않고 JSON 토큰을 사용합니다. local/test에서는 Swagger 자동 처리를 위해 CSRF 쿠키를 읽을 수 있으며, Swagger에서 CSRF 조회 후 헤더에 자동 적용합니다. Access/Refresh 쿠키는 계속 HttpOnly입니다.
+
+교차 Origin 요청은 `CORS_ALLOWED_ORIGINS`의 명시적 허용 목록(미설정 시 `FRONTENDURI`)에 포함되어야 합니다. CSRF 누락·불일치 또는 허용되지 않은 Origin은 403으로 거절하며, Origin 헤더가 없어도 CSRF 검증은 적용됩니다. 보안 필터의 403 본문은 공통 `ApiResponse` JSON 형식을 보장하지 않습니다.
 
 ## 다음 단계
 
 1. 기준선·권한·인증 보안 점검과 스키마 준비
 2. Spring AI ETL·다중 페이지 수집·Ollama 임베딩 비교
-3. Redis Access·MySQL Refresh 인증 저장소 전환
+3. MySQL Refresh 저장소·회전과 Redis 로그인 세션·전체 폐기 구현
 4. Qdrant 검색·최초 근거 스냅샷·판례 검증 연결
 5. Advisor 기반 후속 상담과 출처 검증
 6. 검색·답변 품질 비교와 기존 구현 정리
