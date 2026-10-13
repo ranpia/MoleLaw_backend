@@ -98,9 +98,11 @@ Qdrant 주소는 HTTP `127.0.0.1:6333`, gRPC `127.0.0.1:6334`이며 연결에 �
 
 Redis는 Access의 jti·로그인 세션 활성 상태를 위한 인프라다. 비밀번호 인증과 PING healthcheck를 적용하고 기본 바인딩은 127.0.0.1:6379다. 비밀번호는 프로세스 인자 대신 환경변수에서 읽어 컨테이너 tmpfs에 권한 600의 설정 파일로 작성한다. Docker 관리 권한이 있는 사용자는 환경변수를 볼 수 있으므로 실제 값이나 전체 compose config를 로그로 출력하지 않는다.
 
-RDB·AOF를 모두 끄고 /data는 tmpfs로 둔다. Redis 재시작 후 기존 Access 상태가 없어지면 인증을 거절하고 MySQL의 정상 Refresh로 새 상태를 발급하도록 애플리케이션을 구현할 예정이다. 자동 키 축출로 활성 인증 상태가 사라지지 않도록 noeviction을 사용하며 메모리 부족으로 등록이 실패하면 발급을 실패 처리해야 한다. TTL과 서버 세션 폐기는 애플리케이션 단계에서 구현한다.
+RDB·AOF를 모두 끄고 /data는 tmpfs로 둔다. Redis 재시작 후 기존 Access 상태가 없어지면 인증을 거절한다. 현재는 정상 Refresh JWT와 DB 사용자 확인으로 새 Access를 발급하며 MySQL 등록 Refresh·세션을 확인하는 최종 복구 정책은 후속 단계다. noeviction을 사용하며 메모리 부족 등 Redis 등록 실패는 503으로 처리하고 JWT를 전달하지 않는다. Access TTL과 전달된 Access 폐기를 구현했으며 전체 로그인 세션 폐기는 아직 없다.
 
-현재 Spring Redis 의존성·클라이언트·JWT 저장소는 아직 추가하지 않았다. 따라서 Compose Redis 기동이 현재 JWT 검증 동작을 변경하지 않는다. 연결 예정 값은 호스트 127.0.0.1, 포트 REDIS_PORT(기본 6379), 비밀번호 docker/.env.compose의 REDIS_PASSWORD다. LAN 사용 시 호스트와 방화벽을 맞추고 인증 명령도 평문 통신임을 고려한다.
+Spring Redis 클라이언트와 Access 저장소를 사용한다. 애플리케이션 `.env`에 `REDIS_HOST=127.0.0.1`, `REDIS_PORT=6379`, `REDIS_PASSWORD`(Compose와 같은 값), `REDIS_DATABASE=0`, `REDIS_SSL_ENABLED=false`를 설정한다. LAN 사용 시 호스트와 방화벽을 맞추고 인증 명령도 평문 통신임을 고려한다. TLS 제공 Redis에는 `REDIS_SSL_ENABLED=true`를 사용한다. 연결·명령 제한 시간은 각각 2초다.
+
+`molelaw:auth:access:{jti}`에 사용자 식별자와 JWT 만료까지의 TTL을 저장한다. 원문 JWT는 저장하지 않는다. 키 누락은 401, Redis 장애는 503이며 일반 인증 요청에서 키를 복원하지 않는다. 실제 클라이언트의 등록·TTL·사용자 일치·폐기는 루트에서 `.\gradlew.bat redisLiveTest`로 검증한다. 이 테스트는 고유 테스트 키만 정리하며 일반 test/CI에는 포함되지 않는다. 전체 Refresh·세션 폐기는 [인증 실행 계획](../docs/plans/auth-security.md)을 따른다.
 
 기존 .env.compose가 있으면 덮어쓰지 말고 REDIS_PASSWORD를 추가한다. 설정 확인은 docker compose --env-file .env.compose config --quiet로 수행한다. ./verify.ps1은 임시 키만 사용하고 원래 인증 상태를 변경하지 않는다.
 

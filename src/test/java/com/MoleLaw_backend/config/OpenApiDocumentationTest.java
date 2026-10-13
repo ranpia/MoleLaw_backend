@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@org.springframework.context.annotation.Import(com.MoleLaw_backend.config.TestAccessTokenStoreConfig.class)
 @ActiveProfiles("test")
 class OpenApiDocumentationTest {
     @MockitoBean ChatModel chatModel;
@@ -45,6 +46,11 @@ class OpenApiDocumentationTest {
                 count++;
                 String context = method.getKey() + " " + path.getKey();
                 JsonNode operation = method.getValue();
+                if (!path.getKey().equals("/api/auth/csrf")) {
+                    JsonNode unavailable = operation.path("responses").path("503").path("content").path("application/json");
+                    assertTrue(unavailable.has("schema"), context);
+                    assertEquals("AUTH_STORE_UNAVAILABLE", unavailable.path("example").path("error").path("code").asText(), context);
+                }
                 assertFalse(operation.path("summary").asText().isBlank(), context);
                 assertFalse(operation.path("description").asText().isBlank(), context);
                 assertFalse(operation.path("tags").isEmpty(), context);

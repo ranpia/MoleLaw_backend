@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
+import java.time.Instant;
 
 @Component
 public class JwtUtil {
@@ -42,6 +44,7 @@ public class JwtUtil {
     private String generateToken(String email, String provider, String type, long lifetime) {
         Date now = new Date();
         return Jwts.builder().setSubject(email + ":" + provider).claim(TOKEN_TYPE, type)
+                .setId(UUID.randomUUID().toString())
                 .setIssuedAt(now).setExpiration(new Date(now.getTime() + lifetime))
                 .signWith(key, SignatureAlgorithm.HS256).compact();
     }
@@ -69,6 +72,7 @@ public class JwtUtil {
         Claims claims = parsed.getBody();
         if (!SignatureAlgorithm.HS256.getValue().equals(parsed.getHeader().getAlgorithm())
                 || claims.getExpiration() == null || claims.getIssuedAt() == null
+                || ("access".equals(type) && (claims.getId() == null || claims.getId().isBlank()))
                 || claims.getSubject() == null || !claims.getSubject().matches("[^:]+:[^:]+")) {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
         }
@@ -78,6 +82,13 @@ public class JwtUtil {
     public String getUserIdFromAccessToken(String token) {
         return parseClaims(token, "access").getSubject();
     }
+
+    public AccessTokenIdentity getAccessTokenIdentity(String token) {
+        Claims claims = parseClaims(token, "access");
+        return new AccessTokenIdentity(claims.getId(), claims.getSubject(), claims.getExpiration().toInstant());
+    }
+
+    public record AccessTokenIdentity(String tokenId, String subject, Instant expiresAt) {}
 
     public String[] getEmailAndProviderFromRefreshToken(String token) {
         return parseClaims(token, "refresh").getSubject().split(":", 2);

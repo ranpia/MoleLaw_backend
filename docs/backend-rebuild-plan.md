@@ -32,8 +32,8 @@
 
 | 상태 | 범위 |
 | --- | --- |
-| 구현된 기반 | Spring AI 통합·저장소 프로필·H2 테스트, 법령/판례 내부 Tool·검색 필터·원문 스냅샷, 세 저장소 Compose·CPU Ollama 테스트 환경 |
-| 앞으로 구현 | ETL·영속 수집 재개·Spring Ollama/Qdrant 검색·상담방 근거·Advisor·Redis JWT·Refresh·오케스트레이터 |
+| 구현된 기반 | Spring AI 통합·저장소 프로필·H2 테스트, 법령/판례 내부 Tool·검색 필터·원문 스냅샷, 세 저장소 Compose·CPU Ollama 테스트 환경, Redis Access jti 등록·TTL·인증·전달된 Access 폐기 |
+| 앞으로 구현 | ETL·영속 수집 재개·Spring Ollama/Qdrant 검색·상담방 근거·Advisor·Redis 로그인 세션·MySQL Refresh·전체 폐기·오케스트레이터 |
 | 검증 한계 | 기존 테스트/인프라 검증 이력은 새 기능의 구현 완료나 이번 실행 결과가 아님 |
 
 ## 실행 순서
