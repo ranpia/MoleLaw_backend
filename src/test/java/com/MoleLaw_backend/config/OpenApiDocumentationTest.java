@@ -49,21 +49,31 @@ class OpenApiDocumentationTest {
                 assertFalse(operation.path("description").asText().isBlank(), context);
                 assertFalse(operation.path("tags").isEmpty(), context);
                 if (publicPaths.contains(path.getKey())) {
-                    assertTrue(operation.path("security").isMissingNode() || operation.path("security").isEmpty(), context);
+                    for (JsonNode requirement : operation.path("security")) {
+                        assertFalse(requirement.has("BearerAuth"), context);
+                        assertFalse(requirement.has("AccessCookie"), context);
+                    }
                 } else {
-                    assertTrue(operation.path("security").toString().contains("BearerAuth"), context);
+                    assertFalse(operation.path("security").toString().contains("BearerAuth"), context);
                     assertTrue(operation.path("security").toString().contains("AccessCookie"), context);
                     assertTrue(operation.path("responses").has("401"), context);
                 }
+                for (JsonNode requirement : operation.path("security")) {
+                    assertFalse(requirement.has("RefreshCookie"), context);
+                }
                 if (!method.getKey().equals("get")) {
-                    boolean csrf = false;
-                    for (JsonNode parameter : operation.path("parameters")) {
-                        if (parameter.path("name").asText().equals("X-XSRF-TOKEN")) {
-                            csrf = parameter.path("required").asBoolean();
-                        }
+                    assertFalse(operation.path("security").isEmpty(), context);
+                    for (JsonNode requirement : operation.path("security")) {
+                        assertTrue(requirement.has("CsrfToken"), context);
                     }
-                    assertTrue(csrf, context);
+                    for (JsonNode parameter : operation.path("parameters")) {
+                        assertNotEquals("X-XSRF-TOKEN", parameter.path("name").asText(), context);
+                    }
                     assertTrue(operation.path("responses").has("403"), context);
+                } else {
+                    for (JsonNode requirement : operation.path("security")) {
+                        assertFalse(requirement.has("CsrfToken"), context);
+                    }
                 }
                 for (JsonNode media : operation.path("requestBody").path("content")) {
                     assertExample(media, context + " request");
@@ -84,6 +94,13 @@ class OpenApiDocumentationTest {
             }
         }
         assertEquals(20, count);
+        JsonNode csrfScheme = document.path("components").path("securitySchemes").path("CsrfToken");
+        assertEquals("apiKey", csrfScheme.path("type").asText());
+        assertEquals("header", csrfScheme.path("in").asText());
+        assertEquals("X-XSRF-TOKEN", csrfScheme.path("name").asText());
+        JsonNode schemes = document.path("components").path("securitySchemes");
+        assertFalse(schemes.has("BearerAuth"));
+        assertFalse(schemes.has("RefreshCookie"));
         assertTrue(document.path("components").path("schemas").has("BusinessErrorResponse"));
         assertTrue(document.path("paths").path("/api/auth/signup").path("post")
                 .path("responses").has("200"));

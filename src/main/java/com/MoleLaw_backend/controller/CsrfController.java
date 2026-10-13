@@ -21,7 +21,7 @@ import java.util.Map;
 @RestController
 @Tag(name = "CSRF", description = "쿠키 기반 상태 변경 요청에 필요한 CSRF 토큰 조회")
 public class CsrfController {
-    @Operation(summary = "CSRF 토큰 조회", description = "인증 없이 호출할 수 있습니다. 응답 token을 이후 POST/PUT/PATCH/DELETE 요청의 X-XSRF-TOKEN 헤더에 넣고 이 호출에서 받은 XSRF-TOKEN 쿠키도 함께 전송합니다. Bearer 인증에도 CSRF 헤더가 필요합니다. 쿠키는 HttpOnly이므로 JavaScript는 응답 JSON에서 token을 읽어야 합니다. 브라우저의 교차 Origin 요청은 credentials를 포함하고 허용된 Origin에서 호출해야 합니다. 응답은 Cache-Control: no-store입니다.")
+    @Operation(summary = "CSRF 토큰 조회", description = "인증 없이 호출할 수 있습니다. Swagger에서는 응답 token을 Authorize의 CsrfToken에 한 번 등록합니다. 응답 token을 이후 POST/PUT/PATCH/DELETE 요청의 X-XSRF-TOKEN 헤더에 넣고 이 호출에서 받은 XSRF-TOKEN 쿠키도 함께 전송합니다. Bearer 인증에도 CSRF 헤더가 필요합니다. 쿠키는 HttpOnly이므로 JavaScript는 응답 JSON에서 token을 읽어야 합니다. 브라우저의 교차 Origin 요청은 credentials를 포함하고 허용된 Origin에서 호출해야 합니다. 응답은 Cache-Control: no-store입니다.")
     @SecurityRequirements
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "CSRF 토큰 및 전송 헤더 이름", headers = {
