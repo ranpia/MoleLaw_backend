@@ -17,7 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@org.springframework.context.annotation.Import(com.MoleLaw_backend.config.TestAccessTokenStoreConfig.class)
+@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestAccessTokenStoreConfig.class)
 @ActiveProfiles("test")
 class LawMateBackendApplicationTests {
 

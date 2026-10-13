@@ -109,24 +109,18 @@ Access/Refresh 용도 검증, 토큰·payload 로그 제거, 공통 쿠키 정�
 
 ```text
 src/main/java/com/MoleLaw_backend/
-├── controller/          HTTP API
-├── service/
-│   ├── ai/              공통 AI 호출·프롬프트
-│   ├── chat/            상담방·메시지·후속 답변
-│   ├── law/             법령 수집·임베딩·검색·판례
-│   ├── security/        JWT·쿠키·인증 필터
-│   ├── oauth/           OAuth 로그인
-│   └── user/            사용자 관리
-├── domain/              JPA 엔티티·Repository
-├── dto/                 요청·응답 모델
-├── config/              저장소·보안·AI 설정
-├── exception/           공통 예외 처리
-└── util/                법령 파싱·메시지 암호화
+├── auth/                JWT·OAuth·CSRF·보안 설정
+├── user/                사용자·계정·프로필 관리
+├── chat/                상담방·메시지·상담 흐름
+├── law/                 법령·판례·원문·검색·임베딩
+└── common/              공통 응답·예외·설정·AI 호출
 src/main/resources/      프로필 설정·프롬프트
 src/test/                테스트·법령 응답 fixture
 docker/                  Compose·환경변수 예제·검증 스크립트
 docs/                    재구축 계획·기준선·보안 검토
 ```
+
+도메인 안에 필요한 controller·service·entity·repository·dto 계층을 둡니다. 코드 배치와 의존 관계 기준은 [도메인 구조 스킬](.agents/skills/domain-structure/SKILL.md)을 따릅니다. 설계와 구현 상태는 [문서 안내](docs/README.md)에서 확인할 수 있습니다.
 
 ## 로컬 실행
 

@@ -30,7 +30,7 @@
 `src/test/resources/fixtures/openlaw/law-detail.json`은 필드 구조 검증용 합성 자료다. 실제 API에서 수집한 법령 응답이나 법률 판단·검색 품질 평가 자료가 아니다. 실제 응답 샘플과 평가 질문 30~50개 확보는 남은 작업이다.
 
 ```powershell
-.\gradlew.bat test --tests com.MoleLaw_backend.service.law.LawSearchServiceTest
+.\gradlew.bat test --tests com.MoleLaw_backend.law.service.LawSearchServiceTest
 ```
 
 이 테스트는 기존 파서의 모든 응답 형태 지원을 보장하지 않는다. 배열 형태의 항·단일 객체 형태의 조문 등 지원 범위 점검과 파서 개선은 별도 변경으로 진행한다. 컨텍스트 테스트는 현재 H2 기반 `test` 프로필과 모킹된 모델로 외부 DB·모델 API에서 격리했다.

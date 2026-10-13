@@ -2,24 +2,15 @@
 
 기준일: 2026-10-13. 구현된 내부 Tool과 앞으로 연결할 상담 기능을 구분한다. 전체 방향은 [재구축 요약](backend-rebuild-plan.md)을 따른다.
 
-인증 후속 작업: 보안 개선·Swagger·README 계약은 PR #1로 dev에 병합했고 `fix/auth-security`는 로컬·원격에서 삭제했다. `feat/redis-access-auth`는 해당 dev에서 분리한 Redis Access 개발 브랜치다. Access jti 등록·TTL·매 요청 확인·전달된 Access 폐기와 503 장애 처리를 구현했다. 테스트 95개·JAR·실제 Redis TTL/폐기를 검증했다. 로그인 세션·MySQL Refresh·전체 폐기는 아직 미구현이며 상세 전환·실행 계약은 [인증 실행 계획](plans/auth-security.md)의 Redis 구현 절을 따른다. 아래 API Tool 전달 이력과 별개이며 운영 배포는 실행하지 않았다.
+## 현재 개발 기준
 
-## 브랜치 전달 방식
+패키지는 `auth`, `user`, `chat`, `law`, `common`으로 구성하며 [도메인 구조 스킬](../.agents/skills/domain-structure/SKILL.md)을 따른다. 법령 Tool 구현은 `law.service.tool`, 인증 구현은 `auth.security`와 `auth.oauth`에 있다.
 
-API 기능은 `feat/legal-api-tools`에 커밋하고 `refactor/backend-rebuild`에 병합했다. 문서·실행 환경까지 포함한 최신 통합본을 `main`에 반영하고 같은 기준으로 `dev`를 생성한다. 기능 브랜치도 최신화해 보존한다. 로컬 `.codex/`와 모델 테스트 결과·비밀값은 전달 대상에서 제외한다.
+Access jti 등록·TTL·매 요청 확인·전달된 Access 폐기와 저장소 장애 503 처리를 구현했다. 로그인 세션·MySQL Refresh·전체 폐기는 미구현이며 [인증 실행 계획](plans/auth-security.md)의 구현 절을 따른다.
 
-| 브랜치 | 역할 |
-| --- | --- |
-| `main` | 검증을 통과한 최신 코드·문서 통합본. 푸시만으로 배포하지 않음 |
-| `dev` | 기능 통합·테스트. push 시 H2/모킹 테스트와 JAR 패키징 CI 실행 |
-| `feat/legal-api-tools` | API Tool 개발 이력 보존 및 후속 기능 개발 |
-| `refactor/backend-rebuild` | 기존 재구축 이력 보존 |
+후속 기능은 기능 브랜치에서 개발하고 `dev`에서 통합·테스트한 뒤 검증한 변경을 `main`에 반영한다. CI·수동 배포 조건과 실행 환경은 [프로젝트 안내](../README.md)와 [Docker 가이드](../docker/README.md)를 따른다. 과거 브랜치 생성·병합 이력은 Git 이력에서 확인한다.
 
-후속 작업은 기능 브랜치 → `dev`에서 통합/테스트 → 검증 후 `main` 반영 순서로 진행한다. 문서도 구현 상태·검증 결과와 함께 갱신한다. CI는 `dev` push와 `dev`/`main` 대상 PR에서 동작하며 실제 법령 API 실호출은 별도 실행한다.
-
-EC2 배포는 GitHub Actions의 `Deploy to EC2`를 **main에서 수동 실행**한다. 다른 브랜치에서는 배포 작업을 건너뛴다. 배포 전에는 MySQL 스키마·운영 비밀값·기존 API 호환성과 복구 방법을 별도로 확인한다. 이번 브랜치 최신화에서 EC2 배포는 실행하지 않는다.
-
-## 이번 전달 범위
+## 구현된 법령 Tool 범위
 
 - `LegalApiToolService`: 법령·판례 목록/상세 네 내부 Tool. 공개 HTTP API·MCP·자동 tool-calling은 추가하지 않았다.
 - `SearchRequest`·`LawSearchFilters`: 제목/본문·부처·페이지·법령ID·종류·상태·정확명·정렬·시행일/공포일 범위. 기존 생성자와 법령 fallback 유지.
@@ -45,7 +36,7 @@ EC2 배포는 GitHub Actions의 `Deploy to EC2`를 **main에서 수동 실행**�
 
 ## 검증 결과와 제한
 
-2026-10-13 전체 단위/컨텍스트 테스트 56개 및 실제 API 테스트 통과. 전달 전 `test bootJar`로 테스트 결과 재확인과 실행 JAR 패키징도 통과했다. 실호출에서 현행·부처·종류 조건의 API 후보 2건을 정확명으로 걸러 민법 1건, 법령ID 001706·MST 284415·시행일 20260317을 확인했다. 검색 결과와 버전은 시점에 따라 바뀐다.
+2026-10-13 법령 Tool 개발 당시 일반 테스트 56개 및 실제 API 테스트를 통과했고 `test bootJar`로 패키징을 확인했다. 이는 이후 인증·구조 변경 전체의 최신 검증 결과가 아니다. 실호출에서 현행·부처·종류 조건의 API 후보 2건을 정확명으로 걸러 민법 1건, 법령ID 001706·MST 284415·시행일 20260317을 확인했다. 검색 결과와 버전은 시점에 따라 바뀐다.
 
 이 결과는 법률 적용·검색 품질 평가나 상담 통합 완료를 의미하지 않는다. `contentAvailable`도 본문 존재 여부만 나타낸다. 기존 상담 서비스는 아직 새 Tool을 호출하지 않는다.
 

@@ -1,0 +1,7 @@
+﻿# Only the packaged application is needed by docker/app.Dockerfile.
+**
+!build/
+!build/libs/
+!build/libs/*.jar
+!docker/
+!docker/app.Dockerfile

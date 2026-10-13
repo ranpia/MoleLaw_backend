@@ -3,13 +3,15 @@
 ## 프로젝트 구조와 모듈 구성
 MoleLaw는 법률 검색과 AI 채팅을 제공하는 Java 17 / Spring Boot 3.5 백엔드입니다. 소스는 `src/main/java/com/MoleLaw_backend/`에 있습니다.
 
-- `controller`: HTTP 요청과 응답 처리
-- `service`: 채팅, 법률 검색, 사용자, OAuth 및 인증 로직
-- `domain/entity`, `domain/repository`: JPA 엔티티와 데이터 접근
-- `dto/request`, `dto/response`: API 요청 및 응답 모델
-- `config`, `exception`, `util`: 설정, 공통 예외 처리 및 유틸리티
+- `auth`: JWT·OAuth·CSRF·인증 저장소와 보안 설정
+- `user`: 사용자 엔티티·저장소와 계정·프로필 관리 API
+- `chat`: 상담방·메시지·상담 흐름과 메시지 암호화
+- `law`: 법령·판례·원문·검색·임베딩·법령 도구와 Qdrant 설정
+- `common`: 공통 응답·예외, DB·Swagger 설정과 공통 AI 호출
 
-설정 파일은 `src/main/resources`, 테스트는 `src/test/java`, 구조 설명 이미지는 `docs/`에 있습니다. 빌드 결과는 `build/`에 생성됩니다. 배포 설정은 `Dockerfile`과 `.github/workflows/deploy.yml`을 확인하세요.
+각 도메인 내부에 필요한 `controller`, `service`, `entity`, `repository`, `dto/request`, `dto/response` 등을 둡니다. 최상위 기술 계층 패키지를 새로 만들지 마세요. Java 기능 추가·패키지 이동·구조 리뷰 시 프로젝트 스킬 [domain-structure](.agents/skills/domain-structure/SKILL.md)를 읽고 적용하세요. 테스트 패키지는 구현 패키지를 따르며 여러 도메인의 설정 통합 테스트는 `common.config`에 둡니다.
+
+설정 파일은 `src/main/resources`, 테스트는 `src/test/java`, 설계·실행 문서는 [문서 안내](docs/README.md)를 참고하세요. 빌드 결과는 `build/`에 생성됩니다. 배포 설정은 `docker/app.Dockerfile`과 `.github/workflows/deploy.yml`을 확인하세요.
 
 ## 빌드·테스트·로컬 실행
 JDK 17과 저장소에 포함된 Gradle Wrapper를 사용하세요. Windows 기준 명령어는 다음과 같습니다.
