@@ -13,7 +13,6 @@
 | 기존 API·법령 검색 동작 | [재구축 전 기준선](backend-baseline.md) |
 | 인증 코드의 기존 문제와 설계 근거 | [JWT 보안 검토](jwt-security-review.md) |
 | 로컬 실행·컨테이너 검증 | [인프라 가이드](../docker/README.md) |
-| 이번 분리의 보완점·미결정 항목 | [병렬 검토 결과](plans/review-notes.md) |
 | 법령 API 장애 시 보조 검색 후보 | [SerpApi 활용 검토](plans/search-fallback.md) — 미확정 |
 | 구현 기능·스키마·검증·다음 담당 작업 | [개발 인수인계](development-handoff.md) |
 
@@ -32,8 +31,8 @@
 
 | 상태 | 범위 |
 | --- | --- |
-| 구현된 기반 | Spring AI 통합·저장소 프로필·H2 테스트, 법령/판례 내부 Tool·검색 필터·원문 스냅샷, 세 저장소 Compose·CPU Ollama 테스트 환경 |
-| 앞으로 구현 | ETL·영속 수집 재개·Spring Ollama/Qdrant 검색·상담방 근거·Advisor·Redis JWT·Refresh·오케스트레이터 |
+| 구현된 기반 | Spring AI 통합·저장소 프로필·H2 테스트, 법령/판례 내부 Tool·검색 필터·원문 스냅샷, 세 저장소 Compose·CPU Ollama 테스트 환경, Redis Access jti 등록·TTL·인증·전달된 Access 폐기 |
+| 앞으로 구현 | ETL·영속 수집 재개·Spring Ollama/Qdrant 검색·상담방 근거·Advisor·Redis 로그인 세션·MySQL Refresh·전체 폐기·오케스트레이터 |
 | 검증 한계 | 기존 테스트/인프라 검증 이력은 새 기능의 구현 완료나 이번 실행 결과가 아님 |
 
 ## 실행 순서
@@ -62,6 +61,4 @@
 
 ## 문서 관리 원칙
 
-요약에는 확정 방향·현황·순서만 유지하고 세부 결정은 해당 주제 문서에서 갱신한다. 변경 PR에는 계획/구현/검증 상태와 미결정 정책을 구분한다. 스킬은 반복 가능한 작업 절차가 구현·검증된 뒤 별도로 추출한다. AGENTS.md는 수정하지 않는다.
-
-분리 전 원문은 [2026-10-12 보관본](archive/backend-rebuild-plan-2026-10-12.md)에 남긴다. 보관본은 이력이므로 최신 실행 지침으로 사용하지 않는다.
+요약에는 확정 방향·현황·순서만 유지하고 세부 결정은 해당 주제 문서에서 갱신한다. 변경 PR에는 계획/구현/검증 상태와 미결정 정책을 구분한다. 구조 규칙은 [도메인 구조 스킬](../.agents/skills/domain-structure/SKILL.md)을 따르고, 미구현 RAG·인증 정책은 계획으로 유지한다. 문서 진입점은 [문서 안내](README.md)다.
