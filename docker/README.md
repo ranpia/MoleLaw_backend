@@ -59,6 +59,33 @@ Windows 실행 정책이 verify.ps1을 차단하면 프로세스에만 예외를
 
 일반 `down`은 MySQL·Qdrant 볼륨을 보존한다. Redis는 재시작·재생성 시 인증 상태를 비운다. `down -v`는 DB·색인·스냅샷 볼륨까지 삭제하므로 데이터 초기화를 의도한 경우에만 사용한다. MySQL 초기화용 계정·비밀번호 변수는 빈 볼륨에서만 적용되므로 기존 볼륨의 비밀번호를 환경변수 변경만으로 바꿀 수 없다.
 
+## Redis Insight 로컬 모니터링
+
+키·TTL·메모리·Slow Log 확인은 선택적 `compose.insight.yml`의 Redis Insight 3.4.1을 사용한다. 기본 DB 실행에는 포함되지 않는다. 별도 UI 주소는 `http://localhost:5540`이며 127.0.0.1에만 바인딩한다. 컨테이너 간 접속 주소 `redis:6379`와 Compose 비밀번호로 `MoleLaw Local Redis` 연결을 사전 등록하므로 비밀번호를 UI에 다시 입력할 필요가 없다.
+
+먼저 Git에서 제외된 `docker/.env.compose`에 별도 무작위 `REDISINSIGHT_ENCRYPTION_KEY`를 설정한다. 이 키는 Insight에 저장되는 접속 비밀번호·히스토리 암호화에 사용하며 볼륨을 재사용할 때 같은 키를 유지한다. 현재 로컬 환경에는 키를 생성해 추가했다. 다른 환경에서는 아래를 `docker` 폴더에서 한 번 실행한다. 기존 키는 덮어쓰지 않는다.
+
+```powershell
+$insightEnvPath = Join-Path (Get-Location) '.env.compose'
+if ([System.IO.File]::ReadAllText($insightEnvPath) -notmatch '(?m)^REDISINSIGHT_ENCRYPTION_KEY=.+$') {
+    $insightBytes = New-Object byte[] 32
+    $insightRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try { $insightRng.GetBytes($insightBytes) } finally { $insightRng.Dispose() }
+    $insightKey = [BitConverter]::ToString($insightBytes).Replace('-', '')
+    $insightText = [System.IO.File]::ReadAllText($insightEnvPath)
+    $insightText = [regex]::Replace($insightText, '(?m)^REDISINSIGHT_ENCRYPTION_KEY=.*\r?\n?', '')
+    [System.IO.File]::WriteAllText($insightEnvPath, $insightText + "`r`nREDISINSIGHT_ENCRYPTION_KEY=$insightKey`r`n", [System.Text.UTF8Encoding]::new($false))
+}
+docker compose -f compose.yml -f compose.insight.yml --env-file .env.compose config --quiet
+docker compose -f compose.yml -f compose.insight.yml --env-file .env.compose up -d redisinsight
+```
+
+첫 접속 시 약관을 직접 확인한다. 연결을 열고 Browser에서 `molelaw:auth:access:*`를 검색하면 로그인 후 생성된 키, 감소하는 TTL, 로그아웃 후 키 삭제를 확인할 수 있다. 메모리 분석·Slow Log도 같은 도구에서 확인한다. 이 구성은 GUI이며 운영 지표의 장기 보관·알림은 Prometheus/Grafana를 별도로 구성해야 한다.
+
+UI 설정은 `redisinsight_data` 볼륨에 보존된다. Insight만 중지할 때는 `docker compose -f compose.yml -f compose.insight.yml --env-file .env.compose stop redisinsight`를 사용한다. 재실행은 위 `up` 명령을 사용한다. 기존 Redis를 재생성하지 않고 UI만 시작하려면 Redis healthy 확인 후 `up -d --no-deps redisinsight`를 사용한다.
+
+설치·암호화·사전 연결 변수는 [공식 Docker 안내](https://redis.io/docs/latest/operate/redisinsight/install/install-on-docker/)와 [설정 안내](https://redis.io/docs/latest/operate/redisinsight/configuration/)를 따른다.
+
 ## 애플리케이션 연결 범위
 
 애플리케이션 기본 프로필은 `mysql`이며 기본 MySQL 주소는 로컬 3307이다. MySQL `DataSource`에 `@Primary`를 지정하고 Qdrant는 별도 프로필의 `VectorStore`로 구성했다. 루트 `.env.example`을 `.env`로 복사해 OAuth·API 키·JWT 설정을 채우고, MySQL 비밀번호·Qdrant 키는 `docker/.env.compose`와 일치시킨다. 실제 비밀값은 커밋하지 않는다.

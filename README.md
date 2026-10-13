@@ -159,6 +159,8 @@ local 프로필의 주소는 백엔드 `http://localhost:8080`, Swagger `http://
 
 Redis 연결은 `.env`의 `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DATABASE`, `REDIS_SSL_ENABLED`로 설정합니다. 로컬 비밀번호는 `docker/.env.compose`와 일치시킵니다. 연결·명령 제한 시간은 각각 2초입니다. Redis 재시작으로 키가 유실되면 기존 Access는 거절되며 정상 Refresh와 CSRF 토큰으로 새 Access를 발급받아야 합니다. 기존 jti 없는 Access도 거절되므로 정상 Refresh가 없으면 재로그인합니다.
 
+로컬 키·TTL 모니터링은 선택적 Redis Insight를 사용합니다. 접속 주소는 `http://localhost:5540`이며 실행 방법은 [로컬 모니터링 안내](docker/README.md#redis-insight-로컬-모니터링)를 참고하세요.
+
 Swagger UI와 OpenAPI는 공통 설정에서 비활성화하고 문서 경로 접근도 차단합니다. `local`에서 개발용으로 활성화하며 `test`는 문서 검증용 예외입니다. 운영 배포에는 local/test 프로필을 사용하지 않습니다.
 
 ## 빌드와 검증
