@@ -18,7 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,7 +33,7 @@ public class UserController {
     private final ChatService chatService;
     private final UserService userService;
     private final CookieUtil cookieUtil;
-    private static final boolean IS_SECURE = true;
+
 
     @Operation(summary = "회원가입", description = "이메일 중복 여부 확인 후 회원가입 처리")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
@@ -45,24 +45,8 @@ public class UserController {
     public void signup(@RequestBody SignupRequest request, HttpServletResponse response) {
         AuthResponse authResponse = userService.signup(request);
 
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken", authResponse.getAccessToken())
-                .httpOnly(true)
-                .secure(IS_SECURE)
-                .path("/")
-                .maxAge(60 * 60 * 24 * 7)
-                .sameSite("Lax")
-                .build();
-
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
-                .httpOnly(true)
-                .secure(IS_SECURE)
-                .path("/")
-                .maxAge(60 * 60 * 24 * 7)
-                .sameSite("Lax")
-                .build();
-
-        response.addHeader("Set-Cookie", accessCookie.toString());
-        response.addHeader("Set-Cookie", refreshCookie.toString());
+        cookieUtil.addJwtCookie(response, "accessToken", authResponse.getAccessToken());
+        cookieUtil.addJwtCookie(response, "refreshToken", authResponse.getRefreshToken());
         response.setStatus(HttpServletResponse.SC_FOUND);
         response.setHeader("Location", "/Main");
     }
@@ -125,24 +109,8 @@ public class UserController {
             String provider = parts[1];
             userService.deleteUser(email, provider);
 
-            ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
-                    .path("/")
-                    .maxAge(0)
-                    .httpOnly(true)
-                    .secure(IS_SECURE)
-                    .sameSite("Lax")
-                    .build();
-
-            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
-                    .path("/")
-                    .maxAge(0)
-                    .httpOnly(true)
-                    .secure(IS_SECURE)
-                    .sameSite("Lax")
-                    .build();
-
-            response.addHeader("Set-Cookie", accessCookie.toString());
-            response.addHeader("Set-Cookie", refreshCookie.toString());
+            cookieUtil.clearJwtCookie(response, "accessToken");
+            cookieUtil.clearJwtCookie(response, "refreshToken");
 
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
@@ -157,8 +125,8 @@ public class UserController {
     })
     @PostMapping(value = "/logout", consumes = MediaType.ALL_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<String>> logout(HttpServletResponse response) {
-        cookieUtil.clearJwtCookie(response, "accessToken", IS_SECURE);
-        cookieUtil.clearJwtCookie(response, "refreshToken", IS_SECURE);
+        cookieUtil.clearJwtCookie(response, "accessToken");
+        cookieUtil.clearJwtCookie(response, "refreshToken");
         return ResponseEntity.ok(ApiResponse.success("로그아웃 되었습니다."));
     }
 

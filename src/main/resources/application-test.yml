@@ -28,5 +28,6 @@ frontend:
   uri: http://localhost:3000
 cookie:
   secure: false
+  same-site: Lax
 jwt:
   secret: test-only-jwt-secret-at-least-32-bytes-long

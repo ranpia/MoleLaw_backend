@@ -11,3 +11,4 @@ frontend:
   uri: ${FRONTENDURI:http://localhost:3000}
 cookie:
   secure: false
+  same-site: Lax
