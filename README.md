@@ -4,7 +4,7 @@
 
 현재 Java 17·Spring Boot 3.5·Spring AI 기반으로 백엔드를 재구축하고 있습니다. 법령 수집부터 벡터 검색, 대화 맥락 유지, 토큰 인증까지 역할을 분리하고 검증 가능한 구조로 바꾸는 것이 목표입니다.
 
-> 이 README는 2026-10-07 기준입니다. 아래의 현재 구현과 재구축 계획을 구분해 읽어 주세요. Qdrant·Redis 컨테이너 구동이 애플리케이션 검색·인증 전환 완료를 의미하지는 않습니다.
+> 이 README는 2026-10-13 기준입니다. 아래의 현재 구현과 재구축 계획을 구분해 읽어 주세요. Qdrant·Redis 컨테이너 구동이 애플리케이션 검색·인증 전환 완료를 의미하지는 않습니다.
 
 ## 주요 기능
 
@@ -22,7 +22,7 @@ Kakao OAuth 설정은 별도 `kakao` 프로필로 분리되어 있습니다. 기
 | 영역 | 현재 구현 | 재구축 방향 |
 | --- | --- | --- |
 | AI 호출 | Spring AI 1.0.9 ChatClient·EmbeddingModel 통합 | 상담·보조 호출 분리, Advisor와 구조화 답변·출처 검증 |
-| 법령 수집 | 첫 페이지 중심 조회와 부족 시 fallback | 최초 질문에서 다음 페이지·다른 법령 후보 수집, 이력·실패 재개 |
+| 법령 수집 | 기존 상담 경로는 첫 페이지/fallback, 별도 내부 Tool은 페이지·정확명·ID·날짜·정렬 지원 | 최초 질문에서 다음 페이지·다른 법령 후보 수집, 이력·실패 재개 |
 | 임베딩 | OpenAI 모델, MySQL 임베딩 테이블 저장 | Ollama 모델 비교 후 Spring AI ETL·Qdrant 색인으로 전환 |
 | 검색 | 전체 임베딩 조회 후 코사인 유사도 직접 계산 | Qdrant 벡터 검색·필터·중복 제거·조문 맥락 확장 |
 | 후속 상담 | 최초 assistant 답변과 현재 질문 전달 | MessageChatMemoryAdvisor로 채팅방 기록과 최초 원문 근거 전달 |
@@ -202,6 +202,8 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 ## 관련 문서
 
 - [백엔드 재구축 계획](docs/backend-rebuild-plan.md)
+- [개발 인수인계](docs/development-handoff.md)
+- [법령·판례 Tool 사용 계약](docs/legal-api-tools.md)
 - [RAG·ETL 상세 계획](docs/plans/rag-etl.md)
 - [인증·보안 실행 계획](docs/plans/auth-security.md)
 - [오케스트레이션·모델 계획](docs/plans/orchestration-models.md)
@@ -209,6 +211,7 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 - [JWT 인증 보안 검토](docs/jwt-security-review.md)
 - [재구축 전 동작 기준선](docs/backend-baseline.md)
 - [로컬 인프라 실행·검증 가이드](docker/README.md)
+- [CPU Ollama 임베딩 테스트 이미지](docker/ollama/README.md)
 - [기여 가이드](AGENTS.md)
 
 기존 Dockerfile과 main 푸시 기반 EC2 배포 워크플로는 저장소에 남아 있습니다. 새 Redis 인증·ETL·Ollama 연동의 운영 배포 구성까지 완료한 상태는 아닙니다.
