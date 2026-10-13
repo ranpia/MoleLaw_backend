@@ -45,6 +45,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final org.springframework.core.env.Environment environment;
 
     @Value("${security.allowed-origins:${frontend.uri}}")
     private String frontendUri;
@@ -52,6 +53,8 @@ public class SecurityConfig {
     private boolean cookieSecure;
     @Value("${cookie.same-site:None}")
     private String cookieSameSite;
+    @Value("${cookie.csrf-http-only:true}")
+    private boolean csrfHttpOnly;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -63,8 +66,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html")
+                        .access((authentication, context) -> new org.springframework.security.authorization.AuthorizationDecision(
+                                environment.acceptsProfiles(org.springframework.core.env.Profiles.of("local", "test"))
+                                        && (environment.getProperty("springdoc.api-docs.enabled", Boolean.class, false)
+                                        || environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class, false))))
                         .requestMatchers(
-                                "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html",
                                 "/api/auth/signup", "/api/auth/login", "/api/auth/logout",
                                 "/api/auth/csrf", "/api/auth/reissue",
                                 "/login/**", "/oauth2/**"
@@ -145,8 +152,11 @@ public class SecurityConfig {
 
     @Bean
     public CookieCsrfTokenRepository csrfTokenRepository() {
+        if (!csrfHttpOnly && !environment.acceptsProfiles(org.springframework.core.env.Profiles.of("local", "test"))) {
+            throw new IllegalArgumentException("Readable CSRF cookies are restricted to local or test profiles");
+        }
         CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
-        repository.setCookieCustomizer(cookie -> cookie.httpOnly(true).secure(cookieSecure)
+        repository.setCookieCustomizer(cookie -> cookie.httpOnly(csrfHttpOnly).secure(cookieSecure)
                 .sameSite(cookieSameSite).path("/"));
         return repository;
     }

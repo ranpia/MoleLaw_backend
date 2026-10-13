@@ -27,7 +27,17 @@ openlaw:
 frontend:
   uri: http://localhost:3000
 cookie:
+  csrf-http-only: false
   secure: false
   same-site: Lax
 jwt:
   secret: test-only-jwt-secret-at-least-32-bytes-long
+
+# Documentation integration tests only; never use the test profile for deployment.
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    csrf:
+      enabled: true

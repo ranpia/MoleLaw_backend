@@ -1,5 +1,17 @@
 # 인증·보안 실행 계획
 
+## 프론트 개발 시 확인할 사항 — CSRF 초기 요청 (2026-10-13)
+
+상태: 브라우저에서 첫 요청 403, 재시도 성공 현상이 보고됨. 서버 직접 검증에서는 `/api/auth/csrf` 응답 token과 쿠키가 일치했고, 해당 토큰으로 로그아웃이 성공했으며 재조회 후에도 토큰이 유지됐다. 브라우저에서 발생하는 원인은 아직 확정하지 않았다.
+
+- [ ] 앱 초기화 시 `GET /api/auth/csrf`를 완료한 뒤 상태 변경 요청을 허용한다. 매 요청마다 토큰 조회를 반복하지 않는다.
+- [ ] 운영에서는 CSRF 쿠키가 HttpOnly이므로 JSON 응답의 token을 메모리에 보관하고 `X-XSRF-TOKEN` 헤더로 전송한다. 쿠키 전송에 필요한 credentials 설정과 CORS 허용 Origin을 함께 확인한다.
+- [ ] 개발 Swagger의 자동 처리는 같은 Origin에서만 적용된다. Swagger 화면과 Servers 주소의 scheme/host/port 일치를 확인하고 localhost와 127.0.0.1을 혼용하지 않는다.
+- [ ] Chrome에서 `XSRF-TOKEN`의 Domain·Path 중복, HttpOnly·Secure·SameSite 속성과 각 응답의 Set-Cookie를 확인한다. 같은 이름의 쿠키 중복은 Swagger 자동 헤더 처리를 방해할 수 있다. 진단 시 토큰 원문은 로그에 남기지 않는다.
+- [ ] 첫 요청 403과 두 번째 성공이 재현되면 두 요청의 CSRF 헤더 존재 여부, 쿠키 전달 여부, 응답의 쿠키 발급·삭제를 비교해 원인을 확인한다. CSRF 토큰을 일회용으로 가정하지 않는다.
+- [ ] 로그인·OAuth·로그아웃·브라우저 재실행 후 토큰과 쿠키 상태를 확인하고 필요한 경우 CSRF를 다시 조회한다. Access 쿠키는 강력 새로고침으로 삭제되지 않는다는 점을 구분한다.
+- [ ] 모든 변경 요청을 무조건 두 번 보내지 않는다. CSRF 필터에서 거절된 403은 작업이 실행되지 않지만, 성공 응답 유실·타임아웃 후 재시도는 중복 실행될 수 있다. CSRF 오류와 권한·Origin 오류를 구분하고 자동 재시도에는 상한을 둔다.
+
 상태: 1단계 즉시 개선 구현 (2026-10-13), 자동 테스트 검증 완료. Redis Compose 검증은 완료했지만 Spring Redis 연동·Refresh 테이블·회전·폐기는 미구현이다. 전체 순서는 [재구성 요약](../backend-rebuild-plan.md), 현재 코드의 문제·목표 구조는 [JWT 상세 검토](../jwt-security-review.md)를 따른다. 인증 정책 결정과 저장소 전환을 이 문서에서 추적한다.
 
 ## 범위와 확정 사항
@@ -51,7 +63,7 @@
 
 - JWT 원문·payload·파싱 예외 로그를 제거했다. `tokenType=access/refresh`와 HS256 서명, 만료, 필수 claim을 검증하며 교차 사용과 용도 없는 기존 토큰은 거절한다. 배포 후 기존 사용자는 다시 로그인해야 한다.
 - CORS는 `security.allowed-origins` (`CORS_ALLOWED_ORIGINS`, 쉼표로 구분한 명시적 Origin)만 허용한다. 생략하면 단일 `FRONTENDURI`를 사용한다. OAuth 리다이렉트용 `FRONTENDURI`에는 목록을 넣지 않는다.
-- 프론트는 먼저 `GET /api/auth/csrf`를 `credentials: "include"`로 호출한다. 응답 `{token, headerName}`의 토큰을 메모리에 두고 모든 POST/PUT/PATCH/DELETE 요청에 해당 헤더(기본 `X-XSRF-TOKEN`)와 credentials를 보낸다. 로그인·가입·재발급·로그아웃에도 필요하다. 토큰을 담은 `XSRF-TOKEN` 쿠키는 HttpOnly이며 JS에서 직접 읽지 않는다.
+- 프론트는 먼저 `GET /api/auth/csrf`를 `credentials: "include"`로 호출한다. 응답 `{token, headerName}`의 토큰을 메모리에 두고 모든 POST/PUT/PATCH/DELETE 요청에 해당 헤더(기본 `X-XSRF-TOKEN`)와 credentials를 보낸다. 로그인·가입·재발급·로그아웃에도 필요하다. 토큰을 담은 `XSRF-TOKEN` 쿠키는 local/test에서만 JavaScript로 읽을 수 있고 운영에서는 HttpOnly다. Access/Refresh 인증 쿠키는 HttpOnly를 유지한다.
 - 상태 변경 요청의 Origin은 같은 서버 주소이거나 외부 Origin 허용 목록과 일치해야 한다. Origin이 없는 클라이언트도 CSRF 토큰을 제출해야 한다. 누락·잘못된 CSRF 또는 허용되지 않은 Origin은 403이다. Bearer 호출도 동일한 CSRF 계약을 따른다.
 - Access는 Authorization Bearer를 우선하고 없을 때 accessToken 쿠키를 사용한다. Refresh로 일반 API를 인증하거나 Access로 재발급할 수 없다. `/api/auth/reissue`는 Access 인증 없이 Refresh 자체와 사용자 존재를 검증한다.
 - 일반 로그인·가입·OAuth·재발급·탈퇴·로그아웃은 공통 쿠키 설정을 사용한다. 운영 기본은 Secure=true, SameSite=None, HttpOnly=true이며 `COOKIE_SAME_SITE=Lax/Strict`로 같은 사이트 정책을 선택할 수 있다. Secure=false는 local/test만 허용하고 None과 함께 사용할 수 없다. local/test는 Lax다.
@@ -63,6 +75,10 @@
 
 Swagger 같은 Origin 요청도 CSRF 토큰을 검증한다. 외부 Origin은 명시적 허용 목록으로 제한한다. 내부 ERROR 디스패치는 인증 없이 처리해 CSRF/Origin 거절의 403이 401로 덮어써지지 않도록 한다. 직접 /error 접근과 일반 보호 API의 인증 요구는 유지한다.
 
-Swagger UI는 GET /api/auth/csrf 응답의 token을 Authorize → CsrfToken에 한 번 등록하면 상태 변경 요청에 X-XSRF-TOKEN 헤더를 자동으로 전송한다. CSRF 쿠키가 유지되어야 하며 토큰 재발급 후에는 등록 값도 갱신한다. GET 요청에는 CSRF 보안 요구를 적용하지 않는다.
+개발 local 및 문서 검증용 test의 Swagger UI는 springdoc.swagger-ui.csrf.enabled=true와 cookie-name=XSRF-TOKEN, header-name=X-XSRF-TOKEN을 사용한다. 같은 서버에서 GET /api/auth/csrf를 한 번 실행하면 JavaScript로 읽을 수 있는 CSRF 쿠키가 설정되고 이후 요청 헤더에 자동 적용된다. 수동 헤더 입력과 Authorize CSRF 항목은 없다.
 
-Swagger Authorize 항목은 AccessCookie, CsrfToken으로 구성하며 Bearer와 RefreshCookie 입력 항목은 표시하지 않는다. 실제 API의 Authorization Bearer 지원은 유지한다. 브라우저는 Authorize 입력으로 HttpOnly 쿠키를 설정할 수 없으므로 Access/Refresh 쿠키는 로그인·가입 응답으로 발급받는다. 재발급 요청은 브라우저가 자동 전송하는 refreshToken 쿠키를 사용한다.
+Swagger Authorize에는 AccessCookie만 표시하며 Bearer, RefreshCookie, CsrfToken 입력 항목은 표시하지 않는다. 실제 API의 Authorization Bearer 지원은 유지한다. 브라우저는 Authorize 입력으로 HttpOnly 쿠키를 설정할 수 없으므로 Access/Refresh 쿠키는 로그인·가입 응답으로 발급받는다. 재발급 요청은 브라우저가 자동 전송하는 refreshToken 쿠키를 사용한다.
+
+자동 처리 근거: https://springdoc.org/v2/properties.html 및 https://springdoc.org/faq.html. local/test의 CSRF 쿠키만 HttpOnly=false로 바꾸며 Secure/SameSite/Path 정책과 서버의 CSRF 검증은 유지한다. Swagger와 API는 같은 Origin을 사용한다. 별도 Origin의 프론트는 기존 JSON 토큰 조회와 헤더 전송 계약을 사용한다.
+
+운영 분리 규칙: 공통/main 배포 기본값은 Swagger UI·API docs·Swagger CSRF 자동 처리 비활성화다. 문서 경로는 local/test 외에서는 인증 여부와 무관하게 차단한다. local에서만 개발 편의 설정을 활성화하고 test는 문서 검증용 예외다. cookie.csrf-http-only는 기본 true이며 false는 local/test에서만 허용한다. 운영 프론트는 /api/auth/csrf JSON의 token을 메모리에서 읽어 헤더로 전송한다. 운영 배포에 local/test 프로필을 사용하지 않는다.

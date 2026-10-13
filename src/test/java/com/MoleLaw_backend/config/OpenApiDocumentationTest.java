@@ -62,10 +62,6 @@ class OpenApiDocumentationTest {
                     assertFalse(requirement.has("RefreshCookie"), context);
                 }
                 if (!method.getKey().equals("get")) {
-                    assertFalse(operation.path("security").isEmpty(), context);
-                    for (JsonNode requirement : operation.path("security")) {
-                        assertTrue(requirement.has("CsrfToken"), context);
-                    }
                     for (JsonNode parameter : operation.path("parameters")) {
                         assertNotEquals("X-XSRF-TOKEN", parameter.path("name").asText(), context);
                     }
@@ -94,11 +90,8 @@ class OpenApiDocumentationTest {
             }
         }
         assertEquals(20, count);
-        JsonNode csrfScheme = document.path("components").path("securitySchemes").path("CsrfToken");
-        assertEquals("apiKey", csrfScheme.path("type").asText());
-        assertEquals("header", csrfScheme.path("in").asText());
-        assertEquals("X-XSRF-TOKEN", csrfScheme.path("name").asText());
         JsonNode schemes = document.path("components").path("securitySchemes");
+        assertFalse(schemes.has("CsrfToken"));
         assertFalse(schemes.has("BearerAuth"));
         assertFalse(schemes.has("RefreshCookie"));
         assertTrue(document.path("components").path("schemas").has("BusinessErrorResponse"));
@@ -113,6 +106,16 @@ class OpenApiDocumentationTest {
                 .path("responses").path("200").path("content").path("application/json").path("schema"));
         JsonNode userData = resolve(document, userSchema.path("properties").path("data"));
         assertTrue(userData.path("properties").has("email"), "User response must retain generic data schema");
+    }
+
+    @Test
+    void swaggerInitializerReadsCsrfCookieAndAddsHeader() throws Exception {
+        String script = mvc.perform(get("/swagger-ui/swagger-initializer.js"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertTrue(script.contains("requestInterceptor"));
+        assertTrue(script.contains("document.cookie"));
+        assertTrue(script.contains("XSRF-TOKEN"));
+        assertTrue(script.contains("X-XSRF-TOKEN"));
     }
 
     private JsonNode resolve(JsonNode document, JsonNode schema) {

@@ -9,6 +9,9 @@ description: MoleLaw 컨트롤러와 API DTO를 추가하거나 수정할 때 Sw
 
 ## 작성 기준
 
+- Swagger UI·OpenAPI 엔드포인트 노출과 Swagger의 CSRF 자동 처리는 개발용 `local`에서만 활성화한다. 공통 설정과 `main` 배포는 UI·API docs·Swagger CSRF 자동 처리를 기본 비활성화한다. `test` 활성화는 자동 문서 검증용 예외이며 배포 프로필로 사용하지 않는다.
+- Swagger를 위해 운영 보안 정책을 완화하지 않는다. CSRF 쿠키의 JavaScript 읽기 허용은 `local`·`test`로 제한하고 운영은 HttpOnly를 유지한다. 운영 프론트는 CSRF 조회 JSON의 토큰을 헤더로 전송한다. Access/Refresh 쿠키의 HttpOnly는 모든 환경에서 유지한다. 운영 문서 경로는 인증 사용자에게도 차단한다.
+
 - 컨트롤러에 `@Tag(name, description)`, 각 HTTP 매핑에 `@Operation(summary, description)`을 작성한다. 설명에는 목적, 입력 조건과 주요 동작을 포함한다.
 - path/query/header 파라미터는 `@Parameter`로 의미, 필수 여부, 형식과 `example`을 제공한다. 기본값·범위·enum은 실제 바인딩과 검증 규칙에 맞춘다.
 - 요청 DTO 필드에는 `@Schema(description, example)`을 작성하고 필수 여부·제약·nullable을 실제 Jackson 및 Bean Validation 동작과 일치시킨다. JSON 요청 본문에는 OpenAPI `@RequestBody`의 `@Content`·`@ExampleObject`로 복사해서 사용할 수 있는 전체 예시를 제공한다. Spring MVC `@RequestBody`와 이름이 충돌하면 OpenAPI 쪽을 완전한 클래스명으로 작성한다.

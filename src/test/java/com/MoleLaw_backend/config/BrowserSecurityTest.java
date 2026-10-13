@@ -27,7 +27,7 @@ class BrowserSecurityTest {
     @Autowired ObjectMapper mapper;
 
     @Test
-    void csrfBootstrapIsPublicAndReturnsHttpOnlyCookie() throws Exception {
+    void csrfBootstrapIsPublicAndReturnsReadableCookieForSwagger() throws Exception {
         var response = mvc.perform(get("/api/auth/csrf").header("Origin", "http://localhost:3000"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
@@ -36,7 +36,7 @@ class BrowserSecurityTest {
                 .andReturn().getResponse();
         Cookie cookie = response.getCookie("XSRF-TOKEN");
         assertNotNull(cookie);
-        assertTrue(cookie.isHttpOnly());
+        assertFalse(cookie.isHttpOnly());
         assertEquals("/", cookie.getPath());
     }
 
