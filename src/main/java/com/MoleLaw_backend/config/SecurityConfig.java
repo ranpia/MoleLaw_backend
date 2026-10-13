@@ -62,6 +62,7 @@ public class SecurityConfig {
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html",
                                 "/api/auth/signup", "/api/auth/login", "/api/auth/logout",

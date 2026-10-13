@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class AllowedOriginFilter extends OncePerRequestFilter {
                                   FilterChain filterChain) throws ServletException, IOException {
         String origin = request.getHeader("Origin");
         if (CsrfFilter.DEFAULT_CSRF_MATCHER.matches(request)
-                && origin != null && !allowedOrigins.contains(origin)) {
+                && origin != null && CorsUtils.isCorsRequest(request) && !allowedOrigins.contains(origin)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Origin is not allowed");
             return;
         }

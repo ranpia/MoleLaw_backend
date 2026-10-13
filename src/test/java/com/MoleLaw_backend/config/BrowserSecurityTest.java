@@ -49,6 +49,27 @@ class BrowserSecurityTest {
     }
 
     @Test
+    void signupCompletesWithoutRedirectingToProtectedBackendPage() throws Exception {
+        var bootstrap = mvc.perform(get("/api/auth/csrf")).andReturn().getResponse();
+        String csrf = mapper.readTree(bootstrap.getContentAsString()).get("token").asText();
+        var signup = mvc.perform(post("/api/auth/signup")
+                        .cookie(bootstrap.getCookie("XSRF-TOKEN"))
+                        .header("X-XSRF-TOKEN", csrf)
+                        .header("Origin", "http://localhost:3000")
+                        .contentType("application/json")
+                        .content("{\"email\":\"signup-regression@example.com\",\"password\":\"Example-password-123!\",\"nickname\":\"signup-test\"}"))
+                .andExpect(status().isOk())
+                .andExpect(header().doesNotExist("Location"))
+                .andExpect(jsonPath("success").value(true))
+                .andReturn().getResponse();
+        Cookie access = signup.getCookie("accessToken");
+        assertNotNull(access);
+        mvc.perform(get("/api/auth/me").cookie(access))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("data.email").value("signup-regression@example.com"));
+    }
+
+    @Test
     void actualBootstrapTokenAllowsLogoutButForgedOrMissingTokenDoesNot() throws Exception {
         var response = mvc.perform(get("/api/auth/csrf")).andReturn().getResponse();
         Cookie cookie = response.getCookie("XSRF-TOKEN");

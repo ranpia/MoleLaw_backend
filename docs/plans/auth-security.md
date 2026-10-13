@@ -47,10 +47,12 @@
 
 ## 1단계 구현과 프론트 전환 계약 (2026-10-13)
 
+- 회원가입 성공은 `200`과 `{"success":true,"data":"회원가입 되었습니다."}` 및 JWT 쿠키를 반환한다. 기존 백엔드 `/Main` 리다이렉트는 제거했으며 프론트가 성공 응답을 받은 뒤 화면을 이동한다. 회원가입은 인증 없이 접근 가능하지만 CSRF 토큰과 Origin 정책은 적용한다.
+
 - JWT 원문·payload·파싱 예외 로그를 제거했다. `tokenType=access/refresh`와 HS256 서명, 만료, 필수 claim을 검증하며 교차 사용과 용도 없는 기존 토큰은 거절한다. 배포 후 기존 사용자는 다시 로그인해야 한다.
 - CORS는 `security.allowed-origins` (`CORS_ALLOWED_ORIGINS`, 쉼표로 구분한 명시적 Origin)만 허용한다. 생략하면 단일 `FRONTENDURI`를 사용한다. OAuth 리다이렉트용 `FRONTENDURI`에는 목록을 넣지 않는다.
 - 프론트는 먼저 `GET /api/auth/csrf`를 `credentials: "include"`로 호출한다. 응답 `{token, headerName}`의 토큰을 메모리에 두고 모든 POST/PUT/PATCH/DELETE 요청에 해당 헤더(기본 `X-XSRF-TOKEN`)와 credentials를 보낸다. 로그인·가입·재발급·로그아웃에도 필요하다. 토큰을 담은 `XSRF-TOKEN` 쿠키는 HttpOnly이며 JS에서 직접 읽지 않는다.
-- 상태 변경 요청에 Origin이 있으면 허용 목록과 일치해야 한다. Origin이 없는 클라이언트도 CSRF 토큰을 제출해야 한다. 누락·잘못된 CSRF 또는 허용되지 않은 Origin은 403이다. Bearer 호출도 동일한 CSRF 계약을 따른다.
+- 상태 변경 요청의 Origin은 같은 서버 주소이거나 외부 Origin 허용 목록과 일치해야 한다. Origin이 없는 클라이언트도 CSRF 토큰을 제출해야 한다. 누락·잘못된 CSRF 또는 허용되지 않은 Origin은 403이다. Bearer 호출도 동일한 CSRF 계약을 따른다.
 - Access는 Authorization Bearer를 우선하고 없을 때 accessToken 쿠키를 사용한다. Refresh로 일반 API를 인증하거나 Access로 재발급할 수 없다. `/api/auth/reissue`는 Access 인증 없이 Refresh 자체와 사용자 존재를 검증한다.
 - 일반 로그인·가입·OAuth·재발급·탈퇴·로그아웃은 공통 쿠키 설정을 사용한다. 운영 기본은 Secure=true, SameSite=None, HttpOnly=true이며 `COOKIE_SAME_SITE=Lax/Strict`로 같은 사이트 정책을 선택할 수 있다. Secure=false는 local/test만 허용하고 None과 함께 사용할 수 없다. local/test는 Lax다.
 - Access Path=/, Refresh Path=/api/auth로 통일했다. Refresh 발급·삭제 시 이전 Path=/ 쿠키도 삭제한다. 쿠키 수명은 현재 JWT와 같은 Access 15시간, Refresh 7일이다. Access 15분 변경은 저장소 전환 단계에 남겨 둔다.
@@ -58,3 +60,5 @@
 
 자동 테스트와 별도로 배포 전 실제 브라우저에서 로컬 HTTP 및 운영 HTTPS의 가입·로그인·OAuth 리다이렉트·재발급·로그아웃, 쿠키 전달과 삭제, CSRF 403 후 재조회 흐름을 확인해야 한다. 프론트의 CSRF 헤더 적용과 함께 배포한다.
 검증:  .\gradlew.bat test  전체 성공. JWT·인증 필터·재발급·쿠키·CORS·CSRF 회귀 테스트 포함. 실제 브라우저 검증은 미수행.
+
+Swagger 같은 Origin 요청도 CSRF 토큰을 검증한다. 외부 Origin은 명시적 허용 목록으로 제한한다. 내부 ERROR 디스패치는 인증 없이 처리해 CSRF/Origin 거절의 403이 401로 덮어써지지 않도록 한다. 직접 /error 접근과 일반 보호 API의 인증 요구는 유지한다.

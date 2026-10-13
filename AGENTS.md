@@ -29,6 +29,9 @@ Unix에서는 `./gradlew`를 사용하세요. 실행 전에 MySQL 연결과 환�
 
 역할에 따라 `Controller`, `Service`, `Repository`, `Request`, `Response` 접미사를 사용하세요. 의존성은 생성자로 주입하고 기존 Lombok `@RequiredArgsConstructor` 패턴을 참고하세요. 현재 자동 포매터나 린트 플러그인은 설정되어 있지 않습니다.
 
+## Swagger API 문서화
+모든 HTTP 컨트롤러는 Swagger 설명과 요청·응답 샘플을 제공해야 합니다. 컨트롤러·API DTO를 추가하거나 수정할 때 프로젝트 스킬 [swagger-controller-docs](.agents/skills/swagger-controller-docs/SKILL.md)를 읽고 적용하세요. 엔드포인트 목적, 파라미터, 실제 성공·실패 응답, 인증·CSRF 요구사항을 코드와 함께 갱신하세요. 요청이나 응답 본문이 없는 API는 해당 사실과 실제 헤더·상태 코드를 문서화하세요.
+
 ## 테스트 작성 기준
 JUnit Jupiter, Spring Boot Test, Mockito, Spring Security Test를 사용합니다. 테스트 클래스 이름은 `*Tests` 또는 `*Test`로 작성하고 메서드 이름에 검증할 동작을 드러내세요. 변경한 기능의 정상 동작, 권한 검사, 실패 경로를 검증하세요. 외부 OpenAI/OpenLaw 호출은 모킹하세요.
 
