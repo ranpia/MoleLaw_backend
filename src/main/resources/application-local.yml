@@ -9,5 +9,18 @@ server:
 
 frontend:
   uri: ${FRONTENDURI:http://localhost:3000}
+security:
+  # Development frontend and the local Swagger UI. Production uses its own allowlist.
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:${frontend.uri},http://localhost:8080}
 cookie:
+  csrf-http-only: false
   secure: false
+  same-site: Lax
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    csrf:
+      enabled: true
