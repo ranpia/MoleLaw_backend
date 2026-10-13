@@ -28,8 +28,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     @Value("${frontend.uri}")
     private String frontenduri;
 
-    @Value("${cookie.secure:true}")
-    private boolean isSecure;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -37,17 +35,13 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                                         Authentication authentication)
             throws IOException, ServletException {
 
-        System.out.println("✅ [OAuth2SuccessHandler] 로그인 성공 핸들러 진입");
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         String provider = oAuth2User.getAttribute("provider"); // 예: "google"
 
-        System.out.println("📧 이메일: " + email);
-        System.out.println("🔗 제공자(provider): " + provider);
 
         if (email == null || provider == null) {
-            System.out.println("❌ 이메일 또는 provider가 null입니다.");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "이메일 또는 provider를 가져올 수 없습니다.");
             return;
         }
@@ -55,7 +49,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // ✅ 유저가 존재하지 않으면 새로 저장
         User user = userRepository.findByEmailAndProvider(email, provider)
                 .orElseGet(() -> {
-                    System.out.println("🆕 신규 유저 저장");
                     User newUser = User.builder()
                             .email(email)
                             .provider(provider)
@@ -67,15 +60,12 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String accessToken = jwtUtil.generateAccessToken(email, provider);
         String refreshToken = jwtUtil.generateRefreshToken(email, provider);
 
-        System.out.println("🔐 accessToken 발급 완료: " + accessToken);
-        System.out.println("🔐 refreshToken 발급 완료: " + refreshToken);
 
         // ✅ 쿠키 저장
-        cookieUtil.addJwtCookie(response, "accessToken", accessToken, isSecure);
-        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken, isSecure);
+        cookieUtil.addJwtCookie(response, "accessToken", accessToken);
+        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken);
 
         // ✅ 리다이렉트
-        System.out.println("➡️ 리다이렉트 URL: " + frontenduri);
         response.sendRedirect(frontenduri);
     }
 }

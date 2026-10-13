@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
+import com.MoleLaw_backend.service.security.AllowedOriginFilter;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -22,6 +24,9 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.cors.CorsConfiguration;
@@ -40,17 +45,35 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final org.springframework.core.env.Environment environment;
+
+    @Value("${security.allowed-origins:${frontend.uri}}")
+    private String frontendUri;
+    @Value("${cookie.secure:true}")
+    private boolean cookieSecure;
+    @Value("${cookie.same-site:None}")
+    private String cookieSameSite;
+    @Value("${cookie.csrf-http-only:true}")
+    private boolean csrfHttpOnly;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfTokenRepository())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html")
+                        .access((authentication, context) -> new org.springframework.security.authorization.AuthorizationDecision(
+                                environment.acceptsProfiles(org.springframework.core.env.Profiles.of("local", "test"))
+                                        && (environment.getProperty("springdoc.api-docs.enabled", Boolean.class, false)
+                                        || environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class, false))))
                         .requestMatchers(
-                                "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html",
                                 "/api/auth/signup", "/api/auth/login", "/api/auth/logout",
+                                "/api/auth/csrf", "/api/auth/reissue",
                                 "/login/**", "/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()
@@ -69,6 +92,7 @@ public class SecurityConfig {
                             response.getWriter().write("{\"error\": \"Unauthorized\"}");
                         })
                 )
+                .addFilterBefore(new AllowedOriginFilter(allowedOrigins()), CsrfFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -116,14 +140,28 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("*")); // 모든 Origin 허용 (패턴 방식)
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedOrigins(allowedOrigins());
+        config.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-XSRF-TOKEN", "Accept"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        config.setExposedHeaders(List.of("Set-Cookie", "Authorization")); // 쿠키와 토큰 노출
-        config.setAllowCredentials(true); // 반드시 true 설정
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    @Bean
+    public CookieCsrfTokenRepository csrfTokenRepository() {
+        if (!csrfHttpOnly && !environment.acceptsProfiles(org.springframework.core.env.Profiles.of("local", "test"))) {
+            throw new IllegalArgumentException("Readable CSRF cookies are restricted to local or test profiles");
+        }
+        CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
+        repository.setCookieCustomizer(cookie -> cookie.httpOnly(csrfHttpOnly).secure(cookieSecure)
+                .sameSite(cookieSameSite).path("/"));
+        return repository;
+    }
+
+    private List<String> allowedOrigins() {
+        return AllowedOriginFilter.parseOrigins(frontendUri);
     }
 }
