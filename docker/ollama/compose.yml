@@ -1,0 +1,26 @@
+name: molelaw-embedding-lab
+
+services:
+  ollama:
+    image: molelaw/ollama-embedding:0.40.3-cpu
+    build:
+      context: .
+      args:
+        OLLAMA_VERSION: "0.40.3"
+    platform: linux/amd64
+    restart: "no"
+    ports:
+      - "127.0.0.1:${OLLAMA_LAB_PORT:-11435}:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    cpus: 6.0
+    mem_limit: 8g
+    memswap_limit: 8g
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ollama_models:

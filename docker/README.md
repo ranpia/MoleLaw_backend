@@ -1,5 +1,7 @@
 # 로컬 MySQL·Qdrant·Redis 환경
 
+CPU 기반 Ollama 임베딩 비교는 독립된 [테스트 이미지·실행 가이드](ollama/README.md)를 사용한다. 기존 DB Compose 설정은 변경하지 않는다.
+
 ## 구성과 초기 자원 예산
 
 Spring Boot는 IDE 또는 Gradle로 실행하고 MySQL·Qdrant·Redis는 `docker/compose.yml`로 실행한다. MySQL은 `8.4.11`, Qdrant는 `v1.19.1`, Redis는 `7.4.11-alpine`으로 고정한다. 기존 원격 DB 데이터를 자동으로 가져오지 않으며 MySQL은 빈 개발용 DB로 시작한다.

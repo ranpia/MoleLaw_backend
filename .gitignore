@@ -41,3 +41,5 @@ out/
 # 환경 변수
 .env
 .env.compose
+/docker/ollama/results/
+/molelaw-ollama-cpu.tar
