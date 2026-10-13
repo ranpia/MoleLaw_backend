@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.MoleLaw_backend.exception.ErrorResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -12,8 +14,11 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
+    @Schema(description = "요청 처리 성공 여부", example = "true")
     private boolean success;
+    @Schema(description = "성공 응답 데이터. null이면 JSON에서 생략됩니다.")
     private T data;
+    @Schema(description = "실패 응답 오류. null이면 JSON에서 생략됩니다.")
     private ErrorResponse error;
 
     // ✅ 성공 응답

@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.exception;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,8 +10,11 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @NoArgsConstructor
 public class ErrorResponse {
+    @Schema(description = "HTTP 상태 코드", example = "400")
     private int status;
+    @Schema(description = "오류 코드", example = "BAD_REQUEST")
     private String code;
+    @Schema(description = "오류 원인 메시지", example = "잘못된 요청입니다.")
     private String message;
 
     // ✅ ErrorCode 기반 생성자 (기존)
