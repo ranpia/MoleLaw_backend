@@ -62,3 +62,7 @@
 검증:  .\gradlew.bat test  전체 성공. JWT·인증 필터·재발급·쿠키·CORS·CSRF 회귀 테스트 포함. 실제 브라우저 검증은 미수행.
 
 Swagger 같은 Origin 요청도 CSRF 토큰을 검증한다. 외부 Origin은 명시적 허용 목록으로 제한한다. 내부 ERROR 디스패치는 인증 없이 처리해 CSRF/Origin 거절의 403이 401로 덮어써지지 않도록 한다. 직접 /error 접근과 일반 보호 API의 인증 요구는 유지한다.
+
+Swagger UI는 GET /api/auth/csrf 응답의 token을 Authorize → CsrfToken에 한 번 등록하면 상태 변경 요청에 X-XSRF-TOKEN 헤더를 자동으로 전송한다. CSRF 쿠키가 유지되어야 하며 토큰 재발급 후에는 등록 값도 갱신한다. GET 요청에는 CSRF 보안 요구를 적용하지 않는다.
+
+Swagger Authorize 항목은 AccessCookie, CsrfToken으로 구성하며 Bearer와 RefreshCookie 입력 항목은 표시하지 않는다. 실제 API의 Authorization Bearer 지원은 유지한다. 브라우저는 Authorize 입력으로 HttpOnly 쿠키를 설정할 수 없으므로 Access/Refresh 쿠키는 로그인·가입 응답으로 발급받는다. 재발급 요청은 브라우저가 자동 전송하는 refreshToken 쿠키를 사용한다.

@@ -43,9 +43,8 @@ public class UserController {
     private final CookieUtil cookieUtil;
 
 
-    @Operation(summary = "회원가입", description = "local 계정을 생성하고 두 JWT 쿠키와 성공 JSON을 반환합니다. 화면 이동은 프론트에서 처리합니다. 현재 Bean Validation 검사는 적용하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @Operation(summary = "회원가입", description = "local 계정을 생성하고 두 JWT 쿠키와 성공 JSON을 반환합니다. 화면 이동은 프론트에서 처리합니다. 현재 Bean Validation 검사는 적용하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Swagger에서는 Authorize의 CsrfToken에 한 번 등록하면 자동 전송됩니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
     @SecurityRequirements
-    @Parameter(name = "X-XSRF-TOKEN", in = ParameterIn.HEADER, required = true, description = "GET /api/auth/csrf 응답 token. 같은 호출에서 받은 쿠키를 함께 유지", example = "csrf-token-from-response")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "JSON 요청 본문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SignupRequest.class), examples = @ExampleObject(value = "{\"email\":\"user@example.com\",\"password\":\"Example-password-123!\",\"nickname\":\"두더지\"}")))
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원가입 성공. JWT 쿠키 발급 및 성공 JSON 반환", headers = @Header(name = "Set-Cookie", description = "accessToken: Path=/, 15시간; refreshToken: Path=/api/auth, 7일. HttpOnly 및 설정된 Secure/SameSite 적용", schema = @Schema(type = "string")), content = @Content(mediaType = "application/json", schema = @Schema(implementation = StringEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":\"회원가입 되었습니다.\"}"))),
@@ -62,9 +61,8 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("회원가입 되었습니다."));
     }
 
-    @Operation(summary = "로그인", description = "local 계정의 이메일과 비밀번호를 확인해 두 JWT를 응답 본문과 HttpOnly 쿠키로 발급합니다. 소셜 로그인은 OAuth2 경로를 사용합니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @Operation(summary = "로그인", description = "local 계정의 이메일과 비밀번호를 확인해 두 JWT를 응답 본문과 HttpOnly 쿠키로 발급합니다. 소셜 로그인은 OAuth2 경로를 사용합니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Swagger에서는 Authorize의 CsrfToken에 한 번 등록하면 자동 전송됩니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
     @SecurityRequirements
-    @Parameter(name = "X-XSRF-TOKEN", in = ParameterIn.HEADER, required = true, description = "GET /api/auth/csrf 응답 token. 같은 호출에서 받은 쿠키를 함께 유지", example = "csrf-token-from-response")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "JSON 요청 본문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginRequest.class), examples = @ExampleObject(value = "{\"email\":\"user@example.com\",\"password\":\"Example-password-123!\"}")))
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class), examples = @ExampleObject(value = "{\"accessToken\":\"<access-jwt>\",\"refreshToken\":\"<refresh-jwt>\"}"))),
@@ -79,7 +77,7 @@ public class UserController {
         return ResponseEntity.ok(authResponse);
     }
 
-    @Operation(summary = "내 정보 조회", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. 현재 사용자의 이메일과 닉네임을 조회합니다.", security = {@SecurityRequirement(name = "BearerAuth"), @SecurityRequirement(name = "AccessCookie")})
+    @Operation(summary = "내 정보 조회", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. 현재 사용자의 이메일과 닉네임을 조회합니다.", security = @SecurityRequirement(name = "AccessCookie"))
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":{\"email\":\"user@example.com\",\"nickname\":\"두더지\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 사용자 식별자입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"BAD_REQUEST\",\"message\":\"잘못된 사용자 식별자입니다.\"}}"))),
@@ -104,8 +102,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(user));
     }
 
-    @Operation(summary = "회원 탈퇴", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. 사용자와 연관 채팅 기록을 삭제하고 JWT 쿠키를 삭제합니다. 복사된 JWT의 서버 폐기는 아직 구현하지 않았습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.", security = {@SecurityRequirement(name = "BearerAuth"), @SecurityRequirement(name = "AccessCookie")})
-    @Parameter(name = "X-XSRF-TOKEN", in = ParameterIn.HEADER, required = true, description = "GET /api/auth/csrf 응답 token. 같은 호출에서 받은 쿠키를 함께 유지", example = "csrf-token-from-response")
+    @Operation(summary = "회원 탈퇴", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. 사용자와 연관 채팅 기록을 삭제하고 JWT 쿠키를 삭제합니다. 복사된 JWT의 서버 폐기는 아직 구현하지 않았습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Swagger에서는 Authorize의 CsrfToken에 한 번 등록하면 자동 전송됩니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.", security = @SecurityRequirement(name = "AccessCookie"))
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "탈퇴 성공. 본문 없이 JWT 쿠키 삭제", content = @Content),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "사용자 식별자 구조가 잘못됨. 응답 본문 없음", content = @Content),
@@ -137,9 +134,8 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "로그아웃", description = "인증 없이 호출할 수 있으며 두 JWT 쿠키를 삭제합니다. 서버 토큰 폐기는 아직 구현하지 않았습니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @Operation(summary = "로그아웃", description = "인증 없이 호출할 수 있으며 두 JWT 쿠키를 삭제합니다. 서버 토큰 폐기는 아직 구현하지 않았습니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Swagger에서는 Authorize의 CsrfToken에 한 번 등록하면 자동 전송됩니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
     @SecurityRequirements
-    @Parameter(name = "X-XSRF-TOKEN", in = ParameterIn.HEADER, required = true, description = "GET /api/auth/csrf 응답 token. 같은 호출에서 받은 쿠키를 함께 유지", example = "csrf-token-from-response")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "쿠키 삭제 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = StringEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":\"로그아웃 되었습니다.\"}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
@@ -152,24 +148,21 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("로그아웃 되었습니다."));
     }
 
-    @Operation(summary = "액세스 토큰 재발급", description = "refreshToken 쿠키의 용도·서명·만료와 사용자 존재를 확인해 새 Access를 발급합니다. Access 인증은 필요하지 않습니다. Refresh는 회전하지 않으며 응답에도 포함됩니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @Operation(summary = "액세스 토큰 재발급", description = "refreshToken 쿠키의 용도·서명·만료와 사용자 존재를 확인해 새 Access를 발급합니다. Access 인증은 필요하지 않습니다. Refresh는 회전하지 않으며 응답에도 포함됩니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Swagger에서는 Authorize의 CsrfToken에 한 번 등록하면 자동 전송됩니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
     @SecurityRequirements
-    @Parameter(name = "X-XSRF-TOKEN", in = ParameterIn.HEADER, required = true, description = "GET /api/auth/csrf 응답 token. 같은 호출에서 받은 쿠키를 함께 유지", example = "csrf-token-from-response")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Access 발급 및 accessToken 쿠키 갱신", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":{\"accessToken\":\"<new-access-jwt>\",\"refreshToken\":\"<refresh-jwt>\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "유효하지 않은 리프레시 토큰입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"TOKEN_FAIL\",\"message\":\"유효하지 않은 리프레시 토큰입니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
     })
-    @Parameter(name = "refreshToken", in = ParameterIn.COOKIE, required = true, description = "로그인 또는 가입에서 발급받은 HttpOnly Refresh JWT 쿠키", example = "<refresh-jwt>")
     @PostMapping("/reissue")
     public ResponseEntity<ApiResponse<AuthResponse>> reissue(HttpServletRequest request, HttpServletResponse response) {
         AuthResponse authResponse = userService.reissue(request, response);
         return ResponseEntity.ok(ApiResponse.success(authResponse));
     }
 
-    @Operation(summary = "비밀번호 변경", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. local 계정의 비밀번호를 변경합니다. 현재 비밀번호 확인이나 새 비밀번호의 Bean Validation은 적용하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.", security = {@SecurityRequirement(name = "BearerAuth"), @SecurityRequirement(name = "AccessCookie")})
-    @Parameter(name = "X-XSRF-TOKEN", in = ParameterIn.HEADER, required = true, description = "GET /api/auth/csrf 응답 token. 같은 호출에서 받은 쿠키를 함께 유지", example = "csrf-token-from-response")
+    @Operation(summary = "비밀번호 변경", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. local 계정의 비밀번호를 변경합니다. 현재 비밀번호 확인이나 새 비밀번호의 Bean Validation은 적용하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Swagger에서는 Authorize의 CsrfToken에 한 번 등록하면 자동 전송됩니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.", security = @SecurityRequirement(name = "AccessCookie"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "JSON 요청 본문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ChangePasswordRequest.class), examples = @ExampleObject(value = "{\"newPassword\":\"New-example-password-123!\"}")))
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "비밀번호 변경 성공. 응답 본문 없음", content = @Content),
@@ -186,8 +179,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "닉네임 변경", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. 새 닉네임을 저장합니다. 현재 별도의 중복 확인이나 Bean Validation 검사는 적용하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.", security = {@SecurityRequirement(name = "BearerAuth"), @SecurityRequirement(name = "AccessCookie")})
-    @Parameter(name = "X-XSRF-TOKEN", in = ParameterIn.HEADER, required = true, description = "GET /api/auth/csrf 응답 token. 같은 호출에서 받은 쿠키를 함께 유지", example = "csrf-token-from-response")
+    @Operation(summary = "닉네임 변경", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. 새 닉네임을 저장합니다. 현재 별도의 중복 확인이나 Bean Validation 검사는 적용하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. Swagger에서는 Authorize의 CsrfToken에 한 번 등록하면 자동 전송됩니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.", security = @SecurityRequirement(name = "AccessCookie"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "JSON 요청 본문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ChangeNicknameRequest.class), examples = @ExampleObject(value = "{\"newNickname\":\"새두더지\"}")))
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "닉네임 변경 성공. 응답 본문 없음", content = @Content),
