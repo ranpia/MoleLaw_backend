@@ -1,6 +1,7 @@
 package com.MoleLaw_backend.service.law;
 
 import com.MoleLaw_backend.domain.entity.Law;
+import com.MoleLaw_backend.dto.request.LawSearchFilters;
 import com.MoleLaw_backend.domain.entity.LawChunk;
 import com.MoleLaw_backend.domain.repository.LawChunkRepository;
 import com.MoleLaw_backend.domain.repository.LawRepository;
@@ -77,30 +78,52 @@ public class LawSearchService {
     }
 
     private String trySearch(String keyword, int searchType, String orgCode) {
+        return searchPage(keyword, searchType, orgCode, 1, MAX_DISPLAY);
+    }
+
+    public String searchPage(String keyword, int searchType, String orgCode, int page, int display) {
+        return searchPage(keyword, searchType, orgCode, page, display, LawSearchFilters.NONE);
+    }
+
+    public String searchPage(String keyword, int searchType, String orgCode, int page, int display,
+                             LawSearchFilters filters) {
+        if (keyword == null || keyword.isBlank() || keyword.length() > 200
+                || (searchType != 1 && searchType != 2) || page < 1 || page > 10000
+                || display < 1 || display > 100
+                || (orgCode != null && !orgCode.matches("[0-9]{1,10}"))
+                || filters == null || (filters.exactName() && searchType != 1)) {
+            throw new IllegalArgumentException("Invalid law search conditions");
+        }
         return webClientBuilder.build()
                 .get()
                 .uri(uriBuilder -> {
                     var builder = uriBuilder
-                            .scheme("http")
+                            .scheme("https")
                             .host("www.law.go.kr")
                             .path("/DRF/lawSearch.do")
                             .queryParam("OC", oc)
                             .queryParam("target", "eflaw")
                             .queryParam("type", "JSON")
                             .queryParam("search", searchType)
-                            .queryParam("query", keyword)
-                            .queryParam("display", MAX_DISPLAY)
-                            .queryParam("sort", "lasc");
+                            .queryParam("query", "{query}")
+                            .queryParam("display", display)
+                            .queryParam("page", page)
+                            .queryParam("sort", filters.sort());
 
                     if (orgCode != null && !orgCode.isBlank()) {
                         builder.queryParam("org", orgCode);
                     }
+                    if (filters.lawId() != null) builder.queryParam("LID", filters.lawId());
+                    if (filters.kind() != null) builder.queryParam("knd", filters.kind());
+                    if (filters.status() != null) builder.queryParam("nw", filters.status());
+                    if (filters.effectiveDateRange() != null) builder.queryParam("efYd", filters.effectiveDateRange());
+                    if (filters.promulgationDateRange() != null) builder.queryParam("ancYd", filters.promulgationDateRange());
 
-                    return builder.build();
+                    return builder.build(java.util.Map.of("query", filters.exactName() ? "\"" + keyword.strip() + "\"" : keyword));
                 })
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
+                .block(java.time.Duration.ofSeconds(10));
     }
 
 
@@ -263,7 +286,7 @@ public class LawSearchService {
     public JsonNode getLawDetailByMst(String mst) {
         try {
             URI uri = UriComponentsBuilder.newInstance()
-                    .scheme("http")
+                    .scheme("https")
                     .host("www.law.go.kr")
                     .path("/DRF/lawService.do")
                     .queryParam("OC", oc)
@@ -280,8 +303,11 @@ public class LawSearchService {
                     .uri(uri)
                     .retrieve()
                     .bodyToMono(JsonNode.class)
-                    .block();
+                    .block(java.time.Duration.ofSeconds(10));
 
+            if (response == null) {
+                throw new OpenLawApiException(ErrorCode.OPENLAW_INVALID_RESPONSE);
+            }
             JsonNode lawNode = response.path("법령");
 
             if (lawNode.isMissingNode() || lawNode.isEmpty()) {
