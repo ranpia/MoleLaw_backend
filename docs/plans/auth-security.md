@@ -1,5 +1,7 @@
 # 인증·보안 실행 계획
 
+> 최신 상태(2026-10-14): Access는 모든 프로필에서 5분 stateless JWT이며 Redis 등록·조회·폐기를 제거했다. issuer/audience·버전 3을 검증하고 Refresh 회전은 유지한다. 이전 단계의 Redis Access·local 15시간·미구현 표기는 이력으로 읽는다. 현재 계약은 [Access stateless 구현](../stateless-access.md)을 따른다.
+
 ## 프론트 개발 시 확인할 사항 — CSRF 초기 요청 (2026-10-13)
 
 상태: 브라우저에서 첫 요청 403, 재시도 성공 현상이 보고됨. 서버 직접 검증에서는 `/api/auth/csrf` 응답 token과 쿠키가 일치했고, 해당 토큰으로 로그아웃이 성공했으며 재조회 후에도 토큰이 유지됐다. 브라우저에서 발생하는 원인은 아직 확정하지 않았다.
@@ -12,11 +14,11 @@
 - [ ] 로그인·OAuth·로그아웃·브라우저 재실행 후 토큰과 쿠키 상태를 확인하고 필요한 경우 CSRF를 다시 조회한다. Access 쿠키는 강력 새로고침으로 삭제되지 않는다는 점을 구분한다.
 - [ ] 모든 변경 요청을 무조건 두 번 보내지 않는다. CSRF 필터에서 거절된 403은 작업이 실행되지 않지만, 성공 응답 유실·타임아웃 후 재시도는 중복 실행될 수 있다. CSRF 오류와 권한·Origin 오류를 구분하고 자동 재시도에는 상한을 둔다.
 
-상태: 2026-10-14 Redis Refresh 해시·원자 회전·재사용 탐지·family/사용자 전체 폐기와 JSON 제거를 구현했다. Access는 기본/운영·test 5분, local 개발 15시간이며 아직 Redis 등록·매 요청 확인 방식을 사용한다. 목표 **5분 stateless Access JWT + Redis Refresh** 중 Access stateless·issuer/audience 전환은 후속 작업이다. 현재 구현·프론트 전환·실제 Redis 검증은 [Refresh 회전 구현](../refresh-rotation.md)을 따른다. 이전 위험 분석은 [JWT 상세 검토](../jwt-security-review.md)를 참고한다.
+상태: 2026-10-14 Redis Refresh 회전·재사용 탐지·폐기와 Access 5분 stateless 전환을 구현했다. 모든 프로필에서 issuer/audience·버전 3을 검증하고 Redis Access 등록·조회·폐기는 제거했다. 현재 계약은 [Access 구현](../stateless-access.md)과 [Refresh 구현](../refresh-rotation.md)을 따른다.
 
 ## 범위와 확정 사항
 
-- 운영 Access JWT 수명은 **5분(300초)**으로 확정한다. local 프로필에만 개발 편의상 15시간을 허용하며 test는 운영과 같은 5분이다. 목표에서는 서명·알고리즘·용도·issuer/audience·만료·필수 claim을 로컬 검증하며 Redis allowlist·blocklist·세션 상태를 매 요청 조회하지 않는다. `sub`는 불변 사용자 ID, `jti`는 추적 식별자이며 저장소 등록 조건이 아니다.
+- 운영 Access JWT 수명은 **5분(300초)**으로 확정한다. local·test도 같은 5분이며 300초를 초과하는 설정은 거절한다. 목표에서는 서명·알고리즘·용도·issuer/audience·만료·필수 claim을 로컬 검증하며 Redis allowlist·blocklist·세션 상태를 매 요청 조회하지 않는다. `sub`는 불변 사용자 ID, `jti`는 추적 식별자이며 저장소 등록 조건이 아니다.
 - Refresh와 로그인 세션/family·사용자별 인덱스는 Redis에서 해시·만료·회전 관계·폐기를 관리한다. MySQL Refresh 테이블은 만들지 않는다. 브라우저에는 HttpOnly 쿠키로만 전달하고 JSON에서 제거한다.
 - 로그아웃·비밀번호 변경·재사용 탐지는 해당 범위의 Refresh를 폐기해 추가 발급을 막는다. 이미 발급한 Access는 즉시 폐기되지 않으며 남은 만료 시간, 최대 5분 동안 유효할 수 있다. 서버 시간 동기화를 유지하고 만료 유예는 기본 0초로 두며 변경 시 실제 최대 허용 시간도 문서화한다.
 - Stateless는 토큰 활성 상태 검증의 특성이다. 현재 사용자 조회·API 권한·상담방 소유권 등 업무 DB 검사는 별개다. 계정 삭제·정지의 즉시 차단을 주장하지 않으며, 민감 작업은 현재 계정 상태와 재인증을 별도로 확인한다.
@@ -40,13 +42,13 @@
 2. **API 계약:** Refresh 응답 필드 제거, 만료 Access 없이 Refresh로 재발급, 쿠키 발급·삭제 속성 통일. 프론트 재발급·로그아웃 흐름과 함께 변경한다.
 3. **Redis Refresh 저장소:** `auth` 도메인에 토큰 해시·session/family·사용자별 인덱스와 TTL을 구현한다. 원문 토큰을 Redis·로그에 저장하지 않는다. 운영 영속화·메모리·복구 정책을 확정한다.
 4. **회전·폐기:** Redis Lua 등으로 검증·기존 토큰 소비·새 해시 등록을 원자적으로 처리한다. 로그아웃과 회전이 경합해도 폐기 family를 되살리지 않는다. 재사용 탐지·기기별/전체 Refresh 폐기·응답 유실 처리를 구현한다.
-5. **Access 전환:** 구현된 운영 JWT·쿠키 300초 정책을 유지하며 Redis Access 등록·인증·폐기 경로를 제거한다. local 15시간은 개발 편의 예외다. 일반 로그인·가입·OAuth·재발급을 함께 전환하고 issuer/audience를 검증한다. 구현된 `sub=User.id`와 위 claim 보안 준수사항을 유지한다. Refresh 저장·회전 검증 전에 Access만 stateless로 바꾸지 않는다.
+5. **Access 전환:** 구현된 운영 JWT·쿠키 300초 정책을 유지하며 Redis Access 등록·인증·폐기 경로를 제거한다. local도 5분으로 통일했다. 일반 로그인·가입·OAuth·재발급을 함께 전환하고 issuer/audience를 검증한다. 구현된 `sub=User.id`와 위 claim 보안 준수사항을 유지한다. Refresh 저장·회전 검증 전에 Access만 stateless로 바꾸지 않는다.
 
 ## 구현 전 결정할 정책
 
 | 항목 | 초기 제안·결정 조건 |
 | --- | --- |
-| 수명·형식 | 운영 Access 5분, local 개발 15시간, test 5분. 구현된 Refresh는 256비트 난수와 조회 선택자를 사용하고 family 절대 수명은 7일이다. 회전·쿠키 갱신으로 연장하지 않는다. |
+| 수명·형식 | 모든 프로필 Access 5분. 구현된 Refresh는 256비트 난수와 조회 선택자를 사용하고 family 절대 수명은 7일이다. 회전·쿠키 갱신으로 연장하지 않는다. |
 | Access 전달 | 쿠키 또는 메모리+Authorization 중 프론트 계약으로 선택. 양쪽 허용 시 충돌 처리도 정의한다. |
 | 쿠키·CSRF | 운영 사이트 관계에 맞춘 SameSite, Secure, Path와 CSRF 토큰·Origin 검사. 로컬 HTTP 예외는 local에 한정한다. |
 | 다중 탭·응답 유실 | 프론트 재발급 요청을 합친다. 서버는 한 Refresh의 한 번 소비를 보장한다. 초기에는 소비 후 응답 유실 시 재로그인을 요구하며, 유예 처리는 탈취 토큰 재사용 위험과 함께 별도 결정한다. |
@@ -68,11 +70,11 @@
 ## 완료 조건
 
 - [x] 모든 Access 발급 경로가 `sub=User.id`를 사용하고 이메일·provider·불필요한 개인정보 claim을 포함하지 않는다. 구형 subject 거부와 ID 기반 principal·권한·소유권 검증을 통과한다.
-- [ ] 교차 토큰 사용·잘못된 서명/용도/issuer/audience·만료·삭제 사용자를 거절한다.
+- [x] 교차 토큰 사용·잘못된 서명/용도/issuer/audience·만료·삭제 사용자를 거절한다.
 - [x] 만료 Access로 재발급할 수 있고 동시 Refresh 소비는 한 번만 성공한다. 재사용 시 해당 family를 폐기한다.
-- [ ] 로그아웃·비밀번호 변경 후 Refresh는 거절되고 기존 Access는 만료 전 허용·300초 경계부터 거절된다. 탈퇴 사용자 접근은 업무 계정 조회 정책으로 별도 검증한다. 회전/폐기 경합과 계정 변경의 부분 실패를 재현한다.
-- [ ] Redis 장애에서도 일반 Access 검증은 Redis를 호출하지 않는다. 로그인·재발급·폐기는 장애 시 503이다. 키 유실 시 Refresh는 거절하며 자동 부활하지 않는다. 실제 Redis TTL·동시 소비·재사용·장애 복구를 별도로 검증한다.
-- [ ] Redis Access 등록·조회·폐기 의존성을 제거하고 JWT·쿠키 300초 일치, 이전 15시간 Access 및 미등록 Refresh 거절을 검증한다.
+- [x] 로그아웃·비밀번호 변경 후 Refresh는 거절되고 기존 Access는 만료 전 허용·300초 경계부터 거절된다. 탈퇴 사용자 접근은 업무 계정 조회 정책으로 별도 검증한다. 회전/폐기 경합과 계정 변경의 부분 실패를 재현한다.
+- [x] Redis 장애에서도 일반 Access 검증은 Redis를 호출하지 않는다. 로그인·재발급·폐기는 장애 시 503이다. 키 유실 시 Refresh는 거절하며 자동 부활하지 않는다. 실제 Redis TTL·동시 소비·재사용·장애 복구를 별도로 검증한다.
+- [x] Redis Access 등록·조회·폐기 의존성을 제거하고 JWT·쿠키 300초 일치, 이전 15시간 Access 및 미등록 Refresh 거절을 검증한다.
 - [ ] 쿠키·CORS·CSRF와 일반 로그인/OAuth를 실제 브라우저에서 검증한다. 외부 저장소 없는 단위 테스트도 유지한다.
 - [ ] API 변경·전환 재로그인·키 교체·복구 절차를 문서화한다. 상담방 소유권 검사는 인증과 별도로 유지한다.
 
@@ -139,4 +141,4 @@ Swagger Authorize에는 AccessCookie만 표시하며 Bearer, RefreshCookie, Csrf
 
 가입·일반 로그인·OAuth·재발급을 `AuthTokenService`로 통합했다. Refresh 해시·세대 nonce·family 절대 7일 TTL, Lua 단일 소비/교체·재사용/로그아웃 경합·전체 폐기, HttpOnly 쿠키 전용과 401/503 오류 계약을 구현했다. 계정 행 잠금으로 비밀번호 변경·탈퇴와 발급을 직렬화하며 Redis 폐기 실패는 MySQL 변경을 롤백한다. 저장소 간 단일 트랜잭션이나 폐기 상태 자동 복원은 없다.
 
-구현·키 설계·부분 실패·엄격한 재시도 정책·실제 Redis 검증은 [Refresh 회전 문서](../refresh-rotation.md)를 따른다. 일반 테스트 156개, 실제 Redis 11개, MySQL 2개와 bootJar를 검증했다. Access Redis 등록 의존성 제거와 issuer/audience, 운영 영속화/복구·호출 제한·세션 관리 확장·실제 브라우저 검증은 후속 범위다.
+구현·키 설계·부분 실패·엄격한 재시도 정책·실제 Redis 검증은 [Refresh 회전 문서](../refresh-rotation.md)를 따른다. 일반 테스트 148개, 실제 Redis 11개, MySQL 2개와 bootJar를 검증했다. Access Redis 등록 의존성 제거와 issuer/audience는 완료했다. 운영 영속화/복구·호출 제한·세션 관리 확장·실제 브라우저 검증은 후속 범위다.

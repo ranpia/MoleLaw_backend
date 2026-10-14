@@ -1,5 +1,7 @@
 # 문서 안내
 
+- [Access stateless 구현](stateless-access.md): 버전 3·5분 수명·Redis 장애와 폐기 계약
+
 현재 코드와 실행 방법은 [프로젝트 README](../README.md), 로컬 컨테이너와 모델 비교 환경은 [Docker 가이드](../docker/README.md)를 따른다. 아래 계획 문서는 구현 완료를 의미하지 않는다.
 
 | 목적 | 문서 |

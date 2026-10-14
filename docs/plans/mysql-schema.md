@@ -1,5 +1,7 @@
 # MySQL 스키마·마이그레이션 계획
 
+> 최신 상태(2026-10-14): Access는 모든 프로필에서 5분 stateless JWT이며 Redis 등록·조회·폐기를 제거했다. issuer/audience·버전 3을 검증하고 Refresh 회전은 유지한다. 이전 단계의 Redis Access·local 15시간·미구현 표기는 이력으로 읽는다. 현재 계약은 [Access stateless 구현](../stateless-access.md)을 따른다.
+
 기준: `dev`, `ec9d87b` (2026-10-13). 코드 검토에 기반한 계획이며 실제 DB 스키마·데이터는 이번에 조회하거나 변경하지 않았다. 다음 구현도 `dev`에서 진행한다.
 
 구현 갱신: 같은 `dev` 작업에서 Flyway core/MySQL 모듈·V1 초기 스키마·local validate·User IDENTITY와 독립 MySQL 통합 테스트를 추가했다. 실제 개발 DB·볼륨은 변경하지 않았으며 아래 미구현 테이블은 계획이다.
@@ -14,9 +16,9 @@
 | 사용자·채팅 | `user`, `chat_room`, `message` JPA | 실제 제약·ID 생성·정렬·조회 인덱스 확인 |
 | 법령 | `law`, `law_chunk`, `law_embedding` | MST별 버전·해시·ETL 상태 미관리, 기존 벡터 경로 유지 중 |
 | 원문 | `legal_source` 불변 JSON·해시·UUID, V1 생성·실제 MySQL 저장 검증 | 법령 ETL·상담방 근거 연결 |
-| 인증 | Redis Access 등록·TTL·검증과 Refresh 해시·원자 회전·family/전체 폐기 | Access stateless·issuer/audience 및 운영 Redis 복구 |
+| 인증 | 5분 stateless Access·issuer/audience와 Refresh 해시·원자 회전·family/전체 폐기 | 운영 Redis 복구 |
 
-도메인 패키지 이동은 테이블 재생성 사유가 아니다. 목표에서 MySQL은 원본·업무·작업 상태, Qdrant는 재생성 가능한 검색 벡터, Redis는 Refresh 해시·family·회전·폐기 상태를 관리한다. Access는 5분 stateless JWT다. 현재 Redis Access 등록 구현은 전환 대상이다.
+도메인 패키지 이동은 테이블 재생성 사유가 아니다. 목표에서 MySQL은 원본·업무·작업 상태, Qdrant는 재생성 가능한 검색 벡터, Redis는 Refresh 해시·family·회전·폐기 상태를 관리한다. Access는 5분 stateless JWT다. Redis Access 등록 구현은 제거했다.
 
 ## 1. 빈 DB용 초기 스키마 확정
 

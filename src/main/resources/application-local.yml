@@ -8,8 +8,8 @@ server:
     enabled: false
 
 jwt:
-  # Development convenience only; never activate local in production.
-  access-ttl: 15h
+  # Keep Access lifetime aligned with production; never activate local in production.
+  access-ttl: 5m
 
 frontend:
   uri: ${FRONTENDURI:http://localhost:3000}

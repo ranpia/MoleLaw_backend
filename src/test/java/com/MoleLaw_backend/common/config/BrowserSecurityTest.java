@@ -19,18 +19,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestAccessTokenStoreConfig.class)
+@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestRefreshTokenStoreConfig.class)
 @ActiveProfiles("test")
 class BrowserSecurityTest {
     @MockitoBean ChatModel chatModel;
     @MockitoBean EmbeddingModel embeddingModel;
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;
-    @Autowired com.MoleLaw_backend.auth.security.AccessTokenStore accessTokenStore;
     @Autowired com.MoleLaw_backend.auth.security.JwtUtil jwtUtil;
 
     @Test
-    void logoutRevokesBothPresentedAccessTokensAndThePresentedRefreshFamily() throws Exception {
+    void logoutRevokesRefreshWhilePresentedAccessRemainsValid() throws Exception {
         var bootstrap = mvc.perform(get("/api/auth/csrf")).andReturn().getResponse();
         Cookie csrfCookie = bootstrap.getCookie("XSRF-TOKEN");
         String csrf = mapper.readTree(bootstrap.getContentAsString()).get("token").asText();
@@ -54,29 +53,12 @@ class BrowserSecurityTest {
         mvc.perform(post("/api/auth/logout").cookie(csrfCookie, firstAccess, refresh)
                         .header("X-XSRF-TOKEN", csrf).header("Authorization", "Bearer " + secondAccess.getValue()))
                 .andExpect(status().isOk()).andExpect(jsonPath("success").value(true));
-        mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/auth/me").cookie(secondAccess)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isOk());
+        mvc.perform(get("/api/auth/me").cookie(secondAccess)).andExpect(status().isOk());
         mvc.perform(post("/api/auth/reissue").cookie(csrfCookie, refresh, firstAccess)
                         .header("X-XSRF-TOKEN", csrf))
                 .andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void removingRedisRegistrationMakesAValidSignedAccessUnauthorized() throws Exception {
-        var bootstrap = mvc.perform(get("/api/auth/csrf")).andReturn().getResponse();
-        String csrf = mapper.readTree(bootstrap.getContentAsString()).get("token").asText();
-        var signup = mvc.perform(post("/api/auth/signup").cookie(bootstrap.getCookie("XSRF-TOKEN"))
-                        .header("X-XSRF-TOKEN", csrf).contentType("application/json")
-                        .content("{\"email\":\"redis-missing@example.com\",\"password\":\"Example-password-123!\",\"nickname\":\"redis-test\"}"))
-                .andExpect(status().isOk()).andReturn().getResponse();
-        Cookie access = signup.getCookie("accessToken");
-        mvc.perform(get("/api/auth/me").cookie(access)).andExpect(status().isOk());
-        String id = jwtUtil.getAccessTokenIdentity(access.getValue()).tokenId();
-        accessTokenStore.revoke(id);
-        mvc.perform(get("/api/auth/me").cookie(access)).andExpect(status().isUnauthorized());
-        assertTrue(jwtUtil.validateAccessToken(access.getValue()));
-        assertFalse(accessTokenStore.isActive(id, jwtUtil.getUserIdFromAccessToken(access.getValue()).toString()));
+        mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isOk());
     }
 
     @Test
