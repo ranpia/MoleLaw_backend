@@ -26,13 +26,10 @@ class JwtUtilTest {
     @Test
     void acceptsOnlyTheIntendedTokenPurpose() {
         String access = jwtUtil.generateAccessToken(1L);
-        String refresh = jwtUtil.generateRefreshToken(1L);
+        String refresh = TestJwtTokens.legacyRefresh(1L);
         assertThat(jwtUtil.validateAccessToken(access)).isTrue();
-        assertThat(jwtUtil.validateRefreshToken(refresh)).isTrue();
         assertThat(jwtUtil.validateAccessToken(refresh)).isFalse();
-        assertThat(jwtUtil.validateRefreshToken(access)).isFalse();
         assertThat(jwtUtil.getUserIdFromAccessToken(access)).isEqualTo(1L);
-        assertThat(jwtUtil.getUserIdFromRefreshToken(refresh)).isEqualTo(1L);
     }
 
     @Test
@@ -42,7 +39,6 @@ class JwtUtilTest {
         assertThat(jwtUtil.validateAccessToken(signedToken("access", SECRET, -60000))).isFalse();
         assertThat(jwtUtil.validateAccessToken("malformed")).isFalse();
         assertThat(jwtUtil.validateAccessToken(null)).isFalse();
-        assertThat(jwtUtil.validateRefreshToken("")).isFalse();
     }
 
     @Test
@@ -66,20 +62,17 @@ class JwtUtilTest {
                     "1.0", "1e2", "9223372036854775808", "", "１"}) {
                 String token = subjectToken(subject, type, 2);
                 assertThat(jwtUtil.validateAccessToken(token)).isFalse();
-                assertThat(jwtUtil.validateRefreshToken(token)).isFalse();
             }
             for (Integer version : new Integer[]{null, 1, 3}) {
                 String token = subjectToken("1", type, version);
                 assertThat(jwtUtil.validateAccessToken(token)).isFalse();
-                assertThat(jwtUtil.validateRefreshToken(token)).isFalse();
             }
         }
     }
 
     @Test
     void includesOnlyMinimalClaimsAndAcceptsTheLargestDatabaseId() {
-        for (String token : new String[]{jwtUtil.generateAccessToken(Long.MAX_VALUE),
-                jwtUtil.generateRefreshToken(Long.MAX_VALUE)}) {
+        for (String token : new String[]{jwtUtil.generateAccessToken(Long.MAX_VALUE)}) {
             var claims = Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)))
                     .build().parseClaimsJws(token).getBody();
             assertThat(claims.getSubject()).isEqualTo(Long.toString(Long.MAX_VALUE));
@@ -91,8 +84,6 @@ class JwtUtilTest {
     void refusesIssuanceWithoutAPersistedPositiveUserId() {
         for (Long id : new Long[]{null, 0L, -1L}) {
             org.assertj.core.api.Assertions.assertThatThrownBy(() -> jwtUtil.generateAccessToken(id))
-                    .isInstanceOf(IllegalArgumentException.class);
-            org.assertj.core.api.Assertions.assertThatThrownBy(() -> jwtUtil.generateRefreshToken(id))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }

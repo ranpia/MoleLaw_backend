@@ -28,7 +28,7 @@ class JwtAuthenticationFilterTest {
     void refreshBearerNeverAuthenticatesOrLoadsAUser() throws Exception {
         jwtUtil.init();
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/auth/me");
-        request.addHeader("Authorization", "Bearer " + jwtUtil.generateRefreshToken(1L));
+        request.addHeader("Authorization", "Bearer " + TestJwtTokens.legacyRefresh(1L));
         FilterChain chain = mock(FilterChain.class);
         MockHttpServletResponse response = new MockHttpServletResponse();
         new JwtAuthenticationFilter(jwtUtil, users, accessTokens).doFilter(request, response, chain);

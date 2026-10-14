@@ -2,9 +2,7 @@ package com.MoleLaw_backend.auth.oauth;
 
 import com.MoleLaw_backend.user.entity.User;
 import com.MoleLaw_backend.user.repository.UserRepository;
-import com.MoleLaw_backend.auth.security.CookieUtil;
-import com.MoleLaw_backend.auth.security.JwtUtil;
-import com.MoleLaw_backend.auth.security.AccessTokenService;
+import com.MoleLaw_backend.auth.security.AuthTokenService;
 import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import jakarta.servlet.ServletException;
@@ -24,16 +22,15 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final JwtUtil jwtUtil;
-    private final CookieUtil cookieUtil;
     private final UserRepository userRepository;
-    private final AccessTokenService accessTokenService;
+    private final AuthTokenService authTokens;
 
     @Value("${frontend.uri}")
     private String frontenduri;
 
 
     @Override
+    @jakarta.transaction.Transactional
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication)
@@ -51,7 +48,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         }
 
         // ✅ 유저가 존재하지 않으면 새로 저장
-        User user = userRepository.findByEmailAndProvider(email, provider)
+        User user = userRepository.findByCredentialsForUpdate(email, provider)
                 .orElseGet(() -> {
                     User newUser = User.builder()
                             .email(email)
@@ -61,25 +58,18 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 });
 
         // ✅ JWT 발급
-        String accessToken;
         try {
-            accessToken = accessTokenService.issue(user.getId());
+            authTokens.issue(user.getId(), response);
         } catch (MolelawException e) {
-            if (e.getErrorCode() != ErrorCode.AUTH_STORE_UNAVAILABLE) {
+            if (e.getErrorCode() != ErrorCode.AUTH_STORE_UNAVAILABLE
+                    && e.getErrorCode() != ErrorCode.INVALID_REFRESH_TOKEN) {
                 throw e;
             }
-            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.setStatus(e.getErrorCode().getStatus());
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"AUTH_STORE_UNAVAILABLE\"}");
+            response.getWriter().write("{\"error\":\"" + e.getErrorCode().name() + "\"}");
             return;
         }
-        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
-
-
-        // ✅ 쿠키 저장
-        cookieUtil.addJwtCookie(response, "accessToken", accessToken);
-        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken);
-
         // ✅ 리다이렉트
         response.sendRedirect(frontenduri);
     }

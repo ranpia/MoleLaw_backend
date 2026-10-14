@@ -30,7 +30,7 @@ class BrowserSecurityTest {
     @Autowired com.MoleLaw_backend.auth.security.JwtUtil jwtUtil;
 
     @Test
-    void logoutRevokesBothPresentedAccessTokensAndCopiedRefreshRemainsASeparateFollowup() throws Exception {
+    void logoutRevokesBothPresentedAccessTokensAndThePresentedRefreshFamily() throws Exception {
         var bootstrap = mvc.perform(get("/api/auth/csrf")).andReturn().getResponse();
         Cookie csrfCookie = bootstrap.getCookie("XSRF-TOKEN");
         String csrf = mapper.readTree(bootstrap.getContentAsString()).get("token").asText();
@@ -51,15 +51,14 @@ class BrowserSecurityTest {
         mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isOk());
         mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + secondAccess.getValue()))
                 .andExpect(status().isOk());
-        mvc.perform(post("/api/auth/logout").cookie(csrfCookie, firstAccess)
+        mvc.perform(post("/api/auth/logout").cookie(csrfCookie, firstAccess, refresh)
                         .header("X-XSRF-TOKEN", csrf).header("Authorization", "Bearer " + secondAccess.getValue()))
                 .andExpect(status().isOk()).andExpect(jsonPath("success").value(true));
         mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/auth/me").cookie(secondAccess)).andExpect(status().isUnauthorized());
-        var reissue = mvc.perform(post("/api/auth/reissue").cookie(csrfCookie, refresh, firstAccess)
+        mvc.perform(post("/api/auth/reissue").cookie(csrfCookie, refresh, firstAccess)
                         .header("X-XSRF-TOKEN", csrf))
-                .andExpect(status().isOk()).andReturn().getResponse();
-        mvc.perform(get("/api/auth/me").cookie(reissue.getCookie("accessToken"))).andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
         mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isUnauthorized());
     }
 
