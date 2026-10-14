@@ -1,6 +1,10 @@
 package com.MoleLaw_backend.auth.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,8 +32,8 @@ public class JwtUtil {
         }
         this.secretKeyRaw = secretKeyRaw;
         if (accessTtl == null || accessTtl.isNegative() || accessTtl.isZero()
-                || accessTtl.getNano() != 0) {
-            throw new IllegalArgumentException("Access token TTL must be positive whole seconds");
+                || accessTtl.getNano() != 0 || accessTtl.compareTo(Duration.ofMinutes(5)) > 0) {
+            throw new IllegalArgumentException("Access token TTL must be positive whole seconds up to 300 seconds");
         }
         this.accessTtl = accessTtl;
     }
@@ -49,7 +53,8 @@ public class JwtUtil {
         }
         Date now = new Date();
         return Jwts.builder().setSubject(userId.toString()).claim(TOKEN_TYPE, type)
-                .claim("tokenVersion", 2)
+                .claim("tokenVersion", 3)
+                .setIssuer("molelaw-auth").setAudience("molelaw-api")
                 .setId(UUID.randomUUID().toString())
                 .setIssuedAt(now).setExpiration(new Date(now.getTime() + lifetime))
                 .signWith(key, SignatureAlgorithm.HS256).compact();
@@ -70,12 +75,19 @@ public class JwtUtil {
 
     private Claims parseClaims(String token, String type) {
         Jws<Claims> parsed = Jwts.parserBuilder().setSigningKey(key)
-                .require(TOKEN_TYPE, type).require("tokenVersion", 2).build().parseClaimsJws(token);
+                .requireIssuer("molelaw-auth").requireAudience("molelaw-api")
+                .require(TOKEN_TYPE, type).require("tokenVersion", 3).build().parseClaimsJws(token);
         Claims claims = parsed.getBody();
         if (!SignatureAlgorithm.HS256.getValue().equals(parsed.getHeader().getAlgorithm())
                 || claims.getExpiration() == null || claims.getIssuedAt() == null
                 || claims.getId() == null || claims.getId().isBlank()) {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+        Instant issued = claims.getIssuedAt().toInstant();
+        Instant expires = claims.getExpiration().toInstant();
+        if (issued.isAfter(Instant.now()) || !expires.isAfter(issued)
+                || Duration.between(issued, expires).compareTo(accessTtl) > 0) {
+            throw new IllegalArgumentException("Invalid Access lifetime");
         }
         parseUserId(claims.getSubject());
         return claims;

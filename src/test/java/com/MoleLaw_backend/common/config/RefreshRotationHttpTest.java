@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestAccessTokenStoreConfig.class)
+@Import(TestRefreshTokenStoreConfig.class)
 class RefreshRotationHttpTest {
     @MockitoBean ChatModel chatModel;
     @MockitoBean EmbeddingModel embeddingModel;

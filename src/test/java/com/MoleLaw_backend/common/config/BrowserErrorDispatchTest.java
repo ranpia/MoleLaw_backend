@@ -19,7 +19,7 @@ import java.net.http.HttpResponse;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestAccessTokenStoreConfig.class)
+@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestRefreshTokenStoreConfig.class)
 @ActiveProfiles("test")
 class BrowserErrorDispatchTest {
     @MockitoBean ChatModel chatModel;

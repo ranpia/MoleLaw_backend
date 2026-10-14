@@ -23,10 +23,9 @@ class RefreshTokenValidationTest {
     private final UserRepository users = mock(UserRepository.class);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final MockHttpServletResponse response = new MockHttpServletResponse();
-    private final AccessTokenStore store = mock(AccessTokenStore.class);
     private final RefreshTokenService refresh = new RefreshTokenService(new InMemoryRefreshTokenStore());
     private final UserService service = new UserService(users, mock(PasswordEncoder.class), cookies,
-            new AuthTokenService(new AccessTokenService(jwt, store), refresh, cookies, jwt), refresh);
+            new AuthTokenService(new AccessTokenService(jwt), refresh, cookies), refresh);
 
     @BeforeEach
     void setUp() {
@@ -58,7 +57,6 @@ class RefreshTokenValidationTest {
                 .thenReturn(Optional.of(User.builder().id(1L).email("u@example.com").provider("local").build()));
         assertThat(jwt.validateAccessToken(service.reissue(request, response).getAccessToken())).isTrue();
         verify(cookies).addJwtCookie(eq(response), eq("accessToken"), anyString());
-        verify(store).register(anyString(), eq("1"), any());
         verify(cookies).addRefreshCookie(eq(response), anyString(), any());
     }
 

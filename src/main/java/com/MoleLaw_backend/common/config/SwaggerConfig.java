@@ -36,8 +36,8 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("MoleLaw API")
                         .description("MoleLaw 백엔드 API. 보호된 API는 Bearer Access JWT 또는 accessToken 쿠키로 인증하며 Bearer가 우선합니다. "
-                                + "Access는 JWT 검증과 Redis jti 등록 확인을 모두 통과해야 합니다. 미등록·폐기 Access는 401, Redis 장애는 503입니다. "
-                                + "Access subject는 User.id 문자열이며 tokenVersion=2입니다. Refresh는 난수 기반 HttpOnly 쿠키로만 전달하며 매 재발급마다 회전합니다. 이전 JWT Refresh는 거절하므로 재로그인해야 합니다. "
+                                + "Access는 5분 stateless JWT로 Redis 조회 없이 검증합니다. 로그아웃·비밀번호 변경 후에도 기존 Access는 만료까지 유효합니다. Refresh 저장·회전·폐기의 Redis 장애는 503입니다. "
+                                + "Access subject는 User.id 문자열이며 tokenVersion=3, issuer=molelaw-auth, audience=molelaw-api입니다. Refresh는 난수 기반 HttpOnly 쿠키로만 전달하며 매 재발급마다 회전합니다. 이전 JWT Refresh는 거절하므로 재로그인해야 합니다. "
                                 + "POST/PUT/PATCH/DELETE는 로그인·가입을 포함하여 GET /api/auth/csrf에서 받은 토큰을 X-XSRF-TOKEN 헤더로 보내야 합니다. "
                                 + "같은 서버의 Swagger UI에서 GET /api/auth/csrf를 한 번 실행하면 XSRF-TOKEN 쿠키를 읽어 이후 요청에 X-XSRF-TOKEN 헤더를 자동으로 추가합니다. 직접 토큰을 입력할 필요가 없습니다.")
                         .version("v1.0"))
@@ -77,14 +77,15 @@ public class SwaggerConfig {
                 }
             }
             if (!publicEndpoint) {
-                operation.getResponses().addApiResponse("401", new ApiResponse().description("Access 인증 누락·만료·잘못된 용도 또는 Redis 등록 누락·폐기")
+                operation.getResponses().addApiResponse("401", new ApiResponse().description("Access 인증 누락·만료·서명/용도/버전/issuer/audience 오류 또는 사용자 없음")
                         .content(new Content().addMediaType("application/json", new MediaType()
                                 .schema(new ObjectSchema().addProperty("error", new StringSchema()))
                                 .example(java.util.Map.of("error", "Unauthorized")))));
             }
-            if (!handler.getBeanType().getSimpleName().equals("CsrfController")) {
+            if (handler.getBeanType().getSimpleName().equals("UserController")
+                    && java.util.Set.of("signup", "login", "reissue", "logout", "changePassword", "deleteUser").contains(method)) {
                 operation.getResponses().addApiResponse("503", new ApiResponse()
-                        .description("Redis 인증 저장소 조회·등록·폐기 실패. JWT만으로 우회하지 않습니다. 자동 재발급을 반복하지 말고 제한된 횟수로 재시도합니다.")
+                        .description("Redis Refresh 저장·회전·폐기 실패. 기존 Access 검증은 Redis에 의존하지 않습니다. 사용한 Refresh로 자동 재시도하지 않습니다.")
                         .content(new Content().addMediaType("application/json", new MediaType()
                                 .schema(new io.swagger.v3.oas.models.media.Schema<>().$ref("#/components/schemas/BusinessErrorResponse"))
                                 .example(java.util.Map.of("success", false, "error", java.util.Map.of(

@@ -1,8 +1,6 @@
 package com.MoleLaw_backend.auth.security;
 
 import io.jsonwebtoken.JwtException;
-import com.MoleLaw_backend.common.exception.MolelawException;
-import com.MoleLaw_backend.common.exception.ErrorCode;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -24,7 +22,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
-    private final AccessTokenService accessTokenService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -55,26 +52,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && jwtUtil.validateAccessToken(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                if (accessTokenService.isActive(token)) {
-                    String userId = jwtUtil.getUserIdFromAccessToken(token).toString();
+                String userId = jwtUtil.getUserIdFromAccessToken(token).toString();
 
-                    CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(userId);
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(userId);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            } catch (MolelawException e) {
-                if (e.getErrorCode() != ErrorCode.AUTH_STORE_UNAVAILABLE) {
-                    throw e;
-                }
-                SecurityContextHolder.clearContext();
-                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"success\":false,\"error\":{\"status\":503,\"code\":\"AUTH_STORE_UNAVAILABLE\",\"message\":\"인증 저장소를 사용할 수 없습니다. 잠시 후 다시 시도하세요.\"}}");
-                return;
             } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
                 SecurityContextHolder.clearContext();
             }
