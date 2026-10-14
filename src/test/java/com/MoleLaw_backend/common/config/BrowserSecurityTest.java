@@ -77,7 +77,7 @@ class BrowserSecurityTest {
         accessTokenStore.revoke(id);
         mvc.perform(get("/api/auth/me").cookie(access)).andExpect(status().isUnauthorized());
         assertTrue(jwtUtil.validateAccessToken(access.getValue()));
-        assertFalse(accessTokenStore.isActive(id, "redis-missing@example.com:local"));
+        assertFalse(accessTokenStore.isActive(id, jwtUtil.getUserIdFromAccessToken(access.getValue()).toString()));
     }
 
     @Test
