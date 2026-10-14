@@ -12,7 +12,7 @@
 - [ ] 로그인·OAuth·로그아웃·브라우저 재실행 후 토큰과 쿠키 상태를 확인하고 필요한 경우 CSRF를 다시 조회한다. Access 쿠키는 강력 새로고침으로 삭제되지 않는다는 점을 구분한다.
 - [ ] 모든 변경 요청을 무조건 두 번 보내지 않는다. CSRF 필터에서 거절된 403은 작업이 실행되지 않지만, 성공 응답 유실·타임아웃 후 재시도는 중복 실행될 수 있다. CSRF 오류와 권한·Origin 오류를 구분하고 자동 재시도에는 상한을 둔다.
 
-상태: 2026-10-13 목표를 **5분 stateless Access JWT + Redis Refresh**로 변경했다. Access 수명은 기본/운영·test 5분, local 개발 편의 15시간으로 구현했다. JWT와 쿠키는 공통 `jwt.access-ttl`을 사용한다. 현재 코드는 여전히 Access Redis 등록·매 요청 확인·전달된 Access 폐기를 사용하며 stateless 전환·Refresh 서버 저장·회전은 미구현이다. 전체 순서는 [재구성 요약](../backend-rebuild-plan.md), 이전 위험 분석은 [JWT 상세 검토](../jwt-security-review.md)를 따른다.
+상태: 2026-10-14 Redis Refresh 해시·원자 회전·재사용 탐지·family/사용자 전체 폐기와 JSON 제거를 구현했다. Access는 기본/운영·test 5분, local 개발 15시간이며 아직 Redis 등록·매 요청 확인 방식을 사용한다. 목표 **5분 stateless Access JWT + Redis Refresh** 중 Access stateless·issuer/audience 전환은 후속 작업이다. 현재 구현·프론트 전환·실제 Redis 검증은 [Refresh 회전 구현](../refresh-rotation.md)을 따른다. 이전 위험 분석은 [JWT 상세 검토](../jwt-security-review.md)를 참고한다.
 
 ## 범위와 확정 사항
 
@@ -29,7 +29,7 @@
 
 - Access JWT의 `sub`는 MySQL `User.id`를 문자열로 직렬화한 불변 사용자 고유키를 사용한다. 이메일·닉네임·OAuth provider 조합을 사용자 식별자로 넣지 않는다. `jti`는 토큰마다 달라지는 식별자로 사용자 고유키와 구분한다.
 - 이메일은 다른 claim에도 넣지 않는다. 닉네임·프로필·상담 내용·상담방 목록·비밀값을 포함하지 않고 인증에 필요한 최소 claim만 발급한다. 사용자 고유키도 외부에 노출 가능한 식별자이며 비밀값이나 접근 권한 증명 자체로 취급하지 않는다.
-- 2026-10-14 `JwtUtil`의 Access와 현재 JWT Refresh를 `sub=User.id`, `tokenVersion=2`로 전환했다. 가입·일반 로그인·OAuth·재발급의 발급 경로와 principal·사용자 조회를 함께 변경했다. 이메일은 로그인 입력과 사용자 DB에 유지하며 claim에는 넣지 않는다.
+- 2026-10-14 Access를 `sub=User.id`, `tokenVersion=2`로 전환하고 발급·principal·사용자 조회를 ID로 통일했다. 이후 JWT Refresh는 ID/family 선택자와 난수 토큰으로 대체했다. 이메일은 로그인 입력과 사용자 DB에 유지하며 토큰에는 넣지 않는다.
 - 서명·용도·issuer/audience·만료 검증 후 `sub`의 형식·범위를 검사한다. 사용자 고유키만 일치한다고 권한을 부여하지 않고 API 권한·상담방 소유권을 별도로 검사한다. 사용자 조회가 필요한 경로는 이메일 분해 대신 ID로 조회한다.
 - 이전 `email:provider` Access/Refresh와 버전 없는 토큰은 거절하고 재로그인을 요구한다. 새 형식에서 이메일 subject를 자동 변환해 허용하지 않는다. 이메일 변경 후에도 사용자 고유키는 유지된다.
 - 완료 검증: 모든 발급 경로의 `sub=User.id`, 이메일/provider 개인정보 claim 부재, 잘못된 ID·구형 subject 거부, 정상 사용자 조회·권한·소유권 회귀를 검사한다. 토큰 원문은 테스트 실패 메시지나 로그에 출력하지 않는다. local/test도 동일한 식별자 정책을 적용한다.
@@ -46,7 +46,7 @@
 
 | 항목 | 초기 제안·결정 조건 |
 | --- | --- |
-| 수명·형식 | 운영 Access 5분, local 개발 15시간, test 5분. Refresh는 고엔트로피 난수, family 절대 수명 7일을 초기 제안으로 두며 연장 허용 여부는 구현 전 결정한다. 회전으로 절대 수명이 무한 연장되지 않아야 한다. |
+| 수명·형식 | 운영 Access 5분, local 개발 15시간, test 5분. 구현된 Refresh는 256비트 난수와 조회 선택자를 사용하고 family 절대 수명은 7일이다. 회전·쿠키 갱신으로 연장하지 않는다. |
 | Access 전달 | 쿠키 또는 메모리+Authorization 중 프론트 계약으로 선택. 양쪽 허용 시 충돌 처리도 정의한다. |
 | 쿠키·CSRF | 운영 사이트 관계에 맞춘 SameSite, Secure, Path와 CSRF 토큰·Origin 검사. 로컬 HTTP 예외는 local에 한정한다. |
 | 다중 탭·응답 유실 | 프론트 재발급 요청을 합친다. 서버는 한 Refresh의 한 번 소비를 보장한다. 초기에는 소비 후 응답 유실 시 재로그인을 요구하며, 유예 처리는 탈취 토큰 재사용 위험과 함께 별도 결정한다. |
@@ -69,7 +69,7 @@
 
 - [x] 모든 Access 발급 경로가 `sub=User.id`를 사용하고 이메일·provider·불필요한 개인정보 claim을 포함하지 않는다. 구형 subject 거부와 ID 기반 principal·권한·소유권 검증을 통과한다.
 - [ ] 교차 토큰 사용·잘못된 서명/용도/issuer/audience·만료·삭제 사용자를 거절한다.
-- [ ] 만료 Access로 재발급할 수 있고 동시 Refresh 소비는 한 번만 성공한다. 재사용 시 해당 family를 폐기한다.
+- [x] 만료 Access로 재발급할 수 있고 동시 Refresh 소비는 한 번만 성공한다. 재사용 시 해당 family를 폐기한다.
 - [ ] 로그아웃·비밀번호 변경 후 Refresh는 거절되고 기존 Access는 만료 전 허용·300초 경계부터 거절된다. 탈퇴 사용자 접근은 업무 계정 조회 정책으로 별도 검증한다. 회전/폐기 경합과 계정 변경의 부분 실패를 재현한다.
 - [ ] Redis 장애에서도 일반 Access 검증은 Redis를 호출하지 않는다. 로그인·재발급·폐기는 장애 시 503이다. 키 유실 시 Refresh는 거절하며 자동 부활하지 않는다. 실제 Redis TTL·동시 소비·재사용·장애 복구를 별도로 검증한다.
 - [ ] Redis Access 등록·조회·폐기 의존성을 제거하고 JWT·쿠키 300초 일치, 이전 15시간 Access 및 미등록 Refresh 거절을 검증한다.
@@ -104,13 +104,15 @@ Swagger Authorize에는 AccessCookie만 표시하며 Bearer, RefreshCookie, Csrf
 
 운영 분리 규칙: 공통/main 배포 기본값은 Swagger UI·API docs·Swagger CSRF 자동 처리 비활성화다. 문서 경로는 local/test 외에서는 인증 여부와 무관하게 차단한다. local에서만 개발 편의 설정을 활성화하고 test는 문서 검증용 예외다. cookie.csrf-http-only는 기본 true이며 false는 local/test에서만 허용한다. 운영 프론트는 /api/auth/csrf JSON의 token을 메모리에서 읽어 헤더로 전송한다. 운영 배포에 local/test 프로필을 사용하지 않는다.
 
-## 현재 Redis Access 구현 — 전환 전 상태 (2026-10-13)
+## Redis Access·JWT Refresh 구현 이력 — 회전 구현 전 (2026-10-13)
+
+아래는 Refresh 회전 구현 전 이력이다. 현재 Refresh는 JWT가 아니며 마지막의 구현 안내와 [Refresh 회전 문서](../refresh-rotation.md)를 따른다. Access Redis 등록 방식은 아직 유지한다.
 
 - `AccessTokenService`를 통해 가입·로그인·OAuth·재발급의 Access를 발급한다. JWT에 고유 UUID `jti`를 넣고 `molelaw:auth:access:{jti}` → `User.id` 문자열을 남은 JWT 수명으로 등록한다. 2026-10-14부터 이메일/provider 대신 ID를 저장한다. `SET NX`와 만료를 한 명령으로 적용하며 JWT 원문·Refresh는 Redis에 저장하지 않는다. Access는 기본/운영·test 5분, local 15시간이며 Refresh 7일과 JSON 계약은 유지한다. TTL은 해당 JWT의 실제 만료에 맞춰진다.
 - 인증 필터는 서명·용도·만료·jti를 검증한 뒤 Redis의 사용자 일치를 확인하고 DB에서 사용자 존재를 확인한다. 키 누락·사용자 불일치·폐기는 401이다. 일반 요청에서 키를 자동 재등록하지 않는다. 탈퇴한 사용자는 DB 조회에서도 거절한다.
 - Redis 조회·등록·폐기 오류는 503 `AUTH_STORE_UNAVAILABLE`이다. 발급 등록 실패 시 JWT를 반환하지 않고 가입 DB 변경도 롤백한다. OAuth 등록 실패도 JWT 쿠키·리다이렉트 없이 503을 반환한다. JWT만으로 인증하는 대체 경로는 없다. CSRF 조회와 Refresh 재발급은 전달된 이전 Access의 Redis 조회를 생략하며 재발급의 새 Access 등록은 반드시 수행한다.
 - 로그아웃은 전달된 Bearer 및 Access 쿠키가 가리키는 jti를 폐기한 뒤 JWT 쿠키를 삭제한다. 다른 Access는 유지하고 Refresh 서버 폐기는 아직 없다. **복사된 Refresh로 로그아웃 후에도 새 Access를 받을 수 있으므로 전체 세션 로그아웃이 아니다.** Redis 폐기 실패는 503이며 성공/쿠키 삭제로 처리하지 않는다.
-- Redis 재시작·유실 후 기존 Access는 거절한다. 현재는 유효한 Refresh JWT와 DB 사용자 존재 확인으로 새 jti를 등록한다. 이는 전환 전 동작이며 목표 Redis Refresh 저장은 미구현이다.
+- 당시에는 Redis 재시작·유실 후 기존 Access를 거절하고 유효한 Refresh JWT와 DB 사용자 확인으로 새 jti를 등록했다. 이후 Redis Refresh 저장을 구현했으며 현재는 유실된 Refresh를 자동 복원하지 않는다.
 - 연결 변수는 `.env.example`의 `REDIS_HOST/PORT/PASSWORD/DATABASE/SSL_ENABLED`다. 로컬은 Compose의 비밀번호와 일치시킨다. Redis 연결·명령 제한 시간은 각각 2초다. 운영 Redis 연결·네트워크·비밀값 설정은 배포 전 별도 준비하며 운영에 local/test를 사용하지 않는다.
 - 일반 테스트는 `src/test`의 대체 저장소 또는 모킹을 사용해 Docker 없이 실행한다. `redisLiveTest`는 환경변수 또는 Git 제외 `docker/.env.compose`로 로컬 Redis에 접속하고 고유 테스트 키만 생성·삭제한다. 전체 테스트 95개·bootJar 및 실제 Redis TTL·사용자 일치·폐기 검증을 통과했다. Swagger UI의 수동 브라우저 확인은 수행하지 않았다.
 
@@ -124,9 +126,17 @@ Swagger Authorize에는 AccessCookie만 표시하며 Bearer, RefreshCookie, Csrf
 
 ## 사용자 기본키 식별자 전환·검증 (2026-10-14)
 
+이 절은 식별자 전환 당시의 검증 이력이다. 이후 JWT Refresh를 난수 Refresh로 대체했으며 아래 최신 구현 안내를 따른다.
+
 - `user.id`는 기존 V1의 BIGINT AUTO_INCREMENT PK와 JPA IDENTITY를 사용한다. 새 사용자 ID 컬럼을 만들거나 적용된 migration을 수정하지 않았다.
 - Access와 현재 JWT Refresh의 claim은 `sub`, `tokenType`, `tokenVersion=2`, `jti`, `iat`, `exp`다. subject는 양의 Long 범위의 정규 십진수 문자열이며 0·음수·앞자리 0·공백·소수·범위 초과·이메일 subject는 거절한다. 저장 전 ID가 없는 사용자로는 토큰을 발급하지 않는다.
 - 가입·로그인·기존/신규 OAuth·재발급은 DB PK로 발급한다. principal의 username도 ID 문자열이다. 내 정보·탈퇴·닉네임·비밀번호 변경은 인증된 ID로 조회한다. 이메일/provider는 로그인 입력과 DB 조회에만 사용하며 claim에는 넣지 않는다.
 - 버전 없는 기존 Access/Refresh는 재로그인이 필요하다. 구형 Refresh를 이메일로 조회해 새 형식으로 이관하는 경로는 없다. Redis Access 값은 사용자 ID 문자열이며 기존 키는 TTL까지 남아도 구형 JWT를 인증하지 않는다.
 - 전체 테스트 111개·실제 MySQL 통합 테스트 2개·bootJar 통과. 최소 claim·토큰 용도·구형 subject/버전·잘못된 ID 거절, 신규 OAuth PK, 이메일 변경 후 동일 ID 인증, 프로필 변경, 타인 상담방 접근/삭제 거절, 탈퇴 후 동일 이메일 재가입 시 이전 Access/Refresh 거절, OpenAPI 생성·보안 회귀를 검증했다. 실제 개발 DB 변경·운영 배포·Swagger UI 수동 확인은 수행하지 않았다.
-- 다음 작업은 Redis Refresh 해시·원자 회전·family 폐기다. Access Redis 등록 방식, 수명 설정, Refresh JSON·비회전 방식은 이 변경으로 전환하지 않았다. issuer/audience 검증도 후속 범위다.
+- 식별자 전환 당시에는 Redis Refresh 해시·원자 회전·family 폐기가 다음 작업이었다. 아래 최신 구현에서 Refresh 회전과 JSON 제거를 완료했고 Access Redis·수명 설정은 유지한다. issuer/audience 검증은 후속 범위다.
+
+## Redis Refresh 회전 구현·검증 (2026-10-14)
+
+가입·일반 로그인·OAuth·재발급을 `AuthTokenService`로 통합했다. Refresh 해시·세대 nonce·family 절대 7일 TTL, Lua 단일 소비/교체·재사용/로그아웃 경합·전체 폐기, HttpOnly 쿠키 전용과 401/503 오류 계약을 구현했다. 계정 행 잠금으로 비밀번호 변경·탈퇴와 발급을 직렬화하며 Redis 폐기 실패는 MySQL 변경을 롤백한다. 저장소 간 단일 트랜잭션이나 폐기 상태 자동 복원은 없다.
+
+구현·키 설계·부분 실패·엄격한 재시도 정책·실제 Redis 검증은 [Refresh 회전 문서](../refresh-rotation.md)를 따른다. 일반 테스트 156개, 실제 Redis 11개, MySQL 2개와 bootJar를 검증했다. Access Redis 등록 의존성 제거와 issuer/audience, 운영 영속화/복구·호출 제한·세션 관리 확장·실제 브라우저 검증은 후속 범위다.

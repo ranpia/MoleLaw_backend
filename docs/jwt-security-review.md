@@ -1,6 +1,6 @@
 # JWT 인증 보안 검토
 
-검토 기준: 2026-10-07의 개선 전 코드. **아래 위험 표는 현재 구현 상태가 아니다.** 이후 토큰 용도 검증·로그 제거·CORS/CSRF·쿠키 공통화·Redis Access 등록과 폐기가 적용됐다. 최신 계약과 미구현 세션·Refresh 정책은 [인증·보안 실행 계획](plans/auth-security.md)을 따른다. 이 문서는 기존 위험과 설계 근거를 보존한다.
+검토 기준: 2026-10-07의 개선 전 코드. **아래 위험 표는 현재 구현 상태가 아니다.** 이후 용도 검증·로그 제거·CORS/CSRF·쿠키 공통화·Redis Access 등록과 Refresh 회전·폐기를 적용했다. 최신 계약과 후속 정책은 [인증·보안 실행 계획](plans/auth-security.md)을 따른다. 이 문서는 기존 위험과 설계 근거를 보존한다.
 
 ## 개선 전 코드 검토
 소스 기준 정적 검토이며 브라우저·배포 환경 재현이나 공격 테스트는 수행하지 않았다. 프론트엔드 저장 방식과 프록시 로그 설정은 이 저장소만으로 확인할 수 없다.
@@ -21,7 +21,7 @@
 
 ## 확정 방향: Access 5분 stateless + Redis Refresh
 
-2026-10-13 사용자 결정으로 기존 Redis Access + MySQL Refresh 목표를 대체한다. 현재 코드는 Redis Access 등록 방식이다. 운영/test Access 5분·local 개발 Access 15시간과 JWT/쿠키 공통 설정은 구현했지만 stateless/Redis Refresh 전환은 미구현이다. 구현·전환·완료 조건의 기준은 [인증 실행 계획](plans/auth-security.md)이다.
+2026-10-13 사용자 결정으로 기존 Redis Access + MySQL Refresh 목표를 대체한다. 2026-10-14 Redis Refresh 해시·회전·재사용·폐기·JSON 제거를 구현했다. Access는 운영/test 5분·local 15시간의 Redis 등록 방식이며 stateless·issuer/audience 전환은 아직 남아 있다. 현재 계약은 [Refresh 회전 구현](refresh-rotation.md), 최종 완료 조건은 [인증 실행 계획](plans/auth-security.md)을 따른다.
 
 - Access는 **5분(300초)** JWT다. 허용 알고리즘·서명·용도·issuer/audience·iat/exp·필수 claim을 로컬 검증하는 목표다. `sub`는 `User.id`를 문자열로 표현한 불변 사용자 고유키, `jti`는 토큰별 추적 식별자로 두고 목표에서는 Redis 등록·세션 조회를 요구하지 않는다. 2026-10-14 Access와 현재 JWT Refresh의 `sub=User.id`, 버전 2, 개인정보 claim 제외와 ID 기반 principal·조회를 구현했다. 현재 Redis Access 확인과 issuer/audience 미검증은 후속 전환 대상이다. 고유키 자체로 권한을 부여하지 않는다.
 - Refresh는 고엔트로피 난수 토큰을 우선 제안한다. Redis에는 원문 대신 해시·userId·session/family·만료·소비·폐기·교체 관계를 저장한다. 사용자별 인덱스는 기기별/전체 Refresh 폐기에 사용한다. MySQL Refresh 테이블은 추가하지 않는다.

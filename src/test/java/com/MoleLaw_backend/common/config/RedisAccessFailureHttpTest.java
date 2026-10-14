@@ -28,6 +28,7 @@ class RedisAccessFailureHttpTest {
     @MockitoBean ChatModel chatModel;
     @MockitoBean EmbeddingModel embeddingModel;
     @MockitoBean AccessTokenStore store;
+    @MockitoBean com.MoleLaw_backend.auth.security.RefreshTokenStore refreshStore;
     @Autowired MockMvc mvc;
     @Autowired JwtUtil jwt;
     @Autowired UserRepository users;

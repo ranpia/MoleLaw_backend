@@ -41,12 +41,24 @@ class CookieUtilTest {
         CookieUtil util = new CookieUtil(true, "None", new MockEnvironment(), Duration.ofMinutes(5));
         MockHttpServletResponse response = new MockHttpServletResponse();
         util.addJwtCookie(response, "accessToken", "access-value");
-        util.addJwtCookie(response, "refreshToken", "refresh-value");
+        util.addRefreshCookie(response, "refresh-value", java.time.Instant.now().plus(Duration.ofDays(7)));
         var headers = response.getHeaders("Set-Cookie");
         assertEquals(3, headers.size());
         assertCookie(headers.get(0), "accessToken=access-value", "/", 300);
-        assertCookie(headers.get(1), "refreshToken=refresh-value", "/api/auth", 604800);
+        int refreshAge = response.getCookie("refreshToken").getMaxAge();
+        assertTrue(refreshAge >= 604798 && refreshAge <= 604800);
+        assertCookie(headers.get(1), "refreshToken=refresh-value", "/api/auth", refreshAge);
         assertCookie(headers.get(2), "refreshToken=", "/", 0);
+    }
+
+    @Test
+    void expiredRefreshDoesNotWriteACookieAndJwtHelperCannotExtendRefreshLifetime() {
+        CookieUtil util = new CookieUtil(true, "None", new MockEnvironment(), Duration.ofMinutes(5));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertThrows(com.MoleLaw_backend.common.exception.MolelawException.class,
+                () -> util.addRefreshCookie(response, "expired-test-value", java.time.Instant.now().minusSeconds(1)));
+        assertThrows(IllegalArgumentException.class, () -> util.addJwtCookie(response, "refreshToken", "test-value"));
+        assertFalse(response.containsHeader("Set-Cookie"));
     }
 
     @Test
