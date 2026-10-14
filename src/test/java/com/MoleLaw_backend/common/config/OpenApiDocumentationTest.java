@@ -95,7 +95,7 @@ class OpenApiDocumentationTest {
                 assertTrue(success, context);
             }
         }
-        assertEquals(20, count);
+        assertEquals(21, count);
         JsonNode schemes = document.path("components").path("securitySchemes");
         assertFalse(schemes.has("CsrfToken"));
         assertFalse(schemes.has("BearerAuth"));
@@ -112,6 +112,29 @@ class OpenApiDocumentationTest {
                 .path("responses").path("200").path("content").path("application/json").path("schema"));
         JsonNode userData = resolve(document, userSchema.path("properties").path("data"));
         assertTrue(userData.path("properties").has("email"), "User response must retain generic data schema");
+        JsonNode lawOperation = document.path("paths").path("/api/test/lawsearch").path("get");
+        JsonNode lawSchema = lawOperation.path("responses").path("200").path("content")
+                .path("application/json").path("schema");
+        assertEquals("array", lawSchema.path("type").asText());
+        JsonNode lawItem = resolve(document, lawSchema.path("items"));
+        assertTrue(lawItem.path("properties").has("lawName"));
+        assertTrue(lawItem.path("properties").has("lawType"));
+        assertTrue(lawOperation.path("responses").has("400"));
+        JsonNode casesOperation = document.path("paths").path("/api/test/cases").path("get");
+        assertEquals("array", casesOperation.path("responses").path("200").path("content")
+                .path("application/json").path("schema").path("type").asText());
+        Set<String> caseParameters = new java.util.HashSet<>();
+        for (JsonNode parameter : casesOperation.path("parameters")) {
+            caseParameters.add(parameter.path("name").asText());
+            if (parameter.path("name").asText().equals("query")) assertTrue(parameter.path("required").asBoolean());
+        }
+        assertTrue(caseParameters.containsAll(Set.of("query", "search", "page", "display", "referenceLaw", "courtType", "courtName")));
+        JsonNode caseDetail = document.path("paths").path("/api/test/cases/{id}").path("get");
+        JsonNode caseDetailSchema = resolve(document, caseDetail.path("responses").path("200").path("content")
+                .path("application/json").path("schema"));
+        assertTrue(hasSchemaProperty(document, caseDetailSchema, "판례내용"));
+        assertTrue(hasSchemaProperty(document, caseDetailSchema, "판례일련번호"));
+        assertTrue(caseDetail.path("responses").has("400"));
     }
 
     @Test
@@ -126,6 +149,32 @@ class OpenApiDocumentationTest {
 
     private JsonNode resolve(JsonNode document, JsonNode schema) {
         return schema.has("$ref") ? document.at(schema.path("$ref").asText().substring(1)) : schema;
+    }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser
+    @org.junit.jupiter.api.extension.ExtendWith(org.springframework.boot.test.system.OutputCaptureExtension.class)
+    void missingDevToolsAndOtherResourcesRemain404WithoutServerErrorTrace(
+            org.springframework.boot.test.system.CapturedOutput output) throws Exception {
+        for (String path : new String[]{"/.well-known/appspecific/com.chrome.devtools.json", "/missing-resource.js"}) {
+            var result = mvc.perform(get(path)).andExpect(status().isNotFound()).andReturn();
+            assertInstanceOf(org.springframework.web.servlet.resource.NoResourceFoundException.class,
+                    result.getResolvedException());
+            JsonNode body = mapper.readTree(result.getResponse().getContentAsString());
+            assertEquals("NOT_FOUND", body.path("error").path("code").asText());
+            assertEquals(404, body.path("error").path("status").asInt());
+        }
+        assertFalse(output.getAll().contains("Global exception handler 진입"));
+        assertFalse(output.getAll().contains("\tat org.springframework.web.servlet.resource.ResourceHttpRequestHandler"));
+    }
+
+    private boolean hasSchemaProperty(JsonNode document, JsonNode schema, String name) {
+        JsonNode resolved = resolve(document, schema);
+        if (resolved.path("properties").has(name)) return true;
+        for (JsonNode member : resolved.path("allOf")) {
+            if (hasSchemaProperty(document, member, name)) return true;
+        }
+        return false;
     }
 
     private void verifyLocalReferences(JsonNode document, JsonNode node) {

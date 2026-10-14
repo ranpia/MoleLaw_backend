@@ -3,14 +3,18 @@ package com.MoleLaw_backend.law.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PrecedentInfo {
 
     @JsonProperty("판례일련번호")
+    @JsonAlias("판례정보일련번호")
     @Schema(description = "판례 일련번호", example = "123456")
     private String caseId;
 

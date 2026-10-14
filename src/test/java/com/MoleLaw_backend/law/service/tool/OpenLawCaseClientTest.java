@@ -1,6 +1,8 @@
 package com.MoleLaw_backend.law.service.tool;
 
 import com.MoleLaw_backend.common.exception.ErrorCode;
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.law.dto.request.PrecedentSearchRequest;
 import com.MoleLaw_backend.law.exception.OpenLawApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -92,6 +94,67 @@ class OpenLawCaseClientTest {
                     assertThat(error.getMessage()).doesNotContain("test-key");
                     assertThat(error.getCause()).isNull();
                 });
+    }
+
+    @Test
+    void requestKeepsKeywordSeparateFromReferenceLawAndCourtFilters() {
+        var parameters = new PrecedentSearchRequest();
+        parameters.setQuery("손해배상");
+        parameters.setReferenceLaw("민법");
+        parameters.setCourtType("400201");
+        parameters.setCourtName("대법원");
+        client(HttpStatus.OK, "{\"PrecSearch\":{\"totalCnt\":0}}" ).search(parameters);
+        var query = UriComponentsBuilder.fromUri(requested.get()).build().getQueryParams();
+        assertThat(java.net.URLDecoder.decode(query.getFirst("query"), java.nio.charset.StandardCharsets.UTF_8))
+                .isEqualTo("손해배상");
+        assertThat(java.net.URLDecoder.decode(query.getFirst("JO"), java.nio.charset.StandardCharsets.UTF_8))
+                .isEqualTo("민법");
+        assertThat(query.getFirst("org")).isEqualTo("400201");
+        assertThat(java.net.URLDecoder.decode(query.getFirst("curt"), java.nio.charset.StandardCharsets.UTF_8))
+                .isEqualTo("대법원");
+        assertThat(query.getFirst("search")).isEqualTo("1");
+        assertThat(query.getFirst("page")).isEqualTo("1");
+        assertThat(query.getFirst("display")).isEqualTo("5");
+    }
+
+    @Test
+    void emptyOutOfRangePageIsValidButMissingInRangeRowsAreInvalid() {
+        var client = client(HttpStatus.OK, "{\"PrecSearch\":{\"totalCnt\":5}}" );
+        assertThat(client.search("검색", 1, 2, 5).path("totalCnt").asInt()).isEqualTo(5);
+        assertThatThrownBy(() -> client.search("검색", 1, 1, 5))
+                .isInstanceOfSatisfying(OpenLawApiException.class,
+                        error -> assertThat(error.getErrorCode()).isEqualTo(ErrorCode.OPENLAW_INVALID_RESPONSE));
+    }
+
+    @Test
+    void oversizedCountCannotOverflowIntoEmptySearch() {
+        assertThatThrownBy(() -> client(HttpStatus.OK,
+                "{\"PrecSearch\":{\"totalCnt\":\"1000000000\"}}" ).search("검색", 1, 1, 5))
+                .isInstanceOfSatisfying(OpenLawApiException.class,
+                        error -> assertThat(error.getErrorCode()).isEqualTo(ErrorCode.OPENLAW_INVALID_RESPONSE));
+    }
+
+    @Test
+    void invalidSearchAndDetailInputsNeverReachHttp() {
+        var client = client(HttpStatus.OK, "{\"PrecSearch\":{\"totalCnt\":0}}" );
+        for (String id : new String[]{null, "", "12&OC=other", "123456789012345678901"}) {
+            assertInvalid(() -> client.detail(id));
+        }
+        assertInvalid(() -> client.search((PrecedentSearchRequest) null));
+        assertInvalid(() -> client.search(" ", 1, 1, 5));
+        assertInvalid(() -> client.search("검색", 3, 1, 5));
+        assertInvalid(() -> client.search("검색", 1, 0, 5));
+        assertInvalid(() -> client.search("검색", 1, 1, 101));
+        var parameters = new PrecedentSearchRequest();
+        parameters.setQuery("검색");
+        parameters.setCourtType("400203");
+        assertInvalid(() -> client.search(parameters));
+        assertThat(requested.get()).isNull();
+    }
+
+    private void assertInvalid(org.assertj.core.api.ThrowableAssert.ThrowingCallable action) {
+        assertThatThrownBy(action).isInstanceOfSatisfying(MolelawException.class,
+                error -> assertThat(error.getErrorCode()).isEqualTo(ErrorCode.INVALID_REQUEST));
     }
 
     private OpenLawCaseClient client(HttpStatus status, String body) {

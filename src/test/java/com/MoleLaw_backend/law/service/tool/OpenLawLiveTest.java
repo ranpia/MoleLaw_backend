@@ -53,6 +53,39 @@ class OpenLawLiveTest {
         var context = new LegalToolContext(LegalToolContext.Purpose.PRECOLLECTION,
                 "openlaw-live", clock.instant().plusSeconds(90), 6, clock);
         try {
+            var testController = new com.MoleLaw_backend.law.controller.TestController(laws,
+                    mock(com.MoleLaw_backend.law.service.ExtractKeyword.class),
+                    mock(com.MoleLaw_backend.law.service.FinalAnswer.class),
+                    new com.MoleLaw_backend.law.service.CaseSearchServiceImpl(cases, mapper),
+                    mock(com.MoleLaw_backend.law.service.LawEmbeddingService.class));
+            var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(testController).build();
+            var httpResponse = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                    .get("/api/test/lawsearch").param("keyword", "민법").param("orgCode", "1270000"))
+                    .andReturn().getResponse();
+            assertEquals(200, httpResponse.getStatus());
+            var httpRows = mapper.readTree(httpResponse.getContentAsString(StandardCharsets.UTF_8));
+            assertTrue(httpRows.isArray() && !httpRows.isEmpty(), "Controller must return actual API rows");
+            assertFalse(httpRows.get(0).path("lawName").asText().isBlank());
+            assertFalse(httpRows.get(0).path("lawType").asText().isBlank());
+            System.out.printf("TEST_CONTROLLER: rows=%d, firstLawName=%s, lawType=%s%n", httpRows.size(),
+                    httpRows.get(0).path("lawName").asText(), httpRows.get(0).path("lawType").asText());
+            var caseHttp = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                    .get("/api/test/cases").param("query", "손해배상").param("referenceLaw", "민법")
+                    .param("courtType", "400201").param("courtName", "대법원").param("display", "5"))
+                    .andReturn().getResponse();
+            assertEquals(200, caseHttp.getStatus());
+            var caseHttpRows = mapper.readTree(caseHttp.getContentAsString(StandardCharsets.UTF_8));
+            assertTrue(caseHttpRows.isArray() && !caseHttpRows.isEmpty());
+            String caseHttpId = caseHttpRows.get(0).path("판례일련번호").asText();
+            var detailHttp = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                    .get("/api/test/cases/" + caseHttpId)).andReturn().getResponse();
+            assertEquals(200, detailHttp.getStatus());
+            var caseHttpDetail = mapper.readTree(detailHttp.getContentAsString(StandardCharsets.UTF_8));
+            assertEquals(caseHttpId, caseHttpDetail.path("판례일련번호").asText());
+            assertFalse(caseHttpDetail.path("판례내용").asText().isBlank());
+            System.out.printf("CASE_CONTROLLER: rows=%d, ID=%s, caseNumber=%s, contentChars=%d%n",
+                    caseHttpRows.size(), caseHttpId, caseHttpDetail.path("사건번호").asText(),
+                    caseHttpDetail.path("판례내용").asText().length());
             var lawPage = tools.searchLaws(context, new SearchRequest("민법", 1, "1270000", 1, 100,
                     new LawSearchFilters(null, "A0002", 3, true)));
             assertEquals(Status.AVAILABLE, lawPage.status(), "Law search must return candidates");
