@@ -12,7 +12,6 @@ public class AuthTokenService {
     private final AccessTokenService accessTokens;
     private final RefreshTokenService refreshTokens;
     private final CookieUtil cookies;
-    private final JwtUtil jwt;
 
     public AuthResponse issue(Long userId, HttpServletResponse response) {
         String access = accessTokens.issue(userId);
@@ -28,10 +27,6 @@ public class AuthTokenService {
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         refreshTokens.revoke(cookies.getTokenFromCookie(request, "refreshToken"));
-        String bearer = jwt.resolveToken(request);
-        accessTokens.revoke(bearer);
-        String cookie = cookies.getTokenFromCookie(request, "accessToken");
-        if (!java.util.Objects.equals(bearer, cookie)) accessTokens.revoke(cookie);
         cookies.clearJwtCookie(response, "accessToken");
         cookies.clearJwtCookie(response, "refreshToken");
     }

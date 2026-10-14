@@ -1,6 +1,6 @@
 # Redis Refresh 회전 구현
 
-구현 기준: 2026-10-14. Access는 아직 Redis jti 등록·확인 방식이며 운영/test 5분, local 개발 15시간을 유지한다. 이 문서는 구현된 Refresh 저장·회전·폐기를 설명한다. Access stateless 전환·issuer/audience 검증은 후속 작업이다.
+구현 기준: 2026-10-14. Access는 모든 프로필에서 5분 stateless JWT로 Redis를 조회하지 않는다. issuer/audience와 버전 3 검증을 적용했다. [Access 전환 계약](stateless-access.md)을 함께 참고한다.
 
 ## 토큰과 만료
 
@@ -23,7 +23,7 @@
 
 이미 소비한 해시가 다시 제출되면 revoked를 설정하고 `REFRESH_TOKEN_REUSED` 401을 반환한다. 교체된 최신 Refresh도 이후 거절한다. 소비 이력과 폐기 tombstone은 family 절대 만료까지 남긴다. 동일 토큰의 동시 소비는 한 번만 성공하며 나머지 재사용 요청 때문에 성공한 응답의 새 Refresh도 폐기될 수 있다.
 
-로그아웃은 현재 또는 이전에 발급했던 정상 Refresh 쿠키로 해당 family를 폐기한다. 회전과 경합해도 폐기 family는 되살아나지 않는다. 다른 로그인 family는 유지한다. 유효한 Refresh 쿠키가 없으면 서버가 특정 family를 식별·폐기할 수 없으며 클라이언트 쿠키와 제시된 Access만 정리한다.
+로그아웃은 현재 또는 이전에 발급했던 정상 Refresh 쿠키로 해당 family를 폐기한다. 회전과 경합해도 폐기 family는 되살아나지 않는다. 다른 로그인 family는 유지한다. 유효한 Refresh 쿠키가 없으면 서버가 특정 family를 식별·폐기할 수 없으며 클라이언트 쿠키만 정리한다. 발급된 Access는 만료까지 유효하다.
 
 비밀번호 변경·탈퇴는 사용자 generation을 새 난수 nonce로 바꿔 모든 기존 family를 거절한다. 세대 키 유실 뒤 새 로그인도 새 nonce를 사용하므로 남아 있던 예전 family가 자동 부활하지 않는다. family 목록 조회 API·최대 활성 세션 제한·HTTP 호출 제한은 후속 범위다.
 
@@ -33,9 +33,9 @@
 
 MySQL과 Redis는 단일 트랜잭션이 아니다. Redis 폐기를 먼저 확인하고 비밀번호·탈퇴 DB 변경을 수행한다. Redis 폐기 실패 시 503이며 MySQL 변경은 롤백한다. Redis 폐기 후 DB commit이 실패하면 Refresh 폐기는 되돌리지 않고 재로그인을 요구한다. 실패한 작업을 성공으로 응답하지 않는다.
 
-발급·회전의 저장소 처리 완료 전에는 인증 쿠키·성공 JSON을 전달하지 않는다. Access 등록 실패 또는 Refresh 상태 전이 후 응답 유실은 자동 보상으로 이전 Refresh를 다시 활성화하지 않는다. 회전 후 다음 단계 실패/응답 유실로 새 토큰을 받지 못했다면 재로그인한다. 원문을 받지 못한 발급의 잔여 상태는 TTL로 정리한다.
+발급·회전의 저장소 처리 완료 전에는 인증 쿠키·성공 JSON을 전달하지 않는다. Refresh 상태 전이 후 다음 단계 실패 또는 응답 유실은 자동 보상으로 이전 Refresh를 다시 활성화하지 않는다. 회전 후 다음 단계 실패/응답 유실로 새 토큰을 받지 못했다면 재로그인한다. 원문을 받지 못한 발급의 잔여 상태는 TTL로 정리한다.
 
-Redis 오류·연결 실패·noeviction 메모리 부족은 503 `AUTH_STORE_UNAVAILABLE`이다. 인프로세스 저장소나 JWT 서명으로 우회하지 않는다. 현재 단계는 Access도 Redis에 의존하므로 Redis 장애에서 일반 보호 API까지 영향을 받는다.
+Redis 오류·연결 실패·noeviction 메모리 부족은 503 `AUTH_STORE_UNAVAILABLE`이다. 인프로세스 저장소나 JWT 서명으로 우회하지 않는다. 기존 Access 인증은 Redis를 호출하지 않아 유지되지만 로그인·회전·폐기는 실패한다. 사용자 DB·권한·CSRF 검사는 별개다.
 
 Lua는 다른 요청과의 실행 격리를 제공하지만 임의 실행 오류에 대한 자동 롤백을 제공하지 않는다. 오류 시 성공 응답을 반환하지 않으며 임의로 소비 상태를 되돌리지 않는다. 테스트 전용 대체 저장소는 `src/test`에만 있다.
 
@@ -49,14 +49,14 @@ CSRF·Origin·credentials 계약은 유지한다. 먼저 `GET /api/auth/csrf`를
 | `POST /api/auth/login` | `{"accessToken":"<access-jwt>"}`와 두 HttpOnly 쿠키 |
 | OAuth 성공 콜백 | 두 HttpOnly 쿠키 발급 후 프론트 리다이렉트 |
 | `POST /api/auth/reissue` | `{"success":true,"data":{"accessToken":"<new-access-jwt>"}}`와 Access/회전한 Refresh 쿠키 |
-| `POST /api/auth/logout` | 제시된 Refresh family·Access 폐기, 쿠키 삭제, 기존 성공 JSON |
+| `POST /api/auth/logout` | 제시된 Refresh family 폐기, 쿠키 삭제, 기존 성공 JSON |
 | 비밀번호 변경·탈퇴 | 모든 Refresh family 폐기 후 기존 성공 상태/본문 계약 |
 
 Refresh는 API DTO·OpenAPI schema·JSON 예시에서 제거했다. Path는 `/api/auth`, HttpOnly는 모든 환경에서 유지하고 발급/삭제 시 이전 Path=/ 쿠키도 정리한다. 운영 Secure/SameSite와 local/test 예외는 기존 설정을 유지한다.
 
 재발급 오류는 기존 400 TOKEN_FAIL 대신 401 `INVALID_REFRESH_TOKEN` 또는 `REFRESH_TOKEN_REUSED`의 공통 ApiResponse 오류 JSON이다. Redis 오류는 503이다. OAuth 콜백의 저장소 오류는 503 `{"error":"AUTH_STORE_UNAVAILABLE"}`, 발급 전 세대 충돌은 401 `{"error":"INVALID_REFRESH_TOKEN"}`이다.
 
-프론트는 탭 간에도 재발급 요청을 하나로 합치고 사용한 Refresh로 자동 재시도하지 않는다. 401은 재로그인으로 처리하며, 503/응답 유실 뒤에도 회전 전 토큰 재시도로 성공을 가정하지 않는다. 현재 단계에서 재사용 탐지·전체 Refresh 폐기는 이미 발급된 모든 Access의 즉시 폐기를 뜻하지 않는다. 로그아웃도 제시된 Access만 폐기하며 나머지는 운영/test 5분·local 15시간의 기존 정책을 따른다.
+프론트는 탭 간에도 재발급 요청을 하나로 합치고 사용한 Refresh로 자동 재시도하지 않는다. 401은 재로그인으로 처리하며, 503/응답 유실 뒤에도 회전 전 토큰 재시도로 성공을 가정하지 않는다. 현재 단계에서 재사용 탐지·전체 Refresh 폐기는 이미 발급된 모든 Access의 즉시 폐기를 뜻하지 않는다. 로그아웃도 Access를 즉시 폐기하지 않으며 기존 Access는 모든 프로필에서 만료까지 최대 5분 유효하다.
 
 ## 검증과 운영
 
@@ -67,7 +67,7 @@ Refresh는 API DTO·OpenAPI schema·JSON 예시에서 제거했다. Path는 `/ap
 .\gradlew.bat mysqlIntegrationTest
 ```
 
-2026-10-14 일반 테스트 156개, 실제 Redis 테스트 11개, 실제 MySQL 테스트 2개와 JAR 생성이 통과했다. 실제 Redis 검증은 절대 TTL, 단일 소비·재사용, 로그아웃/회전 경합, 사용자 세대·키 유실, 임의 secret에 의한 세션 폐기 거절, 연결 실패·메모리 부족·Redis 명령 오류를 포함한다. API 검증은 JSON 제거·쿠키 갱신·폐기·계정 변경 롤백·구형 토큰 거절·CSRF/OpenAPI 회귀를 포함한다. 수동 브라우저·운영 배포 검증은 별도다.
+2026-10-14 일반 테스트 148개, 실제 Redis 테스트 11개, 실제 MySQL 테스트 2개와 JAR 생성이 통과했다. 실제 Redis 검증은 절대 TTL, 단일 소비·재사용, 로그아웃/회전 경합, 사용자 세대·키 유실, 임의 secret에 의한 세션 폐기 거절, 연결 실패·메모리 부족·Redis 명령 오류를 포함한다. API 검증은 JSON 제거·쿠키 갱신·폐기·계정 변경 롤백·구형 토큰 거절·CSRF/OpenAPI 회귀를 포함한다. 수동 브라우저·운영 배포 검증은 별도다.
 
 로컬 Redis는 영속화 없이 실행하므로 재시작 시 Refresh가 유실되고 재로그인이 필요하다. 운영은 전용 용량·noeviction·인증/TLS·영속화·복제·복구를 별도 준비한다. 오래된 Redis snapshot 복원이나 MySQL ID 초기화는 기존 세션과 사용자 매핑을 되살릴 수 있으므로 신뢰할 수 없는 상태는 인증 namespace와 키 전환으로 무효화한다. MySQL 복원만으로 Refresh를 복구하지 않는다.
 

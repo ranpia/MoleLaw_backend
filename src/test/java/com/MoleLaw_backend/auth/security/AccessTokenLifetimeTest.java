@@ -28,8 +28,8 @@ class AccessTokenLifetimeTest {
     }
 
     @Test
-    void localDevelopmentKeepsFifteenHourAccessAndMatchingCookie() {
-        assertLifetime("local", 54000);
+    void localDevelopmentUsesFiveMinuteAccessAndMatchingCookie() {
+        assertLifetime("local", 300);
     }
 
     @Test
@@ -44,12 +44,12 @@ class AccessTokenLifetimeTest {
 
     @Test
     void rejectsInvalidLifetimesAtStartup() {
-        for (String lifetime : new String[]{"0s", "-1s", "500ms"}) {
+        for (String lifetime : new String[]{"0s", "-1s", "500ms", "301s", "15h"}) {
             runner.withPropertyValues("spring.profiles.active=test", "jwt.access-ttl=" + lifetime)
                     .run(context -> {
                         assertThat(context).hasFailed();
                         assertThat(context.getStartupFailure())
-                                .hasRootCauseMessage("Access token TTL must be positive whole seconds");
+                                .hasRootCauseMessage("Access token TTL must be positive whole seconds up to 300 seconds");
                     });
         }
     }
