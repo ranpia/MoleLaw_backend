@@ -6,16 +6,18 @@
 
 완료된 기반은 Spring AI 1.0.9 ChatClient·EmbeddingModel 통합, MySQL/Qdrant 프로필 분리, H2 테스트 격리, 법령 회귀 fixture, MySQL/Qdrant/Redis Compose다. Redis 컨테이너 실행은 JWT 저장소 구현 완료를 의미하지 않는다.
 
-법령/판례 내부 Tool·검색 옵션·원문 스냅샷은 구현했다. CPU Ollama 실행 환경은 별도 검증했다. Redis Access jti 등록·TTL·인증·전달된 Access 폐기는 구현했다. ETL·Spring Ollama 연동·애플리케이션 Qdrant 검색·Advisor·상담방 근거 스냅샷·로그인 세션·MySQL Refresh·역할별 오케스트레이터는 미구현이다. 작업 완료는 코드와 해당 검증 결과가 함께 있을 때 표시한다.
+법령/판례 내부 Tool·검색 옵션·원문 스냅샷은 구현했다. CPU Ollama 실행 환경은 별도 검증했다. 현재 Redis Access jti 등록·TTL·인증·전달된 Access 폐기는 전환 전 구현이다. ETL·Spring Ollama 연동·애플리케이션 Qdrant 검색·Advisor·상담방 근거 스냅샷·Access 5분 stateless 전환·Redis Refresh 회전/폐기·역할별 오케스트레이터는 미구현이다. 작업 완료는 코드와 해당 검증 결과가 함께 있을 때 표시한다.
 
 ## 단계와 완료 조건
+
+MySQL 초기 기반: 기존 데이터 이관 없이 Flyway V1으로 빈 DB를 생성하고 기본/local을 validate로 통일했다. `mysqlIntegrationTest`는 별도 임시 MySQL에서 스키마·JPA·원문/암호문·제약·재기동을 검사한다. ETL·상담 근거 스키마까지 완료한 것은 아니다. 인증 family/Refresh는 Redis가 소유하며 MySQL 테이블을 추가하지 않는다. [실행 가이드](../mysql-setup.md)를 따른다.
 
 | 순서 | 작업 | 완료 조건 |
 | --- | --- | --- |
 | 1 | 기준선·긴급 보안 | API/권한/실패 계약 고정, 토큰 로그 제거·용도 분리, CORS/CSRF 정책 검증 |
-| 2 | 환경·스키마 | 명시적 마이그레이션, Redis 앱 설정, 원문·색인 작업·근거·Refresh 스키마, Docker 없는 테스트 유지 |
+| 2 | 환경·스키마 | 명시적 마이그레이션, Redis 앱 설정, 원문·색인 작업·근거 스키마와 Redis Refresh 키 설계, Docker 없는 테스트 유지 |
 | 3 | API Tool·ETL·임베딩 | 법령/판례 목록·상세 Tool 계약, 다중 페이지·Reader·Transformer·writer, 중복/변경/삭제/재개, Ollama 비교와 모델 선정 |
-| 4 | 인증 저장소 | Redis Access·MySQL Refresh, 일반/OAuth 인증 통합, 장애·회전·재사용 테스트 |
+| 4 | 인증 저장소 | Access 5분 stateless + Redis Refresh, 일반/OAuth 통합, 원자 회전·재사용·TTL·장애 검증, 기존 Access 만료 전 유효·300초 경계 거절 |
 | 5 | 최초 질문 | Qdrant 검색→필요 수집→재검색, 판례 검증, 중복 요청 제어·근거 확정 |
 | 6 | 기본 RAG·Advisor | 출처 검증 후 성공 턴 저장, 복원·방별 격리, 후속 검색/수집 호출 0회 |
 | 7 | 품질 비교 | zero-shot 기준선과 one-shot·step-back을 분리 비교, 채택 근거 기록 |
@@ -38,7 +40,7 @@
 - 요청/상담방/수집/색인 작업/모델 역할에 추적 ID를 연결한다. 토큰·민감 질문·외부 응답 원문은 로그에 남기지 않는다.
 - 외부 API/모델 호출에 전체 deadline과 개별 timeout·제한 재시도·동시성 상한을 둔다. 사용자 취소·연결 종료 후 작업 지속/중단 정책도 정한다.
 - 동기 최초 질문이 예산을 넘길 때 오류 반환과 비동기 상태 조회 중 하나를 선택하고 프론트 계약을 문서화한다. SSE나 작업 큐는 아직 확정하지 않는다.
-- MySQL 백업 복원→Qdrant 재색인→활성 색인 전환을 검증한다. Redis 유실 후 인증 복구는 인증 계획을 따른다.
+- MySQL 백업 복원→Qdrant 재색인→활성 색인 전환을 검증한다. Redis Refresh 유실 시 재로그인하고 기존 Access는 만료까지 유지된다. 오래된 복원 상태의 폐기 토큰 부활 방지는 인증 계획을 따른다.
 - 삭제된 상담방의 진행 중 작업이 메시지/근거를 다시 생성하지 않도록 완료 저장 시 상태를 재확인한다. 기록·근거 보존 기간과 계정 탈퇴 삭제 범위를 정한다.
 - 법령 시행일·조회 시점·적용 범위를 응답에 표시하고, 근거 부족을 법적 결론으로 단정하지 않는다. 오래된 방의 스냅샷을 자동 교체하지 않으며 새 상담을 안내한다.
 

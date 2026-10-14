@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.auth.security;
 
+import java.time.Duration;
+
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.common.exception.MolelawException;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +11,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AccessTokenServiceTest {
-    private final JwtUtil jwt = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes");
+    private final JwtUtil jwt = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes", Duration.ofMinutes(5));
     private final AccessTokenStore store = mock(AccessTokenStore.class);
     private final AccessTokenService service = new AccessTokenService(jwt, store);
 

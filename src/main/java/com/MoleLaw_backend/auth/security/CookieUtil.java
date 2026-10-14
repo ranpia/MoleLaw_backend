@@ -9,14 +9,18 @@ import org.springframework.core.env.Profiles;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+
 @Component
 public class CookieUtil {
     private final boolean secure;
     private final String sameSite;
+    private final Duration accessTtl;
 
     public CookieUtil(@Value("${cookie.secure:true}") boolean secure,
                       @Value("${cookie.same-site:None}") String sameSite,
-                      Environment environment) {
+                      Environment environment,
+                      @Value("${jwt.access-ttl:5m}") Duration accessTtl) {
         if (!secure && !environment.acceptsProfiles(Profiles.of("local", "test"))) {
             throw new IllegalArgumentException("Insecure cookies require the local or test profile");
         }
@@ -26,11 +30,16 @@ public class CookieUtil {
         }
         this.secure = secure;
         this.sameSite = sameSite;
+        if (accessTtl == null || accessTtl.isNegative() || accessTtl.isZero()
+                || accessTtl.getNano() != 0) {
+            throw new IllegalArgumentException("Access token TTL must be positive whole seconds");
+        }
+        this.accessTtl = accessTtl;
     }
 
     public void addJwtCookie(HttpServletResponse response, String name, String token) {
         long maxAge = switch (name) {
-            case "accessToken" -> 15 * 60 * 60;
+            case "accessToken" -> accessTtl.toSeconds();
             case "refreshToken" -> 7 * 24 * 60 * 60;
             default -> throw new IllegalArgumentException("Unknown authentication cookie");
         };

@@ -1,5 +1,5 @@
--- Manual MySQL migration. This project does not run Flyway or execute this file automatically.
--- Apply to the target database before deploying legal API tools when schema auto-update is disabled.
+-- Historical manual SQL, retained for reference only. DO NOT run on fresh environments.
+-- Flyway V1__initial_schema.sql now creates this table automatically with the full schema.
 CREATE TABLE legal_source (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     source_type VARCHAR(16) NOT NULL,

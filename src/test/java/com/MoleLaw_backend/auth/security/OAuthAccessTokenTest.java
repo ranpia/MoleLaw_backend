@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.auth.security;
 
+import java.time.Duration;
+
 import com.MoleLaw_backend.user.entity.User;
 import com.MoleLaw_backend.user.repository.UserRepository;
 import com.MoleLaw_backend.common.exception.ErrorCode;
@@ -46,7 +48,7 @@ class OAuthAccessTokenTest {
     }
 
     private static class Fixture {
-        final JwtUtil jwt = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes");
+        final JwtUtil jwt = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes", Duration.ofMinutes(5));
         final AccessTokenStore store = mock(AccessTokenStore.class);
         final CookieUtil cookies = mock(CookieUtil.class);
         final UserRepository users = mock(UserRepository.class);

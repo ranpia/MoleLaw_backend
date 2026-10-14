@@ -12,20 +12,27 @@ import java.security.Key;
 import java.util.Date;
 import java.util.UUID;
 import java.time.Instant;
+import java.time.Duration;
 
 @Component
 public class JwtUtil {
-    private static final long ACCESS_EXPIRATION = 1000L * 60 * 15 * 60;
+    private final Duration accessTtl;
     private static final long REFRESH_EXPIRATION = 1000L * 60 * 60 * 24 * 7;
     private static final String TOKEN_TYPE = "tokenType";
     private final String secretKeyRaw;
     private Key key;
 
-    public JwtUtil(@Value("${jwt.secret}") String secretKeyRaw) {
+    public JwtUtil(@Value("${jwt.secret}") String secretKeyRaw,
+                   @Value("${jwt.access-ttl:5m}") Duration accessTtl) {
         if (secretKeyRaw == null || secretKeyRaw.isBlank()) {
             throw new IllegalArgumentException("JWT_SECRET 환경변수가 설정되지 않았습니다.");
         }
         this.secretKeyRaw = secretKeyRaw;
+        if (accessTtl == null || accessTtl.isNegative() || accessTtl.isZero()
+                || accessTtl.getNano() != 0) {
+            throw new IllegalArgumentException("Access token TTL must be positive whole seconds");
+        }
+        this.accessTtl = accessTtl;
     }
 
     @PostConstruct
@@ -34,7 +41,7 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(String email, String provider) {
-        return generateToken(email, provider, "access", ACCESS_EXPIRATION);
+        return generateToken(email, provider, "access", accessTtl.toMillis());
     }
 
     public String generateRefreshToken(String email, String provider) {

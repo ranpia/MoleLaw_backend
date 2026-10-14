@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.auth.security;
 
+import java.time.Duration;
+
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 class JwtAuthenticationFilterTest {
-    private final JwtUtil jwtUtil = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes");
+    private final JwtUtil jwtUtil = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes", Duration.ofMinutes(5));
     private final CustomUserDetailsService users = mock(CustomUserDetailsService.class);
     private final AccessTokenStore store = mock(AccessTokenStore.class);
     private final AccessTokenService accessTokens = new AccessTokenService(jwtUtil, store);
