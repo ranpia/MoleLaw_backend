@@ -65,11 +65,6 @@ class AccessTokenLifetimeTest {
             assertThat(Duration.between(accessClaims.getIssuedAt().toInstant(),
                     accessClaims.getExpiration().toInstant()).getSeconds()).isEqualTo(expectedSeconds);
 
-            var refreshClaims = parser.parseClaimsJws(jwt.generateRefreshToken(1L))
-                    .getBody();
-            assertThat(Duration.between(refreshClaims.getIssuedAt().toInstant(),
-                    refreshClaims.getExpiration().toInstant())).isEqualTo(Duration.ofDays(7));
-
             MockHttpServletResponse response = new MockHttpServletResponse();
             context.getBean(CookieUtil.class).addJwtCookie(response, "accessToken", access);
             assertThat(response.getHeader("Set-Cookie")).contains("Max-Age=" + expectedSeconds + ";");

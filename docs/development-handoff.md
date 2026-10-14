@@ -6,7 +6,7 @@
 
 패키지는 `auth`, `user`, `chat`, `law`, `common`으로 구성하며 [도메인 구조 스킬](../.agents/skills/domain-structure/SKILL.md)을 따른다. 법령 Tool 구현은 `law.service.tool`, 인증 구현은 `auth.security`와 `auth.oauth`에 있다.
 
-현재 Access jti 등록·TTL·매 요청 확인·전달된 Access 폐기와 저장소 장애 503 처리를 구현했다. JWT·Access 쿠키 수명은 `jwt.access-ttl`로 통일했고 기본/운영·test 5분, local 개발만 15시간이다. 목표는 **Access 5분 stateless + Redis Refresh**이며 stateless 전환·Refresh 회전/폐기는 미구현이다. 현재 코드와 목표는 [인증 실행 계획](plans/auth-security.md)에서 구분한다.
+현재 Access jti 등록·TTL·매 요청 확인과 Redis Refresh 해시·원자 회전·재사용 탐지·폐기를 구현했다. JWT·Access 쿠키 수명은 기본/운영·test 5분, local 15시간이다. Refresh는 HttpOnly 쿠키 전용이며 family 절대 7일이다. 목표 **Access 5분 stateless + Redis Refresh** 중 Access stateless·issuer/audience 전환은 후속 작업이다. 현재 프론트/실행/장애 계약은 [Refresh 회전 구현](refresh-rotation.md)을 따른다.
 
 후속 기능은 기능 브랜치에서 개발하고 `dev`에서 통합·테스트한 뒤 검증한 변경을 `main`에 반영한다. CI·수동 배포 조건과 실행 환경은 [프로젝트 안내](../README.md)와 [Docker 가이드](../docker/README.md)를 따른다. 과거 브랜치 생성·병합 이력은 Git 이력에서 확인한다.
 
@@ -43,9 +43,9 @@
 
 ## 다음 담당 작업
 
-2026-10-14 Access와 현재 JWT Refresh의 subject를 문자열 `User.id`로 전환했다. `user.id`의 기존 IDENTITY PK를 사용하며 토큰 버전은 2다. 가입·로그인·OAuth·재발급, principal·내 정보·탈퇴·프로필 변경을 ID 조회로 통일했다. 이전 이메일 subject/버전 없는 토큰은 거절해 재로그인한다. Redis Access 등록·현재 Refresh JSON·비회전 방식은 유지하며 stateless/Redis Refresh 저장 전환은 다음 작업이다. [인증 계획의 준수사항](plans/auth-security.md#access-식별자claim-보안-준수사항)을 따른다.
+2026-10-14 Access subject와 principal·조회·권한을 기존 `User.id` IDENTITY PK로 통일했다. 이어서 JWT Refresh를 난수 Refresh로 대체하고 Redis 회전·재사용·family 폐기와 JSON 제거를 구현했다. 구형 JWT Refresh는 재로그인한다. 일반 테스트 156개·실제 Redis 11개·MySQL 2개·JAR를 검증했으며 기존 개발 DB/Redis를 초기화하지 않았다. [인증 계획](plans/auth-security.md)과 [회전 구현](refresh-rotation.md)을 따른다.
 
-1. Access 5분 stateless + Redis Refresh 해시·회전·재사용 탐지·family 폐기로 전환한다. MySQL 인증 세션/Refresh migration은 추가하지 않는다. 기존 Access의 최대 5분 유효 계약과 전환 재로그인을 반영한다. 초기 테이블과 원문 저장은 MySQL 통합 테스트로 검증한다.
+1. 구현된 Redis Refresh 회전을 유지하고 Access Redis 의존성을 제거해 stateless·issuer/audience 검증으로 전환한다. 기존 긴 수명 Access의 버전/키 전환과 재로그인, 운영 Refresh 영속화·복구·호출 제한을 준비한다. MySQL 인증 세션/Refresh migration은 추가하지 않는다.
 2. MySQL 원문 Reader → 구조 보존 Transformer → Qdrant writer, Ollama 임베딩 비교/선정.
 3. 실행 중단·페이지 재개 이력 영속화, 전역 동시성·남은 deadline에 맞춘 HTTP 제한.
 4. 인증/방 소유권·최초 질문 오케스트레이터 연결, 상담방 근거 스냅샷과 Advisor 성공 턴 저장.

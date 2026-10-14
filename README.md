@@ -4,7 +4,7 @@
 
 현재 Java 17·Spring Boot 3.5·Spring AI 기반으로 백엔드를 재구축하고 있습니다. 법령 수집부터 벡터 검색, 대화 맥락 유지, 토큰 인증까지 역할을 분리하고 검증 가능한 구조로 바꾸는 것이 목표입니다.
 
-> 이 README는 2026-10-13 기준입니다. 아래의 현재 구현과 재구축 계획을 구분해 읽어 주세요. Qdrant·Redis 컨테이너 구동이 애플리케이션 검색·인증 전환 완료를 의미하지는 않습니다.
+> 이 README는 2026-10-14 기준입니다. 아래의 현재 구현과 재구축 계획을 구분해 읽어 주세요. Qdrant·Redis 컨테이너 구동이 애플리케이션 검색·인증 전환 완료를 의미하지는 않습니다.
 
 ## 주요 기능
 
@@ -27,9 +27,9 @@ Kakao OAuth 설정은 별도 `kakao` 프로필로 분리되어 있습니다. 기
 | 검색 | 전체 임베딩 조회 후 코사인 유사도 직접 계산 | Qdrant 벡터 검색·필터·중복 제거·조문 맥락 확장 |
 | 후속 상담 | 최초 assistant 답변과 현재 질문 전달 | MessageChatMemoryAdvisor로 채팅방 기록과 최초 원문 근거 전달 |
 | Access | JWT 서명·용도·만료 + Redis jti·사용자 일치 확인, 만료까지 TTL | 5분 stateless JWT, Redis 활성 상태 조회 제거 |
-| Refresh | 서버 저장·회전 없이 쿠키와 JSON에 전달 | Redis에 해시·family·회전·폐기·TTL 관리 |
+| Refresh | Redis 해시·family·원자 회전·재사용 탐지·폐기·절대 7일 TTL, HttpOnly 쿠키 전용 | 운영 복구·호출 제한·세션 관리 확장 |
 
-MySQL·Qdrant 프로필과 H2 테스트 구성, 공통 AI 호출, 기본 법령 수집 회귀 테스트는 구현되어 있습니다. Redis Access 등록·매 요청 확인·TTL·전달된 Access 폐기를 구현했습니다. 목표는 **Access 5분 stateless + Redis Refresh**이며 아직 전환하지 않았습니다.
+MySQL·Qdrant 프로필과 H2 테스트 구성, 공통 AI 호출, 기본 법령 수집 회귀 테스트는 구현되어 있습니다. Redis Access 등록·매 요청 확인과 Redis Refresh 해시·회전·폐기를 구현했습니다. 목표 **Access 5분 stateless + Redis Refresh** 중 Access의 stateless 전환은 아직 남아 있습니다.
 
 ## 목표 아키텍처
 
@@ -94,11 +94,11 @@ zero-shot RAG 기준선을 확보한 뒤 one-shot 답변 예시와 step-back 검
 
 확정 목표에서는 Access 검증이 Redis에 의존하지 않고, Refresh만 Redis 해시·회전·폐기로 관리합니다. 로그아웃·비밀번호 변경은 추가 재발급을 막지만 이미 발급된 Access는 만료까지 최대 5분 유효합니다. Redis 장애 시 기존 Access 검증은 유지하고 로그인·재발급·폐기는 오류로 처리합니다. 업무 DB 조회와 권한·CSRF 검사는 별개입니다. 기존 15시간 Access와 미등록 Refresh는 전환 시 거절해 재로그인을 요구합니다.
 
-Access와 현재 JWT Refresh는 **`sub=User.id`(사용자 고유키 문자열)**와 `tokenVersion=2`를 사용합니다. `user.id`는 기존 AUTO_INCREMENT 기본키를 사용하며 이메일·provider·닉네임을 claim에 넣지 않습니다. 가입·로그인·OAuth·재발급, principal과 사용자 조회를 ID 기반으로 통일했습니다. 이전 이메일 subject와 버전 없는 토큰은 거절하므로 재로그인해야 합니다. ID 사용과 별도로 API 권한·상담방 소유권을 검증합니다. Redis Access 등록 방식과 현재 Refresh JSON·비회전 계약은 유지합니다. 상세 준수사항은 [인증 계획](docs/plans/auth-security.md#access-식별자claim-보안-준수사항)을 따릅니다.
+Access는 **`sub=User.id`(사용자 고유키 문자열)**와 `tokenVersion=2`를 사용합니다. `user.id`는 기존 AUTO_INCREMENT 기본키를 사용하며 이메일·provider·닉네임을 claim에 넣지 않습니다. 가입·로그인·OAuth·재발급, principal과 사용자 조회를 ID 기반으로 통일했습니다. Refresh는 JWT 대신 선택자와 256비트 난수로 발급하며 Redis에 전체 토큰의 SHA-256 해시만 저장합니다. 기존 JWT Refresh는 거절하므로 재로그인해야 합니다. ID 사용과 별도로 API 권한·상담방 소유권을 검증합니다. 상세 계약은 [Refresh 회전 구현](docs/refresh-rotation.md)을 따릅니다.
 
-Access/Refresh 용도 검증, 토큰·payload 로그 제거, 공통 쿠키 정책, 명시적 CORS 허용 목록과 CSRF 보호를 적용했습니다. 브라우저 Refresh는 HttpOnly 쿠키로 전달하며 로그인·재발급 JSON에도 아직 포함됩니다. 로그아웃은 전달된 Bearer와 Access 쿠키의 등록을 폐기한 뒤 인증 쿠키를 삭제하고 상담 기록을 보존합니다. 다른 Access와 Refresh는 폐기하지 않으므로 복사된 Refresh로 재발급할 수 있습니다. 전체 세션 폐기·Refresh JSON 제거는 후속 범위입니다.
+토큰·payload 로그 제거, 공통 쿠키 정책, 명시적 CORS 허용 목록과 CSRF 보호를 적용했습니다. Refresh는 HttpOnly 쿠키로만 전달하며 로그인·재발급 JSON에는 Access만 포함됩니다. 매 재발급마다 Refresh를 회전하고 사용한 토큰 재사용은 해당 family를 폐기합니다. 로그아웃은 전달된 Refresh family·Access를 폐기하고 인증 쿠키를 삭제합니다. 비밀번호 변경·탈퇴는 모든 Refresh family를 폐기합니다. 다른 로그인 family와 제시되지 않은 Access는 로그아웃으로 즉시 폐기되지 않으며 상담 기록은 보존합니다.
 
-Access 수명은 기본/운영·test에서 **5분(300초)**, 개발 편의를 위한 **local에서만 15시간**입니다. `jwt.access-ttl`을 JWT와 Access 쿠키가 함께 사용하며 Refresh는 **7일**을 유지합니다. 운영에 local/test 프로필을 사용하지 않습니다. 이 수명 분리는 구현했지만 stateless Access + Redis Refresh 전환은 아직 미구현입니다. `POST /api/auth/reissue`는 **Access 인증 없이** 유효한 `refreshToken` 쿠키와 CSRF 토큰으로 호출합니다. 현재는 Refresh 용도·서명·만료와 사용자 존재를 확인하고 Access만 새로 발급합니다. 후속 설계와 이전 위험 분석은 [인증·보안 실행 계획](docs/plans/auth-security.md)과 [JWT 보안 검토](docs/jwt-security-review.md)를 참고하세요.
+Access 수명은 기본/운영·test에서 **5분(300초)**, 개발 편의를 위한 **local에서만 15시간**입니다. `jwt.access-ttl`을 JWT와 Access 쿠키가 함께 사용합니다. Refresh family는 최초 로그인부터 **절대 7일**이며 회전·쿠키 갱신으로 연장하지 않습니다. 운영에 local/test 프로필을 사용하지 않습니다. `POST /api/auth/reissue`는 **Access 인증 없이** Refresh 쿠키와 CSRF 토큰으로 호출해 새 Access·Refresh를 발급합니다. Refresh 누락·만료·폐기·재사용은 401, Redis 오류는 503입니다. 다중 탭 재발급을 합치고 응답 유실 후 이전 Refresh를 자동 재시도하지 않아야 합니다. 후속 설계는 [인증·보안 실행 계획](docs/plans/auth-security.md)을 참고하세요.
 
 ## 기술 구성과 디렉터리
 
@@ -155,7 +155,7 @@ local 프로필의 주소는 백엔드 `http://localhost:8080`, Swagger `http://
 
 가입·로그인·재발급·OAuth·삭제에 공통 쿠키 정책을 적용합니다. 운영 기본값은 Secure=true·SameSite=None이며 local/test는 Secure=false·SameSite=Lax입니다. Access/Refresh는 모든 환경에서 HttpOnly이고 Path는 각각 `/`, `/api/auth`이며, 이전 Path=/ Refresh 쿠키는 발급·삭제 시 정리합니다. Ollama 애플리케이션 연동은 아직 없습니다. 준비 상태 검사·자원 예산·LAN 연결·데이터 보존 정책은 [로컬 인프라 가이드](docker/README.md)를 따릅니다.
 
-Redis 연결은 `.env`의 `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DATABASE`, `REDIS_SSL_ENABLED`로 설정합니다. 로컬 비밀번호는 `docker/.env.compose`와 일치시킵니다. 연결·명령 제한 시간은 각각 2초입니다. Redis 재시작으로 키가 유실되면 기존 Access는 거절되며 정상 Refresh와 CSRF 토큰으로 새 Access를 발급받아야 합니다. 기존 jti 없는 Access도 거절되므로 정상 Refresh가 없으면 재로그인합니다.
+Redis 연결은 `.env`의 `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DATABASE`, `REDIS_SSL_ENABLED`로 설정합니다. 로컬 비밀번호는 `docker/.env.compose`와 일치시킵니다. 연결·명령 제한 시간은 각각 2초입니다. 현재 Redis 재시작으로 Access·Refresh 상태가 모두 유실되면 재로그인해야 합니다. Access 키만 유실되고 Refresh 상태가 정상이라면 회전으로 새 Access를 발급받을 수 있습니다. 미등록 Refresh를 자동 복원하지 않습니다.
 
 로컬 키·TTL 모니터링은 선택적 Redis Insight를 사용합니다. 접속 주소는 `http://localhost:5540`이며 실행 방법은 [로컬 모니터링 안내](docker/README.md#redis-insight-로컬-모니터링)를 참고하세요.
 
@@ -171,12 +171,14 @@ Swagger UI와 OpenAPI는 공통 설정에서 비활성화하고 문서 경로 �
 .\gradlew.bat mysqlIntegrationTest
 # 실행 중인 로컬 Redis 필요. 일반 test/CI에서는 제외됩니다.
 .\gradlew.bat redisLiveTest
+# Docker의 독립 Redis에서 Refresh 원자 회전·TTL·폐기·장애 검증
+.\gradlew.bat redisIntegrationTest
 powershell -NoProfile -ExecutionPolicy Bypass -File docker/verify.ps1
 ```
 
 Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 없이 실행할 수 있습니다. H2 테스트는 실제 MySQL 통합 검증을 대체하지 않습니다. `verify.ps1`은 실행 중인 컨테이너의 MySQL 쿼리, Qdrant 인증·임시 벡터 검색, Redis 인증·임시 키 쓰기·TTL·삭제를 검사합니다.
 
-2026-10-13 전체 자동 테스트 95개·JAR 생성과 실제 Redis의 TTL·사용자 일치·Access 폐기 검증을 통과했습니다. 일반 테스트는 테스트 전용 저장소 대체 구현·모킹을 사용하며 실제 Redis는 `redisLiveTest`로 별도 검증합니다. 이는 전환 전 검증 이력입니다. ETL·Advisor·stateless Access/Redis Refresh 전환·실제 모델 품질 검증은 별도 구현 후 진행할 예정입니다.
+2026-10-14 일반 테스트 156개·실제 Redis 회전 테스트 11개·MySQL 통합 테스트 2개와 JAR 생성을 통과했습니다. 일반 테스트는 대체 저장소·모킹으로 Docker 없이 실행하며 `redisIntegrationTest`는 독립 Redis에서 TTL·동시 소비·재사용/폐기·장애를 검증합니다. 과거 Access 저장소 검증은 `redisLiveTest`로 별도 실행합니다. ETL·Advisor·Access stateless·실제 모델 품질 검증은 후속 구현 범위입니다.
 
 ## 주요 API
 
@@ -186,7 +188,7 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 | POST /api/auth/signup | 회원가입: 200 성공 JSON과 JWT 쿠키 |
 | POST /api/auth/login | 로그인 |
 | GET /api/auth/me | 내 정보 조회 |
-| POST /api/auth/reissue | Access 없이 Refresh 쿠키 + CSRF 토큰으로 재발급 |
+| POST /api/auth/reissue | Access 없이 Refresh 쿠키 + CSRF 토큰으로 Access/Refresh 회전 |
 | POST /api/auth/logout | 로그아웃 |
 | GET /api/chat-rooms | 내 상담방 목록 |
 | GET /api/chat-rooms/{roomId} | 상담방 메시지 조회 |
@@ -194,7 +196,7 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 | POST /api/chat-rooms/{roomId}/messages | 후속 질문 |
 | DELETE /api/chat-rooms/{roomId} | 상담방·메시지 삭제 |
 
-질문 입력은 `{"content":"상담 질문"}`이며 최초 응답은 상담방 ID와 메시지 목록, 후속 응답은 BOT 메시지입니다. 현재 요청·응답 계약은 local Swagger에서 확인할 수 있습니다. [재구축 기준선](docs/backend-baseline.md)은 변경 전 동작 기록입니다. Refresh JSON 응답 제거·장시간 최초 질문 응답 방식은 후속 구현 범위입니다.
+질문 입력은 `{"content":"상담 질문"}`이며 최초 응답은 상담방 ID와 메시지 목록, 후속 응답은 BOT 메시지입니다. 현재 요청·응답 계약은 local Swagger에서 확인할 수 있습니다. [재구축 기준선](docs/backend-baseline.md)은 변경 전 동작 기록입니다. 장시간 최초 질문 응답 방식은 후속 구현 범위입니다. Refresh 회전·JSON 제거·오류 전환은 [현재 인증 계약](docs/refresh-rotation.md#프론트-api-계약)을 따릅니다.
 
 ### 회원가입과 CSRF 전달 계약
 
@@ -214,7 +216,7 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 
 1. 기준선·권한·인증 보안 점검과 스키마 준비
 2. Spring AI ETL·다중 페이지 수집·Ollama 임베딩 비교
-3. Access 5분 stateless 전환과 Redis Refresh 해시·회전·재사용 탐지·family 폐기 구현
+3. 구현된 Redis Refresh 회전을 유지하며 Access stateless·issuer/audience 검증으로 전환
 4. Qdrant 검색·최초 근거 스냅샷·판례 검증 연결
 5. Advisor 기반 후속 상담과 출처 검증
 6. 검색·답변 품질 비교와 기존 구현 정리

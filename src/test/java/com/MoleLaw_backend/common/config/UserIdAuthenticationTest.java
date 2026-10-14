@@ -34,6 +34,7 @@ class UserIdAuthenticationTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;
     @Autowired JwtUtil jwt;
+    @Autowired com.MoleLaw_backend.auth.security.RefreshTokenService refreshTokens;
     @Autowired UserRepository users;
     @Autowired ChatRoomRepository rooms;
     @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
@@ -56,13 +57,13 @@ class UserIdAuthenticationTest {
         User user = users.findByEmailAndProvider("id-flow@example.com", "local").orElseThrow();
         assertThat(user.getId()).isPositive();
         assertThat(jwt.getUserIdFromAccessToken(signup.access().getValue())).isEqualTo(user.getId());
-        assertThat(jwt.getUserIdFromRefreshToken(signup.refresh().getValue())).isEqualTo(user.getId());
+        assertThat(refreshTokens.userId(signup.refresh().getValue())).isEqualTo(user.getId());
         var login = mvc.perform(post("/api/auth/login").with(csrf()).contentType("application/json")
                         .content("{\"email\":\"id-flow@example.com\",\"password\":\"Example-password-123!\"}"))
                 .andExpect(status().isOk()).andReturn().getResponse();
         var loginJson = mapper.readTree(login.getContentAsString());
         assertThat(jwt.getUserIdFromAccessToken(loginJson.path("accessToken").asText())).isEqualTo(user.getId());
-        assertThat(jwt.getUserIdFromRefreshToken(loginJson.path("refreshToken").asText())).isEqualTo(user.getId());
+        assertThat(loginJson.has("refreshToken")).isFalse();
         var reissue = mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(signup.refresh()))
                 .andExpect(status().isOk()).andReturn().getResponse();
         Cookie access = reissue.getCookie("accessToken");
@@ -112,7 +113,7 @@ class UserIdAuthenticationTest {
         assertThat(newId).isNotEqualTo(oldId);
         mvc.perform(get("/api/auth/me").cookie(old.access())).andExpect(status().isUnauthorized());
         mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(old.refresh()))
-                .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("TOKEN_FAIL"));
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("error.code").value("INVALID_REFRESH_TOKEN"));
         mvc.perform(get("/api/auth/me").cookie(replacement.access())).andExpect(status().isOk());
     }
 

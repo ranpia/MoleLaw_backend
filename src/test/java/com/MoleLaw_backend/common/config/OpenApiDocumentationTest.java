@@ -106,7 +106,9 @@ class OpenApiDocumentationTest {
         assertFalse(document.path("paths").path("/api/auth/signup").path("post")
                 .path("responses").has("302"));
         assertTrue(document.path("paths").path("/api/auth/reissue").path("post")
-                .path("responses").has("400"));
+                .path("responses").has("401"));
+        assertFalse(document.path("components").path("schemas").path("AuthResponse").path("properties").has("refreshToken"));
+        assertTrue(document.path("components").path("schemas").path("AuthResponse").path("properties").has("accessToken"));
         verifyLocalReferences(document, document);
         JsonNode userSchema = resolve(document, document.path("paths").path("/api/auth/me").path("get")
                 .path("responses").path("200").path("content").path("application/json").path("schema"));

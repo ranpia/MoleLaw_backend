@@ -42,7 +42,7 @@ class AccessTokenServiceTest {
     void revokeIgnoresMissingMalformedAndRefreshTokens() {
         service.revoke(null);
         service.revoke("malformed");
-        service.revoke(jwt.generateRefreshToken(1L));
+        service.revoke(TestJwtTokens.legacyRefresh(1L));
         verifyNoInteractions(store);
     }
 }

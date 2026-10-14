@@ -11,6 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @TestConfiguration
 public class TestAccessTokenStoreConfig {
     @Bean
+    com.MoleLaw_backend.auth.security.RefreshTokenStore refreshTokenStore() {
+        return new com.MoleLaw_backend.auth.security.InMemoryRefreshTokenStore();
+    }
+    @Bean
     AccessTokenStore accessTokenStore() {
         return new AccessTokenStore() {
             private final ConcurrentHashMap<String, Entry> entries = new ConcurrentHashMap<>();

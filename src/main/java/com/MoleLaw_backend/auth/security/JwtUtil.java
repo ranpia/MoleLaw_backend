@@ -17,7 +17,6 @@ import java.time.Duration;
 @Component
 public class JwtUtil {
     private final Duration accessTtl;
-    private static final long REFRESH_EXPIRATION = 1000L * 60 * 60 * 24 * 7;
     private static final String TOKEN_TYPE = "tokenType";
     private final String secretKeyRaw;
     private Key key;
@@ -44,10 +43,6 @@ public class JwtUtil {
         return generateToken(userId, "access", accessTtl.toMillis());
     }
 
-    public String generateRefreshToken(Long userId) {
-        return generateToken(userId, "refresh", REFRESH_EXPIRATION);
-    }
-
     private String generateToken(Long userId, String type, long lifetime) {
         if (userId == null || userId <= 0) {
             throw new IllegalArgumentException("A persisted positive user ID is required");
@@ -62,10 +57,6 @@ public class JwtUtil {
 
     public boolean validateAccessToken(String token) {
         return validateToken(token, "access");
-    }
-
-    public boolean validateRefreshToken(String token) {
-        return validateToken(token, "refresh");
     }
 
     private boolean validateToken(String token, String type) {
@@ -100,10 +91,6 @@ public class JwtUtil {
     }
 
     public record AccessTokenIdentity(String tokenId, String subject, Instant expiresAt) {}
-
-    public Long getUserIdFromRefreshToken(String token) {
-        return parseUserId(parseClaims(token, "refresh").getSubject());
-    }
 
     public static Long parseUserId(String subject) {
         if (subject == null || !subject.matches("[1-9][0-9]{0,18}")) {

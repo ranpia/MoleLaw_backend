@@ -23,6 +23,8 @@ public enum ErrorCode {
     USER_NOT_AUTHENTICATED(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다."),
     PASSWORD_FAIL(HttpStatus.BAD_REQUEST.value(), "비밀번호가 일치하지 않습니다."),
     TOKEN_FAIL(HttpStatus.BAD_REQUEST.value(), "유효하지 않은 리프레시 토큰입니다."),
+    INVALID_REFRESH_TOKEN(401, "유효하지 않거나 만료·폐기된 Refresh 토큰입니다."),
+    REFRESH_TOKEN_REUSED(401, "Refresh 토큰 재사용이 감지되어 로그인 세션이 폐기되었습니다."),
     DUPLICATED_EMAIL(HttpStatus.BAD_REQUEST.value(), "이미 존재하는 이메일입니다."),
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST.value(), "잘못된 형식입니다.");
     private final int status;
