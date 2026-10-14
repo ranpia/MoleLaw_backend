@@ -14,7 +14,7 @@
 | 사용자·채팅 | `user`, `chat_room`, `message` JPA | 실제 제약·ID 생성·정렬·조회 인덱스 확인 |
 | 법령 | `law`, `law_chunk`, `law_embedding` | MST별 버전·해시·ETL 상태 미관리, 기존 벡터 경로 유지 중 |
 | 원문 | `legal_source` 불변 JSON·해시·UUID, V1 생성·실제 MySQL 저장 검증 | 법령 ETL·상담방 근거 연결 |
-| 인증 | Redis jti 등록·TTL·검증·전달 Access 폐기 | Access 5분 stateless 전환·Redis Refresh 해시·회전·family 폐기 미구현 |
+| 인증 | Redis Access 등록·TTL·검증과 Refresh 해시·원자 회전·family/전체 폐기 | Access stateless·issuer/audience 및 운영 Redis 복구 |
 
 도메인 패키지 이동은 테이블 재생성 사유가 아니다. 목표에서 MySQL은 원본·업무·작업 상태, Qdrant는 재생성 가능한 검색 벡터, Redis는 Refresh 해시·family·회전·폐기 상태를 관리한다. Access는 5분 stateless JWT다. 현재 Redis Access 등록 구현은 전환 대상이다.
 

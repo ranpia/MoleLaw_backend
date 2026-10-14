@@ -22,3 +22,5 @@ jobs:
         run: bash ./gradlew test bootJar
       - name: Validate migrations on isolated MySQL
         run: bash ./gradlew mysqlIntegrationTest
+      - name: Validate Refresh rotation on isolated Redis
+        run: bash ./gradlew redisIntegrationTest

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.Instant;
 
 @Component
 public class CookieUtil {
@@ -40,7 +41,6 @@ public class CookieUtil {
     public void addJwtCookie(HttpServletResponse response, String name, String token) {
         long maxAge = switch (name) {
             case "accessToken" -> accessTtl.toSeconds();
-            case "refreshToken" -> 7 * 24 * 60 * 60;
             default -> throw new IllegalArgumentException("Unknown authentication cookie");
         };
         writeCookie(response, name, token, maxAge);
@@ -50,6 +50,14 @@ public class CookieUtil {
     public void clearJwtCookie(HttpServletResponse response, String name) {
         writeCookie(response, name, "", 0);
         clearLegacyRefreshCookie(response, name);
+    }
+
+    public void addRefreshCookie(HttpServletResponse response, String value, Instant expiresAt) {
+        long maxAge = Duration.between(Instant.now(), expiresAt).toSeconds();
+        if (maxAge <= 0) throw new com.MoleLaw_backend.common.exception.MolelawException(
+                com.MoleLaw_backend.common.exception.ErrorCode.INVALID_REFRESH_TOKEN);
+        writeCookie(response, "refreshToken", value, maxAge);
+        clearLegacyRefreshCookie(response, "refreshToken");
     }
 
     private void clearLegacyRefreshCookie(HttpServletResponse response, String name) {

@@ -27,16 +27,16 @@ class OAuthAccessTokenTest {
     @Test
     void newOAuthAccountUsesTheGeneratedPrimaryKey() throws Exception {
         Fixture fixture = new Fixture();
-        when(fixture.users.findByEmailAndProvider("oauth@example.com", "google")).thenReturn(Optional.empty());
+        when(fixture.users.findByCredentialsForUpdate("oauth@example.com", "google")).thenReturn(Optional.empty());
         when(fixture.users.save(any(User.class))).thenReturn(User.builder().id(42L)
                 .email("oauth@example.com").provider("google").build());
         fixture.handler.onAuthenticationSuccess(new MockHttpServletRequest(), fixture.response, fixture.authentication);
         var access = ArgumentCaptor.forClass(String.class);
         var refresh = ArgumentCaptor.forClass(String.class);
         verify(fixture.cookies).addJwtCookie(eq(fixture.response), eq("accessToken"), access.capture());
-        verify(fixture.cookies).addJwtCookie(eq(fixture.response), eq("refreshToken"), refresh.capture());
+        verify(fixture.cookies).addRefreshCookie(eq(fixture.response), refresh.capture(), any());
         assertThat(fixture.jwt.getUserIdFromAccessToken(access.getValue())).isEqualTo(42L);
-        assertThat(fixture.jwt.getUserIdFromRefreshToken(refresh.getValue())).isEqualTo(42L);
+        assertThat(fixture.refresh.userId(refresh.getValue())).isEqualTo(42L);
     }
 
     @Test
@@ -69,8 +69,9 @@ class OAuthAccessTokenTest {
         final UserRepository users = mock(UserRepository.class);
         final Authentication authentication = mock(Authentication.class);
         final MockHttpServletResponse response = new MockHttpServletResponse();
-        final OAuth2SuccessHandler handler = new OAuth2SuccessHandler(jwt, cookies, users,
-                new AccessTokenService(jwt, store));
+        final RefreshTokenService refresh = new RefreshTokenService(new InMemoryRefreshTokenStore());
+        final OAuth2SuccessHandler handler = new OAuth2SuccessHandler(users,
+                new AuthTokenService(new AccessTokenService(jwt, store), refresh, cookies, jwt));
 
         Fixture() {
             jwt.init();
@@ -78,7 +79,7 @@ class OAuthAccessTokenTest {
             when(authentication.getPrincipal()).thenReturn(new DefaultOAuth2User(
                     List.of(new SimpleGrantedAuthority("ROLE_USER")),
                     Map.of("email", "oauth@example.com", "provider", "google"), "email"));
-            when(users.findByEmailAndProvider("oauth@example.com", "google"))
+            when(users.findByCredentialsForUpdate("oauth@example.com", "google"))
                     .thenReturn(Optional.of(User.builder().id(1L).email("oauth@example.com").provider("google").build()));
         }
     }

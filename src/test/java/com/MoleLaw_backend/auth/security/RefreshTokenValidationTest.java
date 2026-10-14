@@ -24,8 +24,9 @@ class RefreshTokenValidationTest {
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final MockHttpServletResponse response = new MockHttpServletResponse();
     private final AccessTokenStore store = mock(AccessTokenStore.class);
-    private final UserService service = new UserService(users, mock(PasswordEncoder.class), jwt, cookies,
-            new AccessTokenService(jwt, store));
+    private final RefreshTokenService refresh = new RefreshTokenService(new InMemoryRefreshTokenStore());
+    private final UserService service = new UserService(users, mock(PasswordEncoder.class), cookies,
+            new AuthTokenService(new AccessTokenService(jwt, store), refresh, cookies, jwt), refresh);
 
     @BeforeEach
     void setUp() {
@@ -43,8 +44,8 @@ class RefreshTokenValidationTest {
     @Test
     void rejectsDeletedUsersRefreshToken() {
         when(cookies.getTokenFromCookie(request, "refreshToken"))
-                .thenReturn(jwt.generateRefreshToken(1L));
-        when(users.findById(1L)).thenReturn(Optional.empty());
+                .thenReturn(refresh.issue(1L).value());
+        when(users.findByIdForUpdate(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.reissue(request, response)).isInstanceOf(MolelawException.class);
         verify(cookies, never()).addJwtCookie(any(), anyString(), anyString());
     }
@@ -52,11 +53,19 @@ class RefreshTokenValidationTest {
     @Test
     void validRefreshWorksWithoutAnAccessToken() {
         when(cookies.getTokenFromCookie(request, "refreshToken"))
-                .thenReturn(jwt.generateRefreshToken(1L));
-        when(users.findById(1L))
+                .thenReturn(refresh.issue(1L).value());
+        when(users.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(User.builder().id(1L).email("u@example.com").provider("local").build()));
         assertThat(jwt.validateAccessToken(service.reissue(request, response).getAccessToken())).isTrue();
         verify(cookies).addJwtCookie(eq(response), eq("accessToken"), anyString());
         verify(store).register(anyString(), eq("1"), any());
+        verify(cookies).addRefreshCookie(eq(response), anyString(), any());
+    }
+
+    @Test
+    void rejectsLegacyRefreshJwtBeforeUserLookup() {
+        when(cookies.getTokenFromCookie(request, "refreshToken")).thenReturn(TestJwtTokens.legacyRefresh(1L));
+        assertThatThrownBy(() -> service.reissue(request, response)).isInstanceOf(MolelawException.class);
+        verifyNoInteractions(users);
     }
 }

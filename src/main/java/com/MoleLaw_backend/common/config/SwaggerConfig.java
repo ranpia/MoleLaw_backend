@@ -37,7 +37,7 @@ public class SwaggerConfig {
                         .title("MoleLaw API")
                         .description("MoleLaw 백엔드 API. 보호된 API는 Bearer Access JWT 또는 accessToken 쿠키로 인증하며 Bearer가 우선합니다. "
                                 + "Access는 JWT 검증과 Redis jti 등록 확인을 모두 통과해야 합니다. 미등록·폐기 Access는 401, Redis 장애는 503입니다. "
-                                + "Access/Refresh의 subject는 User.id 문자열이며 tokenVersion=2를 사용합니다. 이메일·provider는 claim에 포함하지 않습니다. 이전 토큰은 거절하므로 재로그인해야 합니다. "
+                                + "Access subject는 User.id 문자열이며 tokenVersion=2입니다. Refresh는 난수 기반 HttpOnly 쿠키로만 전달하며 매 재발급마다 회전합니다. 이전 JWT Refresh는 거절하므로 재로그인해야 합니다. "
                                 + "POST/PUT/PATCH/DELETE는 로그인·가입을 포함하여 GET /api/auth/csrf에서 받은 토큰을 X-XSRF-TOKEN 헤더로 보내야 합니다. "
                                 + "같은 서버의 Swagger UI에서 GET /api/auth/csrf를 한 번 실행하면 XSRF-TOKEN 쿠키를 읽어 이후 요청에 X-XSRF-TOKEN 헤더를 자동으로 추가합니다. 직접 토큰을 입력할 필요가 없습니다.")
                         .version("v1.0"))
@@ -90,6 +90,15 @@ public class SwaggerConfig {
                                 .example(java.util.Map.of("success", false, "error", java.util.Map.of(
                                         "status", 503, "code", "AUTH_STORE_UNAVAILABLE",
                                         "message", "인증 저장소를 사용할 수 없습니다. 잠시 후 다시 시도하세요."))))));
+            }
+            if (publicEndpoint && java.util.Set.of("signup", "login").contains(method)) {
+                operation.getResponses().addApiResponse("401", new ApiResponse()
+                        .description("발급 전 Refresh 사용자 세대가 변경·유실되어 등록 거절. 재로그인이 필요합니다.")
+                        .content(new Content().addMediaType("application/json", new MediaType()
+                                .schema(new io.swagger.v3.oas.models.media.Schema<>().$ref("#/components/schemas/BusinessErrorResponse"))
+                                .example(java.util.Map.of("success", false, "error", java.util.Map.of(
+                                        "status", 401, "code", "INVALID_REFRESH_TOKEN",
+                                        "message", "유효하지 않거나 만료·폐기된 Refresh 토큰입니다."))))));
             }
             return operation;
         };

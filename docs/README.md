@@ -10,6 +10,7 @@
 | 법령·판례 Tool 입력·반환·오류 계약 | [법령 API Tool](legal-api-tools.md) |
 | 기존 채팅 API·법령 수집 회귀 기준 | [동작 기준선](backend-baseline.md) |
 | 현재 인증 구현·CSRF·Access 5분 stateless/Redis Refresh 목표 | [인증·보안 계획](plans/auth-security.md) |
+| 구현된 Refresh 회전·쿠키/JSON·재사용·폐기·Redis 통합 검증 | [Refresh 회전 구현](refresh-rotation.md) |
 | MySQL 마이그레이션·업무/ETL 스키마 | [MySQL 계획](plans/mysql-schema.md) |
 | 빈 MySQL 초기화·통합 테스트 | [MySQL 실행 가이드](mysql-setup.md) |
 | 개선 전 인증 위험과 설계 근거 | [JWT 보안 검토](jwt-security-review.md) |

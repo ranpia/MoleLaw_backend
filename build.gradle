@@ -72,7 +72,17 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration' }
+	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration', 'redis-integration' }
+}
+
+tasks.register('redisIntegrationTest', Test) {
+    description = 'Validates Refresh Lua rotation, reuse, revocation and failure handling on isolated Redis.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'redis-integration' }
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
 }
 
 tasks.register('mysqlIntegrationTest', Test) {
