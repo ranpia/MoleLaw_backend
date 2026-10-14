@@ -35,7 +35,7 @@ class RefreshTokenValidationTest {
     @Test
     void rejectsAccessTokenInRefreshCookieBeforeUserLookup() {
         when(cookies.getTokenFromCookie(request, "refreshToken"))
-                .thenReturn(jwt.generateAccessToken("u@example.com", "local"));
+                .thenReturn(jwt.generateAccessToken(1L));
         assertThatThrownBy(() -> service.reissue(request, response)).isInstanceOf(MolelawException.class);
         verifyNoInteractions(users);
     }
@@ -43,8 +43,8 @@ class RefreshTokenValidationTest {
     @Test
     void rejectsDeletedUsersRefreshToken() {
         when(cookies.getTokenFromCookie(request, "refreshToken"))
-                .thenReturn(jwt.generateRefreshToken("u@example.com", "local"));
-        when(users.findByEmailAndProvider("u@example.com", "local")).thenReturn(Optional.empty());
+                .thenReturn(jwt.generateRefreshToken(1L));
+        when(users.findById(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.reissue(request, response)).isInstanceOf(MolelawException.class);
         verify(cookies, never()).addJwtCookie(any(), anyString(), anyString());
     }
@@ -52,11 +52,11 @@ class RefreshTokenValidationTest {
     @Test
     void validRefreshWorksWithoutAnAccessToken() {
         when(cookies.getTokenFromCookie(request, "refreshToken"))
-                .thenReturn(jwt.generateRefreshToken("u@example.com", "local"));
-        when(users.findByEmailAndProvider("u@example.com", "local"))
-                .thenReturn(Optional.of(User.builder().email("u@example.com").provider("local").build()));
+                .thenReturn(jwt.generateRefreshToken(1L));
+        when(users.findById(1L))
+                .thenReturn(Optional.of(User.builder().id(1L).email("u@example.com").provider("local").build()));
         assertThat(jwt.validateAccessToken(service.reissue(request, response).getAccessToken())).isTrue();
         verify(cookies).addJwtCookie(eq(response), eq("accessToken"), anyString());
-        verify(store).register(anyString(), eq("u@example.com:local"), any());
+        verify(store).register(anyString(), eq("1"), any());
     }
 }

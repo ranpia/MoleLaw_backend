@@ -60,12 +60,12 @@ class AccessTokenLifetimeTest {
             JwtUtil jwt = context.getBean(JwtUtil.class);
             var parser = Jwts.parserBuilder()
                     .setSigningKey(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8))).build();
-            String access = jwt.generateAccessToken("user@example.com", "local");
+            String access = jwt.generateAccessToken(1L);
             var accessClaims = parser.parseClaimsJws(access).getBody();
             assertThat(Duration.between(accessClaims.getIssuedAt().toInstant(),
                     accessClaims.getExpiration().toInstant()).getSeconds()).isEqualTo(expectedSeconds);
 
-            var refreshClaims = parser.parseClaimsJws(jwt.generateRefreshToken("user@example.com", "local"))
+            var refreshClaims = parser.parseClaimsJws(jwt.generateRefreshToken(1L))
                     .getBody();
             assertThat(Duration.between(refreshClaims.getIssuedAt().toInstant(),
                     refreshClaims.getExpiration().toInstant())).isEqualTo(Duration.ofDays(7));

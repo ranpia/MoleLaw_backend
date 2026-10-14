@@ -43,7 +43,7 @@
 
 ## 다음 담당 작업
 
-Access의 현재 `sub=email:provider`를 문자열 `User.id`로 전환하는 것은 필수 보안 작업이다. 이메일·provider·닉네임을 claim에 포함하지 않는다. 가입·로그인·OAuth·재발급과 principal·사용자 ID 조회를 함께 변경하고, 구형 subject 거부·개인정보 claim 부재·권한/소유권을 검증한다. [인증 계획의 준수사항](plans/auth-security.md#access-식별자claim-보안-준수사항)을 따른다. 현재 수명 분리 구현과 달리 이 식별자 전환은 미구현이다.
+2026-10-14 Access와 현재 JWT Refresh의 subject를 문자열 `User.id`로 전환했다. `user.id`의 기존 IDENTITY PK를 사용하며 토큰 버전은 2다. 가입·로그인·OAuth·재발급, principal·내 정보·탈퇴·프로필 변경을 ID 조회로 통일했다. 이전 이메일 subject/버전 없는 토큰은 거절해 재로그인한다. Redis Access 등록·현재 Refresh JSON·비회전 방식은 유지하며 stateless/Redis Refresh 저장 전환은 다음 작업이다. [인증 계획의 준수사항](plans/auth-security.md#access-식별자claim-보안-준수사항)을 따른다.
 
 1. Access 5분 stateless + Redis Refresh 해시·회전·재사용 탐지·family 폐기로 전환한다. MySQL 인증 세션/Refresh migration은 추가하지 않는다. 기존 Access의 최대 5분 유효 계약과 전환 재로그인을 반영한다. 초기 테이블과 원문 저장은 MySQL 통합 테스트로 검증한다.
 2. MySQL 원문 Reader → 구조 보존 Transformer → Qdrant writer, Ollama 임베딩 비교/선정.

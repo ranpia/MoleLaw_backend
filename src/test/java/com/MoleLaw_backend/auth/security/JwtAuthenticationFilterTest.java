@@ -28,7 +28,7 @@ class JwtAuthenticationFilterTest {
     void refreshBearerNeverAuthenticatesOrLoadsAUser() throws Exception {
         jwtUtil.init();
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/auth/me");
-        request.addHeader("Authorization", "Bearer " + jwtUtil.generateRefreshToken("u@example.com", "local"));
+        request.addHeader("Authorization", "Bearer " + jwtUtil.generateRefreshToken(1L));
         FilterChain chain = mock(FilterChain.class);
         MockHttpServletResponse response = new MockHttpServletResponse();
         new JwtAuthenticationFilter(jwtUtil, users, accessTokens).doFilter(request, response, chain);
@@ -40,26 +40,26 @@ class JwtAuthenticationFilterTest {
     @Test
     void deletedUserAccessNeverAuthenticates() throws Exception {
         jwtUtil.init();
-        when(users.loadUserByUsername("u@example.com:local"))
+        when(users.loadUserByUsername("1"))
                 .thenThrow(new UsernameNotFoundException("missing"));
         when(store.isActive(anyString(), anyString())).thenReturn(true);
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/auth/me");
-        request.addHeader("Authorization", "Bearer " + jwtUtil.generateAccessToken("u@example.com", "local"));
+        request.addHeader("Authorization", "Bearer " + jwtUtil.generateAccessToken(1L));
         new JwtAuthenticationFilter(jwtUtil, users, accessTokens)
                 .doFilter(request, new MockHttpServletResponse(), mock(FilterChain.class));
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-        verify(users).loadUserByUsername("u@example.com:local");
+        verify(users).loadUserByUsername("1");
     }
 
     @Test
     void validButUnregisteredAccessNeverAuthenticatesOrRecreatesAKey() throws Exception {
         jwtUtil.init();
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/auth/me");
-        request.addHeader("Authorization", "Bearer " + jwtUtil.generateAccessToken("u@example.com", "local"));
+        request.addHeader("Authorization", "Bearer " + jwtUtil.generateAccessToken(1L));
         new JwtAuthenticationFilter(jwtUtil, users, accessTokens)
                 .doFilter(request, new MockHttpServletResponse(), mock(FilterChain.class));
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-        verify(store).isActive(anyString(), eq("u@example.com:local"));
+        verify(store).isActive(anyString(), eq("1"));
         verify(store, never()).register(anyString(), anyString(), any());
         verifyNoInteractions(users);
     }
@@ -70,7 +70,7 @@ class JwtAuthenticationFilterTest {
         when(store.isActive(anyString(), anyString())).thenThrow(new com.MoleLaw_backend.common.exception.MolelawException(
                 com.MoleLaw_backend.common.exception.ErrorCode.AUTH_STORE_UNAVAILABLE));
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/auth/me");
-        request.addHeader("Authorization", "Bearer " + jwtUtil.generateAccessToken("u@example.com", "local"));
+        request.addHeader("Authorization", "Bearer " + jwtUtil.generateAccessToken(1L));
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = mock(FilterChain.class);
         new JwtAuthenticationFilter(jwtUtil, users, accessTokens).doFilter(request, response, chain);

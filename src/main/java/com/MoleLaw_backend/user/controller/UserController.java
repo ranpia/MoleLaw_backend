@@ -31,7 +31,6 @@ import org.springframework.http.MediaType;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "User", description = "회원가입·로그인·사용자 정보·쿠키 기반 토큰 재발급 API")
@@ -81,61 +80,36 @@ public class UserController {
         return ResponseEntity.ok(authResponse);
     }
 
-    @Operation(summary = "내 정보 조회", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. 현재 사용자의 이메일과 닉네임을 조회합니다.", security = @SecurityRequirement(name = "AccessCookie"))
+    @Operation(summary = "내 정보 조회", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. JWT subject의 User.id로 현재 사용자의 이메일과 닉네임을 조회합니다. 구형 이메일 subject 토큰은 401로 거절합니다.", security = @SecurityRequirement(name = "AccessCookie"))
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":{\"email\":\"user@example.com\",\"nickname\":\"두더지\"}}"))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 사용자 식별자입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"BAD_REQUEST\",\"message\":\"잘못된 사용자 식별자입니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Security 필터 인증 실패. ApiResponse 래퍼 없이 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UnauthorizedSchema.class), examples = @ExampleObject(value = "{\"error\":\"Unauthorized\"}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "502", description = "해당 사용자를 찾을 수 없습니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":502,\"code\":\"USER_NOT_FOUND\",\"message\":\"해당 사용자를 찾을 수 없습니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
     })
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserResponse>> getMyInfo() {
-        String subject = SecurityContextHolder.getContext().getAuthentication().getName();
-        String[] parts = subject.split(":");
-
-        if (parts.length != 2) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.<UserResponse>error("잘못된 사용자 식별자입니다."));
-        }
-
-        String email = parts[0];
-        String provider = parts[1];
-
-        UserResponse user = userService.getUserByEmailAndProvider(email, provider);
+    public ResponseEntity<ApiResponse<UserResponse>> getMyInfo(
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails) {
+        UserResponse user = userService.getUserById(userDetails.getUserId());
         return ResponseEntity.ok(ApiResponse.success(user));
     }
 
-    @Operation(summary = "회원 탈퇴", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. 사용자와 연관 채팅 기록을 삭제하고 JWT 쿠키를 삭제합니다. 복사된 JWT의 서버 폐기는 아직 구현하지 않았습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.", security = @SecurityRequirement(name = "AccessCookie"))
+    @Operation(summary = "회원 탈퇴", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. 인증된 User.id의 사용자와 연관 채팅 기록을 삭제하고 JWT 쿠키를 삭제합니다. 복사된 JWT의 서버 폐기는 아직 구현하지 않았습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.", security = @SecurityRequirement(name = "AccessCookie"))
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "탈퇴 성공. 본문 없이 JWT 쿠키 삭제", content = @Content),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "사용자 식별자 구조가 잘못됨. 응답 본문 없음", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "탈퇴 성공. 본문 없이 JWT 쿠키 삭제", headers = @Header(name = "Set-Cookie", description = "accessToken Path=/ 및 refreshToken Path=/api/auth 삭제. 이전 Path=/ Refresh도 삭제", schema = @Schema(type = "string")), content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "502", description = "인증 후 탈퇴 처리 전에 사용자가 삭제된 경우", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":502,\"code\":\"USER_NOT_FOUND\",\"message\":\"해당 사용자를 찾을 수 없습니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Security 필터 인증 실패. ApiResponse 래퍼 없이 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UnauthorizedSchema.class), examples = @ExampleObject(value = "{\"error\":\"Unauthorized\"}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
     })
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteUser(HttpServletResponse response) {
-        try {
-            String subject = SecurityContextHolder.getContext().getAuthentication().getName();
-            String[] parts = subject.split(":");
-
-            if (parts.length != 2) {
-                return ResponseEntity.badRequest().build();
-            }
-
-            String email = parts[0];
-            String provider = parts[1];
-            userService.deleteUser(email, provider);
-
-            cookieUtil.clearJwtCookie(response, "accessToken");
-            cookieUtil.clearJwtCookie(response, "refreshToken");
-
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("❌ DELETE /me 처리 중 예외 발생: " + e.getMessage());
-        }
+    public ResponseEntity<Void> deleteUser(
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletResponse response) {
+        userService.deleteUser(userDetails.getUserId());
+        cookieUtil.clearJwtCookie(response, "accessToken");
+        cookieUtil.clearJwtCookie(response, "refreshToken");
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "로그아웃", description = "인증 없이 호출할 수 있으며 전달된 Access의 Redis 등록을 폐기한 뒤 두 JWT 쿠키를 삭제합니다. Bearer와 Access 쿠키가 다르면 둘 다 폐기합니다. 다른 Access와 Refresh 서버 폐기는 아직 지원하지 않아 복사된 Refresh로 재발급할 수 있습니다. Redis 폐기 실패는 503이며 성공으로 처리하지 않습니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
@@ -159,7 +133,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("로그아웃 되었습니다."));
     }
 
-    @Operation(summary = "액세스 토큰 재발급", description = "refreshToken 쿠키의 용도·서명·만료와 사용자 존재를 확인해 새 Access를 발급합니다. Access 인증은 필요하지 않습니다. Refresh는 회전하지 않으며 응답에도 포함됩니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @Operation(summary = "액세스 토큰 재발급", description = "refreshToken 쿠키의 버전·용도·서명·만료와 User.id 기반 사용자 존재를 확인해 새 Access를 발급합니다. Access 인증은 필요하지 않습니다. Refresh는 회전하지 않으며 응답에도 포함됩니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
     @SecurityRequirements
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Access 발급 및 accessToken 쿠키 갱신", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":{\"accessToken\":\"<new-access-jwt>\",\"refreshToken\":\"<refresh-jwt>\"}}"))),
@@ -186,7 +160,7 @@ public class UserController {
     @PatchMapping("/password")
     public ResponseEntity<Void> changePassword(@Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
                                                @RequestBody ChangePasswordRequest request) {
-        userService.changePassword(userDetails.getEmail(), userDetails.getProvider(), request);
+        userService.changePassword(userDetails.getUserId(), request);
         return ResponseEntity.ok().build();
     }
 
@@ -202,7 +176,7 @@ public class UserController {
     @PatchMapping("/nickname")
     public ResponseEntity<Void> changeNickname(@Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
                                                @RequestBody ChangeNicknameRequest request) {
-        userService.changeNickname(userDetails.getEmail(), userDetails.getProvider(), request);
+        userService.changeNickname(userDetails.getUserId(), request);
         return ResponseEntity.ok().build();
     }
     @Schema(name = "AuthUserEnvelope")

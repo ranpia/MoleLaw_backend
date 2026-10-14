@@ -43,10 +43,10 @@ public class UserService {
                 .provider("local")
                 .build();
 
-        userRepository.save(user);
+        user = userRepository.save(user);
 
-        String accessToken = accessTokenService.issue(user.getEmail(), user.getProvider());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getProvider());
+        String accessToken = accessTokenService.issue(user.getId());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
 
         return new AuthResponse(accessToken, refreshToken);
     }
@@ -59,9 +59,8 @@ public class UserService {
             throw new MolelawException(ErrorCode.PASSWORD_FAIL);
         }
 
-        // ✅ 여기서 provider를 반드시 명시
-        String accessToken = accessTokenService.issue(user.getEmail(), user.getProvider());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getProvider());
+        String accessToken = accessTokenService.issue(user.getId());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
 
         AuthResponse authResponse=  new AuthResponse(accessToken, refreshToken);
         cookieUtil.addJwtCookie(response, "accessToken", authResponse.getAccessToken());
@@ -76,46 +75,33 @@ public class UserService {
             throw new MolelawException(ErrorCode.TOKEN_FAIL);
         }
 
-        String[] subjectParts = jwtUtil.getEmailAndProviderFromRefreshToken(refreshToken);
-        String email = subjectParts[0];
-        String provider = subjectParts[1];
-
-        userRepository.findByEmailAndProvider(email, provider)
+        Long userId = jwtUtil.getUserIdFromRefreshToken(refreshToken);
+        userRepository.findById(userId)
                 .orElseThrow(() -> new MolelawException(ErrorCode.TOKEN_FAIL));
 
-        String newAccessToken = accessTokenService.issue(email, provider);
+        String newAccessToken = accessTokenService.issue(userId);
         cookieUtil.addJwtCookie(response, "accessToken", newAccessToken);
 
         return new AuthResponse(newAccessToken, refreshToken);
     }
 
 
-    public UserResponse getUserByEmailAndProvider(String email, String provider) {
-        User user = userRepository.findByEmailAndProvider(email, provider)
+    public UserResponse getUserById(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
         return new UserResponse(user);
     }
 
     @Transactional
-    public void deleteUser(String email, String provider) {
-        System.out.println("🧪 deleteUser 호출됨 → " + email + " / " + provider);
-
-        User user = userRepository.findByEmailAndProvider(email, provider)
-                .orElseThrow(() -> {
-                    System.out.println("❌ 유저를 찾을 수 없음 → email: " + email + ", provider: " + provider);
-                    return new MolelawException(ErrorCode.USER_NOT_FOUND, email + " / " + provider);
-                });
-
-        System.out.println("✅ 유저 조회 성공 → id: " + user.getId());
-
-        userRepository.delete(user); // ✅ 이제 연관된 ChatRoom + Message 전부 삭제됨
-
-        System.out.println("🗑️ 유저 삭제 완료");
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
+        userRepository.delete(user);
     }
 
     @Transactional
-    public void changePassword(String email, String provider, ChangePasswordRequest request) {
-        User user = userRepository.findByEmailAndProvider(email, provider)
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
 
         if (!"local".equals(user.getProvider())) {
@@ -127,8 +113,8 @@ public class UserService {
 
 
     @Transactional
-    public void changeNickname(String email, String provider, ChangeNicknameRequest request) {
-        User user = userRepository.findByEmailAndProvider(email, provider)
+    public void changeNickname(Long userId, ChangeNicknameRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
 
         user.changeNickname(request.getNewNickname());

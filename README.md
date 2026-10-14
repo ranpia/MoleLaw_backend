@@ -94,7 +94,7 @@ zero-shot RAG 기준선을 확보한 뒤 one-shot 답변 예시와 step-back 검
 
 확정 목표에서는 Access 검증이 Redis에 의존하지 않고, Refresh만 Redis 해시·회전·폐기로 관리합니다. 로그아웃·비밀번호 변경은 추가 재발급을 막지만 이미 발급된 Access는 만료까지 최대 5분 유효합니다. Redis 장애 시 기존 Access 검증은 유지하고 로그인·재발급·폐기는 오류로 처리합니다. 업무 DB 조회와 권한·CSRF 검사는 별개입니다. 기존 15시간 Access와 미등록 Refresh는 전환 시 거절해 재로그인을 요구합니다.
 
-Access 식별자의 필수 보안 정책은 **`sub=User.id`(사용자 고유키 문자열)**입니다. 이메일·provider·닉네임 등 개인정보를 claim에 넣지 않고 토큰별 `jti`와 사용자 ID를 구분합니다. 현재 코드는 `sub=email:provider`이므로 전환 대상입니다. 발급·인증 principal·사용자 조회를 함께 변경하고 기존 이메일 subject는 새 형식에서 거절합니다. ID 사용과 별도로 API 권한·상담방 소유권을 검증합니다. 상세 준수사항은 [인증 계획](docs/plans/auth-security.md#access-식별자claim-보안-준수사항)을 따릅니다.
+Access와 현재 JWT Refresh는 **`sub=User.id`(사용자 고유키 문자열)**와 `tokenVersion=2`를 사용합니다. `user.id`는 기존 AUTO_INCREMENT 기본키를 사용하며 이메일·provider·닉네임을 claim에 넣지 않습니다. 가입·로그인·OAuth·재발급, principal과 사용자 조회를 ID 기반으로 통일했습니다. 이전 이메일 subject와 버전 없는 토큰은 거절하므로 재로그인해야 합니다. ID 사용과 별도로 API 권한·상담방 소유권을 검증합니다. Redis Access 등록 방식과 현재 Refresh JSON·비회전 계약은 유지합니다. 상세 준수사항은 [인증 계획](docs/plans/auth-security.md#access-식별자claim-보안-준수사항)을 따릅니다.
 
 Access/Refresh 용도 검증, 토큰·payload 로그 제거, 공통 쿠키 정책, 명시적 CORS 허용 목록과 CSRF 보호를 적용했습니다. 브라우저 Refresh는 HttpOnly 쿠키로 전달하며 로그인·재발급 JSON에도 아직 포함됩니다. 로그아웃은 전달된 Bearer와 Access 쿠키의 등록을 폐기한 뒤 인증 쿠키를 삭제하고 상담 기록을 보존합니다. 다른 Access와 Refresh는 폐기하지 않으므로 복사된 Refresh로 재발급할 수 있습니다. 전체 세션 폐기·Refresh JSON 제거는 후속 범위입니다.
 

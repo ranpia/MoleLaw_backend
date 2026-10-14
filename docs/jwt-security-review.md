@@ -23,7 +23,7 @@
 
 2026-10-13 사용자 결정으로 기존 Redis Access + MySQL Refresh 목표를 대체한다. 현재 코드는 Redis Access 등록 방식이다. 운영/test Access 5분·local 개발 Access 15시간과 JWT/쿠키 공통 설정은 구현했지만 stateless/Redis Refresh 전환은 미구현이다. 구현·전환·완료 조건의 기준은 [인증 실행 계획](plans/auth-security.md)이다.
 
-- Access는 **5분(300초)** JWT다. 허용 알고리즘·서명·용도·issuer/audience·iat/exp·필수 claim을 로컬 검증한다. `sub`는 `User.id`를 문자열로 표현한 불변 사용자 고유키, `jti`는 토큰별 추적 식별자로 두고 Redis 등록·세션 조회를 요구하지 않는다. 이메일·provider·닉네임·상담 내용은 claim에 넣지 않는 것을 필수 보안 준수사항으로 정한다. 현재 `email:provider` subject는 미전환 상태이며 모든 발급·principal·조회 경로를 함께 수정해야 한다. 고유키 자체로 권한을 부여하지 않는다.
+- Access는 **5분(300초)** JWT다. 허용 알고리즘·서명·용도·issuer/audience·iat/exp·필수 claim을 로컬 검증하는 목표다. `sub`는 `User.id`를 문자열로 표현한 불변 사용자 고유키, `jti`는 토큰별 추적 식별자로 두고 목표에서는 Redis 등록·세션 조회를 요구하지 않는다. 2026-10-14 Access와 현재 JWT Refresh의 `sub=User.id`, 버전 2, 개인정보 claim 제외와 ID 기반 principal·조회를 구현했다. 현재 Redis Access 확인과 issuer/audience 미검증은 후속 전환 대상이다. 고유키 자체로 권한을 부여하지 않는다.
 - Refresh는 고엔트로피 난수 토큰을 우선 제안한다. Redis에는 원문 대신 해시·userId·session/family·만료·소비·폐기·교체 관계를 저장한다. 사용자별 인덱스는 기기별/전체 Refresh 폐기에 사용한다. MySQL Refresh 테이블은 추가하지 않는다.
 - 회전은 Lua 등으로 기존 토큰 검증·한 번 소비·새 해시 등록을 원자적으로 수행한다. 소비 토큰의 재사용은 family 폐기와 재로그인으로 처리한다. 소비 이력을 family 절대 만료까지 유지하고 다중 탭·응답 유실·회전/로그아웃 경합을 검증한다.
 - Refresh는 HttpOnly 쿠키로만 전달하고 JSON에서 제거한다. Access 전달 방식은 프론트 계약으로 결정한다. 쿠키 사용 시 CSRF 방어가 계속 필요하다.
