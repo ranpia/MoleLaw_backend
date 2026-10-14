@@ -37,6 +37,7 @@ public class SwaggerConfig {
                         .title("MoleLaw API")
                         .description("MoleLaw 백엔드 API. 보호된 API는 Bearer Access JWT 또는 accessToken 쿠키로 인증하며 Bearer가 우선합니다. "
                                 + "Access는 JWT 검증과 Redis jti 등록 확인을 모두 통과해야 합니다. 미등록·폐기 Access는 401, Redis 장애는 503입니다. "
+                                + "Access/Refresh의 subject는 User.id 문자열이며 tokenVersion=2를 사용합니다. 이메일·provider는 claim에 포함하지 않습니다. 이전 토큰은 거절하므로 재로그인해야 합니다. "
                                 + "POST/PUT/PATCH/DELETE는 로그인·가입을 포함하여 GET /api/auth/csrf에서 받은 토큰을 X-XSRF-TOKEN 헤더로 보내야 합니다. "
                                 + "같은 서버의 Swagger UI에서 GET /api/auth/csrf를 한 번 실행하면 XSRF-TOKEN 쿠키를 읽어 이후 요청에 X-XSRF-TOKEN 헤더를 자동으로 추가합니다. 직접 토큰을 입력할 필요가 없습니다.")
                         .version("v1.0"))

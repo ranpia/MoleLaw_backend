@@ -39,6 +39,8 @@ MySQL은 기존 데이터 이관 없이 빈 DB에서 시작한다. Flyway V1과 
 
 Access 수명 분리는 구현했다. 기본/운영·test는 5분, local만 개발 편의로 15시간이며 JWT와 쿠키가 같은 설정을 사용한다. stateless/Redis Refresh 전환 완료를 의미하지 않는다.
 
+2026-10-14 Access와 현재 JWT Refresh의 subject를 기존 `User.id` PK 문자열로 전환했다. 토큰 버전 2와 ID 기반 principal·조회·권한 회귀를 검증했으며 이전 토큰은 재로그인이 필요하다. Redis Refresh 저장·회전과 Access stateless 전환은 후속 작업이다.
+
 ## 실행 순서
 
 1. API·권한 기준선과 긴급 인증 보안 개선, 환경·명시적 스키마 준비.

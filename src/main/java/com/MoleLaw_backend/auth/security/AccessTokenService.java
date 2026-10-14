@@ -9,8 +9,8 @@ public class AccessTokenService {
     private final JwtUtil jwtUtil;
     private final AccessTokenStore store;
 
-    public String issue(String email, String provider) {
-        String token = jwtUtil.generateAccessToken(email, provider);
+    public String issue(Long userId) {
+        String token = jwtUtil.generateAccessToken(userId);
         var identity = jwtUtil.getAccessTokenIdentity(token);
         store.register(identity.tokenId(), identity.subject(), identity.expiresAt());
         return token;

@@ -25,15 +25,14 @@ class JwtUtilTest {
 
     @Test
     void acceptsOnlyTheIntendedTokenPurpose() {
-        String access = jwtUtil.generateAccessToken("user@example.com", "local");
-        String refresh = jwtUtil.generateRefreshToken("user@example.com", "local");
+        String access = jwtUtil.generateAccessToken(1L);
+        String refresh = jwtUtil.generateRefreshToken(1L);
         assertThat(jwtUtil.validateAccessToken(access)).isTrue();
         assertThat(jwtUtil.validateRefreshToken(refresh)).isTrue();
         assertThat(jwtUtil.validateAccessToken(refresh)).isFalse();
         assertThat(jwtUtil.validateRefreshToken(access)).isFalse();
-        assertThat(jwtUtil.getUserIdFromAccessToken(access)).isEqualTo("user@example.com:local");
-        assertThat(jwtUtil.getEmailAndProviderFromRefreshToken(refresh))
-                .containsExactly("user@example.com", "local");
+        assertThat(jwtUtil.getUserIdFromAccessToken(access)).isEqualTo(1L);
+        assertThat(jwtUtil.getUserIdFromRefreshToken(refresh)).isEqualTo(1L);
     }
 
     @Test
@@ -53,9 +52,56 @@ class JwtUtilTest {
     }
 
     private String signedToken(String type, String secret, long lifetime) {
-        return Jwts.builder().setSubject("user@example.com:local").claim("tokenType", type)
+        return Jwts.builder().setSubject("1").setId("test-token-id")
+                .claim("tokenType", type).claim("tokenVersion", 2)
                 .setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + lifetime))
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    @Test
+    void rejectsOldSubjectsInvalidIdsAndOldTokenVersionsForBothPurposes() {
+        for (String type : new String[]{"access", "refresh"}) {
+            for (String subject : new String[]{"user@example.com:local", "0", "-1", "01", "+1", " 1",
+                    "1.0", "1e2", "9223372036854775808", "", "１"}) {
+                String token = subjectToken(subject, type, 2);
+                assertThat(jwtUtil.validateAccessToken(token)).isFalse();
+                assertThat(jwtUtil.validateRefreshToken(token)).isFalse();
+            }
+            for (Integer version : new Integer[]{null, 1, 3}) {
+                String token = subjectToken("1", type, version);
+                assertThat(jwtUtil.validateAccessToken(token)).isFalse();
+                assertThat(jwtUtil.validateRefreshToken(token)).isFalse();
+            }
+        }
+    }
+
+    @Test
+    void includesOnlyMinimalClaimsAndAcceptsTheLargestDatabaseId() {
+        for (String token : new String[]{jwtUtil.generateAccessToken(Long.MAX_VALUE),
+                jwtUtil.generateRefreshToken(Long.MAX_VALUE)}) {
+            var claims = Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)))
+                    .build().parseClaimsJws(token).getBody();
+            assertThat(claims.getSubject()).isEqualTo(Long.toString(Long.MAX_VALUE));
+            assertThat(claims.keySet()).containsExactlyInAnyOrder("sub", "tokenType", "tokenVersion", "jti", "iat", "exp");
+        }
+    }
+
+    @Test
+    void refusesIssuanceWithoutAPersistedPositiveUserId() {
+        for (Long id : new Long[]{null, 0L, -1L}) {
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> jwtUtil.generateAccessToken(id))
+                    .isInstanceOf(IllegalArgumentException.class);
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> jwtUtil.generateRefreshToken(id))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    private String subjectToken(String subject, String type, Integer version) {
+        return Jwts.builder().setSubject(subject).setId("subject-validation-id")
+                .claim("tokenType", type).claim("tokenVersion", version)
+                .setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + 60000))
+                .signWith(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
                 .compact();
     }
 }

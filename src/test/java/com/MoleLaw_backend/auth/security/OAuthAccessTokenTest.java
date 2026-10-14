@@ -25,13 +25,28 @@ import static org.mockito.Mockito.*;
 
 class OAuthAccessTokenTest {
     @Test
+    void newOAuthAccountUsesTheGeneratedPrimaryKey() throws Exception {
+        Fixture fixture = new Fixture();
+        when(fixture.users.findByEmailAndProvider("oauth@example.com", "google")).thenReturn(Optional.empty());
+        when(fixture.users.save(any(User.class))).thenReturn(User.builder().id(42L)
+                .email("oauth@example.com").provider("google").build());
+        fixture.handler.onAuthenticationSuccess(new MockHttpServletRequest(), fixture.response, fixture.authentication);
+        var access = ArgumentCaptor.forClass(String.class);
+        var refresh = ArgumentCaptor.forClass(String.class);
+        verify(fixture.cookies).addJwtCookie(eq(fixture.response), eq("accessToken"), access.capture());
+        verify(fixture.cookies).addJwtCookie(eq(fixture.response), eq("refreshToken"), refresh.capture());
+        assertThat(fixture.jwt.getUserIdFromAccessToken(access.getValue())).isEqualTo(42L);
+        assertThat(fixture.jwt.getUserIdFromRefreshToken(refresh.getValue())).isEqualTo(42L);
+    }
+
+    @Test
     void oauthRegistersBeforeSettingCookiesAndRedirecting() throws Exception {
         Fixture fixture = new Fixture();
         fixture.handler.onAuthenticationSuccess(new MockHttpServletRequest(), fixture.response, fixture.authentication);
         var token = ArgumentCaptor.forClass(String.class);
         verify(fixture.cookies).addJwtCookie(eq(fixture.response), eq("accessToken"), token.capture());
         var identity = fixture.jwt.getAccessTokenIdentity(token.getValue());
-        verify(fixture.store).register(identity.tokenId(), "oauth@example.com:google", identity.expiresAt());
+        verify(fixture.store).register(identity.tokenId(), "1", identity.expiresAt());
         assertThat(fixture.response.getRedirectedUrl()).isEqualTo("http://localhost:3000");
     }
 
@@ -64,7 +79,7 @@ class OAuthAccessTokenTest {
                     List.of(new SimpleGrantedAuthority("ROLE_USER")),
                     Map.of("email", "oauth@example.com", "provider", "google"), "email"));
             when(users.findByEmailAndProvider("oauth@example.com", "google"))
-                    .thenReturn(Optional.of(User.builder().email("oauth@example.com").provider("google").build()));
+                    .thenReturn(Optional.of(User.builder().id(1L).email("oauth@example.com").provider("google").build()));
         }
     }
 }
