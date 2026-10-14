@@ -32,8 +32,8 @@ public class CookieUtil {
         this.secure = secure;
         this.sameSite = sameSite;
         if (accessTtl == null || accessTtl.isNegative() || accessTtl.isZero()
-                || accessTtl.getNano() != 0) {
-            throw new IllegalArgumentException("Access token TTL must be positive whole seconds");
+                || accessTtl.getNano() != 0 || accessTtl.compareTo(Duration.ofMinutes(5)) > 0) {
+            throw new IllegalArgumentException("Access token TTL must be positive whole seconds up to 300 seconds");
         }
         this.accessTtl = accessTtl;
     }

@@ -38,7 +38,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File docker/verify.ps1
 
 기본 바인딩은 `127.0.0.1`이다. 자원 값은 예약량이 아닌 상한이며 `.env.compose`에서 조정한다. 기본 메모리 상한 합계는 8.25 GiB이므로 Docker VM에 운영 여유를 포함한 메모리를 배정한다.
 
-MySQL과 Qdrant 데이터는 named volume에 보존된다. Redis는 RDB·AOF를 끄고 tmpfs를 사용한다. 현재 Access 등록과 Refresh 회전 상태를 함께 저장하므로 재시작 후 재로그인이 필요하다. 목표 Access stateless 전환 뒤에는 기존 Access는 만료까지 유지되고 Refresh만 재로그인이 필요하다. 이 로컬 비영속 설정을 운영 Refresh 복구 정책으로 사용하지 않는다. Redis `maxmemory`는 128 MiB, 정책은 `noeviction`이다.
+MySQL과 Qdrant 데이터는 named volume에 보존된다. Redis는 RDB·AOF를 끄고 tmpfs를 사용한다. Refresh 회전 상태를 저장하므로 재시작해 상태가 유실되면 재로그인이 필요하다. 기존 stateless Access는 만료까지 최대 5분 유효하다. 이 로컬 비영속 설정을 운영 Refresh 복구 정책으로 사용하지 않는다. Redis `maxmemory`는 128 MiB, 정책은 `noeviction`이다.
 
 Refresh 회전은 `molelaw:auth:refresh:v1:*` 키의 해시·세대·절대 TTL로 관리하며 JWT Refresh는 더 이상 받지 않는다. Redis Insight에서 해당 패턴으로 확인할 수 있다. 루트의 `.\gradlew.bat redisIntegrationTest`는 별도 임시 Redis 컨테이너에서 동시 소비·재사용/폐기·TTL·키 유실·메모리 부족/연결 오류를 검증하며 기존 개발 Redis를 변경하지 않는다. [현재 계약과 실행 가이드](../docs/refresh-rotation.md)를 따른다.
 

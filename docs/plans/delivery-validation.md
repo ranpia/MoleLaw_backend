@@ -1,12 +1,14 @@
 # 구현 순서와 검증 계획
 
+> 최신 상태(2026-10-14): Access는 모든 프로필에서 5분 stateless JWT이며 Redis 등록·조회·폐기를 제거했다. issuer/audience·버전 3을 검증하고 Refresh 회전은 유지한다. 이전 단계의 Redis Access·local 15시간·미구현 표기는 이력으로 읽는다. 현재 계약은 [Access stateless 구현](../stateless-access.md)을 따른다.
+
 상위 문서: [재구축 요약](../backend-rebuild-plan.md). 상태 기준: 2026-10-13.
 
 ## 현재 구현과 목표의 구분
 
 완료된 기반은 Spring AI 1.0.9 ChatClient·EmbeddingModel 통합, MySQL/Qdrant 프로필 분리, H2 테스트 격리, 법령 회귀 fixture, MySQL/Qdrant/Redis Compose다. Redis 컨테이너 실행은 JWT 저장소 구현 완료를 의미하지 않는다.
 
-법령/판례 내부 Tool·검색 옵션·원문 스냅샷과 CPU Ollama 환경을 검증했다. Redis Access 등록 방식은 유지하며 2026-10-14 Redis Refresh 해시·원자 회전·재사용/경합·폐기·JSON 제거를 구현했다. ETL·Spring Ollama/Qdrant 검색·Advisor·상담방 근거·Access stateless/issuer/audience·역할별 오케스트레이터는 미구현이다. 현재 Refresh 완료 범위와 일반 156개·실제 Redis 11개·MySQL 2개 검증은 [구현 문서](../refresh-rotation.md)를 따른다.
+법령/판례 내부 Tool·검색 옵션·원문 스냅샷과 CPU Ollama 환경을 검증했다. Access는 5분 stateless로 전환했고 2026-10-14 Redis Refresh 해시·원자 회전·재사용/경합·폐기·JSON 제거를 구현했다. ETL·Spring Ollama/Qdrant 검색·Advisor·상담방 근거·역할별 오케스트레이터는 미구현이다. 현재 Refresh 완료 범위와 일반 148개·실제 Redis 11개·MySQL 2개 검증은 [구현 문서](../refresh-rotation.md)를 따른다.
 
 ## 단계와 완료 조건
 

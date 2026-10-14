@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestAccessTokenStoreConfig.class)
+@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestRefreshTokenStoreConfig.class)
 @ActiveProfiles("test")
 class OpenApiDocumentationTest {
     @MockitoBean ChatModel chatModel;
@@ -46,7 +46,8 @@ class OpenApiDocumentationTest {
                 count++;
                 String context = method.getKey() + " " + path.getKey();
                 JsonNode operation = method.getValue();
-                if (!path.getKey().equals("/api/auth/csrf")) {
+                if (Set.of("/api/auth/signup", "/api/auth/login", "/api/auth/reissue", "/api/auth/logout", "/api/auth/password").contains(path.getKey())
+                        || (path.getKey().equals("/api/auth/me") && method.getKey().equals("delete"))) {
                     JsonNode unavailable = operation.path("responses").path("503").path("content").path("application/json");
                     assertTrue(unavailable.has("schema"), context);
                     assertEquals("AUTH_STORE_UNAVAILABLE", unavailable.path("example").path("error").path("code").asText(), context);
@@ -197,5 +198,20 @@ class OpenApiDocumentationTest {
             String example = exampleNode.path("value").asText();
             if (example.startsWith("{") || example.startsWith("[")) mapper.readTree(example);
         }
+    }
+
+    @Test
+    void documentsStatelessAccessAndRefreshOnlyRevocation() throws Exception {
+        var result = mvc.perform(get("/v3/api-docs")).andExpect(status().isOk()).andReturn();
+        JsonNode document = mapper.readTree(result.getResponse().getContentAsString());
+        String info = document.path("info").path("description").asText();
+        assertTrue(info.contains("5분 stateless"));
+        assertTrue(info.contains("tokenVersion=3"));
+        assertFalse(info.contains("Redis jti 등록 확인"));
+        String logout = document.at("/paths/~1api~1auth~1logout/post/description").asText();
+        assertTrue(logout.contains("최대 5분"));
+        assertFalse(document.at("/paths/~1api~1auth~1me/get/responses").has("503"));
+        assertTrue(document.at("/paths/~1api~1auth~1logout/post/responses").has("503"));
+        assertFalse(logout.contains("Access의 Redis 등록"));
     }
 }

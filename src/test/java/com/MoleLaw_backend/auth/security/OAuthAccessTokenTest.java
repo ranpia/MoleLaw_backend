@@ -40,21 +40,21 @@ class OAuthAccessTokenTest {
     }
 
     @Test
-    void oauthRegistersBeforeSettingCookiesAndRedirecting() throws Exception {
+    void oauthPersistsRefreshBeforeReturningCookiesAndRedirecting() throws Exception {
         Fixture fixture = new Fixture();
         fixture.handler.onAuthenticationSuccess(new MockHttpServletRequest(), fixture.response, fixture.authentication);
         var token = ArgumentCaptor.forClass(String.class);
         verify(fixture.cookies).addJwtCookie(eq(fixture.response), eq("accessToken"), token.capture());
         var identity = fixture.jwt.getAccessTokenIdentity(token.getValue());
-        verify(fixture.store).register(identity.tokenId(), "1", identity.expiresAt());
+        verify(fixture.store).create(eq(1L), anyString(), anyString(), any(), anyLong());
         assertThat(fixture.response.getRedirectedUrl()).isEqualTo("http://localhost:3000");
     }
 
     @Test
-    void oauthRegistrationFailureReturns503WithoutCookiesOrRedirect() throws Exception {
+    void oauthRefreshPersistenceFailureReturns503WithoutCookiesOrRedirect() throws Exception {
         Fixture fixture = new Fixture();
         doThrow(new MolelawException(ErrorCode.AUTH_STORE_UNAVAILABLE))
-                .when(fixture.store).register(anyString(), anyString(), any());
+                .when(fixture.store).create(anyLong(), anyString(), anyString(), any(), anyLong());
         fixture.handler.onAuthenticationSuccess(new MockHttpServletRequest(), fixture.response, fixture.authentication);
         assertThat(fixture.response.getStatus()).isEqualTo(503);
         assertThat(fixture.response.getContentAsString()).contains("AUTH_STORE_UNAVAILABLE");
@@ -64,14 +64,14 @@ class OAuthAccessTokenTest {
 
     private static class Fixture {
         final JwtUtil jwt = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes", Duration.ofMinutes(5));
-        final AccessTokenStore store = mock(AccessTokenStore.class);
+        final RefreshTokenStore store = spy(new InMemoryRefreshTokenStore());
         final CookieUtil cookies = mock(CookieUtil.class);
         final UserRepository users = mock(UserRepository.class);
         final Authentication authentication = mock(Authentication.class);
         final MockHttpServletResponse response = new MockHttpServletResponse();
-        final RefreshTokenService refresh = new RefreshTokenService(new InMemoryRefreshTokenStore());
+        final RefreshTokenService refresh = new RefreshTokenService(store);
         final OAuth2SuccessHandler handler = new OAuth2SuccessHandler(users,
-                new AuthTokenService(new AccessTokenService(jwt, store), refresh, cookies, jwt));
+                new AuthTokenService(new AccessTokenService(jwt), refresh, cookies));
 
         Fixture() {
             jwt.init();

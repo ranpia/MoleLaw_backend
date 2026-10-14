@@ -96,15 +96,6 @@ tasks.register('mysqlIntegrationTest', Test) {
     outputs.upToDateWhen { false }
 }
 
-tasks.register('redisLiveTest', Test) {
-    description = 'Verifies Access token registration, TTL and revocation against local Redis.'
-    group = 'verification'
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-    useJUnitPlatform { includeTags 'redis-live' }
-    outputs.upToDateWhen { false }
-}
-
 tasks.register('openLawLiveTest', Test) {
     description = 'Calls the real OpenLaw API using OC_KEY or the local .env; no DB or model API required.'
     group = 'verification'

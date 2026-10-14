@@ -1,5 +1,7 @@
 # 백엔드 재구축 계획 요약
 
+> 최신 상태(2026-10-14): Access는 모든 프로필에서 5분 stateless JWT이며 Redis 등록·조회·폐기를 제거했다. issuer/audience·버전 3을 검증하고 Refresh 회전은 유지한다. 이전 단계의 Redis Access·local 15시간·미구현 표기는 이력으로 읽는다. 현재 계약은 [Access stateless 구현](stateless-access.md)을 따른다.
+
 최신화: 2026-10-13. 이 문서는 결정 사항과 작업 순서를 안내한다. 세부 설계는 아래 주제별 계획을 따른다. **계획은 구현 완료를 의미하지 않는다.**
 
 ## 문서 안내
@@ -31,17 +33,17 @@
 
 | 상태 | 범위 |
 | --- | --- |
-| 구현된 기반 | Spring AI 통합·저장소 프로필·H2 테스트, 법령/판례 내부 Tool·원문 스냅샷, Compose·CPU Ollama 환경, Redis Access 등록·TTL·인증·전달 Access 폐기, Redis Refresh 해시·회전·재사용 탐지·전체 폐기 |
-| 앞으로 구현 | ETL·영속 수집 재개·Spring Ollama/Qdrant 검색·상담방 근거·Advisor·Access stateless/issuer/audience·운영 Refresh 복구·오케스트레이터 |
+| 구현된 기반 | Spring AI 통합·저장소 프로필·H2 테스트, 법령/판례 내부 Tool·원문 스냅샷, Compose·CPU Ollama 환경, 5분 stateless Access·issuer/audience·버전 3 검증, Redis Refresh 해시·회전·재사용 탐지·전체 폐기 |
+| 앞으로 구현 | ETL·영속 수집 재개·Spring Ollama/Qdrant 검색·상담방 근거·Advisor·운영 Refresh 복구·오케스트레이터 |
 | 검증 한계 | 기존 테스트/인프라 검증 이력은 새 기능의 구현 완료나 이번 실행 결과가 아님 |
 
 MySQL은 기존 데이터 이관 없이 빈 DB에서 시작한다. Flyway V1과 기본/local JPA validate, User IDENTITY 및 독립 MySQL 통합 테스트를 추가했다. ETL·상담 근거 테이블은 후속 구현이다. MySQL 세션·Refresh 테이블 제안은 철회했고 Redis에 구현한다. [MySQL 계획](plans/mysql-schema.md)과 [실행 가이드](mysql-setup.md)를 따른다.
 
-Access 수명 분리는 구현했다. 기본/운영·test는 5분, local만 개발 편의로 15시간이며 JWT와 쿠키가 같은 설정을 사용한다. stateless/Redis Refresh 전환 완료를 의미하지 않는다.
+Access stateless 전환을 구현했다. 모든 프로필에서 JWT와 쿠키는 5분이며 Redis Access 의존성은 없다. issuer/audience와 버전 3을 검증한다.
 
 2026-10-14 사용자 식별자 전환 단계에서 Access와 당시 JWT Refresh의 subject를 기존 `User.id` PK 문자열로 통일했다. 토큰 버전 2와 ID 기반 principal·조회·권한 회귀를 검증했으며 이전 토큰은 거절한다.
 
-이후 같은 날짜에 JWT Refresh를 난수 기반으로 교체하고 Redis 해시·절대 7일·원자 회전·재사용/로그아웃 경합·사용자 전체 폐기와 JSON 제거를 구현했다. 현재 계약과 일반/실제 저장소 검증은 [Refresh 회전 구현](refresh-rotation.md)을 따른다. Access stateless는 아직 남아 있다.
+이후 같은 날짜에 JWT Refresh를 난수 기반으로 교체하고 Redis 해시·절대 7일·원자 회전·재사용/로그아웃 경합·사용자 전체 폐기와 JSON 제거를 구현했다. 현재 계약과 일반/실제 저장소 검증은 [Refresh 회전 구현](refresh-rotation.md)을 따른다. Access stateless 전환도 완료했으며 [현재 계약](stateless-access.md)을 따른다.
 
 ## 실행 순서
 
