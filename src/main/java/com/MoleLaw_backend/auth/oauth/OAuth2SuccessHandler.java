@@ -63,7 +63,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // ✅ JWT 발급
         String accessToken;
         try {
-            accessToken = accessTokenService.issue(email, provider);
+            accessToken = accessTokenService.issue(user.getId());
         } catch (MolelawException e) {
             if (e.getErrorCode() != ErrorCode.AUTH_STORE_UNAVAILABLE) {
                 throw e;
@@ -73,7 +73,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             response.getWriter().write("{\"error\":\"AUTH_STORE_UNAVAILABLE\"}");
             return;
         }
-        String refreshToken = jwtUtil.generateRefreshToken(email, provider);
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
 
 
         // ✅ 쿠키 저장

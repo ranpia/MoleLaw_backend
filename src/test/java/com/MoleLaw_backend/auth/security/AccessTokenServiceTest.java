@@ -22,19 +22,19 @@ class AccessTokenServiceTest {
 
     @Test
     void twoImmediateIssuesHaveDistinctIdsAndAreRegisteredBeforeReturning() {
-        String first = service.issue("u@example.com", "local");
-        String second = service.issue("u@example.com", "local");
-        assertThat(first).isNotEqualTo(second);
+        String first = service.issue(1L);
+        String second = service.issue(1L);
+        assertThat(first.equals(second)).isFalse();
         var identity = jwt.getAccessTokenIdentity(first);
         verify(store).register(identity.tokenId(), identity.subject(), identity.expiresAt());
-        verify(store, times(2)).register(anyString(), eq("u@example.com:local"), any());
+        verify(store, times(2)).register(anyString(), eq("1"), any());
     }
 
     @Test
     void registrationFailureNeverReturnsAnUnregisteredJwt() {
         doThrow(new MolelawException(ErrorCode.AUTH_STORE_UNAVAILABLE))
                 .when(store).register(anyString(), anyString(), any());
-        assertThatThrownBy(() -> service.issue("u@example.com", "local"))
+        assertThatThrownBy(() -> service.issue(1L))
                 .isInstanceOf(MolelawException.class);
     }
 
@@ -42,7 +42,7 @@ class AccessTokenServiceTest {
     void revokeIgnoresMissingMalformedAndRefreshTokens() {
         service.revoke(null);
         service.revoke("malformed");
-        service.revoke(jwt.generateRefreshToken("u@example.com", "local"));
+        service.revoke(jwt.generateRefreshToken(1L));
         verifyNoInteractions(store);
     }
 }

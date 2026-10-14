@@ -35,7 +35,7 @@ class RedisAccessFailureHttpTest {
     @Test
     void redisReadFailureIs503RatherThan401AndBootstrapStillWorks() throws Exception {
         when(store.isActive(anyString(), anyString())).thenThrow(unavailable());
-        String token = jwt.generateAccessToken("u@example.com", "local");
+        String token = jwt.generateAccessToken(1L);
         mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("error.code").value("AUTH_STORE_UNAVAILABLE"));
@@ -60,7 +60,7 @@ class RedisAccessFailureHttpTest {
     void failedLogoutRevocationDoesNotReportSuccessOrClearCookies() throws Exception {
         doThrow(unavailable()).when(store).revoke(anyString());
         mvc.perform(post("/api/auth/logout").with(csrf())
-                        .header("Authorization", "Bearer " + jwt.generateAccessToken("u@example.com", "local")))
+                        .header("Authorization", "Bearer " + jwt.generateAccessToken(1L)))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(header().doesNotExist("Set-Cookie"))
                 .andExpect(jsonPath("error.code").value("AUTH_STORE_UNAVAILABLE"));

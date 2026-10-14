@@ -40,17 +40,21 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(secretKeyRaw.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateAccessToken(String email, String provider) {
-        return generateToken(email, provider, "access", accessTtl.toMillis());
+    public String generateAccessToken(Long userId) {
+        return generateToken(userId, "access", accessTtl.toMillis());
     }
 
-    public String generateRefreshToken(String email, String provider) {
-        return generateToken(email, provider, "refresh", REFRESH_EXPIRATION);
+    public String generateRefreshToken(Long userId) {
+        return generateToken(userId, "refresh", REFRESH_EXPIRATION);
     }
 
-    private String generateToken(String email, String provider, String type, long lifetime) {
+    private String generateToken(Long userId, String type, long lifetime) {
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("A persisted positive user ID is required");
+        }
         Date now = new Date();
-        return Jwts.builder().setSubject(email + ":" + provider).claim(TOKEN_TYPE, type)
+        return Jwts.builder().setSubject(userId.toString()).claim(TOKEN_TYPE, type)
+                .claim("tokenVersion", 2)
                 .setId(UUID.randomUUID().toString())
                 .setIssuedAt(now).setExpiration(new Date(now.getTime() + lifetime))
                 .signWith(key, SignatureAlgorithm.HS256).compact();
@@ -75,19 +79,19 @@ public class JwtUtil {
 
     private Claims parseClaims(String token, String type) {
         Jws<Claims> parsed = Jwts.parserBuilder().setSigningKey(key)
-                .require(TOKEN_TYPE, type).build().parseClaimsJws(token);
+                .require(TOKEN_TYPE, type).require("tokenVersion", 2).build().parseClaimsJws(token);
         Claims claims = parsed.getBody();
         if (!SignatureAlgorithm.HS256.getValue().equals(parsed.getHeader().getAlgorithm())
                 || claims.getExpiration() == null || claims.getIssuedAt() == null
-                || ("access".equals(type) && (claims.getId() == null || claims.getId().isBlank()))
-                || claims.getSubject() == null || !claims.getSubject().matches("[^:]+:[^:]+")) {
+                || claims.getId() == null || claims.getId().isBlank()) {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
         }
+        parseUserId(claims.getSubject());
         return claims;
     }
 
-    public String getUserIdFromAccessToken(String token) {
-        return parseClaims(token, "access").getSubject();
+    public Long getUserIdFromAccessToken(String token) {
+        return parseUserId(parseClaims(token, "access").getSubject());
     }
 
     public AccessTokenIdentity getAccessTokenIdentity(String token) {
@@ -97,8 +101,15 @@ public class JwtUtil {
 
     public record AccessTokenIdentity(String tokenId, String subject, Instant expiresAt) {}
 
-    public String[] getEmailAndProviderFromRefreshToken(String token) {
-        return parseClaims(token, "refresh").getSubject().split(":", 2);
+    public Long getUserIdFromRefreshToken(String token) {
+        return parseUserId(parseClaims(token, "refresh").getSubject());
+    }
+
+    public static Long parseUserId(String subject) {
+        if (subject == null || !subject.matches("[1-9][0-9]{0,18}")) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+        return Long.parseLong(subject);
     }
 
     public String resolveToken(HttpServletRequest request) {
