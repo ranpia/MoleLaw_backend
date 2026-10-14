@@ -38,6 +38,9 @@ out/
 # VS Code
 .vscode/
 
+# Codex 로컬 설정
+/.codex/
+
 # 환경 변수
 .env
 .env.compose
