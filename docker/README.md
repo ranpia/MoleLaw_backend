@@ -1,4 +1,4 @@
-﻿# Docker 실행 가이드
+# Docker 실행 가이드
 
 Docker 관련 구성은 이 디렉터리에 모은다. Spring 애플리케이션 환경변수는 루트 `.env.example`, 프로젝트 구조와 실행은 [루트 README](../README.md)를 참고한다.
 
@@ -38,7 +38,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File docker/verify.ps1
 
 기본 바인딩은 `127.0.0.1`이다. 자원 값은 예약량이 아닌 상한이며 `.env.compose`에서 조정한다. 기본 메모리 상한 합계는 8.25 GiB이므로 Docker VM에 운영 여유를 포함한 메모리를 배정한다.
 
-MySQL과 Qdrant 데이터는 named volume에 보존된다. Redis는 인증 상태 저장소이며 RDB·AOF를 끄고 tmpfs를 사용한다. Redis 재시작 시 기존 Access 인증 상태가 사라진다. Redis `maxmemory`는 128 MiB, 정책은 `noeviction`이다.
+MySQL과 Qdrant 데이터는 named volume에 보존된다. Redis는 인증 상태 저장소이며 RDB·AOF를 끄고 tmpfs를 사용한다. 현재 코드에서는 Redis 재시작 시 기존 Access 인증 상태가 사라진다. 목표인 Access 5분 stateless + Redis Refresh 전환 후에는 기존 Access는 만료까지 유지되고 Refresh 유실로 재로그인이 필요하다. 이 로컬 비영속 설정을 운영 Refresh 복구 정책으로 사용하지 않는다. Redis `maxmemory`는 128 MiB, 정책은 `noeviction`이다.
 
 ```powershell
 # 컨테이너만 중지·제거하고 DB 볼륨은 보존한다.
@@ -63,7 +63,7 @@ Spring은 IDE 또는 Gradle로 실행하고, 루트 `.env`에 다음 연결 정�
 | `REDIS_PASSWORD` | Compose의 `REDIS_PASSWORD` |
 | `REDIS_SSL_ENABLED` | `false` |
 
-빈 개발 DB에는 `local` 프로필을 사용한다. 기본 MySQL 프로필의 스키마 검증은 `validate`, `local`은 `update`다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
+빈 MySQL DB는 애플리케이션 시작 시 Flyway V1이 초기화하고 기본/mysql·local 모두 JPA `validate`로 검사한다. 기존 데이터는 이관하지 않는다. 이력 없는 비어 있지 않은 DB는 자동 baseline 없이 거절한다. 수동 `001-legal-source.sql`과 Hibernate `update`를 함께 사용하지 않는다. `JPA_DDL_AUTO`를 설정했다면 `validate`로 맞춘다. [MySQL 실행 가이드](../docs/mysql-setup.md)를 따른다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
 
 다른 PC에서 연결할 때는 DB PC의 LAN IP를 `DB_BIND_ADDRESS`와 애플리케이션 호스트에 설정하고 방화벽에서 개발 PC의 접근만 허용한다. MySQL·Qdrant 볼륨은 Compose 파일을 복사해도 이동하지 않는다. 데이터 이동에는 별도 백업·복원이 필요하다.
 

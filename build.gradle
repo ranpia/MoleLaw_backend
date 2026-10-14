@@ -51,6 +51,8 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'
+	implementation 'org.flywaydb:flyway-core'
+	runtimeOnly 'org.flywaydb:flyway-mysql'
 	implementation 'org.springframework.ai:spring-ai-starter-model-openai'
 	implementation 'org.springframework.ai:spring-ai-qdrant-store'
 	implementation 'io.grpc:grpc-api:1.65.1'
@@ -59,6 +61,7 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testRuntimeOnly 'com.h2database:h2'
+	testImplementation 'org.testcontainers:mysql'
 
 	// JWT (JJWT)
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -69,7 +72,18 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live' }
+	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration' }
+}
+
+tasks.register('mysqlIntegrationTest', Test) {
+    description = 'Migrates an isolated MySQL 8.4 container and validates all JPA mappings and data constraints.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'mysql-integration' }
+    // Docker 29 rejects docker-java's older default API; keep this local to Docker tests.
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
 }
 
 tasks.register('redisLiveTest', Test) {

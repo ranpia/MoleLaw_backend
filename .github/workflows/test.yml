@@ -20,3 +20,5 @@ jobs:
           java-version: 17
       - name: Test and package without external API credentials
         run: bash ./gradlew test bootJar
+      - name: Validate migrations on isolated MySQL
+        run: bash ./gradlew mysqlIntegrationTest

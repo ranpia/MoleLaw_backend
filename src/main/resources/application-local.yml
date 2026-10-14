@@ -7,6 +7,10 @@ server:
   ssl:
     enabled: false
 
+jwt:
+  # Development convenience only; never activate local in production.
+  access-ttl: 15h
+
 frontend:
   uri: ${FRONTENDURI:http://localhost:3000}
 security:

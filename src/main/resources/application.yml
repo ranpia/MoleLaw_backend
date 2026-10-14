@@ -98,3 +98,5 @@ cookie:
 
 jwt:
   secret: ${JWT_SECRET}
+  # Production/default lifetime. Local development overrides this for convenience.
+  access-ttl: 5m

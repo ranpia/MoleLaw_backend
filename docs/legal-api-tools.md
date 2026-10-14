@@ -58,9 +58,9 @@ if (!page.candidates().isEmpty()) {
 
 ## 스키마·검증·남은 작업
 
-스키마 자동 변경이 꺼진 MySQL에는 배포 전에 [수동 SQL](sql/001-legal-source.sql)을 적용해야 한다. 자동 마이그레이션은 아직 없다. H2/모킹 검증은 `.\gradlew.bat test`로 실행한다.
+빈 MySQL DB의 `legal_source`는 Flyway V1이 다른 업무 테이블과 함께 자동 생성한다. [이전 수동 SQL](sql/001-legal-source.sql)은 참고용이며 별도로 실행하지 않는다. 기본/mysql·local은 JPA validate를 사용한다. H2/모킹 검증은 `.\gradlew.bat test`로 실행한다.
 
-실제 MySQL 통합, 시행일별 상세 조회 정책, 영속적인 페이지/실패 재개 기록, 전체 동시성 제한, ETL·Qdrant·상담 오케스트레이터 연결은 남아 있다. 법령 상세는 기존 `target=law&MST=...` 계약을 재사용하며 목록 시행일/법령ID와 다르면 거부한다.
+Flyway/JPA 원문 저장의 실제 MySQL 검증은 `mysqlIntegrationTest`로 수행한다. 실제 API→MySQL 전체 경로, 시행일별 상세 조회 정책, 영속적인 페이지/실패 재개 기록, 전체 동시성 제한, ETL·Qdrant·상담 오케스트레이터 연결은 남아 있다. 법령 상세는 기존 `target=law&MST=...` 계약을 재사용하며 목록 시행일/법령ID와 다르면 거부한다.
 
 ## 실제 API 연결 테스트
 

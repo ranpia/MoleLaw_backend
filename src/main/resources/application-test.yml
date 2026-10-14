@@ -1,4 +1,6 @@
 spring:
+  flyway:
+    enabled: false
   datasource:
     url: jdbc:h2:mem:molelaw-test;MODE=MySQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER
     username: sa

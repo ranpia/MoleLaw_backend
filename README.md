@@ -26,10 +26,10 @@ Kakao OAuth 설정은 별도 `kakao` 프로필로 분리되어 있습니다. 기
 | 임베딩 | OpenAI 모델, MySQL 임베딩 테이블 저장 | Ollama 모델 비교 후 Spring AI ETL·Qdrant 색인으로 전환 |
 | 검색 | 전체 임베딩 조회 후 코사인 유사도 직접 계산 | Qdrant 벡터 검색·필터·중복 제거·조문 맥락 확장 |
 | 후속 상담 | 최초 assistant 답변과 현재 질문 전달 | MessageChatMemoryAdvisor로 채팅방 기록과 최초 원문 근거 전달 |
-| Access | JWT 서명·용도·만료 + Redis jti·사용자 일치 확인, 만료까지 TTL | 로그인 세션 활성 상태·사용자별 세션 인덱스 추가 |
-| Refresh | 서버 저장·회전 없이 쿠키와 JSON에 전달 | MySQL 별도 테이블에 해시·회전·폐기 이력 관리 |
+| Access | JWT 서명·용도·만료 + Redis jti·사용자 일치 확인, 만료까지 TTL | 5분 stateless JWT, Redis 활성 상태 조회 제거 |
+| Refresh | 서버 저장·회전 없이 쿠키와 JSON에 전달 | Redis에 해시·family·회전·폐기·TTL 관리 |
 
-MySQL·Qdrant 프로필과 H2 테스트 구성, 공통 AI 호출, 기본 법령 수집 회귀 테스트는 구현되어 있습니다. Redis Access 등록·매 요청 확인·TTL·전달된 Access 폐기를 구현했습니다. 로그인 세션 관리와 MySQL Refresh 저장소는 후속 단계입니다.
+MySQL·Qdrant 프로필과 H2 테스트 구성, 공통 AI 호출, 기본 법령 수집 회귀 테스트는 구현되어 있습니다. Redis Access 등록·매 요청 확인·TTL·전달된 Access 폐기를 구현했습니다. 목표는 **Access 5분 stateless + Redis Refresh**이며 아직 전환하지 않았습니다.
 
 ## 목표 아키텍처
 
@@ -38,9 +38,9 @@ MySQL·Qdrant 프로필과 H2 테스트 구성, 공통 AI 호출, 기본 법령 
 ```mermaid
 flowchart LR
     Client[클라이언트] --> API[Spring Boot API]
-    API --> Auth[JWT 검증]
-    Auth --> Redis[Redis: Access 활성 상태]
-    Auth --> Refresh[MySQL: Refresh 해시·회전·폐기]
+    API --> Auth[Stateless Access JWT 검증: 5분]
+    API --> RefreshFlow[로그인·재발급·로그아웃]
+    RefreshFlow --> Redis[Redis: Refresh 해시·회전·폐기]
     API --> Chat[상담 처리]
     Chat --> History[MySQL: 상담방·대화·근거]
     Chat --> Advisor[MessageChatMemoryAdvisor]
@@ -90,11 +90,15 @@ zero-shot RAG 기준선을 확보한 뒤 one-shot 답변 예시와 step-back 검
 
 ## 인증 보안 개선 계획
 
-Access는 JWT 검증과 Redis 등록 확인을 모두 통과해야 합니다. 가입·로그인·OAuth·재발급은 고유 `jti`와 사용자 식별자를 JWT 만료까지 Redis에 등록한 뒤 Access를 전달합니다. Redis에는 토큰 원문을 저장하지 않습니다. 키 누락·폐기는 401, 저장소 장애는 503 `AUTH_STORE_UNAVAILABLE`이며 JWT만으로 인증하거나 키를 자동 복원하지 않습니다. 로그인 세션 관리와 MySQL Refresh 해시 저장·회전·재사용 탐지는 후속 구현입니다.
+현재 Access는 JWT 검증과 Redis 등록 확인을 모두 통과해야 합니다. 가입·로그인·OAuth·재발급은 고유 `jti`와 사용자 식별자를 JWT 만료까지 Redis에 등록한 뒤 Access를 전달합니다. Redis에는 토큰 원문을 저장하지 않습니다. 키 누락·폐기는 401, 저장소 장애는 503 `AUTH_STORE_UNAVAILABLE`이며 JWT만으로 인증하거나 키를 자동 복원하지 않습니다. 이 동작은 Access 5분 stateless + Redis Refresh로 전환할 예정입니다.
+
+확정 목표에서는 Access 검증이 Redis에 의존하지 않고, Refresh만 Redis 해시·회전·폐기로 관리합니다. 로그아웃·비밀번호 변경은 추가 재발급을 막지만 이미 발급된 Access는 만료까지 최대 5분 유효합니다. Redis 장애 시 기존 Access 검증은 유지하고 로그인·재발급·폐기는 오류로 처리합니다. 업무 DB 조회와 권한·CSRF 검사는 별개입니다. 기존 15시간 Access와 미등록 Refresh는 전환 시 거절해 재로그인을 요구합니다.
+
+Access 식별자의 필수 보안 정책은 **`sub=User.id`(사용자 고유키 문자열)**입니다. 이메일·provider·닉네임 등 개인정보를 claim에 넣지 않고 토큰별 `jti`와 사용자 ID를 구분합니다. 현재 코드는 `sub=email:provider`이므로 전환 대상입니다. 발급·인증 principal·사용자 조회를 함께 변경하고 기존 이메일 subject는 새 형식에서 거절합니다. ID 사용과 별도로 API 권한·상담방 소유권을 검증합니다. 상세 준수사항은 [인증 계획](docs/plans/auth-security.md#access-식별자claim-보안-준수사항)을 따릅니다.
 
 Access/Refresh 용도 검증, 토큰·payload 로그 제거, 공통 쿠키 정책, 명시적 CORS 허용 목록과 CSRF 보호를 적용했습니다. 브라우저 Refresh는 HttpOnly 쿠키로 전달하며 로그인·재발급 JSON에도 아직 포함됩니다. 로그아웃은 전달된 Bearer와 Access 쿠키의 등록을 폐기한 뒤 인증 쿠키를 삭제하고 상담 기록을 보존합니다. 다른 Access와 Refresh는 폐기하지 않으므로 복사된 Refresh로 재발급할 수 있습니다. 전체 세션 폐기·Refresh JSON 제거는 후속 범위입니다.
 
-현재 Access 수명은 **15시간**, Refresh는 **7일**이며 Access **15분**은 재구축 초기 제안입니다. `POST /api/auth/reissue`는 **Access 인증 없이** 유효한 `refreshToken` 쿠키와 CSRF 토큰으로 호출합니다. Refresh 용도·서명·만료와 사용자 존재를 확인하고 Access만 새로 발급합니다. 용도 claim이 없는 기존 JWT는 거절하므로 재로그인이 필요합니다. 후속 설계와 이전 위험 분석은 [인증·보안 실행 계획](docs/plans/auth-security.md)과 [JWT 보안 검토](docs/jwt-security-review.md)를 참고하세요.
+Access 수명은 기본/운영·test에서 **5분(300초)**, 개발 편의를 위한 **local에서만 15시간**입니다. `jwt.access-ttl`을 JWT와 Access 쿠키가 함께 사용하며 Refresh는 **7일**을 유지합니다. 운영에 local/test 프로필을 사용하지 않습니다. 이 수명 분리는 구현했지만 stateless Access + Redis Refresh 전환은 아직 미구현입니다. `POST /api/auth/reissue`는 **Access 인증 없이** 유효한 `refreshToken` 쿠키와 CSRF 토큰으로 호출합니다. 현재는 Refresh 용도·서명·만료와 사용자 존재를 확인하고 Access만 새로 발급합니다. 후속 설계와 이전 위험 분석은 [인증·보안 실행 계획](docs/plans/auth-security.md)과 [JWT 보안 검토](docs/jwt-security-review.md)를 참고하세요.
 
 ## 기술 구성과 디렉터리
 
@@ -145,7 +149,7 @@ local 프로필의 주소는 백엔드 `http://localhost:8080`, Swagger `http://
 | 프로필 | 현재 동작 |
 | --- | --- |
 | 기본 / mysql | MySQL @Primary 데이터소스, 스키마 validate, Swagger UI·OpenAPI 비활성화 |
-| local | mysql + qdrant, 개발 스키마 update, SSL 비활성화, Swagger 활성화 |
+| local | mysql + qdrant, Flyway 초기화 후 스키마 validate, SSL 비활성화, Swagger 활성화 |
 | test | H2·더미 인증·모델 모킹, 외부 저장소 없이 테스트 |
 | kakao | 필요한 경우 명시적으로 활성화하는 OAuth 설정 |
 
@@ -163,6 +167,8 @@ Swagger UI와 OpenAPI는 공통 설정에서 비활성화하고 문서 경로 �
 .\gradlew.bat test
 .\gradlew.bat clean build
 .\gradlew.bat bootJar
+# Docker 필요. 기존 개발 DB 대신 임시 MySQL 8.4 컨테이너로 검증합니다.
+.\gradlew.bat mysqlIntegrationTest
 # 실행 중인 로컬 Redis 필요. 일반 test/CI에서는 제외됩니다.
 .\gradlew.bat redisLiveTest
 powershell -NoProfile -ExecutionPolicy Bypass -File docker/verify.ps1
@@ -170,7 +176,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File docker/verify.ps1
 
 Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 없이 실행할 수 있습니다. H2 테스트는 실제 MySQL 통합 검증을 대체하지 않습니다. `verify.ps1`은 실행 중인 컨테이너의 MySQL 쿼리, Qdrant 인증·임시 벡터 검색, Redis 인증·임시 키 쓰기·TTL·삭제를 검사합니다.
 
-2026-10-13 전체 자동 테스트 95개·JAR 생성과 실제 Redis의 TTL·사용자 일치·Access 폐기 검증을 통과했습니다. 일반 테스트는 테스트 전용 저장소 대체 구현·모킹을 사용하며 실제 Redis는 `redisLiveTest`로 별도 검증합니다. ETL·Advisor·MySQL Refresh·실제 모델 품질 검증은 별도 구현 후 진행할 예정입니다.
+2026-10-13 전체 자동 테스트 95개·JAR 생성과 실제 Redis의 TTL·사용자 일치·Access 폐기 검증을 통과했습니다. 일반 테스트는 테스트 전용 저장소 대체 구현·모킹을 사용하며 실제 Redis는 `redisLiveTest`로 별도 검증합니다. 이는 전환 전 검증 이력입니다. ETL·Advisor·stateless Access/Redis Refresh 전환·실제 모델 품질 검증은 별도 구현 후 진행할 예정입니다.
 
 ## 주요 API
 
@@ -208,7 +214,7 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 
 1. 기준선·권한·인증 보안 점검과 스키마 준비
 2. Spring AI ETL·다중 페이지 수집·Ollama 임베딩 비교
-3. MySQL Refresh 저장소·회전과 Redis 로그인 세션·전체 폐기 구현
+3. Access 5분 stateless 전환과 Redis Refresh 해시·회전·재사용 탐지·family 폐기 구현
 4. Qdrant 검색·최초 근거 스냅샷·판례 검증 연결
 5. Advisor 기반 후속 상담과 출처 검증
 6. 검색·답변 품질 비교와 기존 구현 정리
