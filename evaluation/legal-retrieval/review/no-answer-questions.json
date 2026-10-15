@@ -1,0 +1,105 @@
+{
+  "scope": "No direct governing provision in the frozen 33-statute corpus; references to an outside law do not count as an answer.",
+  "questions": [
+    {
+      "id": "noanswer-01",
+      "text": "발명한 장치의 특허출원 명세서와 청구범위를 작성할 때 필요한 법정 기재요건은 무엇인가요?",
+      "missingTopic": "특허법상 출원 요건",
+      "answerability": "out_of_corpus",
+      "split": "development",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    },
+    {
+      "id": "noanswer-02",
+      "text": "등록상표의 존속기간 갱신등록을 신청할 수 있는 기간을 확인하고 싶어요.",
+      "missingTopic": "상표법상 갱신등록",
+      "answerability": "out_of_corpus",
+      "split": "development",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    },
+    {
+      "id": "noanswer-03",
+      "text": "해외에서 물품을 수입할 때 관세 과세가격에 운임을 포함하는 기준은 무엇인가요?",
+      "missingTopic": "관세법상 과세가격",
+      "answerability": "out_of_corpus",
+      "split": "development",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    },
+    {
+      "id": "noanswer-04",
+      "text": "종합소득세 확정신고의 법정 신고기간과 신고서 제출 대상은 누구인가요?",
+      "missingTopic": "소득세법상 확정신고",
+      "answerability": "out_of_corpus",
+      "split": "development",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    },
+    {
+      "id": "noanswer-05",
+      "text": "부가가치세 간이과세자에게 적용하는 과세기간과 신고기한을 확인하고 싶어요.",
+      "missingTopic": "부가가치세법상 과세기간",
+      "answerability": "out_of_corpus",
+      "split": "development",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    },
+    {
+      "id": "noanswer-06",
+      "text": "체류기간을 연장하려는 외국인이 허가를 신청하는 법정 절차는 무엇인가요?",
+      "missingTopic": "출입국관리법상 체류기간 연장",
+      "answerability": "out_of_corpus",
+      "split": "held_out",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    },
+    {
+      "id": "noanswer-07",
+      "text": "국민연금 노령연금의 수급 연령과 가입기간 요건을 확인하고 싶어요.",
+      "missingTopic": "국민연금법상 노령연금",
+      "answerability": "out_of_corpus",
+      "split": "held_out",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    },
+    {
+      "id": "noanswer-08",
+      "text": "건축허가를 받은 뒤 착공신고할 때 필요한 법정 신고 절차를 확인하고 싶어요.",
+      "missingTopic": "건축법상 착공신고",
+      "answerability": "out_of_corpus",
+      "split": "held_out",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    },
+    {
+      "id": "noanswer-09",
+      "text": "운전면허가 아니라 총포를 소지하려고 할 때 소지허가 신청 요건을 찾고 싶어요.",
+      "missingTopic": "총포 관련 법률상 소지허가",
+      "answerability": "out_of_corpus",
+      "split": "held_out",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    },
+    {
+      "id": "noanswer-10",
+      "text": "식당 영업신고를 하려는 사람이 식품위생법상 갖추어야 하는 시설기준을 확인하고 싶어요.",
+      "missingTopic": "식품위생법상 영업시설",
+      "answerability": "out_of_corpus",
+      "split": "held_out",
+      "relevantArticles": [],
+      "relevantChunkIds": [],
+      "reviewStatus": "corpus_scope_reviewed"
+    }
+  ]
+}

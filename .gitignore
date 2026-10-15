@@ -46,3 +46,7 @@ out/
 .env.compose
 /docker/ollama/results/
 /molelaw-ollama-cpu.tar
+/evaluation/legal-retrieval/snapshots/
+/evaluation/legal-retrieval/results/
+/evaluation/legal-retrieval/artifacts/
+/evaluation/legal-retrieval/review/archive/results/

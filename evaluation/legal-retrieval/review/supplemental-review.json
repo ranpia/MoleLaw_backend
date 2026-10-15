@@ -1,0 +1,137 @@
+{
+  "reviewDate": "2026-10-15",
+  "mappings": [
+    {
+      "questionId": "commercial-4",
+      "lawId": "commercial-decree",
+      "articleNumbers": [
+        "2"
+      ]
+    },
+    {
+      "questionId": "commercial-6",
+      "lawId": "commercial-decree",
+      "articleNumbers": [
+        "4"
+      ]
+    },
+    {
+      "questionId": "labor-5",
+      "lawId": "labor-decree",
+      "articleNumbers": [
+        "7",
+        "7-2"
+      ]
+    },
+    {
+      "questionId": "minimum-2",
+      "lawId": "minimum-rule",
+      "articleNumbers": [
+        "2"
+      ]
+    },
+    {
+      "questionId": "minimum-3",
+      "lawId": "minimum-decree",
+      "articleNumbers": [
+        "3"
+      ]
+    },
+    {
+      "questionId": "minimum-5",
+      "lawId": "minimum-decree",
+      "articleNumbers": [
+        "11"
+      ]
+    },
+    {
+      "questionId": "minimum-6",
+      "lawId": "minimum-decree",
+      "articleNumbers": [
+        "6"
+      ]
+    },
+    {
+      "questionId": "minimum-6",
+      "lawId": "minimum-rule",
+      "articleNumbers": [
+        "3"
+      ]
+    },
+    {
+      "questionId": "retirement-3",
+      "lawId": "retirement-decree",
+      "articleNumbers": [
+        "3"
+      ]
+    },
+    {
+      "questionId": "employment-1",
+      "lawId": "employment-decree",
+      "articleNumbers": [
+        "10",
+        "11"
+      ]
+    },
+    {
+      "questionId": "employment-4",
+      "lawId": "employment-decree",
+      "articleNumbers": [
+        "15",
+        "15-2"
+      ]
+    },
+    {
+      "questionId": "ecommerce-4",
+      "lawId": "ecommerce-decree",
+      "articleNumbers": [
+        "21"
+      ]
+    },
+    {
+      "questionId": "door-5",
+      "lawId": "door-decree",
+      "articleNumbers": [
+        "25",
+        "26"
+      ]
+    },
+    {
+      "questionId": "consumer-3",
+      "lawId": "consumer-decree",
+      "articleNumbers": [
+        "56",
+        "57"
+      ]
+    },
+    {
+      "questionId": "privacy-5",
+      "lawId": "privacy-decree",
+      "articleNumbers": [
+        "39"
+      ]
+    },
+    {
+      "questionId": "criminalprocedure-5",
+      "lawId": "prosecution",
+      "articleNumbers": [
+        "57"
+      ]
+    },
+    {
+      "questionId": "execution-5",
+      "lawId": "execution-decree",
+      "articleNumbers": [
+        "3",
+        "4"
+      ]
+    },
+    {
+      "questionId": "rehabilitation-4",
+      "lawId": "rehabilitation-rule",
+      "articleNumbers": [
+        "79"
+      ]
+    }
+  ]
+}

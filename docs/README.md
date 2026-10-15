@@ -17,6 +17,7 @@
 | 빈 MySQL 초기화·통합 테스트 | [MySQL 실행 가이드](mysql-setup.md) |
 | 개선 전 인증 위험과 설계 근거 | [JWT 보안 검토](jwt-security-review.md) |
 | 수집·청킹·벡터 검색·근거·Advisor | [RAG·ETL 계획](plans/rag-etl.md) |
+| 주 법령 20개·보충 근거·질문 110개의 임베딩 검색 평가 | [검색 평가 실행 안내](../evaluation/legal-retrieval/README.md) |
 | 역할별 에이전트와 모델 평가 | [오케스트레이션·모델 계획](plans/orchestration-models.md) |
 | 단계별 완료 조건·평가·복구 | [구현·검증 계획](plans/delivery-validation.md) |
 | 미확정 보조 검색 후보 | [SerpApi 검토](plans/search-fallback.md) |

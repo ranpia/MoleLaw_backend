@@ -1,0 +1,34 @@
+{
+  "notice": {
+    "id": "minimum-notice",
+    "name": "최저임금법 제5조에 따른 단순노무직종 근로자 지정 고시",
+    "version": "2100000118064",
+    "effectiveDate": "2018-03-20",
+    "sourceUrl": "https://www.law.go.kr/LSW/admRulLsInfoR.do?admRulSeq=2100000118064&chrClsCd=010202",
+    "questionIds": [
+      "minimum-3"
+    ]
+  },
+  "annexes": [
+    {
+      "id": "labor-annex1",
+      "parentLawId": "labor-decree",
+      "heading": "별표 1 상시 4명 이하의 근로자를 사용하는 사업 또는 사업장에 적용하는 법 규정",
+      "sourceUrl": "https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=150839883&bylClsCd=110201",
+      "fileId": "150839883",
+      "questionIds": [
+        "labor-5"
+      ]
+    },
+    {
+      "id": "minimum-annex3",
+      "parentLawId": "minimum-rule",
+      "heading": "별표 3 최저임금 적용 제외의 인가 기준",
+      "sourceUrl": "https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=159941953&bylClsCd=110201",
+      "fileId": "159941953",
+      "questionIds": [
+        "minimum-6"
+      ]
+    }
+  ]
+}
