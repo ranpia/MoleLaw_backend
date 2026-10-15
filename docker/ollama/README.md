@@ -46,6 +46,10 @@ docker compose -f docker/ollama/compose.yml stats --no-stream
 
 **이 스크립트는 실행·지연 검사다.** 가상 조문과 질문을 raw 입력으로 사용하며 모델별 검색 instruction/prefix를 적용한 법률 검색 품질 비교가 아니다. 실제 법령 청크·모델별 입력 형식·Recall@K·RAM 측정·Qdrant 색인은 [RAG·ETL 계획](../../docs/plans/rag-etl.md)의 별도 평가로 진행한다. Spring 애플리케이션의 현재 OpenAI 임베딩 설정은 바꾸지 않는다.
 
+## 실제 법령 검색 평가
+
+[법령 검색 평가 실행 안내](../../evaluation/legal-retrieval/README.md)에서 고정 데이터, 모델별 결과와 실행 명령을 확인한다. 도구는 evaluation/legal-retrieval/scripts에 모아 둔다. 최초 가상 샘플 측정은 review/archive에 보관한다.
+
 ## 중지·이동·문제 해결
 
 ```powershell
