@@ -11,6 +11,8 @@
 
 한국어 추가 학습 모델은 현재 계획 단계이며 아직 다운로드·실행하지 않았다. 차원 축소 비교도 별도 후속 실험으로 관리한다. 모델별 검증이 완료되면 각각 커밋·푸시한다.
 
+한국어 모델의 [Hugging Face 후보 조사 기록](review/korean-model-candidates.md)을 보존했다. 진행 브랜치는 `experiment/legal-embedding-evaluation`이다.
+
 `data/questions.json`의 `evaluationReady=true`는 고정 원문·청크·정답으로 **임베딩 검색 평가를 실행할 준비가 됐다**는 뜻이다. 답변 생성, 법률 자문 정확도, 서비스 배포 준비를 뜻하지 않는다.
 
 2026-10-15 EmbeddingGemma 768차원의 전체 벡터화·질문 실행을 완료했다. [실제 법령 기준선 결과](reports/embeddinggemma/README.md)와 [모델·입력 해시 및 지표 JSON](reports/embeddinggemma/summary.json)을 보존했다.
