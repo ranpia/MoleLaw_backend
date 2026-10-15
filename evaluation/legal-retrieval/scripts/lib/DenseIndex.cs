@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 public sealed class RetrievalHit {
     public string ChunkId { get; set; }
@@ -10,13 +12,26 @@ public sealed class RetrievalHit {
 }
 
 public sealed class LegalDenseIndex {
+    private readonly int dimensions;
+    public LegalDenseIndex() : this(768) { }
+    public LegalDenseIndex(int dimensions) {
+        if (dimensions < 1) throw new ArgumentOutOfRangeException("dimensions");
+        this.dimensions = dimensions;
+    }
     private readonly Dictionary<string, float[]> vectors = new Dictionary<string, float[]>(StringComparer.Ordinal);
     private readonly Dictionary<string, string> units = new Dictionary<string, string>(StringComparer.Ordinal);
     public int Count { get { return vectors.Count; } }
     public bool Contains(string id) { return vectors.ContainsKey(id); }
+    public float[] GetVector(string id) { return vectors[id]; }
+    public void Add(string id, float[] vector) { vectors.Add(id, Normalize(vector)); }
+    public static string InputKey(string text) {
+        using (var sha = SHA256.Create()) {
+            return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-", "").ToLowerInvariant();
+        }
+    }
 
-    private static float[] Normalize(float[] vector) {
-        if (vector.Length != 768) throw new InvalidDataException("Expected 768 dimensions.");
+    private float[] Normalize(float[] vector) {
+        if (vector.Length != dimensions) throw new InvalidDataException("Unexpected embedding dimensions.");
         double norm = 0;
         foreach (float value in vector) {
             if (float.IsNaN(value) || float.IsInfinity(value)) throw new InvalidDataException("Non-finite vector.");
@@ -53,10 +68,10 @@ public sealed class LegalDenseIndex {
             if (count < 1 || count > 64) throw new InvalidDataException("Invalid batch size.");
             for (int i = 0; i < count; i++) {
                 string id = reader.ReadString();
-                int dimensions = reader.ReadInt32();
-                if (dimensions != 768) throw new InvalidDataException("Invalid dimensions.");
-                var vector = new float[dimensions];
-                for (int j = 0; j < dimensions; j++) vector[j] = reader.ReadSingle();
+                int recordDimensions = reader.ReadInt32();
+                if (recordDimensions != dimensions) throw new InvalidDataException("Invalid dimensions.");
+                var vector = new float[recordDimensions];
+                for (int j = 0; j < recordDimensions; j++) vector[j] = reader.ReadSingle();
                 vectors.Add(id, Normalize(vector));
             }
             if (reader.BaseStream.Position != reader.BaseStream.Length) throw new InvalidDataException("Trailing cache bytes.");

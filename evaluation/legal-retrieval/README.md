@@ -1,5 +1,16 @@
 # 법령 임베딩 검색 평가
 
+## 후속 모델 평가 계획
+
+2026-10-15 중단 지점: EmbeddingGemma와 BGE-M3의 500문자 평가는 완료했다. 사용자 요청으로 BGE-M3의 300문자 평가를 도중 중단했으며, 완료된 벡터 배치 캐시는 보존했다. 300 / 700문자 평가는 두 모델 모두 후속 작업으로 남긴다. 미완료 구성은 비교표에 포함하지 않는다. 재개할 때 아래 `run-model.ps1` 명령을 사용하면 저장된 입력 벡터를 재사용한다.
+
+1. 현재 기본 모델 EmbeddingGemma(768차원), BGE-M3(1,024차원)의 300 / 500 / 700문자 청크 비교를 완료한다.
+2. 한국어 데이터셋으로 추가 학습한 공개 임베딩 모델을 후보에 추가한다. 한국어 학습 데이터·학습 방법·기반 모델·라이선스·실행 가능 여부를 모델 카드로 확인한 뒤 후보를 확정한다. 자체 추가 학습은 별도 실험으로 구분한다.
+3. 확정한 한국어 추가 학습 모델에도 동일한 법령·질문·정답·분할과 청크 조건을 적용한다. 모델별 기본 벡터 차원과 입력 형식을 기록하고, 검색 지표·유사도·처리 시간·저장 용량을 비교한다.
+4. 청크와 모델 선택은 개발용 질문으로 진행하고 held-out 질문은 최종 검증에 사용한다. 추가 학습을 직접 진행하는 경우 평가 질문 및 정답 조문이 학습 데이터에 유입되지 않도록 분리한다.
+
+한국어 추가 학습 모델은 현재 계획 단계이며 아직 다운로드·실행하지 않았다. 차원 축소 비교도 별도 후속 실험으로 관리한다. 모델별 검증이 완료되면 각각 커밋·푸시한다.
+
 `data/questions.json`의 `evaluationReady=true`는 고정 원문·청크·정답으로 **임베딩 검색 평가를 실행할 준비가 됐다**는 뜻이다. 답변 생성, 법률 자문 정확도, 서비스 배포 준비를 뜻하지 않는다.
 
 2026-10-15 EmbeddingGemma 768차원의 전체 벡터화·질문 실행을 완료했다. [실제 법령 기준선 결과](reports/embeddinggemma/README.md)와 [모델·입력 해시 및 지표 JSON](reports/embeddinggemma/summary.json)을 보존했다.
@@ -20,7 +31,7 @@
 
 ## 실행
 
-JDK 17, Windows PowerShell 5.1, 기존 CPU Ollama 컨테이너와 설치된 `embeddinggemma:latest`를 사용한다. Spring 서버·MySQL·Qdrant·OpenAI 키는 평가에 필요하지 않다.
+JDK 17, Windows PowerShell 5.1, CPU Ollama 컨테이너를 사용한다. 모델 입력 계약과 차원은 `review/models.json`에서 관리한다. Spring 서버·MySQL·Qdrant·OpenAI 키는 평가에 필요하지 않다.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/validate-evaluation.ps1
@@ -30,7 +41,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 
 기본 주소는 `http://127.0.0.1:11435`이며 `-Port`로 바꾼다. 모델 다운로드는 자동 수행하지 않는다. CPU 6 threads / GPU 0 / 순차 요청 / 기본 배치 16개 / `truncate=false`다. 완료한 벡터 배치는 중간 실패 뒤 재사용한다. 다른 모델이 로드돼 있으면 거부하고, 완료·실패 시 평가 모델을 언로드한다.
 
-공식 EmbeddingGemma 검색 접두문을 적용한다. 질문은 `task: search result | query: ...`, 문서는 `title: 법령명 조문명 | text: ...`다. 벡터 수·768차원·유한값·0이 아닌 벡터를 검증한다. 컨텍스트 초과는 잘라 쓰지 않고 실패한다.
+EmbeddingGemma는 공식 검색 접두문을 적용하고, BGE-M3는 질문에 instruction을 붙이지 않는다. 두 모델 모두 동일한 법령명·조문명과 본문을 사용한다. 벡터 수·모델별 차원·유한값·0이 아닌 벡터를 검증하며 컨텍스트 초과는 잘라 쓰지 않고 실패한다. [BGE-M3 공식 입력 계약](https://huggingface.co/BAAI/bge-m3)을 기준으로 dense 검색만 비교한다.
 
 ## 청킹과 지표
 
@@ -59,7 +70,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 - `top10.csv`: 질문별 상위 10개 조문·대표 청크·유사도·정답 여부
 - `report.json`: 모델 digest·차원·질문/코퍼스 해시·임계값 선정 방식·실행 정보
 
-`artifacts/results/cache/`에 코퍼스 해시·모델 digest·입력 형식별 binary 벡터 배치를 저장한다. 정규화한 float32 벡터를 사용하고 다른 모델·코퍼스와 혼합하지 않는다. 질문 지연은 준비 후 각 질문 한 번의 HTTP 시간이며 반복 성능 벤치마크는 아니다. 색인 시간은 해당 실행에서 새로 만든 벡터 작업 시간으로 기록한다.
+`artifacts/results/shared-cache/`에 모델 digest·차원·입력 형식별 binary 벡터 배치를 저장한다. 벡터의 키는 실제 입력 문자열의 SHA256이며 청크 크기가 달라도 입력이 동일하면 재사용한다. 기존 Gemma 기준선 캐시도 입력을 바꾸지 않고 이관하며 지표 재현을 확인했다. 정규화한 float32 벡터를 사용하고 다른 모델·코퍼스와 혼합하지 않는다. 질문 지연은 준비 후 각 질문 한 번의 HTTP 시간이며 반복 성능 벤치마크는 아니다. 색인 시간은 해당 실행에서 새로 만든 벡터 작업 시간으로 기록한다.
 
 ## 원문과 재생성
 
@@ -88,3 +99,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 | `artifacts/` | 원문 다운로드·벡터 캐시·상세 실행 결과. Git 제외 |
 
 최초 가상 샘플 측정은 `review/archive/`에 보관한다. 현재 모델 비교에는 `data/`의 실제 법령 평가셋을 사용한다.
+## 모델·청크 크기 실험
+
+동일한 공식 원문 5,486개 단위·질문 110개·정답 조문·분할을 고정한다. 조문 경계를 유지하면서 최대 문자 수만 300 / 500 / 700으로 바꾸고 중첩은 64문자로 고정한다. 300문자는 8,497개, 500문자는 6,634개, 700문자는 6,031개 청크다. 각 변형에서 원문 누락·내용 변경이 없는지 공식 원문에 대해 확인했다.
+
+```powershell
+# 500문자 기준선에서 원문을 복원해 변형 생성: 원문 재다운로드 불필요
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/prepare-variants.ps1
+# 모델 하나를 500 -> 300 -> 700문자 순서로 평가하고 reports에 검증 결과 저장
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/run-model.ps1 -Model bge-m3
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/run-model.ps1 -Model embeddinggemma
+# 완료된 결과만 비교표로 집계
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/compare-results.ps1
+```
+
+한 구성만 실행하려면 `scripts/evaluate.ps1 -Model bge-m3 -DatasetDirectory evaluation/legal-retrieval/data/variants/char300-overlap64-article-v1`처럼 지정한다. `-DatasetDirectory`를 생략하면 500문자 기준선이다.
+
+변형 데이터는 `data/variants/<청킹 버전>/`, 모델별 확정 결과는 `reports/<모델>/<청킹 버전>/`에 둔다. 각 결과 폴더에는 요약 JSON·요약 CSV·질문별 지표 CSV·상위 조문 유사도 CSV를 함께 저장한다. [모델·청크 비교표](reports/comparison.md)와 [비교 CSV](reports/comparison.csv)는 실행이 완료된 구성만 포함한다.
+
+이 실험은 문자 수만 바꾸는 비교다. 토크나이저 기반 청킹이나 중첩 크기의 독립 비교는 포함하지 않는다. 청크 설정 선택은 개발용 지표로 하고, held-out 점수를 반복해서 최적화하지 않는다. `run-model.ps1`은 커밋·푸시하지 않으며 공유 Git 반영은 검증 뒤 별도로 수행한다.
