@@ -1,0 +1,18 @@
+{
+  "embeddinggemma": {
+    "tag": "embeddinggemma:latest",
+    "dimensions": 768,
+    "inputMode": "gemma-retrieval-v1",
+    "documentFormat": "title: {title} | text: {text}",
+    "queryFormat": "task: search result | query: {text}",
+    "sourceUrl": "https://huggingface.co/google/embeddinggemma-300m"
+  },
+  "bge-m3": {
+    "tag": "bge-m3:latest",
+    "dimensions": 1024,
+    "inputMode": "bge-m3-title-text-v1",
+    "documentFormat": "{title}\n{text}",
+    "queryFormat": "{text}",
+    "sourceUrl": "https://huggingface.co/BAAI/bge-m3"
+  }
+}

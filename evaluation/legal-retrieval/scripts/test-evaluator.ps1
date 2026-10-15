@@ -25,3 +25,11 @@ foreach ($invalid in @((New-Object single[] 768),(New-Object single[] 767))) {
     if (!$rejected) { throw 'Invalid query vector was accepted.' }
 }
 Write-Host 'PASS: cosine 1/0/-1, normalization, cache roundtrip, article collapse, invalid vector rejection.'
+$large = [LegalDenseIndex]::new(1024)
+$vector1024 = New-Object single[] 1024; $vector1024[0] = 1
+$large.Add('bge',[single[]]$vector1024); $large.SetUnit('bge','bge-unit')
+if ([math]::Abs($large.Rank($vector1024,1)[0].Score - 1) -gt 0.000001) { throw '1024-dimensional cosine failed.' }
+$rejected = $false
+try { $large.ReadBatch($path) } catch { $rejected = $true }
+if (!$rejected) { throw 'Mixed model dimensions accepted.' }
+Write-Host 'PASS: 1024-dimensional scoring and rejection of 768-dimensional cache in 1024-dimensional index.'

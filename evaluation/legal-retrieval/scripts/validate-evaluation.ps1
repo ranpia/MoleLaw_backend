@@ -1,7 +1,8 @@
 [CmdletBinding()]
-param()
+param([string]$DatasetDirectory)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
+if ($DatasetDirectory) { $DataRoot = [IO.Path]::GetFullPath($DatasetDirectory) }
 $data = Get-Content -Raw -Encoding UTF8 (Join-Path $DataRoot 'questions.json') | ConvertFrom-Json
 $corpusPath = Join-Path $DataRoot $data.corpus.path
 if ((Get-FileHash $corpusPath).Hash -ne $data.corpus.sha256) { throw 'Corpus SHA256 mismatch.' }
@@ -11,7 +12,7 @@ $chunks = @{}
 foreach ($line in [IO.File]::ReadLines($corpusPath)) {
     $chunk = $line | ConvertFrom-Json
     if ($chunks.ContainsKey($chunk.id)) { throw "Duplicate chunk: $($chunk.id)" }
-    if (!$chunk.text -or $chunk.text.Length -gt 500) { throw "Invalid chunk text: $($chunk.id)" }
+    if (!$chunk.text -or $chunk.text.Length -gt $data.corpus.maxChars) { throw "Invalid chunk text: $($chunk.id)" }
     if ($chunk.endChar - $chunk.startChar -ne $chunk.text.Length) { throw 'Offset mismatch.' }
     $sha = [Security.Cryptography.SHA256]::Create()
     try { $hash = ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($chunk.text)))).Replace('-', '').ToLowerInvariant() } finally { $sha.Dispose() }

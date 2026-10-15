@@ -2,4 +2,4 @@
 *.bat text eol=crlf
 *.jar binary
 # Preserve the frozen corpus bytes used by its SHA256 manifest.
-/evaluation/legal-retrieval/data/corpus.jsonl -text
+/evaluation/legal-retrieval/data/**/corpus.jsonl -text whitespace=cr-at-eol
