@@ -91,7 +91,8 @@ $extra = @(foreach ($group in ($rankingRows | Group-Object model,chunkingVersion
 $extra | Export-Csv (Join-Path $ReportsRoot 'ranking-comparison.csv') -NoTypeInformation -Encoding UTF8
 $similarityRows | Export-Csv (Join-Path $ReportsRoot 'similarity-examples.csv') -NoTypeInformation -Encoding UTF8
 $lines = @('# 법령 임베딩 모델·청크 비교', '', '2026-10-16 기준 3개 모델 × 300 / 500 / 700문자, 총 9개 구성 완료. 중복은 64문자이며 동일 원문 5,486개 단위·질문 110개·정답·분할을 사용했다. 차원 축소는 아직 평가하지 않았다.', '',
-    '처음 읽는다면 Recall@5 → Complete@5 → MRR → nDCG 순서로 보면 된다. 각각 필요한 근거를 얼마나 찾았는지, 전부 찾았는지, 첫 정답이 앞에 있는지, 여러 정답이 앞에 모였는지를 뜻한다. [숫자 예시로 보는 지표 설명](similarity-and-metrics.md)을 함께 참고한다.')
+    '처음 읽는다면 Recall@5 → Complete@5 → MRR → nDCG 순서로 보면 된다. 각각 필요한 근거를 얼마나 찾았는지, 전부 찾았는지, 첫 정답이 앞에 있는지, 여러 정답이 앞에 모였는지를 뜻한다. [숫자 예시로 보는 지표 설명](similarity-and-metrics.md)을 함께 참고한다.', '',
+    '아래 표는 원본 질문 기준이다. 같은 700문자 조건에서 질문만 정제한 [Gemma·BGE-M3 전후 비교](query-rewrite-v1/comparison.md)도 확인할 수 있다.')
 foreach ($split in @('development','held_out')) {
     $label = $(if ($split -eq 'development') { '개발용: 설정 비교에 사용한 양성 질문 30개' } else { '검증용: 별도로 남겨 둔 양성 질문 70개' })
     $prefix = $(if ($split -eq 'development') { 'dev' } else { 'heldOut' })

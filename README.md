@@ -83,6 +83,8 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 [실행 안내](evaluation/legal-retrieval/README.md), [모델·청크 비교표](evaluation/legal-retrieval/reports/comparison.md), [유사도·지표 설명](evaluation/legal-retrieval/reports/similarity-and-metrics.md)에서 전체 결과를 확인할 수 있습니다. 현재는 오프라인 전수 코사인 검색 평가이며 Qdrant 색인·ANN 검색·생성 답변은 검증하지 않았습니다. 차원 축소와 토큰 기반 청킹은 후속 실험입니다.
 
+700문자 조건에서 대화형 LLM이 작성한 정제 질문 110개로 Gemma와 BGE-M3도 비교했습니다. 검증용 Recall@5는 Gemma 78.14% → 78.43%, BGE-M3 73.62% → 80.95%였습니다. 원본·정제 질문에 같은 문서 벡터를 사용했으며 자동 정제 API의 시간·비용을 측정한 실험은 아닙니다. [질문 정제 전후 비교](evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md)에서 개선·악화 사례와 범위 밖 오수용률도 확인할 수 있습니다.
+
 모델별 토크나이저·질문/문서 입력 형식·실제 출력 차원을 확인합니다. 모델별 Qdrant 컬렉션을 분리하며 같은 차원이어도 서로 다른 모델 벡터를 섞지 않습니다. 답변 모델은 우선 외부 API를 유지하고 Ollama는 임베딩 후보로 도입합니다.
 
 zero-shot RAG 기준선을 확보한 뒤 one-shot 답변 예시와 step-back 검색 전략을 각각 비교합니다. one-shot은 답변 예시 한 개를 넣는 방식이며 최종 답변 호출 횟수와는 다른 개념입니다.
