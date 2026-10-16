@@ -1,4 +1,6 @@
-# Additional ranking metrics
+# 순위 지표 상세 집계
+
+전체 지표의 통합 비교는 [모델 비교표](comparison.md), 쉬운 설명은 [지표 안내](similarity-and-metrics.md)를 참고한다. 이 파일은 CSV에 대응하는 상세 집계다.
 
 Positive questions only; macro averages over frozen gold source units. Binary relevance, log2(rank+1) discount; IDCG uses min(k, total gold units), including gold outside retrieved top ten.
 
@@ -23,6 +25,6 @@ Positive questions only; macro averages over frozen gold source units. Binary re
 | kure-v1:official | char700-overlap64-article-v1 | development | 30 | 0.7333 | 0.4333 | 0.1933 | 0.5438 | 0.6021 |
 | kure-v1:official | char700-overlap64-article-v1 | held_out | 70 | 0.8714 | 0.6429 | 0.2286 | 0.637 | 0.6558 |
 
-These are post-hoc supporting metrics, not a replacement for the predeclared development Recall@5 selection rule. Unlabelled units count as non-gold, not as independently proven irrelevant.
+모델 선택은 개발용 Recall@5를 중심으로 다른 지표를 함께 본다. 정답 목록 밖의 조문은 계산상 정답이 아닌 것으로 처리하며, 모두 무관하다고 검증한 것은 아니다.
 
-Definitions, similarity examples and deferred metrics: [evaluation guide](similarity-and-metrics.md).
+지표 정의와 예시: [안내](similarity-and-metrics.md).

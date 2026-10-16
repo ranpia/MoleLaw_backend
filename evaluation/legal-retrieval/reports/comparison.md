@@ -2,63 +2,61 @@
 
 2026-10-16 기준 3개 모델 × 300 / 500 / 700문자, 총 9개 구성 완료. 중복은 64문자이며 동일 원문 5,486개 단위·질문 110개·정답·분할을 사용했다. 차원 축소는 아직 평가하지 않았다.
 
-## 기존 검색 지표
+처음 읽는다면 Recall@5 → Complete@5 → MRR → nDCG 순서로 보면 된다. 각각 필요한 근거를 얼마나 찾았는지, 전부 찾았는지, 첫 정답이 앞에 있는지, 여러 정답이 앞에 모였는지를 뜻한다. [숫자 예시로 보는 지표 설명](similarity-and-metrics.md)을 함께 참고한다.
 
-| Model | Dimensions | Characters | Dev Recall@5 | Dev MRR | Held-out top-1 | Held-out Recall@5 | Held-out MRR |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| bge-m3:latest | 1024 | 300 | 57.39% | 0.5196 | 52.86% | 72.79% | 0.6762 |
-| bge-m3:latest | 1024 | 500 | 64.06% | 0.5928 | 60.0% | 75.40% | 0.7226 |
-| bge-m3:latest | 1024 | 700 | 65.72% | 0.5909 | 58.57% | 73.62% | 0.7179 |
-| embeddinggemma:latest | 768 | 300 | 61.28% | 0.5815 | 65.71% | 74.69% | 0.7417 |
-| embeddinggemma:latest | 768 | 500 | 62.28% | 0.5854 | 70.0% | 79.93% | 0.7861 |
-| embeddinggemma:latest | 768 | 700 | 64.22% | 0.6065 | 62.86% | 78.14% | 0.7422 |
-| kure-v1:official | 1024 | 300 | 57.11% | 0.6160 | 51.43% | 71.71% | 0.6592 |
-| kure-v1:official | 1024 | 500 | 57.28% | 0.6245 | 55.71% | 73.81% | 0.6935 |
-| kure-v1:official | 1024 | 700 | 58.39% | 0.6153 | 48.57% | 76.48% | 0.6526 |
+## 개발용: 설정 비교에 사용한 양성 질문 30개
 
-## 추가 지표: development
+| 모델 | 차원 | 문자 | 1위 적중률 | Recall@5 | Recall@10 | Hit@5 | Complete@5 | Precision@5 | MRR | nDCG@5 | nDCG@10 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| bge-m3:latest | 1024 | 300 | 36.67% | 57.39% | 70.83% | 70% | 43.33% | 18.67% | 0.5196 | 0.4725 | 0.5238 |
+| bge-m3:latest | 1024 | 500 | 50.0% | 64.06% | 76.67% | 76.67% | 50% | 20% | 0.5928 | 0.5377 | 0.5863 |
+| bge-m3:latest | 1024 | 700 | 46.67% | 65.72% | 73.33% | 80% | 50% | 21.33% | 0.5909 | 0.5469 | 0.5791 |
+| embeddinggemma:latest | 768 | 300 | 43.33% | 61.28% | 70.72% | 73.33% | 46.67% | 20% | 0.5815 | 0.5301 | 0.5675 |
+| embeddinggemma:latest | 768 | 500 | 43.33% | 62.28% | 71.00% | 73.33% | 50% | 20% | 0.5854 | 0.5357 | 0.5719 |
+| embeddinggemma:latest | 768 | 700 | 46.67% | 64.22% | 71.00% | 76.67% | 50% | 21.33% | 0.6065 | 0.5543 | 0.5821 |
+| kure-v1:official | 1024 | 300 | 53.33% | 57.11% | 72.22% | 66.67% | 43.33% | 18.67% | 0.6160 | 0.5316 | 0.5856 |
+| kure-v1:official | 1024 | 500 | 53.33% | 57.28% | 73.33% | 73.33% | 43.33% | 18.67% | 0.6245 | 0.537 | 0.5987 |
+| kure-v1:official | 1024 | 700 | 50.0% | 58.39% | 73.33% | 73.33% | 43.33% | 19.33% | 0.6153 | 0.5438 | 0.6021 |
 
-양성 30개 질문의 macro 평균이다. Hit@5는 정답 하나 이상, Complete@5는 정답 전체 회수, Precision@5는 검색 5개 중 정답 비율이다. nDCG는 정답의 순서를 반영한다.
+## 검증용: 별도로 남겨 둔 양성 질문 70개
 
-| 모델 | 최대 문자 | Hit@5 | Complete@5 | Precision@5 | nDCG@5 | nDCG@10 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| bge-m3:latest | 300 | 70% | 43.33% | 18.67% | 0.4725 | 0.5238 |
-| bge-m3:latest | 500 | 76.67% | 50% | 20% | 0.5377 | 0.5863 |
-| bge-m3:latest | 700 | 80% | 50% | 21.33% | 0.5469 | 0.5791 |
-| embeddinggemma:latest | 300 | 73.33% | 46.67% | 20% | 0.5301 | 0.5675 |
-| embeddinggemma:latest | 500 | 73.33% | 50% | 20% | 0.5357 | 0.5719 |
-| embeddinggemma:latest | 700 | 76.67% | 50% | 21.33% | 0.5543 | 0.5821 |
-| kure-v1:official | 300 | 66.67% | 43.33% | 18.67% | 0.5316 | 0.5856 |
-| kure-v1:official | 500 | 73.33% | 43.33% | 18.67% | 0.537 | 0.5987 |
-| kure-v1:official | 700 | 73.33% | 43.33% | 19.33% | 0.5438 | 0.6021 |
+| 모델 | 차원 | 문자 | 1위 적중률 | Recall@5 | Recall@10 | Hit@5 | Complete@5 | Precision@5 | MRR | nDCG@5 | nDCG@10 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| bge-m3:latest | 1024 | 300 | 52.86% | 72.79% | 84.86% | 85.71% | 60% | 20.86% | 0.6762 | 0.6275 | 0.6764 |
+| bge-m3:latest | 1024 | 500 | 60.0% | 75.40% | 84.33% | 87.14% | 61.43% | 22.29% | 0.7226 | 0.6759 | 0.7105 |
+| bge-m3:latest | 1024 | 700 | 58.57% | 73.62% | 84.33% | 85.71% | 60% | 21.71% | 0.7179 | 0.6635 | 0.7054 |
+| embeddinggemma:latest | 768 | 300 | 65.71% | 74.69% | 83.88% | 87.14% | 61.43% | 22.29% | 0.7417 | 0.6849 | 0.7217 |
+| embeddinggemma:latest | 768 | 500 | 70.0% | 79.93% | 84.60% | 91.43% | 67.14% | 24% | 0.7861 | 0.7385 | 0.7589 |
+| embeddinggemma:latest | 768 | 700 | 62.86% | 78.14% | 83.52% | 90% | 65.71% | 23.14% | 0.7422 | 0.7077 | 0.7319 |
+| kure-v1:official | 1024 | 300 | 51.43% | 71.71% | 82.67% | 84.29% | 57.14% | 20.86% | 0.6592 | 0.6139 | 0.6583 |
+| kure-v1:official | 1024 | 500 | 55.71% | 73.81% | 82.79% | 85.71% | 61.43% | 21.43% | 0.6935 | 0.6476 | 0.6846 |
+| kure-v1:official | 1024 | 700 | 48.57% | 76.48% | 81.00% | 87.14% | 64.29% | 22.86% | 0.6526 | 0.637 | 0.6558 |
 
 ## 결과 해석
 
 - 미리 정한 development Recall@5 기준 우선 후보는 BGE-M3 700문자(65.72%)다. Gemma 700문자(64.22%)와 차이는 1.50%p이며, 작은 개발 표본만으로 일반적인 우열을 확정하지 않는다.
 - 첫 정답 순위의 MRR은 KURE 500문자(0.6245), nDCG@5는 Gemma 700문자(0.5543), nDCG@10은 KURE 700문자(0.6021)가 가장 높다. 여러 근거의 회수와 앞쪽 배치에서 지표별 장점이 다르다.
 - Complete@5의 개발 최고값은 50%다. 정답 하나를 찾는 Hit@5가 높아도 필요한 모든 조문을 확보한 것은 아니다.
-- 추가 지표는 결과 확인 후 도입한 보조 분석이다. 기존 Recall@5 선택 규칙을 유지하고 공개된 held-out으로 반복 튜닝하지 않는다.
+- 모델 선택은 미리 정한 개발용 Recall@5를 중심으로 하고 다른 지표를 함께 본다. 공개된 검증용 결과로 설정을 반복 조정하지 않는다.
 
 ## 유사도 점수 읽기
 
 700문자 조건의 휴게시간 질문에서 BGE-M3는 근로기준법 제50조(근로시간)를 0.5869로, KURE는 정답 제54조(휴게)를 0.5602로 검색했다. 유사도는 정답 확률이 아니며 모델별 원시 점수로 우열을 비교하지 않는다. 조문 점수는 자식 청크의 최대 코사인 유사도다.
 
-예시 전체와 검색 조문명: [유사도 CSV](similarity-examples.csv). 질문별 추가 지표: [CSV](ranking-queries.csv).
+예시 전체와 검색 조문명: [유사도 CSV](similarity-examples.csv). 질문별 순위 지표: [CSV](ranking-queries.csv).
 
 ## 평가 조건과 한계
 
-Similarity examples and metric definitions: [guide](similarity-and-metrics.md). Additional Hit@5, Complete@5, Precision@5 and nDCG@5/10: [ranking comparison](ranking-comparison.md).
+지표를 읽는 방법: [설명 문서](similarity-and-metrics.md). 전체 순위 지표는 위 두 표에서 함께 비교한다.
 
-Use development results to choose chunk/model settings. Held-out rows are descriptive final checks, not a repeated tuning objective.
+각 질문의 점수를 먼저 구한 뒤 평균했다. 예를 들어 Recall@5 65.72%는 필요한 근거 중 평균 65.72%를 찾았다는 뜻이며, 질문의 65.72%에 완벽하게 답했다는 뜻은 아니다.
 
-Primary selection metric: development Recall@5. Supporting metrics: MRR, Recall@10, in-corpus acceptance and out-of-corpus false acceptance; see CSV.
+정답이 없는 질문은 순위 지표에서 뺐다. 범위 안 수용률과 범위 밖 오수용률은 [실행 조건 CSV](comparison.csv)에서 확인한다. 수용은 검색 점수가 기준값 이상이라는 뜻으로, 실제 답변의 정답 여부가 아니다. 음성 질문은 분할마다 5개뿐이다.
 
-Recall ranks distinct source articles/annexes by maximum child-chunk score. No-answer rates use only five held-out negative questions and score-based thresholds, not generated answers.
+유사도 기준값은 모델·청크 구성마다 개발용 질문으로 따로 정했다. 정답 목록 밖의 조문은 계산상 정답이 아닌 것으로 처리하지만, 모든 조문이 무관하다고 검증한 것은 아니다.
 
-Raw similarity thresholds are fitted independently per configuration; do not compare absolute cosine scores across models.
+질문 임베딩 시간은 모델이 준비된 상태에서 질문마다 한 번 측정했다. 반복 부하 시험이 아니며, 청크 길이도 토큰 수가 아닌 문자 수다.
 
-Query latency is one warm request per question, not a repeated load test. Character limits are not tokenizer-exact token limits.
+벡터 용량은 청크 수 × 차원 × 4바이트로 계산한 숫자 자체의 크기다. 문서 정보와 검색 색인 등은 제외하므로 실제 저장 공간은 더 필요하다. 캐시를 재사용한 색인 시간은 처음부터 전체 자료를 처리하는 속도로 비교하지 않는다.
 
-CSV vector size is chunk count x dimension x 4 bytes for float32 values only; excludes IDs, metadata, cache overhead and any ANN index. Cached indexing times are not model throughput measurements.
-
-KURE uses official Sentence Transformers/PyTorch float32; the existing Gemma/BGE runs use Ollama BF16/F16. Runtime and precision differ, so latency is not a pure model comparison. Legacy report JSON remains unchanged; unrecorded dtype is explicitly marked in CSV.
+KURE는 Sentence Transformers/PyTorch float32, Gemma와 BGE는 Ollama BF16/F16으로 실행했다. 실행 도구와 숫자 정밀도가 달라 시간 차이를 모델 자체의 속도 차이로 단정하지 않는다. 원본 보고서는 보존했고 기록되지 않은 정밀도는 CSV에 명시했다.
