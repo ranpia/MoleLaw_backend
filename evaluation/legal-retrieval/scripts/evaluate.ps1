@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param([ValidateRange(1,65535)][int]$Port = 11435, [ValidateRange(1,8)][int]$Threads = 6,
-    [ValidateRange(1,32)][int]$BatchSize = 16, [Alias('Model')][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$ModelChoice = 'embeddinggemma', [string]$DatasetDirectory)
+    [ValidateRange(1,32)][int]$BatchSize = 16, [Alias('Model')][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$ModelChoice = 'embeddinggemma', [string]$DatasetDirectory, [string]$QueryRewritesPath)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 if (Test-Path -LiteralPath (Join-Path $ArtifactsRoot "control/stop-$ModelChoice.flag")) { throw "Evaluation intentionally deferred by user stop request: $ModelChoice" }
@@ -11,6 +11,12 @@ $comparisonIdentity = Get-ComparisonIdentity $DataRoot
 Add-Type -Path (Join-Path $PSScriptRoot 'lib/DenseIndex.cs')
 $dataPath = Join-Path $DataRoot 'questions.json'
 $data = Get-Content -Raw -Encoding UTF8 $dataPath | ConvertFrom-Json
+$queryRewrites = $null; $queryMode = 'original'; $runSuffix = ''
+if ($QueryRewritesPath) {
+    . (Join-Path $PSScriptRoot 'lib/QueryRewrites.ps1')
+    $queryRewrites = Read-QueryRewrites $QueryRewritesPath $data (Get-FileHash $dataPath).Hash $comparisonIdentity
+    $queryMode = 'llm-rewrite-v1'; $runSuffix = '-llm-rewrite-v1'
+}
 $chunks = @(foreach ($line in [IO.File]::ReadLines((Join-Path $DataRoot $data.corpus.path))) { $line | ConvertFrom-Json })
 $byId = @{}; foreach ($chunk in $chunks) { $byId[$chunk.id] = $chunk }
 $baseUri = "http://127.0.0.1:$Port"
@@ -86,6 +92,7 @@ if ($ModelChoice -eq 'embeddinggemma') {
     }
 }
 $missing = @($inputsByKey.Keys | Where-Object { !$shared.Contains($_) } | Sort-Object)
+if ($queryRewrites -and $missing.Count -gt 0) { throw 'Rewrite experiment requires existing frozen document vectors.' }
 if ($profile.runtime -eq 'sentence-transformers') {
     # Group similar-length documents to reduce CPU padding; inputs and batch size stay fixed.
     $missing = @($missing | Sort-Object @{ Expression = { $inputsByKey[$_].Length } }, @{ Expression = { $_ } })
@@ -114,7 +121,8 @@ try {
     foreach ($chunk in $chunks) { $index.Add($chunk.id,$shared.GetVector($chunkKeys[$chunk.id])); $index.SetUnit($chunk.id,$chunk.unitId) }; if ($index.Count -ne $chunks.Count) { throw 'Index count mismatch.' }
     foreach ($q in $data.questions) {
         $watch = [Diagnostics.Stopwatch]::StartNew()
-        $response = Invoke-Embedding @((Format-Query $q.text))
+        $retrievalText = $(if ($queryRewrites) { $queryRewrites[$q.id].rewrittenText } else { $q.text })
+        $response = Invoke-Embedding @((Format-Query $retrievalText))
         $watch.Stop()
         if ($response.embeddings.Count -ne 1) { throw 'Query vector count mismatch.' }
         $searchWatch = [Diagnostics.Stopwatch]::StartNew()
@@ -127,7 +135,7 @@ try {
             if ($i -lt 10) {
                 $chunk = $byId[$hit.ChunkId]
                 $resultRows += [pscustomobject]@{ queryId = $q.id; split = $q.split; query = $q.text
-                    answerability = $q.answerability; rank = $i + 1; unitId = $hit.UnitId; chunkId = $hit.ChunkId
+                    retrievalQuery = $retrievalText; answerability = $q.answerability; rank = $i + 1; unitId = $hit.UnitId; chunkId = $hit.ChunkId
                     title = $chunk.title; similarity = $hit.Score; relevant = $relevant }
             }
         }
@@ -169,7 +177,7 @@ $summary = @(foreach ($split in @('development','held_out')) {
         inCorpusAcceptanceRate = @($positive | Where-Object top1Similarity -ge $selected.threshold).Count / [double]$positive.Count
         threshold = $selected.threshold; meanQueryEmbeddingMs = ($positive | Measure-Object embeddingMs -Average).Average }
 })
-$outputDir = Join-Path $ArtifactsRoot ('results/' + $ModelChoice + '-' + $data.corpus.chunkingVersion + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
+$outputDir = Join-Path $ArtifactsRoot ('results/' + $ModelChoice + '-' + $data.corpus.chunkingVersion + $runSuffix + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
 $null = New-Item -ItemType Directory -Force $outputDir
 $summary | Export-Csv (Join-Path $outputDir 'summary.csv') -NoTypeInformation -Encoding UTF8
 $queryRows | Export-Csv (Join-Path $outputDir 'queries.csv') -NoTypeInformation -Encoding UTF8
@@ -182,7 +190,8 @@ $report = [ordered]@{ timestampUtc = [datetime]::UtcNow.ToString('o'); datasetId
     thresholdCalibration = @{ split = 'development_only'; objective = 'balanced_answerability_accuracy'; selected = $selected }
     metricScope = 'distinct article/annex units ranked by maximum child-chunk cosine; positives only for Recall/MRR'
     noAnswerScope = 'out-of-frozen-corpus topic checks, not answer generation'; summary = $summary }
+if ($queryRewrites) { $report.queryMode=$queryMode; $report.queryRewritesSha256=(Get-FileHash $QueryRewritesPath).Hash }
 [IO.File]::WriteAllText((Join-Path $outputDir 'report.json'),($report | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
-[IO.File]::WriteAllText((Join-Path $ResultsRoot ("latest-$ModelChoice-$($data.corpus.chunkingVersion).json")),(@{ directory = $outputDir; corpusSha256 = $data.corpus.sha256 } | ConvertTo-Json),[Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $ResultsRoot ("latest-$ModelChoice-$($data.corpus.chunkingVersion)$runSuffix.json")),(@{ directory = $outputDir; corpusSha256 = $data.corpus.sha256 } | ConvertTo-Json),[Text.UTF8Encoding]::new($false))
 $summary | Format-Table -AutoSize
 Write-Host "Results: $outputDir"
