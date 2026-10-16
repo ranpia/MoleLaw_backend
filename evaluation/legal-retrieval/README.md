@@ -2,7 +2,7 @@
 
 ## 현재 결과 요약
 
-3개 모델 × 3개 청크 평가와 추가 지표 집계를 완료했다. 현재 결과는 오프라인 전수 검색 기준이며 서비스 적용 모델은 미확정이다.
+3개 모델 × 3개 청크 평가와 평가지표 집계를 완료했다. 현재 결과는 오프라인 전수 검색 기준이며 서비스 적용 모델은 미확정이다.
 
 | 비교 관점 | Development 최고 구성 | 값 |
 | --- | --- | ---: |
@@ -12,9 +12,9 @@
 | nDCG@10: 상위 10개 정답 배치 | KURE-v1 700문자 | 0.6021 |
 | Complete@5: 필요한 정답 전체 회수 | BGE-M3 500·700 / Gemma 500·700문자 | 50.00% |
 
-모든 값은 개발용 양성 30개 기준이다. BGE-M3와 Gemma의 700문자 Recall@5 차이는 1.50%p이며 통계적으로 확정된 우열을 뜻하지 않는다. 추가 지표는 보조 분석으로 사용하고 기존 선택 기준은 유지한다. 유사도는 정답 확률이 아니며 모델별 원시 점수를 직접 비교하지 않는다.
+모든 값은 개발용 양성 30개 기준이다. BGE-M3와 Gemma의 700문자 Recall@5 차이는 1.50%p이며 통계적으로 확정된 우열을 뜻하지 않는다. 모델 선택은 개발용 Recall@5를 중심으로 다른 지표를 함께 본다. 유사도는 정답 확률이 아니며 모델별 원시 점수를 직접 비교하지 않는다.
 
-[모델·청크 전체 비교](reports/comparison.md)는 기존 지표와 추가 지표를 함께 정리한다. [추가 지표의 두 분할 전체 표](reports/ranking-comparison.md), [유사도 예시와 계산 정의](reports/similarity-and-metrics.md), 질문별 CSV도 보존했다. 순위 지표에서 음성 질문은 제외한다.
+[모델·청크 전체 비교](reports/comparison.md)는 모든 평가지표를 함께 정리한다. [순위 지표 상세 집계](reports/ranking-comparison.md), [유사도 예시와 계산 정의](reports/similarity-and-metrics.md), 질문별 CSV도 보존했다. 순위 지표에서 음성 질문은 제외한다.
 
 ## 평가 완료 내역과 후속 계획
 
@@ -143,6 +143,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 
 이 실험은 문자 수만 바꾸는 비교다. 토크나이저 기반 청킹이나 중첩 크기의 독립 비교는 포함하지 않는다. 청크 설정 선택은 개발용 지표로 하고, held-out 점수를 반복해서 최적화하지 않는다. `run-model.ps1`은 커밋·푸시하지 않으며 공유 Git 반영은 검증 뒤 별도로 수행한다.
 
-## 유사도와 추가 지표
+## 유사도와 평가지표
 
-[유사도 예시·지표 정의 및 검토](reports/similarity-and-metrics.md)에 모델별 점수 해석과 추가 지표의 적용 범위를 정리했다. [추가 지표 비교](reports/ranking-comparison.md)는 저장된 검색 결과에서 Hit@5, Complete@5, Precision@5, nDCG@5/10을 계산한다. 기존 development Recall@5 선택 기준은 유지하며, 모델 재추론과 Qdrant 변경 없이 재집계한다.
+[유사도 예시·지표 정의 및 검토](reports/similarity-and-metrics.md)에 모델별 점수 해석과 평가지표의 적용 범위를 정리했다. [순위 지표 상세 집계](reports/ranking-comparison.md)는 저장된 검색 결과에서 Hit@5, Complete@5, Precision@5, nDCG@5/10을 계산한다. 기존 development Recall@5 선택 기준은 유지하며, 모델 재추론과 Qdrant 변경 없이 재집계한다.
