@@ -126,3 +126,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 변형 데이터는 `data/variants/<청킹 버전>/`, 모델별 확정 결과는 `reports/<모델>/<청킹 버전>/`에 둔다. 각 결과 폴더에는 요약 JSON·요약 CSV·질문별 지표 CSV·상위 조문 유사도 CSV를 함께 저장한다. [모델·청크 비교표](reports/comparison.md)와 [비교 CSV](reports/comparison.csv)는 실행이 완료된 구성만 포함한다.
 
 이 실험은 문자 수만 바꾸는 비교다. 토크나이저 기반 청킹이나 중첩 크기의 독립 비교는 포함하지 않는다. 청크 설정 선택은 개발용 지표로 하고, held-out 점수를 반복해서 최적화하지 않는다. `run-model.ps1`은 커밋·푸시하지 않으며 공유 Git 반영은 검증 뒤 별도로 수행한다.
+
+## 유사도와 추가 지표
+
+[유사도 예시·지표 정의 및 검토](reports/similarity-and-metrics.md)에 모델별 점수 해석과 추가 지표의 적용 범위를 정리했다. [추가 지표 비교](reports/ranking-comparison.md)는 저장된 검색 결과에서 Hit@5, Complete@5, Precision@5, nDCG@5/10을 계산한다. 기존 development Recall@5 선택 기준은 유지하며, 모델 재추론과 Qdrant 변경 없이 재집계한다.
