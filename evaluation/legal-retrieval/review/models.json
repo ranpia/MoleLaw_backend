@@ -7,6 +7,16 @@
     "queryFormat": "task: search result | query: {text}",
     "sourceUrl": "https://huggingface.co/google/embeddinggemma-300m"
   },
+  "kure-v1": {
+    "tag": "kure-v1:official",
+    "dimensions": 1024,
+    "inputMode": "kure-st-cls-normalized-v1",
+    "documentFormat": "{title}\n{text}",
+    "queryFormat": "{text}",
+    "runtime": "sentence-transformers",
+    "sourceUrl": "https://huggingface.co/nlpai-lab/KURE-v1",
+    "revision": "8b418a58414668e75532ed045c22d9ca018ae2b2"
+  },
   "bge-m3": {
     "tag": "bge-m3:latest",
     "dimensions": 1024,

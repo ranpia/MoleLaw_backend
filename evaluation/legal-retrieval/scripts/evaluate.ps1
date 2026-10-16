@@ -1,8 +1,9 @@
 [CmdletBinding()]
 param([ValidateRange(1,65535)][int]$Port = 11435, [ValidateRange(1,8)][int]$Threads = 6,
-    [ValidateRange(1,32)][int]$BatchSize = 16, [Alias('Model')][ValidateSet('embeddinggemma','bge-m3')][string]$ModelChoice = 'embeddinggemma', [string]$DatasetDirectory)
+    [ValidateRange(1,32)][int]$BatchSize = 16, [Alias('Model')][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$ModelChoice = 'embeddinggemma', [string]$DatasetDirectory)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
+if (Test-Path -LiteralPath (Join-Path $ArtifactsRoot "control/stop-$ModelChoice.flag")) { throw "Evaluation intentionally deferred by user stop request: $ModelChoice" }
 if ($DatasetDirectory) { $DataRoot = [IO.Path]::GetFullPath($DatasetDirectory) }
 & (Join-Path $PSScriptRoot 'validate-evaluation.ps1') -DatasetDirectory $DataRoot
 . (Join-Path $PSScriptRoot 'lib/ComparisonIdentity.ps1')
@@ -30,6 +31,7 @@ $tags = Invoke-RestMethod "$baseUri/api/tags" -TimeoutSec 10
 $tag = @($tags.models | Where-Object name -eq $model)
 if ($tag.Count -ne 1) { throw "Model not installed: $model" }
 $digest = $tag[0].digest
+if ($profile.revision -and $digest -ne $profile.revision) { throw 'Pinned official model revision mismatch.' }
 $running = Invoke-RestMethod "$baseUri/api/ps" -TimeoutSec 10
 if (@($running.models | Where-Object name -ne $model).Count -gt 0) { throw 'Another model is loaded.' }
 $cacheKey = $ModelChoice + '-' + $digest.Substring(0,16) + '-' + $profile.inputMode
@@ -44,12 +46,17 @@ foreach ($chunk in $chunks) {
     $chunkKeys[$chunk.id] = $key; $inputsByKey[$key] = $inputText
 }
 $metadata = [ordered]@{ corpusSha256 = $data.corpus.sha256; model = $model; modelDigest = $digest
-    dimensions = $dimensions; inputMode = $profile.inputMode; ollamaVersion = $version.version
+    dimensions = $dimensions; inputMode = $profile.inputMode
     documentFormat = $profile.documentFormat; queryFormat = $profile.queryFormat }
+if ($profile.runtime -eq 'sentence-transformers') {
+    $metadata.inferenceRuntime = 'sentence-transformers'; $metadata.inferenceRuntimeVersion = $version.version
+    $metadata.dtype = $version.dtype; $metadata.device = $version.device; $metadata.sourceUrl = $profile.sourceUrl
+} else { $metadata.ollamaVersion = $version.version }
 $cacheMetadataPath = Join-Path $cacheDir 'metadata.json'
 if (Test-Path -LiteralPath $cacheMetadataPath) {
     $previous = Get-Content -Raw -Encoding UTF8 $cacheMetadataPath | ConvertFrom-Json
     if ($previous.modelDigest -ne $digest -or $previous.dimensions -ne $dimensions -or $previous.inputMode -ne $profile.inputMode) { throw 'Shared cache model metadata mismatch.' }
+    if ($profile.runtime -eq 'sentence-transformers' -and $previous.inferenceRuntimeVersion -ne $version.version) { throw 'Shared cache inference runtime version mismatch.' }
 }
 [IO.File]::WriteAllText($cacheMetadataPath,($metadata | ConvertTo-Json),[Text.UTF8Encoding]::new($false))
 # Reuse the original Gemma vectors with exactly the same document input.
@@ -79,6 +86,11 @@ if ($ModelChoice -eq 'embeddinggemma') {
     }
 }
 $missing = @($inputsByKey.Keys | Where-Object { !$shared.Contains($_) } | Sort-Object)
+if ($profile.runtime -eq 'sentence-transformers') {
+    # Group similar-length documents to reduce CPU padding; inputs and batch size stay fixed.
+    $missing = @($missing | Sort-Object @{ Expression = { $inputsByKey[$_].Length } }, @{ Expression = { $_ } })
+    $metadata.documentBatchOrder = 'input_character_length_ascending_then_input_sha256'
+}
 $index = [LegalDenseIndex]::new($dimensions)
 $indexWatch = [Diagnostics.Stopwatch]::StartNew(); $newVectors = 0; $queryRows = @(); $resultRows = @()
 try {
