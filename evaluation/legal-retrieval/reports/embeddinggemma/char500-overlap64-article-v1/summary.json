@@ -1,6 +1,8 @@
 {
-    "timestampUtc":  "2026-10-15T07:52:00.6318792Z",
+    "timestampUtc":  "2026-10-16T00:46:54.4020155Z",
     "datasetId":  "legal-retrieval-ready-v1",
+    "comparisonIdentityVersion":  1,
+    "comparisonIdentitySha256":  "48c415c1b5f5454b135c05f53831c0401b0c0a583afbe92bde909d13c273e852",
     "datasetSha256":  "A06B9ECAE98AA9E691C811FA71CC3BB22D6010230832A7425781983EA0D393E3",
     "corpusSha256":  "5476BA7333F16A26965B32FFB59EBE3EC82A07FDCC3B1CE8FDA51F3182A3EEAB",
     "chunkingVersion":  "char500-overlap64-article-v1",
@@ -18,7 +20,7 @@
     "batchSize":  16,
     "newVectors":  0,
     "reusedVectors":  6634,
-    "indexingWallMsThisRun":  1579.3381000000002,
+    "indexingWallMsThisRun":  2345.7261000000003,
     "thresholdCalibration":  {
                                  "objective":  "balanced_answerability_accuracy",
                                  "split":  "development_only",
@@ -43,7 +45,7 @@
                         "noAnswerFalseAcceptanceRate":  0,
                         "inCorpusAcceptanceRate":  0.83333333333333337,
                         "threshold":  0.49478109971930873,
-                        "meanQueryEmbeddingMs":  38.617246666666674
+                        "meanQueryEmbeddingMs":  37.086083333333328
                     },
                     {
                         "model":  "embeddinggemma:latest",
@@ -58,7 +60,7 @@
                         "noAnswerFalseAcceptanceRate":  0.6,
                         "inCorpusAcceptanceRate":  0.82857142857142863,
                         "threshold":  0.49478109971930873,
-                        "meanQueryEmbeddingMs":  37.389765714285716
+                        "meanQueryEmbeddingMs":  36.78293428571429
                     }
                 ]
 }

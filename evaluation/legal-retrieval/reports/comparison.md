@@ -7,7 +7,9 @@ Character-based chunks with 64-character overlap; identical source units, questi
 | bge-m3:latest | 1024 | 300 | 57.39% | 0.5196 | 52.86% | 72.79% | 0.6762 |
 | bge-m3:latest | 1024 | 500 | 64.06% | 0.5928 | 60.0% | 75.40% | 0.7226 |
 | bge-m3:latest | 1024 | 700 | 65.72% | 0.5909 | 58.57% | 73.62% | 0.7179 |
+| embeddinggemma:latest | 768 | 300 | 61.28% | 0.5815 | 65.71% | 74.69% | 0.7417 |
 | embeddinggemma:latest | 768 | 500 | 62.28% | 0.5854 | 70.0% | 79.93% | 0.7861 |
+| embeddinggemma:latest | 768 | 700 | 64.22% | 0.6065 | 62.86% | 78.14% | 0.7422 |
 
 Use development results to choose chunk/model settings. Held-out rows are descriptive final checks, not a repeated tuning objective.
 
