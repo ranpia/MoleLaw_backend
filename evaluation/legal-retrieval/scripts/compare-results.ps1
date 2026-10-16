@@ -56,6 +56,9 @@ foreach ($file in Get-ChildItem -LiteralPath $ReportsRoot -Recurse -Filter summa
         heldOutInCorpusAcceptanceRate = $held.inCorpusAcceptanceRate
         heldOutMeanQueryEmbeddingMs = $held.meanQueryEmbeddingMs; corpusSha256 = $r.corpusSha256
         comparisonIdentitySha256 = $identity; threads = $r.threads; batchSize = $r.batchSize
+        inferenceRuntime = $(if ($r.model.inferenceRuntime) { $r.model.inferenceRuntime } else { 'ollama' })
+        inferenceRuntimeVersion = $(if ($r.model.inferenceRuntimeVersion) { $r.model.inferenceRuntimeVersion } else { $r.model.ollamaVersion })
+        dtype = $(if ($r.model.dtype) { $r.model.dtype } else { 'not_recorded_in_legacy_report' })
         rawFloat32VectorMiB = $data.corpus.chunkCount * $r.model.dimensions * 4.0 / 1MB }
 }
 $records = @($records | Sort-Object model,maxChars)
@@ -71,6 +74,7 @@ $lines += @('', 'Use development results to choose chunk/model settings. Held-ou
     'Recall ranks distinct source articles/annexes by maximum child-chunk score. No-answer rates use only five held-out negative questions and score-based thresholds, not generated answers.', '',
     'Raw similarity thresholds are fitted independently per configuration; do not compare absolute cosine scores across models.', '',
     'Query latency is one warm request per question, not a repeated load test. Character limits are not tokenizer-exact token limits.', '',
-    'CSV vector size is chunk count x dimension x 4 bytes for float32 values only; excludes IDs, metadata, cache overhead and any ANN index. Cached indexing times are not model throughput measurements.')
+    'CSV vector size is chunk count x dimension x 4 bytes for float32 values only; excludes IDs, metadata, cache overhead and any ANN index. Cached indexing times are not model throughput measurements.', '',
+    'KURE uses official Sentence Transformers/PyTorch float32; the existing Gemma/BGE runs use Ollama BF16/F16. Runtime and precision differ, so latency is not a pure model comparison. Legacy report JSON remains unchanged; unrecorded dtype is explicitly marked in CSV.')
 [IO.File]::WriteAllText((Join-Path $ReportsRoot 'comparison.md'),($lines -join [Environment]::NewLine)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
 $records | Format-Table model,maxChars,devRecallAt5,heldOutRecallAt5,heldOutMrr -AutoSize

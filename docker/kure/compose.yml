@@ -1,0 +1,30 @@
+name: molelaw-kure-lab
+services:
+  kure:
+    image: molelaw/kure-embedding:st6.1.0-cpu
+    build:
+      context: .
+    platform: linux/amd64
+    restart: "no"
+    environment:
+      HF_HUB_DISABLE_XET: "1"
+    ports:
+      - "127.0.0.1:11436:11434"
+    volumes:
+      - kure_models:/models
+    cpus: 6.0
+    mem_limit: 8g
+    memswap_limit: 8g
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:11434/api/version', timeout=5)"]
+      interval: 10s
+      timeout: 5s
+      retries: 120
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  kure_models:

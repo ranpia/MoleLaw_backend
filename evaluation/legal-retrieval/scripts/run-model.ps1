@@ -1,8 +1,9 @@
 [CmdletBinding()]
-param([ValidateSet('embeddinggemma','bge-m3')][string]$Model, [int[]]$Sizes = @(500,300,700), [int]$Port = 11435)
+param([ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model, [int[]]$Sizes = @(500,300,700), [int]$Port = 11435)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 foreach ($size in $Sizes) {
+    if (Test-Path -LiteralPath (Join-Path $ArtifactsRoot "control/stop-$Model.flag")) { Write-Host "Stopped by user request before $Model / char$size"; break }
     $version = "char$size-overlap64-article-v1"
     $directory = $(if ($size -eq 500) { $DataRoot } else { Join-Path $DataRoot "variants/$version" })
     if (!(Test-Path -LiteralPath (Join-Path $directory 'questions.json'))) { throw "Dataset missing: $version" }

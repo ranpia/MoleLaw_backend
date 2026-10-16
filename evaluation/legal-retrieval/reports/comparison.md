@@ -10,6 +10,8 @@ Character-based chunks with 64-character overlap; identical source units, questi
 | embeddinggemma:latest | 768 | 300 | 61.28% | 0.5815 | 65.71% | 74.69% | 0.7417 |
 | embeddinggemma:latest | 768 | 500 | 62.28% | 0.5854 | 70.0% | 79.93% | 0.7861 |
 | embeddinggemma:latest | 768 | 700 | 64.22% | 0.6065 | 62.86% | 78.14% | 0.7422 |
+| kure-v1:official | 1024 | 300 | 57.11% | 0.6160 | 51.43% | 71.71% | 0.6592 |
+| kure-v1:official | 1024 | 500 | 57.28% | 0.6245 | 55.71% | 73.81% | 0.6935 |
 
 Use development results to choose chunk/model settings. Held-out rows are descriptive final checks, not a repeated tuning objective.
 
@@ -22,3 +24,5 @@ Raw similarity thresholds are fitted independently per configuration; do not com
 Query latency is one warm request per question, not a repeated load test. Character limits are not tokenizer-exact token limits.
 
 CSV vector size is chunk count x dimension x 4 bytes for float32 values only; excludes IDs, metadata, cache overhead and any ANN index. Cached indexing times are not model throughput measurements.
+
+KURE uses official Sentence Transformers/PyTorch float32; the existing Gemma/BGE runs use Ollama BF16/F16. Runtime and precision differ, so latency is not a pure model comparison. Legacy report JSON remains unchanged; unrecorded dtype is explicitly marked in CSV.
