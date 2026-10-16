@@ -19,15 +19,31 @@ foreach ($line in [IO.File]::ReadLines($corpusPath)) {
     if ($hash -ne $chunk.textSha256) { throw 'Chunk hash mismatch.' }
     $chunks[$chunk.id] = $chunk
 }
-if ($chunks.Count -ne $manifest.chunkCount) { throw 'Chunk count mismatch.' }
+if ($chunks.Count -ne $manifest.chunkCount -or $chunks.Count -ne $data.corpus.chunkCount) { throw 'Chunk count mismatch.' }
+$units = @{}; foreach ($chunk in $chunks.Values) { $units[$chunk.unitId] = $true }
+if ($units.Count -ne $data.corpus.unitCount -or $units.Count -ne $manifest.unitCount) { throw 'Unit count mismatch.' }
+function Assert-SameSet($Left, $Right, [string]$Label) {
+    $a = @($Left); $b = @($Right)
+    if (@($a | Select-Object -Unique).Count -ne $a.Count -or @($b | Select-Object -Unique).Count -ne $b.Count) { throw "Duplicate gold: $Label" }
+    if ($a.Count -ne $b.Count -or @($a | Where-Object { $_ -notin $b }).Count -gt 0) { throw "Gold set mismatch: $Label" }
+}
 $seen = @{}; $splitsByUnit = @{}
 foreach ($q in $data.questions) {
     if ($seen.ContainsKey($q.id)) { throw 'Duplicate question ID.' }
     $seen[$q.id] = $true
+    if ($q.split -notin @('development','held_out')) { throw 'Unknown split.' }
     if ($q.answerability -eq 'in_corpus') {
         if (@($q.relevantUnitIds).Count -lt 1 -or @($q.relevantChunkIds).Count -lt 1) { throw "Missing gold: $($q.id)" }
         if (@($q.supplementalSourcesNeeded).Count -ne 0) { throw 'Unresolved supplemental source.' }
+        Assert-SameSet $q.relevantUnitIds @($q.relevantChunkGroups | ForEach-Object { $_.unitId }) $q.id
+        Assert-SameSet $q.relevantChunkIds @($q.relevantChunkGroups | ForEach-Object { $_.chunkIds }) $q.id
+        foreach ($unitId in $q.relevantUnitIds) {
+            if (!$units.ContainsKey($unitId)) { throw "Missing gold unit: $unitId" }
+            if ($splitsByUnit.ContainsKey($unitId) -and $splitsByUnit[$unitId] -ne $q.split) { throw "Split leakage: $unitId" }
+            $splitsByUnit[$unitId] = $q.split
+        }
         foreach ($group in $q.relevantChunkGroups) {
+            if (@($group.chunkIds).Count -eq 0) { throw 'Empty gold group.' }
             if ($splitsByUnit.ContainsKey($group.unitId) -and $splitsByUnit[$group.unitId] -ne $q.split) { throw "Split leakage: $($group.unitId)" }
             $splitsByUnit[$group.unitId] = $q.split
             foreach ($id in $group.chunkIds) {
@@ -36,7 +52,7 @@ foreach ($q in $data.questions) {
         }
         foreach ($id in $q.relevantChunkIds) { if (!$chunks.ContainsKey($id)) { throw 'Missing gold chunk.' } }
     } elseif ($q.answerability -eq 'out_of_corpus') {
-        if (@($q.relevantChunkIds).Count -ne 0 -or @($q.relevantUnitIds).Count -ne 0) { throw 'Negative question has gold.' }
+        if (@($q.relevantChunkIds).Count -ne 0 -or @($q.relevantUnitIds).Count -ne 0 -or @($q.relevantChunkGroups).Count -ne 0) { throw 'Negative question has gold.' }
     } else { throw "Unknown answerability: $($q.id)" }
 }
 foreach ($expected in @(@('in_corpus','development',30),@('in_corpus','held_out',70),@('out_of_corpus','development',5),@('out_of_corpus','held_out',5))) {

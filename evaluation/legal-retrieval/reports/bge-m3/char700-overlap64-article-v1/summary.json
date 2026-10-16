@@ -1,0 +1,66 @@
+{
+    "timestampUtc":  "2026-10-16T00:46:02.2614199Z",
+    "datasetId":  "legal-retrieval-char700-overlap64-article-v1",
+    "comparisonIdentityVersion":  1,
+    "comparisonIdentitySha256":  "48c415c1b5f5454b135c05f53831c0401b0c0a583afbe92bde909d13c273e852",
+    "datasetSha256":  "0B875A1EF22CCE51C0E40672534ECF527C159C1633B93EF8551BAA459B09A117",
+    "corpusSha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+    "chunkingVersion":  "char700-overlap64-article-v1",
+    "model":  {
+                  "corpusSha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+                  "model":  "bge-m3:latest",
+                  "modelDigest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                  "dimensions":  1024,
+                  "inputMode":  "bge-m3-title-text-v1",
+                  "ollamaVersion":  "0.40.3",
+                  "documentFormat":  "{title}\n{text}",
+                  "queryFormat":  "{text}"
+              },
+    "threads":  6,
+    "batchSize":  16,
+    "newVectors":  1318,
+    "reusedVectors":  4713,
+    "indexingWallMsThisRun":  929068.9011,
+    "thresholdCalibration":  {
+                                 "objective":  "balanced_answerability_accuracy",
+                                 "split":  "development_only",
+                                 "selected":  {
+                                                  "threshold":  0.60057227638833166,
+                                                  "balancedAccuracy":  0.83333333333333337
+                                              }
+                             },
+    "metricScope":  "distinct article/annex units ranked by maximum child-chunk cosine; positives only for Recall/MRR",
+    "noAnswerScope":  "out-of-frozen-corpus topic checks, not answer generation",
+    "summary":  [
+                    {
+                        "model":  "bge-m3:latest",
+                        "dimensions":  1024,
+                        "split":  "development",
+                        "positiveQueries":  30,
+                        "negativeQueries":  5,
+                        "top1HitRate":  0.46666666666666667,
+                        "recallAt5":  0.65722222222222237,
+                        "recallAt10":  0.7333333333333335,
+                        "mrr":  0.59091486624241951,
+                        "noAnswerFalseAcceptanceRate":  0.2,
+                        "inCorpusAcceptanceRate":  0.8666666666666667,
+                        "threshold":  0.60057227638833166,
+                        "meanQueryEmbeddingMs":  62.676653333333341
+                    },
+                    {
+                        "model":  "bge-m3:latest",
+                        "dimensions":  1024,
+                        "split":  "held_out",
+                        "positiveQueries":  70,
+                        "negativeQueries":  5,
+                        "top1HitRate":  0.58571428571428574,
+                        "recallAt5":  0.73619047619047617,
+                        "recallAt10":  0.84333333333333327,
+                        "mrr":  0.71789060490686107,
+                        "noAnswerFalseAcceptanceRate":  0.2,
+                        "inCorpusAcceptanceRate":  0.82857142857142863,
+                        "threshold":  0.60057227638833166,
+                        "meanQueryEmbeddingMs":  61.647798571428588
+                    }
+                ]
+}
