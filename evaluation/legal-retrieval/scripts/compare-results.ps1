@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([string]$ReportDirectory)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
@@ -90,12 +90,28 @@ $extra = @(foreach ($group in ($rankingRows | Group-Object model,chunkingVersion
 })
 $extra | Export-Csv (Join-Path $ReportsRoot 'ranking-comparison.csv') -NoTypeInformation -Encoding UTF8
 $similarityRows | Export-Csv (Join-Path $ReportsRoot 'similarity-examples.csv') -NoTypeInformation -Encoding UTF8
-$lines = @('# Model and chunk comparison', '', 'Character-based chunks with 64-character overlap; identical source units, questions and splits.', '',
+$lines = @('# 법령 임베딩 모델·청크 비교', '', '2026-10-16 기준 3개 모델 × 300 / 500 / 700문자, 총 9개 구성 완료. 중복은 64문자이며 동일 원문 5,486개 단위·질문 110개·정답·분할을 사용했다. 차원 축소는 아직 평가하지 않았다.', '',
+    '## 기존 검색 지표', '',
     '| Model | Dimensions | Characters | Dev Recall@5 | Dev MRR | Held-out top-1 | Held-out Recall@5 | Held-out MRR |',
     '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
 foreach ($r in $records) {
     $lines += '| '+$r.model+' | '+$r.dimensions+' | '+$r.maxChars+' | '+([math]::Round(100*$r.devRecallAt5,2))+'% | '+([math]::Round($r.devMrr,4))+' | '+([math]::Round(100*$r.heldOutTop1HitRate,2))+'% | '+([math]::Round(100*$r.heldOutRecallAt5,2))+'% | '+([math]::Round($r.heldOutMrr,4))+' |'
 }
+$lines += @('', '## 추가 지표: development', '', '양성 30개 질문의 macro 평균이다. Hit@5는 정답 하나 이상, Complete@5는 정답 전체 회수, Precision@5는 검색 5개 중 정답 비율이다. nDCG는 정답의 순서를 반영한다.', '',
+    '| 모델 | 최대 문자 | Hit@5 | Complete@5 | Precision@5 | nDCG@5 | nDCG@10 |',
+    '| --- | ---: | ---: | ---: | ---: | ---: | ---: |')
+foreach ($row in @($extra | Where-Object split -eq 'development')) {
+    $size = [regex]::Match($row.chunkingVersion,'char(\d+)').Groups[1].Value
+    $lines += '| '+$row.model+' | '+$size+' | '+([math]::Round(100*$row.hitAt5,2))+'% | '+([math]::Round(100*$row.completeAt5,2))+'% | '+([math]::Round(100*$row.precisionAt5,2))+'% | '+([math]::Round($row.ndcgAt5,4))+' | '+([math]::Round($row.ndcgAt10,4))+' |'
+}
+$lines += @('', '## 결과 해석', '',
+    '- 미리 정한 development Recall@5 기준 우선 후보는 BGE-M3 700문자(65.72%)다. Gemma 700문자(64.22%)와 차이는 1.50%p이며, 작은 개발 표본만으로 일반적인 우열을 확정하지 않는다.',
+    '- 첫 정답 순위의 MRR은 KURE 500문자(0.6245), nDCG@5는 Gemma 700문자(0.5543), nDCG@10은 KURE 700문자(0.6021)가 가장 높다. 여러 근거의 회수와 앞쪽 배치에서 지표별 장점이 다르다.',
+    '- Complete@5의 개발 최고값은 50%다. 정답 하나를 찾는 Hit@5가 높아도 필요한 모든 조문을 확보한 것은 아니다.',
+    '- 추가 지표는 결과 확인 후 도입한 보조 분석이다. 기존 Recall@5 선택 규칙을 유지하고 공개된 held-out으로 반복 튜닝하지 않는다.', '',
+    '## 유사도 점수 읽기', '',
+    '700문자 조건의 휴게시간 질문에서 BGE-M3는 근로기준법 제50조(근로시간)를 0.5869로, KURE는 정답 제54조(휴게)를 0.5602로 검색했다. 유사도는 정답 확률이 아니며 모델별 원시 점수로 우열을 비교하지 않는다. 조문 점수는 자식 청크의 최대 코사인 유사도다.', '',
+    '예시 전체와 검색 조문명: [유사도 CSV](similarity-examples.csv). 질문별 추가 지표: [CSV](ranking-queries.csv).', '', '## 평가 조건과 한계')
 $lines += @('', 'Similarity examples and metric definitions: [guide](similarity-and-metrics.md). Additional Hit@5, Complete@5, Precision@5 and nDCG@5/10: [ranking comparison](ranking-comparison.md).', '', 'Use development results to choose chunk/model settings. Held-out rows are descriptive final checks, not a repeated tuning objective.', '',
     'Primary selection metric: development Recall@5. Supporting metrics: MRR, Recall@10, in-corpus acceptance and out-of-corpus false acceptance; see CSV.', '',
     'Recall ranks distinct source articles/annexes by maximum child-chunk score. No-answer rates use only five held-out negative questions and score-based thresholds, not generated answers.', '',
