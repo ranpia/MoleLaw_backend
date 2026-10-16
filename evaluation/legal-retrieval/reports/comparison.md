@@ -12,6 +12,7 @@ Character-based chunks with 64-character overlap; identical source units, questi
 | embeddinggemma:latest | 768 | 700 | 64.22% | 0.6065 | 62.86% | 78.14% | 0.7422 |
 | kure-v1:official | 1024 | 300 | 57.11% | 0.6160 | 51.43% | 71.71% | 0.6592 |
 | kure-v1:official | 1024 | 500 | 57.28% | 0.6245 | 55.71% | 73.81% | 0.6935 |
+| kure-v1:official | 1024 | 700 | 58.39% | 0.6153 | 48.57% | 76.48% | 0.6526 |
 
 Use development results to choose chunk/model settings. Held-out rows are descriptive final checks, not a repeated tuning objective.
 

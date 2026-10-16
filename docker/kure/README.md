@@ -21,11 +21,13 @@ docker compose -f docker/kure/compose.yml stop
 
 다른 모델 평가와 동시에 실행하지 않는다. `docker compose down -v`는 다운로드한 모델을 지우므로 일반 중단에 사용하지 않는다. 문서 및 질문은 KURE-v1로 다시 임베딩하며 기존 BGE-M3 벡터 공간을 재사용하지 않는다. 정확히 같은 KURE 입력만 전용 공유 캐시에서 재사용한다.
 
-2026-10-16 사용자 요청으로 300문자까지만 마무리하고 700문자는 보류한다. `evaluation/legal-retrieval/artifacts/control/stop-kure-v1.flag`가 있으면 다음 구성을 실행하지 않는다. 이미 실행 중인 구성은 완료하고 결과를 보존한다. 사용자가 재개를 지시한 뒤에만 이 파일을 제거하고 필요한 크기를 지정한다.
+2026-10-16 사용자 요청으로 300문자에서 일시 중단했다가, 재개 지시 후 700문자까지 완료했다. `evaluation/legal-retrieval/artifacts/control/stop-kure-v1.flag`가 있으면 다음 구성을 실행하지 않는다. 이미 실행 중인 구성은 완료하고 결과를 보존한다. 사용자가 재개를 지시한 뒤에만 이 파일을 제거하고 필요한 크기를 지정한다.
 
 ```powershell
 # 사용자 재개 지시 이후에만 실행
-Remove-Item -LiteralPath evaluation/legal-retrieval/artifacts/control/stop-kure-v1.flag
+if (Test-Path -LiteralPath evaluation/legal-retrieval/artifacts/control/stop-kure-v1.flag) {
+    Remove-Item -LiteralPath evaluation/legal-retrieval/artifacts/control/stop-kure-v1.flag
+}
 & evaluation/legal-retrieval/scripts/run-model.ps1 -Model kure-v1 -Port 11436 -Sizes @(700)
 ```
 
