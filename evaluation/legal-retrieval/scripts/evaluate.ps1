@@ -5,6 +5,8 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 if ($DatasetDirectory) { $DataRoot = [IO.Path]::GetFullPath($DatasetDirectory) }
 & (Join-Path $PSScriptRoot 'validate-evaluation.ps1') -DatasetDirectory $DataRoot
+. (Join-Path $PSScriptRoot 'lib/ComparisonIdentity.ps1')
+$comparisonIdentity = Get-ComparisonIdentity $DataRoot
 Add-Type -Path (Join-Path $PSScriptRoot 'lib/DenseIndex.cs')
 $dataPath = Join-Path $DataRoot 'questions.json'
 $data = Get-Content -Raw -Encoding UTF8 $dataPath | ConvertFrom-Json
@@ -161,6 +163,7 @@ $summary | Export-Csv (Join-Path $outputDir 'summary.csv') -NoTypeInformation -E
 $queryRows | Export-Csv (Join-Path $outputDir 'queries.csv') -NoTypeInformation -Encoding UTF8
 $resultRows | Export-Csv (Join-Path $outputDir 'top10.csv') -NoTypeInformation -Encoding UTF8
 $report = [ordered]@{ timestampUtc = [datetime]::UtcNow.ToString('o'); datasetId = $data.id
+    comparisonIdentityVersion = 1; comparisonIdentitySha256 = $comparisonIdentity
     datasetSha256 = (Get-FileHash $dataPath).Hash; corpusSha256 = $data.corpus.sha256; chunkingVersion = $data.corpus.chunkingVersion
     model = $metadata; threads = $Threads; batchSize = $BatchSize; newVectors = $newVectors
     reusedVectors = $chunks.Count - $newVectors; indexingWallMsThisRun = $indexWatch.Elapsed.TotalMilliseconds
