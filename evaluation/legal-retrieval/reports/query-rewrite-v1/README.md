@@ -7,7 +7,7 @@
 - [고정 질문 110개](../../review/query-rewrites-v1.json): 원문·정제본·작성 방식·입력 해시.
 - [정제 지침](../../review/query-rewrite-prompt-v1.txt).
 - 모델별 `report.json`, `summary.csv`, `queries.csv`, `top10.csv`: 원본 질문과 실제 검색 질문, 순위·유사도·정답 여부.
-- 두 모델 완료 후 `comparison.md`, `comparison.csv`, `paired-queries.csv`에 전후 결과와 질문별 변화를 집계한다.
+- [전후 성능 비교와 해석](comparison.md), [성능 CSV](comparison.csv), [질문별 전후 결과](paired-queries.csv)에 전체 결과를 집계했다.
 
 문서 벡터는 기존 캐시만 사용한다. 누락된 문서 벡터가 있으면 실행을 중단한다. 정제본의 해시와 원본 데이터·모델 digest·입력 형식·차원·스레드·배치 크기가 기준선과 일치하는지 검사한다. 원본 질문 결과와 데이터는 덮어쓰지 않는다. Qdrant에는 쓰지 않는다.
 
@@ -20,4 +20,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/compare-query-rewrite.ps1
 ```
 
-2026-10-16: Gemma 정제 질문 평가 110개 완료. BGE-M3는 이어서 실행한다. 사용자 변경 지시로 중단한 OpenAI 생성 스크립트와 중간 응답은 제거했으며, 해당 응답은 평가에 사용하지 않았다. 실제 자동 정제의 API 지연·비용은 이번 실험에서 측정하지 않는다.
+2026-10-16: Gemma·BGE-M3 각각 정제 질문 110개 평가 완료. 검증용 Recall@5는 Gemma 78.14% → 78.43%, BGE-M3 73.62% → 80.95%다. 검증용 Complete@5는 Gemma 65.71% → 62.86%, BGE-M3 60.00% → 68.57%다. 이번 정제본의 효과는 BGE-M3에서 더 컸지만 모든 질문이 개선된 것은 아니다.
+
+사용자 변경 지시로 중단한 OpenAI 생성 스크립트와 중간 응답은 제거했으며, 해당 응답은 평가에 사용하지 않았다. 실제 자동 정제의 API 지연·비용은 이번 실험에서 측정하지 않는다.

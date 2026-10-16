@@ -20,6 +20,7 @@
 | 주 법령 20개·보충 근거·질문 110개의 임베딩 검색 평가 | [검색 평가 실행 안내](../evaluation/legal-retrieval/README.md) |
 | 3개 모델·3개 청크의 평가지표와 결과 해석 | [모델·청크 비교](../evaluation/legal-retrieval/reports/comparison.md) |
 | 모델별 유사도 예시·지표 정의·평가 한계 | [유사도와 평가지표](../evaluation/legal-retrieval/reports/similarity-and-metrics.md) |
+| Gemma·BGE-M3 700문자에서 LLM 질문 정제의 효과 | [질문 정제 전후 비교](../evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md) |
 | 임베딩 실험 캐시·정답 검증·보안 검토 | [2026-10-15 실험 검토](embedding-experiment-review-2026-10-15.md) |
 | 역할별 에이전트와 모델 평가 | [오케스트레이션·모델 계획](plans/orchestration-models.md) |
 | 단계별 완료 조건·평가·복구 | [구현·검증 계획](plans/delivery-validation.md) |
