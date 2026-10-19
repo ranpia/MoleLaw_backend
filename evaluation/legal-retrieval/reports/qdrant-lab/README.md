@@ -54,6 +54,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/qdrant-lab.ps1 -Action Verify -Model embeddinggemma
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/qdrant-lab.ps1 -Action Verify -Model bge-m3
 
+# 실제 질문을 임베딩한 검색까지 검증 기록에 남기려면 -Query를 지정한다 (Ollama 필요)
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/qdrant-lab.ps1 -Action Verify -Model bge-m3 -Query '휴게시간을 전혀 주지 않았어요'
+
 # 해당 모델의 현재 실험 컬렉션만 삭제할 때 실행한다
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/qdrant-lab.ps1 -Action Delete -Model embeddinggemma
 ```
@@ -62,4 +65,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 
 `Verify`는 문서 벡터 3개를 사용해 저장 벡터·원문의 왕복 확인, 기존 전수 코사인 계산과 Qdrant의 상위 10개 점수 비교, 조문 묶음과 법령 필터를 검사한다. 동점이면 같은 점수의 조문 순서가 다를 수 있어 점수 일치와 근사 검색 조문 겹침을 별도로 기록한다. 모델별 `*-verification.json`에 검증 기록을 보존한다. 질문 전체의 검색 품질이나 반복 지연시간을 측정한 벤치마크는 아니다.
 
-2026-10-19: Gemma 컬렉션 6,031개 적재와 문서 벡터 검증 완료. BGE-M3도 같은 방식으로 적재·검증한다. 기존 Qdrant에는 컬렉션이 없었으며 이번 작업에서는 실험 컬렉션만 생성했다. 전체 평가 지표는 [원본 질문 비교](../comparison.md), [정제 질문 비교](../query-rewrite-v1/comparison.md)를 참고한다.
+2026-10-19: Gemma·BGE-M3 각각 6,031개, 합계 12,062개 벡터 적재 완료. 두 모델의 문서 벡터 검증과 실제 질문 검색을 확인했다. Gemma는 재적재 후에도 6,031개로 유지되어 중복 방지를 확인했다. 기존 Qdrant에는 컬렉션이 없었으며 이번 작업에서는 실험 컬렉션만 생성했다. 전체 평가 지표는 [원본 질문 비교](../comparison.md), [정제 질문 비교](../query-rewrite-v1/comparison.md)를 참고한다.
