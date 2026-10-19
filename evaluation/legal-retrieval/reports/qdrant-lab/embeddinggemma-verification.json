@@ -1,6 +1,40 @@
 {
     "qdrantVersion":  "1.19.1",
+    "querySmoke":  {
+                       "query":  "휴게시간을 전혀 주지 않았어요",
+                       "results":  [
+                                       {
+                                           "unitId":  "labor:285279:005400",
+                                           "similarity":  0.47913462,
+                                           "title":  "근로기준법 제54조(휴게)"
+                                       },
+                                       {
+                                           "unitId":  "labor:285279:005000",
+                                           "similarity":  0.44312245,
+                                           "title":  "근로기준법 제50조(근로시간)"
+                                       },
+                                       {
+                                           "unitId":  "labor:285279:004600",
+                                           "similarity":  0.41390717,
+                                           "title":  "근로기준법 제46조(휴업수당)"
+                                       }
+                                   ],
+                       "exact":  true
+                   },
+    "verifiedAtUtc":  "2026-10-19T01:55:52.5194253Z",
+    "collection":  "molelaw_exp_embeddinggemma_c700_66106d14_85462619",
     "scope":  "Three stored document-vector probes, not a full question benchmark or latency comparison.",
+    "metadata":  {
+                     "owner":  "molelaw-legal-retrieval-lab-v1",
+                     "corpus_sha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+                     "model":  "embeddinggemma",
+                     "input_mode":  "gemma-retrieval-v1",
+                     "dimensions":  768,
+                     "model_digest":  "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+                     "chunking_version":  "char700-overlap64-article-v1",
+                     "chunk_count":  6031
+                 },
+    "pointCount":  6031,
     "checks":  [
                    {
                        "chunkId":  "autoliability:290659:000100:char700-overlap64-article-v1:0:8555631534bb",
@@ -23,18 +57,5 @@
                        "filterVerified":  true,
                        "vectorRoundtripVerified":  true
                    }
-               ],
-    "verifiedAtUtc":  "2026-10-19T01:53:28.6250871Z",
-    "metadata":  {
-                     "owner":  "molelaw-legal-retrieval-lab-v1",
-                     "corpus_sha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
-                     "model":  "embeddinggemma",
-                     "input_mode":  "gemma-retrieval-v1",
-                     "dimensions":  768,
-                     "model_digest":  "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
-                     "chunking_version":  "char700-overlap64-article-v1",
-                     "chunk_count":  6031
-                 },
-    "collection":  "molelaw_exp_embeddinggemma_c700_66106d14_85462619",
-    "pointCount":  6031
+               ]
 }

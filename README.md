@@ -81,7 +81,9 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 개발 Recall@5 우선 후보는 BGE-M3 700문자(65.72%)이며, Gemma 700문자는 64.22%입니다. MRR은 KURE 500문자(0.6245), nDCG@5는 Gemma 700문자(0.5543)가 가장 높았습니다. 작은 표본의 탐색 결과이며, 공개된 held-out을 반복 튜닝에 사용하지 않습니다. 유사도 원시 점수는 모델 간 우열이나 정답 확률로 해석하지 않습니다.
 
-[실행 안내](evaluation/legal-retrieval/README.md), [모델·청크 비교표](evaluation/legal-retrieval/reports/comparison.md), [유사도·지표 설명](evaluation/legal-retrieval/reports/similarity-and-metrics.md)에서 전체 결과를 확인할 수 있습니다. 현재는 오프라인 전수 코사인 검색 평가이며 Qdrant 색인·ANN 검색·생성 답변은 검증하지 않았습니다. 차원 축소와 토큰 기반 청킹은 후속 실험입니다.
+[실행 안내](evaluation/legal-retrieval/README.md), [모델·청크 비교표](evaluation/legal-retrieval/reports/comparison.md), [유사도·지표 설명](evaluation/legal-retrieval/reports/similarity-and-metrics.md)에서 전체 결과를 확인할 수 있습니다. 모델 비교 지표는 오프라인 전수 코사인 검색 기준이며 생성 답변은 검증하지 않았습니다. 차원 축소와 토큰 기반 청킹은 후속 실험입니다.
+
+Gemma·BGE-M3의 700문자 벡터는 로컬 Qdrant의 실험 전용 컬렉션에도 각각 6,031개씩 적재했습니다. 대시보드에서 원문과 정보를 확인하고 스크립트로 검색·재색인·검증·삭제할 수 있습니다. [Qdrant 실험 안내](evaluation/legal-retrieval/reports/qdrant-lab/README.md)를 참고하세요. 전체 질문의 Qdrant 검색 품질·반복 지연시간 비교는 아직 수행하지 않았습니다.
 
 700문자 조건에서 대화형 LLM이 작성한 정제 질문 110개로 Gemma와 BGE-M3도 비교했습니다. 검증용 Recall@5는 Gemma 78.14% → 78.43%, BGE-M3 73.62% → 80.95%였습니다. 원본·정제 질문에 같은 문서 벡터를 사용했으며 자동 정제 API의 시간·비용을 측정한 실험은 아닙니다. [질문 정제 전후 비교](evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md)에서 개선·악화 사례와 범위 밖 오수용률도 확인할 수 있습니다.
 

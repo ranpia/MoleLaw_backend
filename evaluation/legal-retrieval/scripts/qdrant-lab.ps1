@@ -95,6 +95,14 @@ if ($Action -eq 'Verify') {
     }
     $report=@{verifiedAtUtc=[datetime]::UtcNow.ToString('o');collection=$context.collection;metadata=$context.metadata;pointCount=$count
         qdrantVersion=(Invoke-RestMethod $script:LabUri -TimeoutSec 10).version;checks=$checks;scope='Three stored document-vector probes, not a full question benchmark or latency comparison.'}
+    if (![string]::IsNullOrWhiteSpace($Query)) {
+        $queryVector=Get-QdrantLabQueryVector $context $Query $OllamaPort
+        $queryGroups=@(Invoke-QdrantLabGroups $context $queryVector 3 $true)
+        if ($queryGroups.Count -ne 3) { throw 'Live query smoke test did not return three article groups.' }
+        $report.querySmoke=@{query=$Query;exact=$true;results=@(foreach ($group in $queryGroups) {
+            @{unitId=$group.id;title=$group.hits[0].payload.title;similarity=$group.hits[0].score}
+        })}
+    }
     $directory=Join-Path $ReportsRoot 'qdrant-lab'
     $null=New-Item -ItemType Directory -Force $directory
     [IO.File]::WriteAllText((Join-Path $directory "$Model-verification.json"),($report | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))

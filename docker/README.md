@@ -2,6 +2,8 @@
 
 Docker 관련 구성은 이 디렉터리에 모은다. Spring 애플리케이션 환경변수는 루트 `.env.example`, 프로젝트 구조와 실행은 [루트 README](../README.md)를 참고한다.
 
+법령 검색 실험은 실행 중인 로컬 Qdrant에 별도 실험 컬렉션을 사용한다. Gemma·BGE-M3의 700문자 자료를 각각 6,031개씩 적재했으며, [Qdrant 실험 안내](../evaluation/legal-retrieval/reports/qdrant-lab/README.md)에서 대시보드와 적재·검색·재색인·삭제 명령을 확인할 수 있다. 별도 Qdrant 이미지나 컨테이너는 추가하지 않는다.
+
 | 파일 | 용도 |
 | --- | --- |
 | `app.Dockerfile` | Gradle로 빌드한 Spring Boot JAR의 배포 이미지 |
