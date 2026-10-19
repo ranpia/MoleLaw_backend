@@ -78,21 +78,23 @@ function Get-QdrantLabDocumentKey($Context,$Chunk) {
     return [LegalDenseIndex]::InputKey($Context.profile.documentFormat.Replace('{title}',$Chunk.title).Replace('{text}',$Chunk.text))
 }
 
-function Invoke-QdrantLabGroups($Context,[single[]]$Vector,[int]$Limit=10,[bool]$Exact=$false,[string]$LawId='') {
+function Invoke-QdrantLabGroups($Context,[single[]]$Vector,[int]$Limit=10,[bool]$Exact=$false,[string]$LawId='',[bool]$IncludeTiming=$false) {
     if ($Vector.Length -ne $Context.profile.dimensions) { throw 'Query vector dimension mismatch.' }
     $body=@{query=@($Vector);group_by='unit_id';group_size=1;limit=$Limit;with_payload=$true;with_vector=$false;params=@{exact=$Exact;hnsw_ef=128}}
     if ($LawId) { $body.filter=@{must=@(@{key='law_id';match=@{value=$LawId}})} }
-    return (Invoke-QdrantLab POST "collections/$($Context.collection)/points/query/groups" $body).result.groups
+    $response=Invoke-QdrantLab POST "collections/$($Context.collection)/points/query/groups" $body
+    if ($IncludeTiming) { return [pscustomobject]@{groups=@($response.result.groups);serverMs=1000.0*$response.time} }
+    return $response.result.groups
 }
 
-function Get-QdrantLabQueryVector($Context,[string]$Query,[int]$OllamaPort) {
+function Get-QdrantLabQueryVector($Context,[string]$Query,[int]$OllamaPort,[string]$KeepAlive='0') {
     $uri="http://127.0.0.1:$OllamaPort"
     $tags=Invoke-RestMethod "$uri/api/tags" -TimeoutSec 10
     $tag=@($tags.models | Where-Object name -eq $Context.profile.tag)
     if ($tag.Count -ne 1 -or $tag[0].digest -ne $Context.baseline.model.modelDigest) { throw 'Ollama model digest mismatch.' }
     $running=Invoke-RestMethod "$uri/api/ps" -TimeoutSec 10
     if (@($running.models | Where-Object name -ne $Context.profile.tag).Count -gt 0) { throw 'Another Ollama model is loaded.' }
-    $body=@{model=$Context.profile.tag;input=@($Context.profile.queryFormat.Replace('{text}',$Query));truncate=$false;keep_alive=0;options=@{num_thread=6;num_gpu=0}}
+    $body=@{model=$Context.profile.tag;input=@($Context.profile.queryFormat.Replace('{text}',$Query));truncate=$false;keep_alive=$KeepAlive;options=@{num_thread=6;num_gpu=0}}
     $result=Invoke-RestMethod -Method Post -Uri "$uri/api/embed" -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes(($body | ConvertTo-Json -Depth 6 -Compress))) -TimeoutSec 300
     if ($result.embeddings.Count -ne 1 -or $result.embeddings[0].Count -ne $Context.profile.dimensions) { throw 'Invalid query embedding.' }
     return ,([single[]]$result.embeddings[0])

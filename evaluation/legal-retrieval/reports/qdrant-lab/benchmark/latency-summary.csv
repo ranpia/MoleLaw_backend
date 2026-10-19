@@ -1,0 +1,5 @@
+﻿"model","queryMode","engine","samples","clientMedianMs","clientP95Ms","serverMedianMs","serverP95Ms"
+"embeddinggemma","original","exact","330","26.8991","32.2865","3.717468","6.372813"
+"embeddinggemma","original","ann","330","25.1185","29.9613","1.712437","3.873812"
+"embeddinggemma","rewritten","exact","330","27.3462","35.9521","3.757583","5.540089"
+"embeddinggemma","rewritten","ann","330","25.4344","32.6646","1.694819","2.902304"

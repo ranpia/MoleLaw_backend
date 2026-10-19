@@ -1,5 +1,7 @@
 # Qdrant 실험용 자료 관리
 
+전체 질문 비교는 [Qdrant 검색 벤치마크](benchmark/comparison.md)에 기록한다. 모델별 원본 110개·정제 110개에 같은 질문 벡터를 사용하고 기존 전수 계산·Qdrant 전수·근사 검색을 비교한다. 질문 임베딩을 제외한 검색 시간은 각 방식 3회씩 측정한다.
+
 로컬 Qdrant를 이용해 기존 법령 벡터를 보관하고 검색하는 실험 환경이다. 별도 Qdrant 컨테이너를 늘리지 않고 이미 실행 중인 인스턴스에 실험용 컬렉션을 만든다. 서비스의 Spring 설정·기본 컬렉션은 변경하지 않는다. 새 컨테이너 이미지나 임베딩 모델 다운로드는 필요하지 않다.
 
 ## 들어 있는 자료
@@ -48,6 +50,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 기본 검색은 Qdrant가 색인을 활용할 수 있는 근사 검색 설정이다. 작은 데이터나 필터 조건에서는 Qdrant가 전수 탐색을 선택할 수도 있어, `-Exact`를 생략했다고 항상 HNSW를 사용했다고 주장하지 않는다. `-Exact`는 전수 탐색을 요청한다. 조문 묶음은 `unit_id`, 법령 필터는 `law_id`의 keyword 색인을 사용한다. [공식 그룹 검색 API](https://api.qdrant.tech/api-reference/search/query-points-groups)를 따른다.
 
 ## 검증과 정리
+
+```powershell
+# 전체 질문 품질·반복 검색 시간 비교 (자료 재색인 없음)
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/benchmark-qdrant.ps1 -Model embeddinggemma
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/benchmark-qdrant.ps1 -Model bge-m3
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/compare-qdrant-benchmark.ps1
+```
+
+질문 벡터는 `artifacts/qdrant-query-cache/`에서 입력 문자열·모델 버전별로 재사용한다. 같은 캐시를 재사용해 반복하면 임베딩을 새로 생성하지 않으며 검색 결과 파일은 새 측정값으로 갱신된다. 벤치마크의 MRR@10은 10위 밖 정답을 0으로 처리하므로 기존 전체 순위 MRR과 다르다. 수동 질문 검색은 짧은 사용에 맞춰 요청 후 모델을 내리고, 벤치마크는 질문 벡터 생성 중 모델을 유지했다가 생성 완료 후 내린다.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/test-qdrant-lab.ps1
