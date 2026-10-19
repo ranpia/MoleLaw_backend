@@ -1,0 +1,42 @@
+{
+    "version":  1,
+    "frozenAtUtc":  "2026-10-19T08:25:37.9965985Z",
+    "datasetSha256":  "70AFB82B8E26651AE50FB7026E2C9F604A27B78166A8DA8D6927FBDD7CEAB727",
+    "corpusSha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+    "draftSha256":  "58426CD3561CD228970E00E4F5BE8C0633E06306A545D26161C032FC823B7445",
+    "model":  {
+                  "tag":  "kure-v1:official",
+                  "dimensions":  1024,
+                  "inputMode":  "kure-st-cls-normalized-v1",
+                  "documentFormat":  "{title}\n{text}",
+                  "queryFormat":  "{text}",
+                  "runtime":  "sentence-transformers",
+                  "sourceUrl":  "https://huggingface.co/nlpai-lab/KURE-v1",
+                  "revision":  "8b418a58414668e75532ed045c22d9ca018ae2b2"
+              },
+    "newSourceCount":  10,
+    "sourceUnitCount":  6527,
+    "chunkCount":  10999,
+    "questionCount":  270,
+    "newPositiveCount":  120,
+    "newNegativeCount":  40,
+    "thresholds":  {
+                       "rewritten":  0.59829341466087427,
+                       "original":  0.59257074600968018
+                   },
+    "thresholdPolicy":  "Frozen original development thresholds; no recalibration on expanded corpus",
+    "criteria":  {
+                     "newRewrittenRecallAt5Minimum":  0.75,
+                     "legacyHeldOutRecallAt5Minimum":  0.75523809523809493,
+                     "newRewrittenCompleteAt5Minimum":  0.6,
+                     "noRewriteRegressionOnNewRecall":  true
+                 },
+    "limitations":  [
+                        "Assistant saw official source/gold when authoring; exploratory, not independent blind human review",
+                        "100 single-article plus 20 multi-article positives; overlapping gold within a law",
+                        "Foreign-jurisdiction and unavailable-case-fact negatives; not an exhaustive abstention benchmark",
+                        "Existing 110 questions are regression controls, not independent new evidence",
+                        "New laws intentionally selected, not a random sample of all law"
+                    ],
+    "rewritesSha256":  "5469ABB6CBCC090BD9F6D56DD2DBD40A60B7408CC6E129CBF49BE25B33E8F747"
+}
