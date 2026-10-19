@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param([ValidateSet('List','Index','Search','Verify','Delete')][string]$Action='List',
-    [ValidateSet('embeddinggemma','bge-m3')][string]$Model='embeddinggemma', [string]$Query,
-    [ValidateRange(1,65535)][int]$QdrantPort=6333, [ValidateRange(1,65535)][int]$OllamaPort=11435,
+    [ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model='embeddinggemma', [string]$Query,
+    [ValidateRange(1,65535)][int]$QdrantPort=6333, [ValidateRange(0,65535)][int]$OllamaPort=0,
     [ValidateRange(1,50)][int]$Limit=10, [switch]$Exact, [string]$LawId)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
@@ -15,6 +15,7 @@ if ($Action -eq 'List') {
     return
 }
 $context=Get-QdrantLabContext $Model
+if (!$OllamaPort) { $OllamaPort=$(if ($Model -eq 'kure-v1') {11436} else {11435}) }
 $exists=@((Invoke-QdrantLab GET 'collections').result.collections | Where-Object name -eq $context.collection).Count -eq 1
 if (!$exists -and $Action -ne 'Index') { throw 'Experiment collection not indexed. Run -Action Index first.' }
 if ($exists) {

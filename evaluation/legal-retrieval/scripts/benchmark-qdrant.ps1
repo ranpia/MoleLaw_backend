@@ -1,6 +1,6 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3')][string]$Model,
-    [ValidateRange(3,10)][int]$Repeats=3,[int]$QdrantPort=6333,[int]$OllamaPort=11435)
+param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model,
+    [ValidateRange(3,10)][int]$Repeats=3,[int]$QdrantPort=6333,[int]$OllamaPort=0)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
 . (Join-Path $PSScriptRoot 'lib/RankingMetrics.ps1')
@@ -8,6 +8,7 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QueryRewrites.ps1')
 Initialize-QdrantLab $QdrantPort
 $context=Get-QdrantLabContext $Model
+if (!$OllamaPort) { $OllamaPort=$(if ($Model -eq 'kure-v1') {11436} else {11435}) }
 $info=(Invoke-QdrantLab GET "collections/$($context.collection)").result
 Assert-QdrantLabCollection $context $info
 $count=(Invoke-QdrantLab POST "collections/$($context.collection)/points/count" @{exact=$true}).result.count
@@ -17,7 +18,7 @@ $rewritePath=Join-Path $ReviewRoot 'query-rewrites-v1.json'
 $rewriteHash=(Get-FileHash $rewritePath).Hash
 $rewrites=Read-QueryRewrites $rewritePath $context.data (Get-FileHash $datasetPath).Hash (Get-ComparisonIdentity $context.directory)
 $version=Invoke-RestMethod "http://127.0.0.1:$OllamaPort/api/version" -TimeoutSec 10
-if ($version.version -ne $context.baseline.model.ollamaVersion) { throw 'Ollama runtime changed since baseline.' }
+Assert-QdrantLabRuntime $context $version
 $queries=@(foreach ($mode in @('original','rewritten')) {
     foreach ($q in $context.data.questions) {
         $text=$(if ($mode -eq 'original') { $q.text } else { $rewrites[$q.id].rewrittenText })
@@ -28,6 +29,10 @@ $cacheDirectory=Join-Path $ArtifactsRoot ('qdrant-query-cache/'+$Model+'-'+$cont
 $null=New-Item -ItemType Directory -Force $cacheDirectory
 $cacheMetadataPath=Join-Path $cacheDirectory 'metadata.json'
 $cacheMetadata=@{modelDigest=$context.baseline.model.modelDigest;dimensions=$context.profile.dimensions;queryFormat=$context.profile.queryFormat;ollamaVersion=$version.version}
+if ($context.profile.runtime -eq 'sentence-transformers') {
+    $cacheMetadata.Remove('ollamaVersion')
+    $cacheMetadata.inferenceRuntimeVersion=$version.version;$cacheMetadata.dtype=$version.dtype;$cacheMetadata.device=$version.device
+}
 if (Test-Path -LiteralPath $cacheMetadataPath) {
     $previous=Get-Content -Raw -Encoding UTF8 $cacheMetadataPath | ConvertFrom-Json
     foreach ($field in $cacheMetadata.Keys) { if ($previous.$field -ne $cacheMetadata[$field]) { throw 'Query vector cache metadata mismatch.' } }
@@ -123,5 +128,9 @@ $report=@{timestampUtc=[datetime]::UtcNow.ToString('o');model=$Model;metadata=$c
     questionDatasetSha256=(Get-FileHash $datasetPath).Hash;repeats=$Repeats;hnswEf=128;newQueryVectors=$generated
     latencyScope='Sequential warm HTTP grouped queries; embedding excluded; 3+ repeated samples per question. Local scan is in-process and not HTTP-comparable.'
     qualityScope='First repetition only; positive-query macro averages; MRR@10 is truncated and differs from historical full MRR. ANN means exact=false, not proof HNSW was selected.'}
+if ($context.profile.runtime -eq 'sentence-transformers') {
+    $report.Remove('ollamaVersion')
+    $report.inferenceRuntimeVersion=$version.version;$report.dtype=$version.dtype;$report.device=$version.device
+}
 [IO.File]::WriteAllText((Join-Path $directory 'report.json'),($report | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
 Write-Host "PASS: $Model, 220 query variants, 660 quality rows, $($samples.Count) latency samples; collection unchanged."

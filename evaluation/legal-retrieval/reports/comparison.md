@@ -4,7 +4,7 @@
 
 처음 읽는다면 Recall@5 → Complete@5 → MRR → nDCG 순서로 보면 된다. 각각 필요한 근거를 얼마나 찾았는지, 전부 찾았는지, 첫 정답이 앞에 있는지, 여러 정답이 앞에 모였는지를 뜻한다. [숫자 예시로 보는 지표 설명](similarity-and-metrics.md)을 함께 참고한다.
 
-아래 표는 원본 질문 기준이다. 같은 700문자 조건에서 질문만 정제한 [Gemma·BGE-M3 전후 비교](query-rewrite-v1/comparison.md)도 확인할 수 있다.
+아래 표는 원본 질문 기준이다. 같은 700문자 조건에서 질문만 정제한 [Gemma·BGE-M3·KURE-v1 전후 비교](query-rewrite-v1/comparison.md)도 확인할 수 있다.
 
 ## 개발용: 설정 비교에 사용한 양성 질문 30개
 

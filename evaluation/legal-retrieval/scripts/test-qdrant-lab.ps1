@@ -19,3 +19,16 @@ foreach ($case in @('owner','dimension','name','corpus')) {
     if (!$rejected) { throw "Unsafe collection accepted: $case" }
 }
 Write-Host 'PASS: deterministic IDs; collection owner, dimension, name and corpus guards. No live deletion performed.'
+$kure=Get-QdrantLabContext 'kure-v1'
+$runtime=[pscustomobject]@{runtime='sentence-transformers';version=$kure.baseline.model.inferenceRuntimeVersion;revision=$kure.baseline.model.modelDigest;dtype='float32';device='cpu'}
+Assert-QdrantLabRuntime $kure $runtime
+foreach ($field in @('runtime','version','revision','dtype','device')) {
+    $bad=$runtime | ConvertTo-Json | ConvertFrom-Json
+    $bad.$field='unexpected'
+    $rejected=$false
+    try { Assert-QdrantLabRuntime $kure $bad } catch { $rejected=$true }
+    if (!$rejected) { throw "Incompatible KURE runtime accepted: $field" }
+}
+$kureInfo=[pscustomobject]@{config=[pscustomobject]@{metadata=$kure.metadata;params=[pscustomobject]@{vectors=[pscustomobject]@{size=1024;distance='Cosine'}}}}
+Assert-QdrantLabCollection $kure $kureInfo
+Write-Host 'PASS: KURE collection identity and pinned runtime/revision/dtype/device guards.'
