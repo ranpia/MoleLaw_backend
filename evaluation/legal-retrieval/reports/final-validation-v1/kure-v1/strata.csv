@@ -1,0 +1,9 @@
+﻿"queryMode","style","count","recallAt5","completeAt5","falseAcceptanceRate"
+"original","scenario","100","0.96","0.96",
+"original","multi_evidence","20","0.975","0.95",
+"original","foreign_jurisdiction","20",,,"0.55"
+"original","unavailable_case_facts","20",,,"0"
+"rewritten","scenario","100","1","1",
+"rewritten","multi_evidence","20","0.95","0.9",
+"rewritten","foreign_jurisdiction","20",,,"0.55"
+"rewritten","unavailable_case_facts","20",,,"0"
