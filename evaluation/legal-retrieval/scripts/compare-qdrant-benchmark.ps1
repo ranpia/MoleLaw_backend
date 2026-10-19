@@ -1,5 +1,5 @@
 ﻿[CmdletBinding()]
-param([ValidateSet('embeddinggemma','bge-m3','kure-v1')][string[]]$Models=@('embeddinggemma','bge-m3','kure-v1'))
+param([ValidateSet('embeddinggemma','bge-m3','kure-v1')][string[]]$Models=@('embeddinggemma','bge-m3','kure-v1'),[ValidateSet(300,500,700)][int]$Size=700)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 function Get-NearestRankPercentile($Values,[double]$Percentile) {
@@ -8,6 +8,8 @@ function Get-NearestRankPercentile($Values,[double]$Percentile) {
     return $ordered[[math]::Max(0,[math]::Ceiling($Percentile*$ordered.Count)-1)]
 }
 $root=Join-Path $ReportsRoot 'qdrant-lab/benchmark'
+if ($Size -ne 700) { $root=Join-Path $root "char$Size" }
+$chunkVersion="char$Size-overlap64-article-v1"
 $quality=@();$latency=@();$agreement=@()
 foreach ($model in $Models) {
     $directory=Join-Path $root $model
@@ -15,9 +17,9 @@ foreach ($model in $Models) {
     $queries=@(Import-Csv (Join-Path $directory 'queries.csv'))
     $samples=@(Import-Csv (Join-Path $directory 'latency.csv'))
     $top=@(Import-Csv (Join-Path $directory 'top10.csv'))
-    $datasetPath=Join-Path $DataRoot 'variants/char700-overlap64-article-v1/questions.json'
+    $datasetPath=$(if ($Size -eq 500) { Join-Path $DataRoot 'questions.json' } else { Join-Path $DataRoot "variants/$chunkVersion/questions.json" })
     $data=Get-Content -Raw -Encoding UTF8 $datasetPath | ConvertFrom-Json
-    $baseline=Get-Content -Raw -Encoding UTF8 (Join-Path $ReportsRoot "$model/char700-overlap64-article-v1/summary.json") | ConvertFrom-Json
+    $baseline=Get-Content -Raw -Encoding UTF8 (Join-Path $ReportsRoot "$model/$chunkVersion/summary.json") | ConvertFrom-Json
     if ($report.questionDatasetSha256 -ne (Get-FileHash $datasetPath).Hash -or $report.queryRewritesSha256 -ne (Get-FileHash (Join-Path $ReviewRoot 'query-rewrites-v1.json')).Hash -or $report.metadata.corpus_sha256 -ne $baseline.corpusSha256 -or $report.metadata.model_digest -ne $baseline.model.modelDigest) { throw 'Benchmark input identity mismatch.' }
     if ($queries.Count -ne 660 -or $samples.Count -ne 440*$report.repeats -or $top.Count -ne 6600) { throw 'Incomplete benchmark outputs.' }
     $queryIndex=@{};$hitIndex=@{};$sampleIndex=@{}
@@ -25,7 +27,7 @@ foreach ($model in $Models) {
     foreach ($row in $top) { $key="$($row.queryMode)/$($row.engine)/$($row.queryId)"; $hitIndex[$key]=@($hitIndex[$key] | Where-Object { $null -ne $_ })+@($row) }
     foreach ($row in $samples) { $key="$($row.queryMode)/$($row.engine)/$($row.queryId)"; $sampleIndex[$key]=@($sampleIndex[$key] | Where-Object { $null -ne $_ })+@($row) }
     foreach ($mode in @('original','rewritten')) {
-        $historicalDirectory=$(if ($mode -eq 'original') { Join-Path $ReportsRoot "$model/char700-overlap64-article-v1" } else { Join-Path $ReportsRoot "query-rewrite-v1/$model" })
+        $historicalDirectory=$(if ($mode -eq 'original') { Join-Path $ReportsRoot "$model/$chunkVersion" } elseif ($Size -eq 700) { Join-Path $ReportsRoot "query-rewrite-v1/$model" } else { Join-Path $ReportsRoot "query-rewrite-v1/char$Size/$model" })
         $historical=@(Import-Csv (Join-Path $historicalDirectory 'queries.csv'))
         foreach ($q in $data.questions) {
             foreach ($engine in @('local','exact','ann')) {
@@ -105,7 +107,7 @@ foreach ($row in $agreement) { $lines+='| '+$row.model+' | '+$row.queryMode+' | 
 $changedRecallTotal=($agreement | Measure-Object annRecallAt5ChangedQueries -Sum).Sum
 $recallInterpretation=$(if ($changedRecallTotal -eq 0) { '이번 측정에서는 모든 구성의 질문별 Recall@5가 유지됐다.' } else { "이번 측정에서는 근사 설정으로 Recall@5가 달라진 양성 질문 변형이 $changedRecallTotal 개 있었다. 모델·질문별 차이를 표와 원본 CSV에서 확인해야 한다." })
 $lines+=@('', '상위 조문 일부가 바뀌어도 정답 근거가 그대로 포함되면 Recall은 유지될 수 있다. 반대로 평균이 같아도 질문별 개선·악화가 상쇄될 수 있으므로 질문별 변화 수도 함께 계산했다.', '',
-    $recallInterpretation, '', 'Gemma 정제본의 급여 압류 질문(execution-5)은 nDCG@10이 전수 0.7039에서 근사 0.8396으로 달라졌다. 근사 검색이 상위의 비정답 조문을 놓치면 정답이 상대적으로 앞에 나와 지표가 좋아질 수도 있으므로, 근사 검색이 본질적으로 더 정확하다는 근거로 해석하지 않는다.', '',
+    $recallInterpretation, '', '근사 검색이 상위의 비정답 조문을 놓치면 정답이 상대적으로 앞에 나와 지표가 좋아질 수도 있으므로, 근사 검색이 본질적으로 더 정확하다는 근거로 해석하지 않는다.', '',
     '## 검색 시간', '', '| 모델 | 질문 | 방식 | 측정 수 | 클라이언트 중앙값 ms | 클라이언트 p95 ms | 서버 중앙값 ms | 서버 p95 ms |', '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |')
 foreach ($row in $latency) {
     $cells=@($row.model,$row.queryMode,$row.engine,$row.samples)
@@ -118,5 +120,12 @@ $lines+=@('', '중앙값은 측정값의 가운데, p95는 약 95%의 요청이 
     '정제본은 대화형 어시스턴트가 작성한 고정 질문이며 블라인드 실험은 아니다. 이번 결과를 보고 질문이나 모델을 다시 조정하지 않았다. 정제 전후 범위 밖 오수용률은 [별도 비교](../../query-rewrite-v1/comparison.md)를 참고한다. 이번 실험은 임계값을 새로 학습하지 않았다.', '',
     '세부 자료: 모델별 queries.csv(질문별 지표), top10.csv(상위 조문), latency.csv(반복 측정 원본), report.json(환경·입력 정보).')
 [IO.File]::WriteAllText((Join-Path $root 'comparison.md'),($lines -join [Environment]::NewLine)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
+if ($Size -ne 700) {
+    $path=Join-Path $root 'comparison.md'
+    $text=[IO.File]::ReadAllText($path).Replace('700문자 청크',"$Size 문자 청크")
+    $text=$text.Replace('Gemma 정제본의 급여 압류 질문(execution-5)은 nDCG@10이 전수 0.7039에서 근사 0.8396으로 달라졌다. ','')
+    $text=$text.Replace('../../query-rewrite-v1/comparison.md','../../../chunk-experiments/comparison.md')
+    [IO.File]::WriteAllText($path,$text,[Text.UTF8Encoding]::new($false))
+}
 $agreement | Format-Table -AutoSize
 $latency | Format-Table -AutoSize

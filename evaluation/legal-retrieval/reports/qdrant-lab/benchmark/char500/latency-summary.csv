@@ -1,0 +1,5 @@
+﻿"model","queryMode","engine","samples","clientMedianMs","clientP95Ms","serverMedianMs","serverP95Ms"
+"kure-v1","original","exact","330","28.5704","34.6201","5.066692","8.438486"
+"kure-v1","original","ann","330","25.554","30.03","2.023342","4.745033"
+"kure-v1","rewritten","exact","330","28.6073","32.3205","5.040423","6.724411"
+"kure-v1","rewritten","ann","330","25.7103","29.3863","1.986665","2.838574"

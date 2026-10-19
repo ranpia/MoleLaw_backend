@@ -1,22 +1,23 @@
 [CmdletBinding()]
 param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model,
-    [ValidateRange(3,10)][int]$Repeats=3,[int]$QdrantPort=6333,[int]$OllamaPort=0)
+    [ValidateRange(3,10)][int]$Repeats=3,[int]$QdrantPort=6333,[int]$OllamaPort=0,[ValidateSet(300,500,700)][int]$Size=700)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
 . (Join-Path $PSScriptRoot 'lib/RankingMetrics.ps1')
 . (Join-Path $PSScriptRoot 'lib/ComparisonIdentity.ps1')
 . (Join-Path $PSScriptRoot 'lib/QueryRewrites.ps1')
 Initialize-QdrantLab $QdrantPort
-$context=Get-QdrantLabContext $Model
+$context=Get-QdrantLabContext $Model $Size
 if (!$OllamaPort) { $OllamaPort=$(if ($Model -eq 'kure-v1') {11436} else {11435}) }
 $info=(Invoke-QdrantLab GET "collections/$($context.collection)").result
 Assert-QdrantLabCollection $context $info
 $count=(Invoke-QdrantLab POST "collections/$($context.collection)/points/count" @{exact=$true}).result.count
-if ($count -ne 6031 -or $info.status -ne 'green' -or $info.indexed_vectors_count -ne $count) { throw 'Collection must be fully indexed and green.' }
+if ($count -ne $context.data.corpus.chunkCount -or $info.status -ne 'green' -or $info.optimizer_status -ne 'ok' -or $info.indexed_vectors_count -lt 1) { throw 'Collection must be complete, optimized and green.' }
 $datasetPath=Join-Path $context.directory 'questions.json'
 $rewritePath=Join-Path $ReviewRoot 'query-rewrites-v1.json'
 $rewriteHash=(Get-FileHash $rewritePath).Hash
-$rewrites=Read-QueryRewrites $rewritePath $context.data (Get-FileHash $datasetPath).Hash (Get-ComparisonIdentity $context.directory)
+$sourceHash=(Get-FileHash (Join-Path $DataRoot 'variants/char700-overlap64-article-v1/questions.json')).Hash
+$rewrites=Read-QueryRewrites $rewritePath $context.data (Get-FileHash $datasetPath).Hash (Get-ComparisonIdentity $context.directory) $sourceHash
 $version=Invoke-RestMethod "http://127.0.0.1:$OllamaPort/api/version" -TimeoutSec 10
 Assert-QdrantLabRuntime $context $version
 $queries=@(foreach ($mode in @('original','rewritten')) {
@@ -119,11 +120,13 @@ $after=(Invoke-QdrantLab GET "collections/$($context.collection)").result
 Assert-QdrantLabCollection $context $after
 if ((Invoke-QdrantLab POST "collections/$($context.collection)/points/count" @{exact=$true}).result.count -ne $count) { throw 'Point count changed.' }
 $directory=Join-Path $ReportsRoot "qdrant-lab/benchmark/$Model"
+if ($Size -ne 700) { $directory=Join-Path $ReportsRoot "qdrant-lab/benchmark/char$Size/$Model" }
 $null=New-Item -ItemType Directory -Force $directory
 $samples | Export-Csv (Join-Path $directory 'latency.csv') -NoTypeInformation -Encoding UTF8
 $queryRows | Export-Csv (Join-Path $directory 'queries.csv') -NoTypeInformation -Encoding UTF8
 $topRows | Export-Csv (Join-Path $directory 'top10.csv') -NoTypeInformation -Encoding UTF8
 $report=@{timestampUtc=[datetime]::UtcNow.ToString('o');model=$Model;metadata=$context.metadata;collection=$context.collection;points=$count
+    indexedVectors=$info.indexed_vectors_count;segments=$info.segments_count;indexingThresholdKiB=$info.config.optimizer_config.indexing_threshold
     qdrantVersion=(Invoke-RestMethod $script:LabUri -TimeoutSec 10).version;ollamaVersion=$version.version;queryRewritesSha256=$rewriteHash
     questionDatasetSha256=(Get-FileHash $datasetPath).Hash;repeats=$Repeats;hnswEf=128;newQueryVectors=$generated
     latencyScope='Sequential warm HTTP grouped queries; embedding excluded; 3+ repeated samples per question. Local scan is in-process and not HTTP-comparable.'

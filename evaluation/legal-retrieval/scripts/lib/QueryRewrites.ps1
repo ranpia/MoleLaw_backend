@@ -1,6 +1,7 @@
-function Read-QueryRewrites([string]$Path, $Data, [string]$DatasetSha256, [string]$ComparisonIdentity) {
+function Read-QueryRewrites([string]$Path, $Data, [string]$DatasetSha256, [string]$ComparisonIdentity, [string]$RewriteSourceDatasetSha256='') {
     $rewrites = Get-Content -Raw -Encoding UTF8 $Path | ConvertFrom-Json
-    if (!$rewrites.complete -or $rewrites.sourceDatasetSha256 -ne $DatasetSha256 -or $rewrites.sourceComparisonIdentitySha256 -ne $ComparisonIdentity) { throw 'Incomplete or incompatible query rewrites.' }
+    $expectedSource=$(if ($RewriteSourceDatasetSha256) { $RewriteSourceDatasetSha256 } else { $DatasetSha256 })
+    if (!$rewrites.complete -or $rewrites.sourceDatasetSha256 -ne $expectedSource -or $rewrites.sourceComparisonIdentitySha256 -ne $ComparisonIdentity) { throw 'Incomplete or incompatible query rewrites.' }
     if (@($rewrites.questions).Count -ne @($Data.questions).Count) { throw 'Rewrite count mismatch.' }
     $byId = @{}
     foreach ($row in $rewrites.questions) {

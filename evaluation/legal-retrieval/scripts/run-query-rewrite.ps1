@@ -1,10 +1,10 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model, [int]$Port=0)
+param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model, [int]$Port=0,[ValidateSet(300,500,700)][int]$Size=700)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 if (!$Port) { $Port=$(if ($Model -eq 'kure-v1') {11436} else {11435}) }
-$version = 'char700-overlap64-article-v1'
-$dataset = Join-Path $DataRoot "variants/$version"
+$version = "char$Size-overlap64-article-v1"
+$dataset = $(if ($Size -eq 500) { $DataRoot } else { Join-Path $DataRoot "variants/$version" })
 $rewrites = Join-Path $ReviewRoot 'query-rewrites-v1.json'
 $rewriteHash = (Get-FileHash $rewrites).Hash
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'evaluate.ps1') -Model $Model -DatasetDirectory $dataset -QueryRewritesPath $rewrites -Port $Port
@@ -20,6 +20,7 @@ $queries = @(Import-Csv (Join-Path $pointer.directory 'queries.csv'))
 $hits = @(Import-Csv (Join-Path $pointer.directory 'top10.csv'))
 if ($queries.Count -ne 110 -or @($queries.queryId | Select-Object -Unique).Count -ne 110 -or $hits.Count -ne 1100) { throw 'Incomplete rewritten query results.' }
 $target = Join-Path $ReportsRoot "query-rewrite-v1/$Model"
+if ($Size -ne 700) { $target=Join-Path $ReportsRoot "query-rewrite-v1/char$Size/$Model" }
 $null = New-Item -ItemType Directory -Force $target
 foreach ($file in @('report.json','summary.csv','queries.csv','top10.csv')) { Copy-Item -LiteralPath (Join-Path $pointer.directory $file) -Destination (Join-Path $target $file) }
 Write-Host "Verified frozen vectors and published: $target"
