@@ -255,3 +255,8 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 - [기여 가이드](AGENTS.md)
 
 `main`은 검증한 최신 통합본, `dev`는 기능 통합·테스트 브랜치로 사용합니다. `dev` push와 `dev`/`main` 대상 PR은 외부 API 키 없이 테스트·JAR 패키징을 실행합니다. EC2 배포는 `Deploy to EC2`를 main에서 수동 실행하며 push만으로 배포하지 않습니다. [개발 인수인계](docs/development-handoff.md)에 브랜치 운영·스키마·검증·후속 작업을 정리했습니다. 새 Redis 인증·ETL·Ollama 연동의 운영 배포 구성은 별도 준비가 필요합니다.
+
+
+### KURE 최종 확대 검증 완료 (2026-10-19)
+
+주 법령 30개·질문 270개·10,999개 청크의 사전 고정 검색 기준을 모두 통과해 KURE-v1 1024차원·300자·중복 64자와 질문 정제 구성을 유지한다. 신규 정제 Recall@5 99.17%, Complete@5 98.33%, 기존 검증용 정제 Recall@5 80.52%다. 신규 질문은 원문을 보고 작성한 표적 평가이며, 음성 오수용률 27.5%는 유사도 기준값 통과율이다. 실제 LLM 판단·답변과 운영 준비는 별도 검증 대상이다. [결과와 한계](evaluation/legal-retrieval/reports/final-validation-v1/kure-v1/README.md)를 참고한다.

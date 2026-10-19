@@ -40,3 +40,7 @@ Start-Process powershell.exe -ArgumentList @('-NoExit','-NoProfile','-ExecutionP
 별도 터미널 한 개에서 CPU 6개·메모리 8GB로 순차 실행한다. 문서 벡터는 기존 KURE 캐시에서 재사용하고 추가 2,502개 문서 입력만 새로 생성한다. 새 데이터·벡터·질문·결과는 이름이 분리된 Qdrant 확대 검증 컬렉션에 보관하며 기존 컬렉션을 삭제하지 않는다. 당시 실험 DB는 약 996MB, C드라이브 여유는 약 74GB로 보존하기로 했다.
 
 결과는 `reports/final-validation-v1/kure-v1/`, 로그는 Git 제외된 `artifacts/logs/kure-final-validation-v1-*.log`에 남긴다. 완료·실패 시 KURE 컨테이너를 종료한다. 채팅 에이전트는 반복 폴링하지 않는다. 실패 시 캐시를 재사용할 수 있으며, 중지하려면 `artifacts/control/stop-kure-final-validation-v1.flag`를 생성한다. 결과의 커밋·푸시는 검증 결과를 확인한 뒤 수행한다.
+
+## 완료 결과
+
+2026-10-19 실행 완료. 사전 고정한 검색 기준 네 가지를 모두 통과했다. [전체 결과와 한계](../../reports/final-validation-v1/kure-v1/README.md)를 참고한다. KURE 컨테이너는 실행 후 중지했으며 실험용 Qdrant 데이터는 보존한다.
