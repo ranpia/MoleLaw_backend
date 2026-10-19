@@ -83,7 +83,9 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 [실행 안내](evaluation/legal-retrieval/README.md), [모델·청크 비교표](evaluation/legal-retrieval/reports/comparison.md), [유사도·지표 설명](evaluation/legal-retrieval/reports/similarity-and-metrics.md)에서 전체 결과를 확인할 수 있습니다. 모델 비교 지표는 오프라인 전수 코사인 검색 기준이며 생성 답변은 검증하지 않았습니다. 차원 축소와 토큰 기반 청킹은 후속 실험입니다.
 
-Gemma·BGE-M3의 700문자 벡터는 로컬 Qdrant의 실험 전용 컬렉션에도 각각 6,031개씩 적재했습니다. 대시보드에서 원문과 정보를 확인하고 스크립트로 검색·재색인·검증·삭제할 수 있습니다. [Qdrant 실험 안내](evaluation/legal-retrieval/reports/qdrant-lab/README.md)를 참고하세요. 전체 질문의 Qdrant 검색 품질·반복 지연시간 비교는 아직 수행하지 않았습니다.
+Gemma·BGE-M3의 700문자 벡터는 로컬 Qdrant의 실험 전용 컬렉션에도 각각 6,031개씩 적재했습니다. 대시보드에서 원문과 정보를 확인하고 스크립트로 검색·재색인·검증·삭제할 수 있습니다. [Qdrant 실험 안내](evaluation/legal-retrieval/reports/qdrant-lab/README.md)를 참고하세요.
+
+두 모델의 원본·정제 질문 총 440개 변형으로 [Qdrant 전체 질문 비교](evaluation/legal-retrieval/reports/qdrant-lab/benchmark/comparison.md)도 완료했습니다. 근사 검색에서 Recall@5가 달라진 질문은 없었고 상위 10개 조문 일치율은 평균 99.55~99.91%였습니다. 검색 시간은 2,640회 반복 측정했으며 질문 임베딩·LLM 정제·답변 생성 시간을 제외합니다. 근사 검색의 서버 처리 시간은 줄었지만 클라이언트 처리까지 포함한 차이는 작았습니다.
 
 700문자 조건에서 대화형 LLM이 작성한 정제 질문 110개로 Gemma와 BGE-M3도 비교했습니다. 검증용 Recall@5는 Gemma 78.14% → 78.43%, BGE-M3 73.62% → 80.95%였습니다. 원본·정제 질문에 같은 문서 벡터를 사용했으며 자동 정제 API의 시간·비용을 측정한 실험은 아닙니다. [질문 정제 전후 비교](evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md)에서 개선·악화 사례와 범위 밖 오수용률도 확인할 수 있습니다.
 
