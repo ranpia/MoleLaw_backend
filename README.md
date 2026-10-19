@@ -68,6 +68,8 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 ## 법령 임베딩 비교 현황
 
+긴 표 대신 [그래프와 정렬된 요약](evaluation/legal-retrieval/reports/chunk-experiments/overview.md)으로 모델·청크별 차이를 확인할 수 있습니다.
+
 2026-10-16 기준 EmbeddingGemma·BGE-M3·KURE-v1의 300 / 500 / 700문자 청크 평가, 총 9개 구성을 완료했습니다. 서비스에 적용할 모델과 청크 크기는 아직 확정하지 않았습니다.
 
 | 비교군 | 기본 벡터 차원 | 역할 |

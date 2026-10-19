@@ -69,7 +69,7 @@ $null=New-Item -ItemType Directory -Force $target
 $rows | Export-Csv (Join-Path $target 'comparison.csv') -NoTypeInformation -Encoding UTF8
 $timing | Export-Csv (Join-Path $target 'latency.csv') -NoTypeInformation -Encoding UTF8
 $agreement | Export-Csv (Join-Path $target 'agreement.csv') -NoTypeInformation -Encoding UTF8
-$lines=@('# 모델·청크·질문 정제 통합 비교', '', '300·500·700문자 청크에서 같은 원문 5,486개 단위와 같은 질문·정답·분할을 사용했다. 정제 질문 110개는 처음 작성한 것을 그대로 재사용했고 결과에 맞춰 고치지 않았다. 완료된 모델만 아래 표에 포함한다.', '',
+$lines=@('# 모델·청크·질문 정제 통합 비교', '', '![정제 질문 Recall@5 그래프](recall-by-chunk.png)', '', '[그래프와 정렬된 요약표로 보기](overview.md)', '', '300·500·700문자 청크에서 같은 원문 5,486개 단위와 같은 질문·정답·분할을 사용했다. 정제 질문 110개는 처음 작성한 것을 그대로 재사용했고 결과에 맞춰 고치지 않았다. 완료된 모델만 아래 표에 포함한다.', '',
     'Recall@5는 필요한 근거 중 상위 5개에서 찾은 비율, Complete@5는 필요한 근거를 전부 찾은 질문의 비율이다. MRR은 첫 정답의 순위, nDCG는 여러 정답의 배치를 본다. 모두 높을수록 좋다. [예시를 이용한 설명](../similarity-and-metrics.md)을 참고한다.', '', '## 정제 후 핵심 결과', '',
     '| 모델 | 문자 | 개발용 Recall@5 원본 → 정제 | 검증용 Recall@5 원본 → 정제 | 검증용 정제 MRR |', '| --- | ---: | ---: | ---: | ---: |')
 foreach ($model in $Models) {
@@ -112,4 +112,5 @@ $lines+=@('', '시간을 읽는 방법: 중앙값은 가운데 값, p95는 약 9
     '개발용 Recall@5가 원래 선택 기준이다. 공개된 검증용 결과로 질문·정답을 다시 조정하지 않으며, 정제본은 대화형 어시스턴트가 작성한 탐색 자료여서 독립 블라인드 검증은 아니다. 정제 후 검색 점수 분포가 달라질 수 있어 범위 안 수용률·범위 밖 오수용률·기준값은 CSV에 보존했다. 음성은 분할마다 5개뿐이다.', '',
     '상세 결과: [300문자 Qdrant](../qdrant-lab/benchmark/char300/comparison.md), [500문자 Qdrant](../qdrant-lab/benchmark/char500/comparison.md), [700문자 Qdrant](../qdrant-lab/benchmark/comparison.md). 현재 통합 표의 원본 검색 품질은 동일 벡터의 Qdrant 전수 기준이며 실제 근사 Recall@5·nDCG@10도 CSV에 함께 남겼다.')
 [IO.File]::WriteAllText((Join-Path $target 'comparison.md'),($lines -join [Environment]::NewLine)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
+& (Join-Path $PSScriptRoot 'export-experiment-charts.ps1')
 Write-Host "PASS: $($Models.Count) models, $($rows.Count) quality summaries, canonical identity=$commonIdentity"
