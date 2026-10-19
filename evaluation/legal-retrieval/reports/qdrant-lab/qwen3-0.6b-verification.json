@@ -1,0 +1,40 @@
+{
+    "qdrantVersion":  "1.19.1",
+    "scope":  "Three stored document-vector probes, not a full question benchmark or latency comparison.",
+    "checks":  [
+                   {
+                       "chunkId":  "autoliability:290659:000100:char700-overlap64-article-v1:0:8555631534bb",
+                       "exactTop10ScoreMatch":  true,
+                       "annTop10UnitOverlap":  1,
+                       "filterVerified":  true,
+                       "vectorRoundtripVerified":  true
+                   },
+                   {
+                       "chunkId":  "criminalprocedure:290189:047200:char700-overlap64-article-v1:0:1bea7379663f",
+                       "exactTop10ScoreMatch":  true,
+                       "annTop10UnitOverlap":  1,
+                       "filterVerified":  true,
+                       "vectorRoundtripVerified":  true
+                   },
+                   {
+                       "chunkId":  "traffic:291133:016600:char700-overlap64-article-v1:0:3d702e0202f3",
+                       "exactTop10ScoreMatch":  true,
+                       "annTop10UnitOverlap":  1,
+                       "filterVerified":  true,
+                       "vectorRoundtripVerified":  true
+                   }
+               ],
+    "verifiedAtUtc":  "2026-10-19T05:58:30.1840696Z",
+    "metadata":  {
+                     "owner":  "molelaw-legal-retrieval-lab-v1",
+                     "corpus_sha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+                     "model":  "qwen3-0.6b",
+                     "input_mode":  "qwen3-st-lasttoken-normalized-v1",
+                     "dimensions":  1024,
+                     "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                     "chunking_version":  "char700-overlap64-article-v1",
+                     "chunk_count":  6031
+                 },
+    "collection":  "molelaw_exp_qwen3_0.6b_c700_66106d14_97b0c614",
+    "pointCount":  6031
+}

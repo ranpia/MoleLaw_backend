@@ -1,5 +1,5 @@
-[CmdletBinding()]
-param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model,
+﻿[CmdletBinding()]
+param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1','qwen3-0.6b')][string]$Model,
     [ValidateRange(3,10)][int]$Repeats=3,[int]$QdrantPort=6333,[int]$OllamaPort=0,[ValidateSet(300,500,700)][int]$Size=700)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
@@ -8,7 +8,7 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QueryRewrites.ps1')
 Initialize-QdrantLab $QdrantPort
 $context=Get-QdrantLabContext $Model $Size
-if (!$OllamaPort) { $OllamaPort=$(if ($Model -eq 'kure-v1') {11436} else {11435}) }
+if (!$OllamaPort) { $OllamaPort=$(if ($Model -eq 'qwen3-0.6b') {11437} elseif ($Model -eq 'kure-v1') {11436} else {11435}) }
 $info=(Invoke-QdrantLab GET "collections/$($context.collection)").result
 Assert-QdrantLabCollection $context $info
 $count=(Invoke-QdrantLab POST "collections/$($context.collection)/points/count" @{exact=$true}).result.count

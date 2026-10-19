@@ -1,4 +1,4 @@
-. (Join-Path $PSScriptRoot 'Paths.ps1')
+﻿. (Join-Path $PSScriptRoot 'Paths.ps1')
 if (!('LegalDenseIndex' -as [type])) { Add-Type -Path (Join-Path $PSScriptRoot 'DenseIndex.cs') }
 $script:LabOwner = 'molelaw-legal-retrieval-lab-v1'
 
@@ -48,7 +48,7 @@ function Get-QdrantLabContext([string]$Model,[ValidateSet(300,500,700)][int]$Siz
 }
 
 function Assert-QdrantLabCollection($Context,$Info) {
-    if ($Context.collection -notmatch '^molelaw_exp_(embeddinggemma|bge_m3|kure_v1)_c(300|500|700)_[a-f0-9]{8}_[a-f0-9]{8}$') { throw 'Not a managed experiment collection.' }
+    if ($Context.collection -notmatch '^molelaw_exp_(embeddinggemma|bge_m3|kure_v1|qwen3_0\.6b)_c(300|500|700)_[a-f0-9]{8}_[a-f0-9]{8}$') { throw 'Not a managed experiment collection.' }
     foreach ($field in @('owner','model','model_digest','corpus_sha256','chunking_version','input_mode','dimensions','chunk_count')) {
         if ($null -eq $Context.metadata.$field -or $Info.config.metadata.$field -ne $Context.metadata.$field) { throw "Collection ownership/identity mismatch: $field" }
     }

@@ -1,6 +1,6 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([ValidateRange(1,65535)][int]$Port = 11435, [ValidateRange(1,8)][int]$Threads = 6,
-    [ValidateRange(1,32)][int]$BatchSize = 16, [Alias('Model')][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$ModelChoice = 'embeddinggemma', [string]$DatasetDirectory, [string]$QueryRewritesPath)
+    [ValidateRange(1,32)][int]$BatchSize = 16, [Alias('Model')][ValidateSet('embeddinggemma','bge-m3','kure-v1','qwen3-0.6b')][string]$ModelChoice = 'embeddinggemma', [string]$DatasetDirectory, [string]$QueryRewritesPath)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 if (Test-Path -LiteralPath (Join-Path $ArtifactsRoot "control/stop-$ModelChoice.flag")) { throw "Evaluation intentionally deferred by user stop request: $ModelChoice" }

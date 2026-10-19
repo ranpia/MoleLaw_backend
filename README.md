@@ -4,7 +4,7 @@
 
 현재 Java 17·Spring Boot 3.5·Spring AI 기반으로 백엔드를 재구축하고 있습니다. 법령 수집부터 벡터 검색, 대화 맥락 유지, 토큰 인증까지 역할을 분리하고 검증 가능한 구조로 바꾸는 것이 목표입니다.
 
-> 이 README는 2026-10-14 기준입니다. 아래의 현재 구현과 재구축 계획을 구분해 읽어 주세요. Qdrant·Redis 컨테이너 구동이 애플리케이션 검색·인증 전환 완료를 의미하지는 않습니다.
+> 서비스 구현·재구축 설명은 2026-10-14 기준이며, 임베딩 실험은 아래의 2026-10-19 완료 현황과 연결된 최신 결과를 따릅니다. 아래의 현재 구현과 재구축 계획을 구분해 읽어 주세요. Qdrant·Redis 컨테이너 구동이 애플리케이션 검색·인증 전환 완료를 의미하지는 않습니다.
 
 ## 주요 기능
 
@@ -70,26 +70,28 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 긴 표 대신 [그래프와 정렬된 요약](evaluation/legal-retrieval/reports/chunk-experiments/overview.md)으로 모델·청크별 차이를 확인할 수 있습니다.
 
-2026-10-16 기준 EmbeddingGemma·BGE-M3·KURE-v1의 300 / 500 / 700문자 청크 평가, 총 9개 구성을 완료했습니다. 서비스에 적용할 모델과 청크 크기는 아직 확정하지 않았습니다.
+2026-10-19 기준 EmbeddingGemma·BGE-M3·KURE-v1·Qwen3-Embedding-0.6B의 300·500·700자, 총 12개 구성에서 원본·정제 질문 평가를 완료했습니다. 완료된 모델·청크 조건은 위 그래프와 통합 비교표에서 확인할 수 있습니다. 검색 품질 기준 모델은 **KURE-v1 1024차원·300자 청크·중복 64자·질문 정제 사용**으로 선정했습니다. [선정 근거](evaluation/legal-retrieval/review/model-selection.md)를 참고하세요. 애플리케이션 설정과 서비스 색인은 아직 전환하지 않았습니다.
 
 | 비교군 | 기본 벡터 차원 | 역할 |
 | --- | --- | --- |
 | BGE-M3 | 1,024 | 세 청크 평가 완료, 다국어 기준선 |
 | EmbeddingGemma | 768 | 세 청크 평가 완료, 소형 기준선 |
 | KURE-v1 | 1,024 | 세 청크 평가 완료, 한국어 추가 학습 모델 |
-| qwen3-embedding:0.6b | 1,024 | 미실행 후속 후보 |
+| Qwen3-Embedding-0.6B | 1,024 | 세 청크 평가 완료, 다국어 비교군 |
 
 현재 실험은 주 법령 20개와 보충 근거의 원문 5,486개 단위, 질문 110개를 고정했습니다. 토큰 기준이 아닌 최대 300 / 500 / 700문자·중복 64문자 청킹입니다. 개발용 양성 30개에서 Recall@5를 1차 기준으로 사용하고 MRR·Recall@10·Hit@5·Complete@5·Precision@5·nDCG@5/10을 함께 봅니다. 음성은 분할별 5개로 별도 평가합니다.
 
-원본 질문 비교의 개발 Recall@5 우선 후보는 BGE-M3 700문자(65.72%)이며, Gemma 700문자는 64.22%입니다. MRR은 KURE 500문자(0.6245), nDCG@5는 Gemma 700문자(0.5543)가 가장 높았습니다. 작은 표본의 탐색 결과이며, 공개된 held-out을 반복 튜닝에 사용하지 않습니다. 유사도 원시 점수는 모델 간 우열이나 정답 확률로 해석하지 않습니다.
+모델 선택은 개발용 Recall@5를 우선으로 하고 MRR·nDCG·근거 전체 회수율을 함께 봅니다. 원본 질문과 정제 질문은 별도 조건입니다. 구성별 최신 우선 후보와 수치는 통합 비교표를 기준으로 읽어 주세요. 작은 표본의 탐색 결과이며, 유사도는 정답 확률이 아닙니다.
 
-[실행 안내](evaluation/legal-retrieval/README.md), [모델·청크 비교표](evaluation/legal-retrieval/reports/comparison.md), [유사도·지표 설명](evaluation/legal-retrieval/reports/similarity-and-metrics.md)에서 전체 결과를 확인할 수 있습니다. 모델 비교 지표는 오프라인 전수 코사인 검색 기준이며 생성 답변은 검증하지 않았습니다. 차원 축소와 토큰 기반 청킹은 후속 실험입니다.
+[실행 안내](evaluation/legal-retrieval/README.md), [모델·청크 비교표](evaluation/legal-retrieval/reports/comparison.md), [유사도·지표 설명](evaluation/legal-retrieval/reports/similarity-and-metrics.md)에서 전체 결과를 확인할 수 있습니다. 주요 통합 비교 지표는 Qdrant 전수 코사인 검색 기준이며 생성 답변은 검증하지 않았습니다. 전체 순위 MRR은 기존 로컬 전수 평가값을 함께 보존합니다. 차원 축소와 토큰 기반 청킹은 후속 실험입니다.
 
-Gemma·BGE-M3·KURE-v1의 300·500·700문자 벡터를 Qdrant의 실험 전용 컬렉션 9개에 적재했습니다. 모델별 청크 수는 각각 8,497·6,634·6,031개이며 전체 63,486개입니다. 대시보드에서 원문과 정보를 확인하고 스크립트로 검색·재색인·검증·삭제할 수 있습니다. [Qdrant 실험 안내](evaluation/legal-retrieval/reports/qdrant-lab/README.md)를 참고하세요.
+법령 벡터는 완료된 모델·청크별 Qdrant 실험 컬렉션에 적재합니다. 300·500·700자 코퍼스의 청크 수는 각각 8,497·6,634·6,031개입니다. [Qdrant 실험 안내](evaluation/legal-retrieval/reports/qdrant-lab/README.md)에서 조회·검색·검증 방법을 확인할 수 있습니다.
 
-세 모델 × 세 청크 크기의 [질문 정제·Qdrant 통합 비교](evaluation/legal-retrieval/reports/chunk-experiments/comparison.md)를 완료했습니다. 고정 질문 110개를 원본·정제로 9개 구성에 적용해 1,980개 실행 조합을 비교했고 검색 시간은 11,880회 측정했습니다. 질문 임베딩·LLM 정제·답변 생성 시간은 제외했으며, 무거운 추론과 측정은 리소스 간섭을 줄이기 위해 순차 실행했습니다.
+[모델·청크·질문 정제 통합 비교](evaluation/legal-retrieval/reports/chunk-experiments/comparison.md)는 완료된 구성에 동일한 원본·정제 질문 110개를 적용합니다. 주요 검색 지표는 Qdrant 전수 검색 결과이며, 전체 순위 MRR은 기존 전체 순위 평가 원자료를 Qdrant에 저장해 집계합니다. 검색 시간은 임베딩·정제·답변 생성을 제외한 과거 상세 측정 기록으로 구분합니다.
 
 정제 입력의 개발용 Recall@5는 KURE 300문자(75.17%)가 가장 높았습니다. Gemma는 세 크기 모두 72.00%, BGE-M3는 500문자(72.67%)가 해당 모델 안에서 가장 높았습니다. 원본 입력과 유리한 청크가 달라 모델·질문 입력 방식·청크를 함께 비교해야 합니다. 대화형 LLM이 작성한 고정 정제본을 재사용한 탐색 실험이며 자동 정제 API의 시간·비용이나 독립 블라인드 검증을 뜻하지 않습니다. 검증용 결과와 전체 MRR·nDCG·근거 전체 회수율은 통합 표에서 함께 확인할 수 있습니다. 기존 [700문자 상세 비교](evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md)도 보존했습니다.
+
+실험 자료는 Qdrant에서 관리합니다. 법령 컬렉션과 별도로 모델별 질문 컬렉션에 원본·정제 질문 벡터, 정답 조문 ID, 300·500·700문자 검색 상위 10개와 유사도·평가지표를 저장합니다. 로컬·Qdrant 정확도 비교는 주요 표에서 제외하고 상세 기록으로 보존합니다. [Qwen3 실행 조건](docker/qwen3/README.md)을 참고하세요.
 
 모델별 토크나이저·질문/문서 입력 형식·실제 출력 차원을 확인합니다. 모델별 Qdrant 컬렉션을 분리하며 같은 차원이어도 서로 다른 모델 벡터를 섞지 않습니다. 답변 모델은 우선 외부 API를 유지하고 Ollama는 임베딩 후보로 도입합니다.
 

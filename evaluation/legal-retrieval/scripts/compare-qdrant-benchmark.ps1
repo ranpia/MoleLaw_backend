@@ -1,7 +1,11 @@
 ﻿[CmdletBinding()]
-param([ValidateSet('embeddinggemma','bge-m3','kure-v1')][string[]]$Models=@('embeddinggemma','bge-m3','kure-v1'),[ValidateSet(300,500,700)][int]$Size=700)
+param([ValidateSet('embeddinggemma','bge-m3','kure-v1','qwen3-0.6b')][string[]]$Models=@('embeddinggemma','bge-m3','kure-v1','qwen3-0.6b'),[ValidateSet(300,500,700)][int]$Size=700)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
+$profiles=Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json
+if(!$PSBoundParameters.ContainsKey('Models')){
+    $Models=@($Models | Where-Object {!$profiles.$_.experimentSizes -or $Size -in @($profiles.$_.experimentSizes)})
+}
 function Get-NearestRankPercentile($Values,[double]$Percentile) {
     $ordered=@($Values | Sort-Object)
     if (!$ordered.Count) { throw 'No latency samples.' }

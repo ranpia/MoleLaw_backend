@@ -1,7 +1,12 @@
-[CmdletBinding()]
-param([ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model, [int[]]$Sizes = @(500,300,700), [int]$Port = 11435)
+﻿[CmdletBinding()]
+param([ValidateSet('embeddinggemma','bge-m3','kure-v1','qwen3-0.6b')][string]$Model, [int[]]$Sizes, [int]$Port = 0)
 $ErrorActionPreference = 'Stop'
+if (!$Port) { $Port=$(if ($Model -eq 'qwen3-0.6b') {11437} elseif ($Model -eq 'kure-v1') {11436} else {11435}) }
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
+if(!$Sizes){
+    $profile=(Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json).$Model
+    $Sizes=$(if($profile.experimentSizes){@($profile.experimentSizes)}else{@(500,300,700)})
+}
 foreach ($size in $Sizes) {
     if (Test-Path -LiteralPath (Join-Path $ArtifactsRoot "control/stop-$Model.flag")) { Write-Host "Stopped by user request before $Model / char$size"; break }
     $version = "char$size-overlap64-article-v1"

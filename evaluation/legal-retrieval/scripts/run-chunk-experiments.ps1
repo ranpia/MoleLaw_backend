@@ -1,11 +1,15 @@
-[CmdletBinding()]
-param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model,[ValidateSet(300,500)][int[]]$Sizes=@(500,300))
+﻿[CmdletBinding()]
+param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1','qwen3-0.6b')][string]$Model,[ValidateSet(300,500,700)][int[]]$Sizes)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
+if(!$Sizes){
+    $profile=(Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json).$Model
+    $Sizes=$(if($profile.experimentSizes){@($profile.experimentSizes)}else{@(500,300)})
+}
 foreach ($size in $Sizes) {
     $version="char$size-overlap64-article-v1"
     $context=Get-QdrantLabContext $Model $size
-    $path=Join-Path $ReportsRoot "query-rewrite-v1/char$size/$Model/report.json"
+    $path=$(if ($size -eq 700) {Join-Path $ReportsRoot "query-rewrite-v1/$Model/report.json"} else {Join-Path $ReportsRoot "query-rewrite-v1/char$size/$Model/report.json"})
     $complete=$false
     if (Test-Path -LiteralPath $path) {
         $r=Get-Content -Raw -Encoding UTF8 $path | ConvertFrom-Json

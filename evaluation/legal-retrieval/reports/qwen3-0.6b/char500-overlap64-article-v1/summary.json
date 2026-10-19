@@ -1,0 +1,71 @@
+{
+    "timestampUtc":  "2026-10-19T04:29:06.4082728Z",
+    "datasetId":  "legal-retrieval-ready-v1",
+    "comparisonIdentityVersion":  1,
+    "comparisonIdentitySha256":  "48c415c1b5f5454b135c05f53831c0401b0c0a583afbe92bde909d13c273e852",
+    "datasetSha256":  "A06B9ECAE98AA9E691C811FA71CC3BB22D6010230832A7425781983EA0D393E3",
+    "corpusSha256":  "5476BA7333F16A26965B32FFB59EBE3EC82A07FDCC3B1CE8FDA51F3182A3EEAB",
+    "chunkingVersion":  "char500-overlap64-article-v1",
+    "model":  {
+                  "corpusSha256":  "5476BA7333F16A26965B32FFB59EBE3EC82A07FDCC3B1CE8FDA51F3182A3EEAB",
+                  "model":  "qwen3-embedding-0.6b:official",
+                  "modelDigest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                  "dimensions":  1024,
+                  "inputMode":  "qwen3-st-lasttoken-normalized-v1",
+                  "documentFormat":  "{title}\n{text}",
+                  "queryFormat":  "Instruct: Given a legal question in Korean, retrieve relevant Korean legal provisions that answer the question.\nQuery:{text}",
+                  "inferenceRuntime":  "sentence-transformers",
+                  "inferenceRuntimeVersion":  "sentence-transformers/6.1.0;torch/2.14.1+cpu;transformers/5.20.0",
+                  "dtype":  "float32",
+                  "device":  "cpu",
+                  "sourceUrl":  "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B",
+                  "documentBatchOrder":  "input_character_length_ascending_then_input_sha256"
+              },
+    "threads":  6,
+    "batchSize":  16,
+    "newVectors":  6634,
+    "reusedVectors":  0,
+    "indexingWallMsThisRun":  5832750.9376,
+    "thresholdCalibration":  {
+                                 "objective":  "balanced_answerability_accuracy",
+                                 "split":  "development_only",
+                                 "selected":  {
+                                                  "threshold":  0.60833784081604192,
+                                                  "balancedAccuracy":  0.96666666666666667
+                                              }
+                             },
+    "metricScope":  "distinct article/annex units ranked by maximum child-chunk cosine; positives only for Recall/MRR",
+    "noAnswerScope":  "out-of-frozen-corpus topic checks, not answer generation",
+    "summary":  [
+                    {
+                        "model":  "qwen3-embedding-0.6b:official",
+                        "dimensions":  1024,
+                        "split":  "development",
+                        "positiveQueries":  30,
+                        "negativeQueries":  5,
+                        "top1HitRate":  0.46666666666666667,
+                        "recallAt5":  0.66166666666666685,
+                        "recallAt10":  0.72666666666666679,
+                        "mrr":  0.60611783555324927,
+                        "noAnswerFalseAcceptanceRate":  0,
+                        "inCorpusAcceptanceRate":  0.93333333333333335,
+                        "threshold":  0.60833784081604192,
+                        "meanQueryEmbeddingMs":  294.48772333333335
+                    },
+                    {
+                        "model":  "qwen3-embedding-0.6b:official",
+                        "dimensions":  1024,
+                        "split":  "held_out",
+                        "positiveQueries":  70,
+                        "negativeQueries":  5,
+                        "top1HitRate":  0.58571428571428574,
+                        "recallAt5":  0.784047619047619,
+                        "recallAt10":  0.84857142857142864,
+                        "mrr":  0.72637465425730718,
+                        "noAnswerFalseAcceptanceRate":  0.6,
+                        "inCorpusAcceptanceRate":  0.88571428571428568,
+                        "threshold":  0.60833784081604192,
+                        "meanQueryEmbeddingMs":  277.99844714285723
+                    }
+                ]
+}
