@@ -38,3 +38,7 @@ KURE-v1은 BGE-M3 기반 한국어 추가 학습 모델이며 공식 모델 카�
 실험 CPU 런타임과 배포 서버 성능은 구분한다. 이번 선정은 운영 지연시간·동시 처리량을 보장하지 않으며, 기존 실험 컬렉션과 다른 모델 결과는 비교·회귀 검증용으로 보존한다.
 
 근거: [전체 지표](../reports/chunk-experiments/comparison.md), [정렬된 요약](../reports/chunk-experiments/overview.md), [KURE 결과](../reports/kure-v1/README.md).
+
+## 선정 후 확대 검증
+
+[확대 검증 계획](final-validation-v1/README.md)에 따라 주 법령 30개·질문 270개로 마지막 검색 검증을 별도 수행한다. 모델·청크·수용 기준값은 고정하고 새 법령의 새 질문과 기존 회귀 질문을 분리 집계한다. 완료 전까지 이 단계의 통과를 주장하지 않는다.

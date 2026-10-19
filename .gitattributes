@@ -3,3 +3,5 @@
 *.jar binary
 # Preserve the frozen corpus bytes used by its SHA256 manifest.
 /evaluation/legal-retrieval/data/**/corpus.jsonl -text whitespace=cr-at-eol
+/evaluation/legal-retrieval/data/final-validation-v1/** -text whitespace=cr-at-eol
+/evaluation/legal-retrieval/review/final-validation-v1/questions.psv -text whitespace=cr-at-eol
