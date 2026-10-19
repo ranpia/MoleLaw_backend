@@ -1,8 +1,8 @@
-[CmdletBinding()]
-param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model, [int]$Port=0,[ValidateSet(300,500,700)][int]$Size=700)
+﻿[CmdletBinding()]
+param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1','qwen3-0.6b')][string]$Model, [int]$Port=0,[ValidateSet(300,500,700)][int]$Size=700)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
-if (!$Port) { $Port=$(if ($Model -eq 'kure-v1') {11436} else {11435}) }
+if (!$Port) { $Port=$(if ($Model -eq 'qwen3-0.6b') {11437} elseif ($Model -eq 'kure-v1') {11436} else {11435}) }
 $version = "char$Size-overlap64-article-v1"
 $dataset = $(if ($Size -eq 500) { $DataRoot } else { Join-Path $DataRoot "variants/$version" })
 $rewrites = Join-Path $ReviewRoot 'query-rewrites-v1.json'

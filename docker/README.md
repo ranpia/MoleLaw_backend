@@ -2,7 +2,7 @@
 
 Docker 관련 구성은 이 디렉터리에 모은다. Spring 애플리케이션 환경변수는 루트 `.env.example`, 프로젝트 구조와 실행은 [루트 README](../README.md)를 참고한다.
 
-법령 검색 실험은 실행 중인 로컬 Qdrant에 별도 실험 컬렉션을 사용한다. Gemma·BGE-M3·KURE-v1의 300·500·700문자 자료를 총 9개 컬렉션, 63,486개 포인트로 적재했다. [Qdrant 실험 안내](../evaluation/legal-retrieval/reports/qdrant-lab/README.md)에서 대시보드와 적재·검색·재색인·삭제 명령을 확인할 수 있다. 별도 Qdrant 이미지나 컨테이너는 추가하지 않는다.
+법령 검색 실험은 실행 중인 로컬 Qdrant에 별도 실험 컬렉션을 사용한다. Gemma·BGE-M3·KURE-v1·Qwen3의 300·500·700자 자료를 총 12개 법령 컬렉션, 84,648개 벡터 포인트로 적재했다. 질문·정답·검색 결과는 모델별 별도 컬렉션, 데이터셋·정제본·모델 설정은 카탈로그 컬렉션으로 관리한다. [Qdrant 실험 안내](../evaluation/legal-retrieval/reports/qdrant-lab/README.md)에서 대시보드와 적재·검색·재색인·삭제 명령을 확인할 수 있다. 별도 Qdrant 이미지나 컨테이너는 추가하지 않는다.
 
 | 파일 | 용도 |
 | --- | --- |

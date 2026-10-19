@@ -18,12 +18,14 @@
 | 개선 전 인증 위험과 설계 근거 | [JWT 보안 검토](jwt-security-review.md) |
 | 수집·청킹·벡터 검색·근거·Advisor | [RAG·ETL 계획](plans/rag-etl.md) |
 | 주 법령 20개·보충 근거·질문 110개의 임베딩 검색 평가 | [검색 평가 실행 안내](../evaluation/legal-retrieval/README.md) |
-| 3개 모델·3개 청크의 평가지표와 결과 해석 | [모델·청크 비교](../evaluation/legal-retrieval/reports/comparison.md) |
+| 임베딩 모델·차원·청크 선정 근거 | [KURE-v1 선정](../evaluation/legal-retrieval/review/model-selection.md) |
+| Qwen3의 세 청크·원본/정제 질문 결과 | [Qwen3 결과](../evaluation/legal-retrieval/reports/qwen3-0.6b/README.md) |
+| 완료된 모델·청크의 원본 질문 평가지표와 해석 | [모델·청크 비교](../evaluation/legal-retrieval/reports/comparison.md) |
 | 모델별 유사도 예시·지표 정의·평가 한계 | [유사도와 평가지표](../evaluation/legal-retrieval/reports/similarity-and-metrics.md) |
-| Gemma·BGE-M3·KURE-v1 700문자에서 LLM 질문 정제의 효과 | [질문 정제 전후 비교](../evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md) |
+| 기존 세 모델·700자의 질문 정제 초기 기록 | [질문 정제 전후 비교](../evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md) |
 | Qdrant 실험 컬렉션 적재·조회·검색·재색인·삭제 | [Qdrant 실험 환경](../evaluation/legal-retrieval/reports/qdrant-lab/README.md) |
 | 전체 질문의 Qdrant 전수·근사 검색 품질과 반복 지연시간 | [Qdrant 벤치마크](../evaluation/legal-retrieval/reports/qdrant-lab/benchmark/comparison.md) |
-| 세 모델 × 300·500·700문자 × 원본·정제 질문 통합 비교 | [청크·질문 정제 종합 결과](../evaluation/legal-retrieval/reports/chunk-experiments/comparison.md) |
+| 네 모델 × 세 청크의 원본·정제 통합 비교 | [청크·질문 정제 종합 결과](../evaluation/legal-retrieval/reports/chunk-experiments/comparison.md) |
 | 임베딩 실험 캐시·정답 검증·보안 검토 | [2026-10-15 실험 검토](embedding-experiment-review-2026-10-15.md) |
 | 역할별 에이전트와 모델 평가 | [오케스트레이션·모델 계획](plans/orchestration-models.md) |
 | 단계별 완료 조건·평가·복구 | [구현·검증 계획](plans/delivery-validation.md) |

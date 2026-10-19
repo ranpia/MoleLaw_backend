@@ -2,37 +2,32 @@
 
 ## 현재 결과 요약
 
-**최신 결과:** 세 모델의 300·500·700문자에서 원본·정제 질문과 Qdrant 검색을 모두 평가한 [통합 비교](reports/chunk-experiments/comparison.md)를 참고한다. 9개 구성에서 같은 질문 110개를 원본·정제로 실행했고 검색 시간 표본은 총 11,880개다. 정제 입력의 개발용 Recall@5 최고값은 KURE 300문자 75.17%이며, 원본 입력 결과와 구별한다. 아래 기존 표는 원본 질문 기준 기록이다.
+2026-10-19 기준 **4개 모델 × 300·500·700자, 총 12개 구성**에서 원본·정제 질문 평가를 완료했다. [그래프와 정렬된 요약](reports/chunk-experiments/overview.md) → [전체 지표](reports/chunk-experiments/comparison.md) → [지표 설명](reports/similarity-and-metrics.md) 순서로 읽으면 된다.
 
-실험 자료를 Qdrant에서도 관리하려면 [Qdrant 실험 안내](reports/qdrant-lab/README.md)를 참고한다. 기존 벡터 캐시를 실험 전용 컬렉션에 적재하고 조회·검색·검증·삭제하는 명령을 제공한다.
+| 모델 | 차원 | 완료 청크 | 상세 |
+| --- | ---: | --- | --- |
+| EmbeddingGemma | 768 | 300·500·700자 | [결과](reports/embeddinggemma/README.md) |
+| BGE-M3 | 1,024 | 300·500·700자 | [결과](reports/bge-m3/README.md) |
+| KURE-v1 | 1,024 | 300·500·700자 | [결과](reports/kure-v1/README.md) |
+| Qwen3-Embedding-0.6B | 1,024 | 300·500·700자 | [결과](reports/qwen3-0.6b/README.md) |
 
-[Qdrant 전체 질문 비교](reports/qdrant-lab/benchmark/comparison.md)는 세 모델의 원본·정제 질문 총 660개 변형을 기존 전수 계산·Qdrant 전수·근사 설정으로 실행했다. 검색 시간은 방식별 3회씩 총 3,960회 측정했다. 근사 검색으로 Recall@5가 달라진 질문은 없었으나 상위 10개 조문은 일부 달랐다. 검색 벡터는 한 번 생성해 공유하고 자료 재색인은 하지 않았다.
+정제 질문의 개발용 Recall@5 우선 후보는 KURE 300자(75.17%)다. Qwen3 안에서는 300자(72.67%)가 높다. 검증용 Recall@5 최고값은 Qwen3 500자(82.17%), 검증용 전체 MRR 최고값은 Gemma 500자(0.8136)다. 서로 다른 지표의 최고값을 한 모델의 종합 우승으로 해석하지 않는다. 원본 질문만 비교하면 개발용 Recall@5 최고값은 Qwen3 500자(66.17%)다.
 
-700문자 조건의 [원본 질문과 LLM 정제 질문 비교 실험](reports/query-rewrite-v1/comparison.md)도 완료했다. 원본·정답·문서 벡터는 고정하고 검색 질문만 바꿨다. 검증용 Recall@5는 Gemma 78.14% → 78.43%, BGE-M3 73.62% → 80.95%, KURE-v1 76.48% → 81.12%다. 정제본은 대화형 어시스턴트가 작성했으며 자동 API 정제의 시간·비용은 평가하지 않았다.
+고정 원문 5,486개 단위와 질문 110개를 사용한다. 원본 110개·정제 110개를 12개 구성에 적용한 2,640개 실행 조합이며, 양성은 개발용 30개·검증용 70개, 음성은 각각 5개다. 정제본은 대화형 어시스턴트가 한 번 작성한 110개를 재사용한다. 이미 공개된 평가셋을 사용한 탐색 실험으로 독립 블라인드 검증이나 답변 생성 평가는 아니다.
 
-3개 모델 × 3개 청크 평가와 평가지표 집계를 완료했다. 현재 결과는 오프라인 전수 검색 기준이며 서비스 적용 모델은 미확정이다.
+주요 지표는 Qdrant 전수 검색 결과에서 집계한다. 전체 순위 MRR은 기존 전체 순위 원자료를 Qdrant에 보존해 함께 집계하며, 상위 10개만 사용하는 MRR@10과 구분한다. 데이터·벡터·질문·정답·검색 결과는 [Qdrant](reports/qdrant-lab/README.md), Git 파일은 재현·공유, 로컬 캐시는 재추론 방지 용도다. 검색 품질 기준 모델은 KURE-v1 1024차원·300자·중복 64자·질문 정제 사용으로 선정했다. [선정 근거](review/model-selection.md)를 따른다. 애플리케이션 전환은 아직 수행하지 않았으며 차원 축소는 아직 비교하지 않았다.
 
-| 비교 관점 | Development 최고 구성 | 값 |
-| --- | --- | ---: |
-| Recall@5: 정답 근거 회수 (기존 1차 기준) | BGE-M3 700문자 | 65.72% |
-| MRR: 첫 정답 순위 | KURE-v1 500문자 | 0.6245 |
-| nDCG@5: 상위 5개 정답 배치 | EmbeddingGemma 700문자 | 0.5543 |
-| nDCG@10: 상위 10개 정답 배치 | KURE-v1 700문자 | 0.6021 |
-| Complete@5: 필요한 정답 전체 회수 | BGE-M3 500·700 / Gemma 500·700문자 | 50.00% |
-
-모든 값은 개발용 양성 30개 기준이다. BGE-M3와 Gemma의 700문자 Recall@5 차이는 1.50%p이며 통계적으로 확정된 우열을 뜻하지 않는다. 모델 선택은 개발용 Recall@5를 중심으로 다른 지표를 함께 본다. 유사도는 정답 확률이 아니며 모델별 원시 점수를 직접 비교하지 않는다.
-
-[모델·청크 전체 비교](reports/comparison.md)는 모든 평가지표를 함께 정리한다. [순위 지표 상세 집계](reports/ranking-comparison.md), [유사도 예시와 계산 정의](reports/similarity-and-metrics.md), 질문별 CSV도 보존했다. 순위 지표에서 음성 질문은 제외한다.
-
-## 평가 완료 내역과 후속 계획
+## 이전 진행 기록과 후속 계획
 
 2026-10-16 리뷰 반영: 비교의 1차 지표는 development Recall@5, 보조 지표는 MRR·Recall@10·양성/음성 수용률로 정한다. 단독 순차 실행 중 모델·데이터를 고정하고 기존 정상 캐시는 유지한다. 캐시 재사용량이 다른 실행의 색인 시간으로 모델 속도를 비교하지 않는다. 이미 공개된 held-out 결과는 반복적인 선정 기준으로 사용하지 않으며, 이를 보고 설정을 조정했다면 탐색 결과로 표시하고 최종 확인에는 새 독립 질문셋을 사용한다.
 
 정답 unit·그룹·flat chunk 집합과 분할 누수를 검사하고, 비교표는 청크와 무관한 원문·질문·정답·분할 identity 및 보고서 입력 해시·완료 파일을 검증한다. 기존 보고서는 원본 입력 해시가 일치할 때만 identity를 계산해 비교하며 결과 파일 자체를 다시 쓰지 않는다. `scripts/test-evaluation-contract.ps1`로 변조 거절과 variant 간 동일성을 확인할 수 있다.
 
+아래 날짜별 설명은 당시 진행 기록이다. 최신 현황은 문서 맨 위 요약과 통합 결과를 따른다.
+
 2026-10-16 재개: 보존한 캐시로 EmbeddingGemma·BGE-M3·KURE-v1의 300 / 500 / 700문자 평가, 총 9개 구성을 모두 완료했다. [BGE-M3 결과](reports/bge-m3/README.md), [EmbeddingGemma 재검토·청크 결과](reports/embeddinggemma/README.md), [KURE 결과](reports/kure-v1/README.md)를 기록했다. Gemma 500문자 재실행은 최초 기준선의 질문 110개 검색 지표와 일치했다. KURE 700문자는 사용자 재개 지시 후 같은 이미지·revision·라이브러리 버전으로 실행했다. 아래 `run-model.ps1` 명령은 저장된 입력 벡터를 재사용한다.
 
-1. 현재 기본 모델 EmbeddingGemma(768차원), BGE-M3(1,024차원)의 300 / 500 / 700문자 청크 비교를 완료한다.
+1. 완료: EmbeddingGemma(768차원), BGE-M3(1,024차원)의 300 / 500 / 700문자 청크 비교.
 2. 한국어 데이터셋으로 추가 학습한 공개 임베딩 모델을 후보에 추가한다. 한국어 학습 데이터·학습 방법·기반 모델·라이선스·실행 가능 여부를 모델 카드로 확인한 뒤 후보를 확정한다. 자체 추가 학습은 별도 실험으로 구분한다.
 3. 확정한 한국어 추가 학습 모델에도 동일한 법령·질문·정답·분할과 청크 조건을 적용한다. 모델별 기본 벡터 차원과 입력 형식을 기록하고, 검색 지표·유사도·처리 시간·저장 용량을 비교한다.
 4. 청크와 모델 선택은 개발용 질문으로 진행하고 held-out 질문은 최종 검증에 사용한다. 추가 학습을 직접 진행하는 경우 평가 질문 및 정답 조문이 학습 데이터에 유입되지 않도록 분리한다.
@@ -41,7 +36,7 @@
 
 한국어 모델의 [Hugging Face 후보 조사 기록](review/korean-model-candidates.md)을 보존했다. 진행 브랜치는 `experiment/legal-embedding-evaluation`이다.
 
-고려대 KURE 계열을 추가 조사했고, 사용자 지시로 공식 KURE-v1 revision을 고정해 같은 조건의 평가를 시작했다. [별도 CPU 추론 환경](../../docker/kure/README.md)에서 공식 출력과의 일치를 먼저 검증했다. KURE-v2·Sparse·Reranker는 검색 방식이 달라 별도 후속 실험으로 구분한다.
+고려대 KURE 계열은 공식 KURE-v1 revision을 고정해 세 청크 평가를 완료했다. [별도 CPU 추론 환경](../../docker/kure/README.md)에서 공식 출력과의 일치를 먼저 검증했다. KURE-v2·Sparse·Reranker는 검색 방식이 달라 별도 후속 실험으로 구분한다.
 
 `data/questions.json`의 `evaluationReady=true`는 고정 원문·청크·정답으로 **임베딩 검색 평가를 실행할 준비가 됐다**는 뜻이다. 답변 생성, 법률 자문 정확도, 서비스 배포 준비를 뜻하지 않는다.
 
@@ -154,3 +149,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 ## 유사도와 평가지표
 
 [유사도 예시·지표 정의 및 검토](reports/similarity-and-metrics.md)에 모델별 점수 해석과 평가지표의 적용 범위를 정리했다. [순위 지표 상세 집계](reports/ranking-comparison.md)는 저장된 검색 결과에서 Hit@5, Complete@5, Precision@5, nDCG@5/10을 계산한다. 기존 development Recall@5 선택 기준은 유지하며, 모델 재추론과 Qdrant 변경 없이 재집계한다.
+
+## Qwen3 및 Qdrant 자료 관리
+
+Qwen3-Embedding-0.6B 공식 revision과 1024차원을 고정한다. 청크별 완료 수치는 [Qwen3 결과](reports/qwen3-0.6b/README.md)와 통합 비교표를 기준으로 확인한다. [실행 환경](../../docker/qwen3/README.md)에 입력 지시문과 자원 제한을 기록했다. 질문 정제본과 정답·분할은 기존과 동일하다.
+
+실험 데이터는 Qdrant에서 관리한다. 법령 청크는 모델·청크별 컬렉션에, 질문 벡터·원본/정제 텍스트·정답과 세 청크의 Qdrant 전수 검색 결과는 모델별 별도 컬렉션에 저장한다. `store-qdrant-catalog.ps1`는 고정 데이터셋·정제본·모델 설정과 질문 JSON의 원본 바이트를 카탈로그에 보존한다. 다음 명령은 기존 모델의 질문과 검색 결과도 멱등 upsert하며 다른 소유자·체크포인트·데이터셋의 컬렉션에는 쓰지 않는다. Git의 고정 입력·결과는 재현과 공유용으로 유지한다.
+
+```powershell
+.\evaluation\legal-retrieval\scripts\store-qdrant-evaluation.ps1 -Model bge-m3
+```
+
+## 모델 실험 실행 원칙
+
+사용자 요청: 앞으로 모델 다운로드·추론·평가는 별도 터미널에서 실행하고 로그를 파일에 남긴다. 채팅 에이전트가 반복 폴링하거나 분 단위 진행 메시지를 생성하지 않는다. 사용자가 상태·결과를 요청할 때 확인해 토큰 사용을 줄인다. 공통 실행기는 scripts/run-qwen-terminal.ps1이며 -Size로 청크를 지정한다. 요청한 청크 평가 후 컨테이너를 종료한다. 종료된 로그와 새 실행 로그는 Git 제외된 artifacts/logs에서 관리한다. 실행 중인 기존 로그는 기존 위치를 유지한다.

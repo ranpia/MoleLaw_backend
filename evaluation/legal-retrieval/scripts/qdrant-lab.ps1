@@ -1,6 +1,6 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([ValidateSet('List','Index','Search','Verify','Delete')][string]$Action='List',
-    [ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model='embeddinggemma', [string]$Query,
+    [ValidateSet('embeddinggemma','bge-m3','kure-v1','qwen3-0.6b')][string]$Model='embeddinggemma', [string]$Query,
     [ValidateRange(1,65535)][int]$QdrantPort=6333, [ValidateRange(0,65535)][int]$OllamaPort=0,
     [ValidateRange(1,50)][int]$Limit=10, [switch]$Exact, [string]$LawId,[ValidateSet(300,500,700)][int]$Size=700)
 $ErrorActionPreference='Stop'
@@ -8,14 +8,14 @@ $ErrorActionPreference='Stop'
 Initialize-QdrantLab $QdrantPort
 if ($Action -eq 'List') {
     $collections=(Invoke-QdrantLab GET 'collections').result.collections
-    foreach ($entry in @($collections | Where-Object { $_.name -like 'molelaw_exp_*' })) {
+    foreach ($entry in @($collections | Where-Object { $_.name -match '^molelaw_(exp_|eval_queries_|eval_catalog_)' })) {
         $info=(Invoke-QdrantLab GET "collections/$($entry.name)").result
-        [pscustomobject]@{collection=$entry.name;owner=$info.config.metadata.owner;points=$info.points_count;indexedVectors=$info.indexed_vectors_count;dimensions=$info.config.params.vectors.size;status=$info.status}
+        [pscustomobject]@{collection=$entry.name;kind=$(if($info.config.metadata.kind){$info.config.metadata.kind}else{'document_chunks'});owner=$info.config.metadata.owner;points=$info.points_count;indexedVectors=$info.indexed_vectors_count;dimensions=$info.config.params.vectors.size;status=$info.status}
     }
     return
 }
 $context=Get-QdrantLabContext $Model $Size
-if (!$OllamaPort) { $OllamaPort=$(if ($Model -eq 'kure-v1') {11436} else {11435}) }
+if (!$OllamaPort) { $OllamaPort=$(if ($Model -eq 'qwen3-0.6b') {11437} elseif ($Model -eq 'kure-v1') {11436} else {11435}) }
 $exists=@((Invoke-QdrantLab GET 'collections').result.collections | Where-Object name -eq $context.collection).Count -eq 1
 if (!$exists -and $Action -ne 'Index') { throw 'Experiment collection not indexed. Run -Action Index first.' }
 if ($exists) {

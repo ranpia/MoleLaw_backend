@@ -1,6 +1,6 @@
 # 유사도와 평가지표를 읽는 방법
 
-2026-10-16: 저장된 3개 모델 × 3개 청크 구성의 검색 결과를 재집계했다. 모델 재추론이나 Qdrant 입력 없이 계산했으며, 기존 원본 summary/queries/top10 파일은 보존했다.
+아래 수치 예시는 2026-10-16에 기존 세 모델의 저장 결과를 재집계한 설명용 기록이다. Qwen3를 포함한 최신 완료 조건의 지표는 [통합 비교](chunk-experiments/comparison.md), 원시 유사도 예시는 [CSV](similarity-examples.csv)를 기준으로 확인한다. 기존 원본 summary/queries/top10 파일은 보존한다.
 
 ## 유사도 점수 예시
 
@@ -85,9 +85,9 @@ nDCG는 이상적 순서의 DCG로 정규화한다는 [scikit-learn 공식 정�
 
 ## 결과와 재현
 
-- [통합 비교표](comparison.md), [순위 지표 상세 집계](ranking-comparison.md), [구성·분할별 CSV](ranking-comparison.csv): 9개 구성 × 2개 분할.
-- [질문별 순위 지표](ranking-queries.csv): 양성 100개 × 9개 구성.
-- [유사도 예시 상세 CSV](similarity-examples.csv): 예시 4개 × 3개 모델, 검색 조문명 포함.
+- [통합 비교표](comparison.md), [순위 지표 상세 집계](ranking-comparison.md), [구성·분할별 CSV](ranking-comparison.csv): 12개 구성 × 2개 분할.
+- [질문별 순위 지표](ranking-queries.csv): 양성 100개 × 12개 구성.
+- [유사도 예시 상세 CSV](similarity-examples.csv): 예시 4개 × 4개 모델, 검색 조문명 포함.
 - [검색·실행 조건 CSV](comparison.csv).
 
 ```powershell

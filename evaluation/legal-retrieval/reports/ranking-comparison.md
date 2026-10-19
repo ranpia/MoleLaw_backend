@@ -24,6 +24,12 @@ Positive questions only; macro averages over frozen gold source units. Binary re
 | kure-v1:official | char500-overlap64-article-v1 | held_out | 70 | 0.8571 | 0.6143 | 0.2143 | 0.6476 | 0.6846 |
 | kure-v1:official | char700-overlap64-article-v1 | development | 30 | 0.7333 | 0.4333 | 0.1933 | 0.5438 | 0.6021 |
 | kure-v1:official | char700-overlap64-article-v1 | held_out | 70 | 0.8714 | 0.6429 | 0.2286 | 0.637 | 0.6558 |
+| qwen3-embedding-0.6b:official | char300-overlap64-article-v1 | development | 30 | 0.7667 | 0.4667 | 0.2133 | 0.5393 | 0.5641 |
+| qwen3-embedding-0.6b:official | char300-overlap64-article-v1 | held_out | 70 | 0.8571 | 0.6571 | 0.22 | 0.6461 | 0.6876 |
+| qwen3-embedding-0.6b:official | char500-overlap64-article-v1 | development | 30 | 0.8 | 0.5 | 0.2133 | 0.5648 | 0.5898 |
+| qwen3-embedding-0.6b:official | char500-overlap64-article-v1 | held_out | 70 | 0.9 | 0.6714 | 0.2371 | 0.6915 | 0.7185 |
+| qwen3-embedding-0.6b:official | char700-overlap64-article-v1 | development | 30 | 0.7667 | 0.4667 | 0.2067 | 0.5514 | 0.5755 |
+| qwen3-embedding-0.6b:official | char700-overlap64-article-v1 | held_out | 70 | 0.9 | 0.6571 | 0.2343 | 0.6999 | 0.7303 |
 
 모델 선택은 개발용 Recall@5를 중심으로 다른 지표를 함께 본다. 정답 목록 밖의 조문은 계산상 정답이 아닌 것으로 처리하며, 모두 무관하다고 검증한 것은 아니다.
 

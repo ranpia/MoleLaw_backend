@@ -1,0 +1,30 @@
+{
+    "inferenceRuntimeVersion":  "sentence-transformers/6.1.0;torch/2.14.1+cpu;transformers/5.20.0",
+    "metadata":  {
+                     "owner":  "molelaw-legal-retrieval-lab-v1",
+                     "corpus_sha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+                     "model":  "qwen3-0.6b",
+                     "input_mode":  "qwen3-st-lasttoken-normalized-v1",
+                     "dimensions":  1024,
+                     "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                     "chunking_version":  "char700-overlap64-article-v1",
+                     "chunk_count":  6031
+                 },
+    "latencyScope":  "Sequential warm HTTP grouped queries; embedding excluded; 3+ repeated samples per question. Local scan is in-process and not HTTP-comparable.",
+    "hnswEf":  128,
+    "qdrantVersion":  "1.19.1",
+    "indexedVectors":  6031,
+    "qualityScope":  "First repetition only; positive-query macro averages; MRR@10 is truncated and differs from historical full MRR. ANN means exact=false, not proof HNSW was selected.",
+    "points":  6031,
+    "queryRewritesSha256":  "981FD202C9E24019A2BD79848906A500A8192D11045FA90BE24C02AF968DE123",
+    "model":  "qwen3-0.6b",
+    "questionDatasetSha256":  "0B875A1EF22CCE51C0E40672534ECF527C159C1633B93EF8551BAA459B09A117",
+    "timestampUtc":  "2026-10-19T05:59:26.7136718Z",
+    "dtype":  "float32",
+    "repeats":  3,
+    "device":  "cpu",
+    "segments":  2,
+    "collection":  "molelaw_exp_qwen3_0.6b_c700_66106d14_97b0c614",
+    "newQueryVectors":  0,
+    "indexingThresholdKiB":  1000
+}

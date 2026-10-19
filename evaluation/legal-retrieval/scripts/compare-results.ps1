@@ -90,9 +90,13 @@ $extra = @(foreach ($group in ($rankingRows | Group-Object model,chunkingVersion
 })
 $extra | Export-Csv (Join-Path $ReportsRoot 'ranking-comparison.csv') -NoTypeInformation -Encoding UTF8
 $similarityRows | Export-Csv (Join-Path $ReportsRoot 'similarity-examples.csv') -NoTypeInformation -Encoding UTF8
-$lines = @('# 법령 임베딩 모델·청크 비교', '', '2026-10-16 기준 3개 모델 × 300 / 500 / 700문자, 총 9개 구성 완료. 중복은 64문자이며 동일 원문 5,486개 단위·질문 110개·정답·분할을 사용했다. 차원 축소는 아직 평가하지 않았다.', '',
+$statusSentence='완료된 모델 '+@($records.model | Select-Object -Unique).Count+'개, 총 '+$records.Count+'개 구성이다. 300·500·700문자, 중복 64문자이며 동일 원문 5,486개 단위·질문 110개·정답·분할을 사용했다. 차원 축소는 아직 평가하지 않았다.'
+$bestValue=($records | Measure-Object devRecallAt5 -Maximum).Maximum
+$bestLabels=@($records | Where-Object { [math]::Abs($_.devRecallAt5-$bestValue) -lt 1e-8 } | ForEach-Object { $_.model+' '+$_.maxChars+'문자' }) -join ', '
+$bestSentence='- 개발용 Recall@5 기준 우선 후보는 '+$bestLabels+' ('+([math]::Round(100*$bestValue,2))+'%)다. 작은 표본의 탐색 결과이므로 일반적인 모델 우열로 확정하지 않는다.'
+$lines = @('# 법령 임베딩 모델·청크 비교', '', $statusSentence, '',
     '처음 읽는다면 Recall@5 → Complete@5 → MRR → nDCG 순서로 보면 된다. 각각 필요한 근거를 얼마나 찾았는지, 전부 찾았는지, 첫 정답이 앞에 있는지, 여러 정답이 앞에 모였는지를 뜻한다. [숫자 예시로 보는 지표 설명](similarity-and-metrics.md)을 함께 참고한다.', '',
-    '아래 표는 원본 질문 기준이다. 같은 700문자 조건에서 질문만 정제한 [Gemma·BGE-M3·KURE-v1 전후 비교](query-rewrite-v1/comparison.md)도 확인할 수 있다.')
+    '아래 표는 원본 질문 기준이다. 같은 질문을 정제한 [모델·청크 통합 비교](chunk-experiments/comparison.md)도 확인할 수 있다.')
 foreach ($split in @('development','held_out')) {
     $label = $(if ($split -eq 'development') { '개발용: 설정 비교에 사용한 양성 질문 30개' } else { '검증용: 별도로 남겨 둔 양성 질문 70개' })
     $prefix = $(if ($split -eq 'development') { 'dev' } else { 'heldOut' })
@@ -108,9 +112,9 @@ foreach ($split in @('development','held_out')) {
     }
 }
 $lines += @('', '## 결과 해석', '',
-    '- 미리 정한 development Recall@5 기준 우선 후보는 BGE-M3 700문자(65.72%)다. Gemma 700문자(64.22%)와 차이는 1.50%p이며, 작은 개발 표본만으로 일반적인 우열을 확정하지 않는다.',
-    '- 첫 정답 순위의 MRR은 KURE 500문자(0.6245), nDCG@5는 Gemma 700문자(0.5543), nDCG@10은 KURE 700문자(0.6021)가 가장 높다. 여러 근거의 회수와 앞쪽 배치에서 지표별 장점이 다르다.',
-    '- Complete@5의 개발 최고값은 50%다. 정답 하나를 찾는 Hit@5가 높아도 필요한 모든 조문을 확보한 것은 아니다.',
+    $bestSentence,
+    '- 첫 정답 순위는 MRR, 여러 정답의 앞쪽 배치는 nDCG로 확인한다. 근거 회수율이 높은 구성이 모든 지표에서도 최고라는 뜻은 아니다.',
+    '- Complete@5는 필요한 모든 조문을 확보한 비율이다. 정답 하나를 찾는 Hit@5와 함께 비교한다.',
     '- 모델 선택은 미리 정한 개발용 Recall@5를 중심으로 하고 다른 지표를 함께 본다. 공개된 검증용 결과로 설정을 반복 조정하지 않는다.', '',
     '## 유사도 점수 읽기', '',
     '700문자 조건의 휴게시간 질문에서 BGE-M3는 근로기준법 제50조(근로시간)를 0.5869로, KURE는 정답 제54조(휴게)를 0.5602로 검색했다. 유사도는 정답 확률이 아니며 모델별 원시 점수로 우열을 비교하지 않는다. 조문 점수는 자식 청크의 최대 코사인 유사도다.', '',
@@ -121,7 +125,7 @@ $lines += @('', '지표를 읽는 방법: [설명 문서](similarity-and-metrics
     '유사도 기준값은 모델·청크 구성마다 개발용 질문으로 따로 정했다. 정답 목록 밖의 조문은 계산상 정답이 아닌 것으로 처리하지만, 모든 조문이 무관하다고 검증한 것은 아니다.', '',
     '질문 임베딩 시간은 모델이 준비된 상태에서 질문마다 한 번 측정했다. 반복 부하 시험이 아니며, 청크 길이도 토큰 수가 아닌 문자 수다.', '',
     '벡터 용량은 청크 수 × 차원 × 4바이트로 계산한 숫자 자체의 크기다. 문서 정보와 검색 색인 등은 제외하므로 실제 저장 공간은 더 필요하다. 캐시를 재사용한 색인 시간은 처음부터 전체 자료를 처리하는 속도로 비교하지 않는다.', '',
-    'KURE는 Sentence Transformers/PyTorch float32, Gemma와 BGE는 Ollama BF16/F16으로 실행했다. 실행 도구와 숫자 정밀도가 달라 시간 차이를 모델 자체의 속도 차이로 단정하지 않는다. 원본 보고서는 보존했고 기록되지 않은 정밀도는 CSV에 명시했다.')
+    'KURE와 Qwen3는 Sentence Transformers/PyTorch float32, Gemma와 BGE는 Ollama BF16/F16으로 실행했다. 실행 도구와 숫자 정밀도가 달라 시간 차이를 모델 자체의 속도 차이로 단정하지 않는다. 원본 보고서는 보존했고 기록되지 않은 정밀도는 CSV에 명시했다.')
 [IO.File]::WriteAllText((Join-Path $ReportsRoot 'comparison.md'),($lines -join [Environment]::NewLine)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
 $extraLines = @('# 순위 지표 상세 집계', '', '전체 지표의 통합 비교는 [모델 비교표](comparison.md), 쉬운 설명은 [지표 안내](similarity-and-metrics.md)를 참고한다. 이 파일은 CSV에 대응하는 상세 집계다.', '', 'Positive questions only; macro averages over frozen gold source units. Binary relevance, log2(rank+1) discount; IDCG uses min(k, total gold units), including gold outside retrieved top ten.', '',
     '| Model | Chunk | Split | N | Hit@5 | Complete@5 | Precision@5 | nDCG@5 | nDCG@10 |',

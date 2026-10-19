@@ -80,7 +80,7 @@ foreach ($model in @('embeddinggemma','bge-m3','kure-v1')) {
 }
 $summaryRows | Export-Csv (Join-Path $target 'comparison.csv') -NoTypeInformation -Encoding UTF8
 $pairedRows | Export-Csv (Join-Path $target 'paired-queries.csv') -NoTypeInformation -Encoding UTF8
-$lines=@('# 질문 정제 전후 검색 성능', '', '같은 원문·정답·질문 분할·700문자 청크·모델 버전·문서 벡터를 사용하고 검색 질문만 바꿨다. 정제본 110개를 고정해 Gemma·BGE-M3·KURE-v1에 동일하게 적용했다.', '', '정제 방식은 GPT-4 API 실행이 아니라 대화형 Codex 어시스턴트가 작성한 질문이다. 정제 시 원본 질문만 사용했으나 대화에 기존 결과가 있었으므로 독립적인 블라인드 검증은 아니다. 프롬프트를 결과에 맞춰 재작성하지 않았다.', '', '## 원본과 정제본 비교', '', '| 모델 | 질문 | 분할 | Recall@5 | Recall@10 | 1위 적중률 | Hit@5 | Complete@5 | Precision@5 | MRR | nDCG@5 | nDCG@10 |', '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
+$lines=@('# 질문 정제 전후 검색 성능', '', '기존 세 모델의 700자 기록이다. Qwen3를 포함한 최신 결과는 [통합 비교](../chunk-experiments/comparison.md)를 따른다.', '', '같은 원문·정답·질문 분할·700문자 청크·모델 버전·문서 벡터를 사용하고 검색 질문만 바꿨다. 정제본 110개를 고정해 Gemma·BGE-M3·KURE-v1에 동일하게 적용했다.', '', '정제 방식은 GPT-4 API 실행이 아니라 대화형 Codex 어시스턴트가 작성한 질문이다. 정제 시 원본 질문만 사용했으나 대화에 기존 결과가 있었으므로 독립적인 블라인드 검증은 아니다. 프롬프트를 결과에 맞춰 재작성하지 않았다.', '', '## 원본과 정제본 비교', '', '| 모델 | 질문 | 분할 | Recall@5 | Recall@10 | 1위 적중률 | Hit@5 | Complete@5 | Precision@5 | MRR | nDCG@5 | nDCG@10 |', '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
 foreach ($row in $summaryRows) {
     $cells=@($row.model,$row.queryMode,$row.split)
     foreach ($metric in @('recallAt5','recallAt10','top1HitRate','hitAt5','completeAt5','precisionAt5')) { $cells+=([math]::Round(100*$row.$metric,2)).ToString()+'%' }

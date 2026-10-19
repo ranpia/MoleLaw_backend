@@ -1,0 +1,26 @@
+name: molelaw-qwen3-lab
+services:
+  qwen3:
+    container_name: molelaw-qwen3-lab
+    image: molelaw/kure-embedding:st6.1.0-cpu
+    command: ["python", "/qwen/server.py"]
+    restart: "no"
+    environment:
+      HF_HUB_DISABLE_XET: "1"
+    ports:
+      - "127.0.0.1:11437:11434"
+    volumes:
+      - qwen3_models:/models
+      - .:/qwen:ro
+    cpus: 6.0
+    mem_limit: 8g
+    memswap_limit: 8g
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+volumes:
+  qwen3_models:
+    external: true
+    name: molelaw_qwen3_models
