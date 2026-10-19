@@ -1,3 +1,5 @@
 ﻿"model","queryMode","questions","meanAnnExactTop10Overlap","meanLocalExactTop10Overlap","maxExactScoreError","historicalRecallAt5ChangedQueries","annTop10ChangedQueries","annRecallAt5ChangedQueries","annNdcgAt10ChangedQueries"
+"embeddinggemma","original","110","0.996363636363636","1","9.4179455E-08","0","3","0","1"
+"embeddinggemma","rewritten","110","0.997272727272727","1","1.04324251E-07","0","3","0","0"
 "kure-v1","original","110","0.996363636363636","1","9.8155926E-08","0","3","0","0"
 "kure-v1","rewritten","110","0.996363636363636","1","1.13272767E-07","0","3","0","0"

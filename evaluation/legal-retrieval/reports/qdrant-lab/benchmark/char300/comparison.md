@@ -8,6 +8,18 @@ original은 원본 질문, rewritten은 정제 질문이다. development는 개�
 
 | 모델 | 질문 | 분할 | 방식 | Recall@5 | Recall@10 | 1위 적중률 | Complete@5 | MRR@10 | nDCG@5 | nDCG@10 |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| embeddinggemma | original | development | local | 61.28% | 70.72% | 43.33% | 46.67% | 0.5733 | 0.5301 | 0.5675 |
+| embeddinggemma | original | development | exact | 61.28% | 70.72% | 43.33% | 46.67% | 0.5733 | 0.5301 | 0.5675 |
+| embeddinggemma | original | development | ann | 61.28% | 70.72% | 43.33% | 46.67% | 0.5733 | 0.5301 | 0.5675 |
+| embeddinggemma | original | held_out | local | 74.69% | 83.88% | 65.71% | 61.43% | 0.7389 | 0.6849 | 0.7217 |
+| embeddinggemma | original | held_out | exact | 74.69% | 83.88% | 65.71% | 61.43% | 0.7389 | 0.6849 | 0.7217 |
+| embeddinggemma | original | held_out | ann | 74.69% | 83.88% | 65.71% | 61.43% | 0.7389 | 0.6849 | 0.7217 |
+| embeddinggemma | rewritten | development | local | 72% | 82.39% | 46.67% | 53.33% | 0.6456 | 0.6107 | 0.6556 |
+| embeddinggemma | rewritten | development | exact | 72% | 82.39% | 46.67% | 53.33% | 0.6456 | 0.6107 | 0.6556 |
+| embeddinggemma | rewritten | development | ann | 72% | 82.39% | 46.67% | 53.33% | 0.6456 | 0.6107 | 0.6556 |
+| embeddinggemma | rewritten | held_out | local | 77.9% | 85.43% | 68.57% | 64.29% | 0.7789 | 0.7283 | 0.76 |
+| embeddinggemma | rewritten | held_out | exact | 77.9% | 85.43% | 68.57% | 64.29% | 0.7789 | 0.7283 | 0.76 |
+| embeddinggemma | rewritten | held_out | ann | 77.9% | 85.43% | 68.57% | 64.29% | 0.7789 | 0.7283 | 0.76 |
 | kure-v1 | original | development | local | 57.11% | 72.22% | 53.33% | 43.33% | 0.6106 | 0.5316 | 0.5856 |
 | kure-v1 | original | development | exact | 57.11% | 72.22% | 53.33% | 43.33% | 0.6106 | 0.5316 | 0.5856 |
 | kure-v1 | original | development | ann | 57.11% | 72.22% | 53.33% | 43.33% | 0.6106 | 0.5316 | 0.5856 |
@@ -27,6 +39,8 @@ MRR@10은 첫 정답이 10위 밖이면 0으로 처리한다. 이전 보고서�
 
 | 모델 | 질문 | ANN·전수 상위 10개 겹침 | 기존 계산·Qdrant 전수 겹침 | 과거 Recall@5가 달라진 질문 수 |
 | --- | --- | ---: | ---: | ---: |
+| embeddinggemma | original | 99.45% | 100% | 0 |
+| embeddinggemma | rewritten | 99.64% | 100% | 0 |
 | kure-v1 | original | 99.45% | 100% | 0 |
 | kure-v1 | rewritten | 99.64% | 100% | 0 |
 
@@ -34,6 +48,8 @@ MRR@10은 첫 정답이 10위 밖이면 0으로 처리한다. 이전 보고서�
 
 | 모델 | 질문 | 상위 10개가 달라진 질문 수 / 110 | Recall@5가 달라진 양성 질문 수 / 100 | nDCG@10이 달라진 양성 질문 수 / 100 |
 | --- | --- | ---: | ---: | ---: |
+| embeddinggemma | original | 6 | 0 | 0 |
+| embeddinggemma | rewritten | 4 | 0 | 0 |
 | kure-v1 | original | 5 | 0 | 0 |
 | kure-v1 | rewritten | 4 | 0 | 0 |
 
@@ -47,6 +63,10 @@ MRR@10은 첫 정답이 10위 밖이면 0으로 처리한다. 이전 보고서�
 
 | 모델 | 질문 | 방식 | 측정 수 | 클라이언트 중앙값 ms | 클라이언트 p95 ms | 서버 중앙값 ms | 서버 p95 ms |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| embeddinggemma | original | exact | 330 | 30.567 | 37.835 | 5.533 | 10.554 |
+| embeddinggemma | original | ann | 330 | 27.073 | 32.953 | 2.226 | 5.859 |
+| embeddinggemma | rewritten | exact | 330 | 30.373 | 35.591 | 5.487 | 8.833 |
+| embeddinggemma | rewritten | ann | 330 | 26.873 | 32.177 | 2.187 | 4.05 |
 | kure-v1 | original | exact | 330 | 30.213 | 39.169 | 6.603 | 11.103 |
 | kure-v1 | original | ann | 330 | 25.878 | 31.058 | 2.309 | 5.111 |
 | kure-v1 | rewritten | exact | 330 | 29.623 | 33.349 | 6.199 | 7.757 |
