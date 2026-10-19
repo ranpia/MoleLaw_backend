@@ -1,6 +1,25 @@
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
 $context=Get-QdrantLabContext 'embeddinggemma'
+$variantContexts=@(foreach ($size in @(300,500,700)) {
+    $variant=Get-QdrantLabContext 'embeddinggemma' $size
+    $version="char$size-overlap64-article-v1"
+    $expectedDirectory=$(if ($size -eq 500) { $DataRoot } else { Join-Path $DataRoot "variants/$version" })
+    $expectedCount=@{300=8497;500=6634;700=6031}[$size]
+    if ($variant.directory -ne $expectedDirectory -or $variant.data.corpus.chunkCount -ne $expectedCount -or $variant.metadata.chunk_count -ne $expectedCount -or $variant.metadata.chunking_version -ne $version -or $variant.collection -notmatch "_c$($size)_") { throw "Invalid size context: $size" }
+    $variantInfo=[pscustomobject]@{config=[pscustomobject]@{metadata=$variant.metadata;params=[pscustomobject]@{vectors=[pscustomobject]@{size=768;distance='Cosine'}}}}
+    Assert-QdrantLabCollection $variant $variantInfo
+    foreach ($field in @('chunking_version','chunk_count')) {
+        $badInfo=$variantInfo | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $badInfo.config.metadata.$field=$(if ($field -eq 'chunk_count') { 1 } else { 'char999-overlap64-article-v1' })
+        $rejected=$false
+        try { Assert-QdrantLabCollection $variant $badInfo } catch { $rejected=$true }
+        if (!$rejected) { throw "Wrong size metadata accepted: $size/$field" }
+    }
+    $variant
+})
+if (@($variantContexts.collection | Select-Object -Unique).Count -ne 3 -or @($variantContexts.directory | Select-Object -Unique).Count -ne 3) { throw 'Chunk variants share a collection or dataset path.' }
+Write-Host 'PASS: 300/500/700 paths, corpus counts, collection separation and size metadata guards.'
 $info=[pscustomobject]@{config=[pscustomobject]@{metadata=$context.metadata;params=[pscustomobject]@{vectors=[pscustomobject]@{size=768;distance='Cosine'}}}}
 Assert-QdrantLabCollection $context $info
 $id=Get-QdrantLabPointId 'chunk-one'

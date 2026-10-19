@@ -2,7 +2,7 @@
 param([ValidateSet('List','Index','Search','Verify','Delete')][string]$Action='List',
     [ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model='embeddinggemma', [string]$Query,
     [ValidateRange(1,65535)][int]$QdrantPort=6333, [ValidateRange(0,65535)][int]$OllamaPort=0,
-    [ValidateRange(1,50)][int]$Limit=10, [switch]$Exact, [string]$LawId)
+    [ValidateRange(1,50)][int]$Limit=10, [switch]$Exact, [string]$LawId,[ValidateSet(300,500,700)][int]$Size=700)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
 Initialize-QdrantLab $QdrantPort
@@ -14,7 +14,7 @@ if ($Action -eq 'List') {
     }
     return
 }
-$context=Get-QdrantLabContext $Model
+$context=Get-QdrantLabContext $Model $Size
 if (!$OllamaPort) { $OllamaPort=$(if ($Model -eq 'kure-v1') {11436} else {11435}) }
 $exists=@((Invoke-QdrantLab GET 'collections').result.collections | Where-Object name -eq $context.collection).Count -eq 1
 if (!$exists -and $Action -ne 'Index') { throw 'Experiment collection not indexed. Run -Action Index first.' }
@@ -106,7 +106,8 @@ if ($Action -eq 'Verify') {
     }
     $directory=Join-Path $ReportsRoot 'qdrant-lab'
     $null=New-Item -ItemType Directory -Force $directory
-    [IO.File]::WriteAllText((Join-Path $directory "$Model-verification.json"),($report | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
+    $verificationName=$(if ($Size -eq 700) { "$Model-verification.json" } else { "$Model-char$Size-verification.json" })
+    [IO.File]::WriteAllText((Join-Path $directory $verificationName),($report | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
     $checks | Format-Table -AutoSize
     Write-Host "PASS: $count points, cache roundtrip, exact cosine scores, article grouping and law filter."
 }

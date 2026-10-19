@@ -1,0 +1,7 @@
+﻿"model","maxChars","queryMode","annExactOverlap","annRecallAt5ChangedQueries","indexedVectors","points"
+"kure-v1","300","original","0.994545454545455","0","8497","8497"
+"kure-v1","300","rewritten","0.996363636363637","0","8497","8497"
+"kure-v1","500","original","0.996363636363636","0","6592","6634"
+"kure-v1","500","rewritten","0.996363636363636","0","6592","6634"
+"kure-v1","700","original","0.998181818181818","0",,"6031"
+"kure-v1","700","rewritten","0.999090909090909","0",,"6031"

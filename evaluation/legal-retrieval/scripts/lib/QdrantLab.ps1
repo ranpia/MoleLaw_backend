@@ -33,22 +33,22 @@ function Invoke-QdrantLab([string]$Method,[string]$Path,$Body=$null) {
     return $result
 }
 
-function Get-QdrantLabContext([string]$Model) {
-    $version='char700-overlap64-article-v1'
-    $directory=Join-Path $DataRoot "variants/$version"
+function Get-QdrantLabContext([string]$Model,[ValidateSet(300,500,700)][int]$Size=700) {
+    $version="char$Size-overlap64-article-v1"
+    $directory=$(if ($Size -eq 500) { $DataRoot } else { Join-Path $DataRoot "variants/$version" })
     $data=Get-Content -Raw -Encoding UTF8 (Join-Path $directory 'questions.json') | ConvertFrom-Json
     $baseline=Get-Content -Raw -Encoding UTF8 (Join-Path $ReportsRoot "$Model/$version/summary.json") | ConvertFrom-Json
     $profile=(Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json).$Model
     if ($baseline.datasetSha256 -ne (Get-FileHash (Join-Path $directory 'questions.json')).Hash -or $baseline.corpusSha256 -ne (Get-FileHash (Join-Path $directory $data.corpus.path)).Hash) { throw 'Frozen dataset mismatch.' }
     foreach ($field in @('dimensions','inputMode','documentFormat','queryFormat')) { if ($profile.$field -ne $baseline.model.$field) { throw "Model profile mismatch: $field" } }
-    $collection='molelaw_exp_'+$Model.Replace('-','_')+'_c700_'+$baseline.corpusSha256.Substring(0,8).ToLowerInvariant()+'_'+$baseline.model.modelDigest.Substring(0,8)
+    $collection='molelaw_exp_'+$Model.Replace('-','_')+"_c$($Size)_"+$baseline.corpusSha256.Substring(0,8).ToLowerInvariant()+'_'+$baseline.model.modelDigest.Substring(0,8)
     $metadata=@{owner=$script:LabOwner;model=$Model;model_digest=$baseline.model.modelDigest;corpus_sha256=$baseline.corpusSha256
         chunking_version=$version;input_mode=$profile.inputMode;dimensions=[int]$profile.dimensions;chunk_count=[int]$data.corpus.chunkCount}
     return [pscustomobject]@{model=$Model;collection=$collection;directory=$directory;data=$data;baseline=$baseline;profile=$profile;metadata=$metadata}
 }
 
 function Assert-QdrantLabCollection($Context,$Info) {
-    if ($Context.collection -notmatch '^molelaw_exp_(embeddinggemma|bge_m3|kure_v1)_c700_[a-f0-9]{8}_[a-f0-9]{8}$') { throw 'Not a managed experiment collection.' }
+    if ($Context.collection -notmatch '^molelaw_exp_(embeddinggemma|bge_m3|kure_v1)_c(300|500|700)_[a-f0-9]{8}_[a-f0-9]{8}$') { throw 'Not a managed experiment collection.' }
     foreach ($field in @('owner','model','model_digest','corpus_sha256','chunking_version','input_mode','dimensions','chunk_count')) {
         if ($null -eq $Context.metadata.$field -or $Info.config.metadata.$field -ne $Context.metadata.$field) { throw "Collection ownership/identity mismatch: $field" }
     }

@@ -8,6 +8,21 @@ try {
     Save-Fixture $valid
     $loaded = Read-QueryRewrites $path $data 'source' 'identity'
     if ($loaded.q1.rewrittenText -ne 'rewrite') { throw 'Valid rewrite not loaded.' }
+    $variant = Read-QueryRewrites $path $data 'different-target-dataset' 'identity' 'source'
+    if ($variant.q1.rewrittenText -ne 'rewrite') { throw 'Cross-variant rewrite not loaded.' }
+    foreach ($case in @('implicit-target','wrong-source','changed-identity','changed-text')) {
+        $targetData = $data | ConvertTo-Json -Depth 5 | ConvertFrom-Json
+        $identity = 'identity'; $source = 'source'
+        switch ($case) {
+            'implicit-target' { $source = '' }
+            'wrong-source' { $source = 'incorrect-source' }
+            'changed-identity' { $identity = 'different-canonical-identity' }
+            'changed-text' { $targetData.questions[0].text = 'different original' }
+        }
+        $rejected = $false
+        try { $null = Read-QueryRewrites $path $targetData 'different-target-dataset' $identity $source } catch { $rejected = $true }
+        if (!$rejected) { throw "Unsafe cross-variant rewrite accepted: $case" }
+    }
     foreach ($mutation in @('original','duplicate','empty','incomplete','identity')) {
         $fixture = $valid | ConvertTo-Json -Depth 5 | ConvertFrom-Json
         switch ($mutation) {
@@ -22,5 +37,5 @@ try {
         try { $null = Read-QueryRewrites $path $data 'source' 'identity' } catch { $rejected = $true }
         if (!$rejected) { throw "Invalid rewrite accepted: $mutation" }
     }
-    Write-Host 'PASS: valid rewrite, changed original, duplicate, empty, incomplete, incompatible identity.'
+    Write-Host 'PASS: valid rewrite, explicit cross-variant source, source hash/identity/text guards, duplicate, empty and incomplete rewrites.'
 } finally { if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path } }

@@ -1,5 +1,19 @@
 # Qdrant 실험용 자료 관리
 
+300·500문자 실험도 `-Size 300` 또는 `-Size 500`으로 실행할 수 있다. 크기를 생략하면 기존과 같이 700문자를 사용한다. 원문·질문·정답·분할의 동일성을 검증한 뒤 크기별 컬렉션과 결과 폴더를 분리한다. [모델·청크·질문 정제 통합 비교](../chunk-experiments/comparison.md)에 완료된 모델의 세 크기 결과를 모은다.
+
+```powershell
+# 한 모델의 500·300문자 정제 평가·색인·검증·Qdrant 시간 측정을 순차 실행
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/run-chunk-experiments.ps1 -Model kure-v1
+
+# 모든 모델 완료 후 크기별 비교를 전체 모델로 다시 집계
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/compare-qdrant-benchmark.ps1 -Size 300
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/compare-qdrant-benchmark.ps1 -Size 500
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/compare-chunk-experiments.ps1
+```
+
+정제 질문은 700문자 평가에 쓴 원문과 동일한 질문을 사용한다. 청크마다 데이터 파일 해시는 다르지만 정규화한 원문·질문·정답·분할 identity와 각 원본 질문을 함께 검사한다. 모델 추론·색인·시간 측정은 순차 실행해 메모리 부담과 측정 간섭을 줄인다. 작은 세그먼트 일부는 색인 임계값보다 작아 전수 탐색 대상으로 남을 수 있으므로, 모든 포인트가 HNSW에 들어가야 한다고 가정하지 않는다.
+
 전체 질문 비교는 [Qdrant 검색 벤치마크](benchmark/comparison.md)에 기록한다. 모델별 원본 110개·정제 110개에 같은 질문 벡터를 사용하고 기존 전수 계산·Qdrant 전수·근사 검색을 비교한다. 질문 임베딩을 제외한 검색 시간은 각 방식 3회씩 측정한다.
 
 2026-10-19 세 모델의 전체 질문 비교 완료: 총 660개 질문 변형·3,960개 검색 시간 표본이다. 모든 질문에서 Qdrant 전수 검색 점수가 기존 계산과 허용 오차 이내에서 일치했고, 근사 검색으로 Recall@5가 바뀐 질문은 없었다. 상위 10개 조문 집합은 평균 99.55~99.91% 일치했으며 Gemma 정제 질문 1개는 nDCG@10이 달라졌다. 반복 지연시간은 동시 사용자 부하 시험과 구별한다.

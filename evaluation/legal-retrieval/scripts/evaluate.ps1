@@ -14,7 +14,8 @@ $data = Get-Content -Raw -Encoding UTF8 $dataPath | ConvertFrom-Json
 $queryRewrites = $null; $queryMode = 'original'; $runSuffix = ''
 if ($QueryRewritesPath) {
     . (Join-Path $PSScriptRoot 'lib/QueryRewrites.ps1')
-    $queryRewrites = Read-QueryRewrites $QueryRewritesPath $data (Get-FileHash $dataPath).Hash $comparisonIdentity
+    $sourceHash=(Get-FileHash (Join-Path $EvaluationRoot 'data/variants/char700-overlap64-article-v1/questions.json')).Hash
+    $queryRewrites = Read-QueryRewrites $QueryRewritesPath $data (Get-FileHash $dataPath).Hash $comparisonIdentity $sourceHash
     $queryMode = 'llm-rewrite-v1'; $runSuffix = '-llm-rewrite-v1'
 }
 $chunks = @(foreach ($line in [IO.File]::ReadLines((Join-Path $DataRoot $data.corpus.path))) { $line | ConvertFrom-Json })
