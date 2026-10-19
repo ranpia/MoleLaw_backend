@@ -1,5 +1,5 @@
 ﻿[CmdletBinding()]
-param([ValidateSet('embeddinggemma','bge-m3')][string[]]$Models=@('embeddinggemma','bge-m3'))
+param([ValidateSet('embeddinggemma','bge-m3','kure-v1')][string[]]$Models=@('embeddinggemma','bge-m3','kure-v1'))
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 function Get-NearestRankPercentile($Values,[double]$Percentile) {
@@ -102,8 +102,10 @@ foreach ($row in $agreement) { $lines+='| '+$row.model+' | '+$row.queryMode+' | 
 $lines+=@('', '겹침 100%는 검색된 조문 집합이 같다는 뜻이다. 순서가 같거나 모든 조문이 정답이라는 뜻은 아니다. 전수 검색 점수는 기존 계산과 오차 0.00001 이내인지도 질문마다 검사했다. 동점에서는 조문 순서나 마지막 포함 조문이 달라질 수 있다.', '',
     '| 모델 | 질문 | 상위 10개가 달라진 질문 수 / 110 | Recall@5가 달라진 양성 질문 수 / 100 | nDCG@10이 달라진 양성 질문 수 / 100 |', '| --- | --- | ---: | ---: | ---: |')
 foreach ($row in $agreement) { $lines+='| '+$row.model+' | '+$row.queryMode+' | '+$row.annTop10ChangedQueries+' | '+$row.annRecallAt5ChangedQueries+' | '+$row.annNdcgAt10ChangedQueries+' |' }
+$changedRecallTotal=($agreement | Measure-Object annRecallAt5ChangedQueries -Sum).Sum
+$recallInterpretation=$(if ($changedRecallTotal -eq 0) { '이번 측정에서는 모든 구성의 질문별 Recall@5가 유지됐다.' } else { "이번 측정에서는 근사 설정으로 Recall@5가 달라진 양성 질문 변형이 $changedRecallTotal 개 있었다. 모델·질문별 차이를 표와 원본 CSV에서 확인해야 한다." })
 $lines+=@('', '상위 조문 일부가 바뀌어도 정답 근거가 그대로 포함되면 Recall은 유지될 수 있다. 반대로 평균이 같아도 질문별 개선·악화가 상쇄될 수 있으므로 질문별 변화 수도 함께 계산했다.', '',
-    '이번 측정에서는 모든 구성의 질문별 Recall@5가 유지됐다. Gemma 정제본의 급여 압류 질문(execution-5)은 nDCG@10이 전수 0.7039에서 근사 0.8396으로 달라졌다. 근사 검색이 상위의 비정답 조문을 놓치면 정답이 상대적으로 앞에 나와 지표가 좋아질 수도 있으므로, 근사 검색이 본질적으로 더 정확하다는 근거로 해석하지 않는다.', '',
+    $recallInterpretation, '', 'Gemma 정제본의 급여 압류 질문(execution-5)은 nDCG@10이 전수 0.7039에서 근사 0.8396으로 달라졌다. 근사 검색이 상위의 비정답 조문을 놓치면 정답이 상대적으로 앞에 나와 지표가 좋아질 수도 있으므로, 근사 검색이 본질적으로 더 정확하다는 근거로 해석하지 않는다.', '',
     '## 검색 시간', '', '| 모델 | 질문 | 방식 | 측정 수 | 클라이언트 중앙값 ms | 클라이언트 p95 ms | 서버 중앙값 ms | 서버 p95 ms |', '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |')
 foreach ($row in $latency) {
     $cells=@($row.model,$row.queryMode,$row.engine,$row.samples)

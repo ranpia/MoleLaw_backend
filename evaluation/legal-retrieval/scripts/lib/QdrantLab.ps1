@@ -48,7 +48,7 @@ function Get-QdrantLabContext([string]$Model) {
 }
 
 function Assert-QdrantLabCollection($Context,$Info) {
-    if ($Context.collection -notmatch '^molelaw_exp_(embeddinggemma|bge_m3)_c700_[a-f0-9]{8}_[a-f0-9]{8}$') { throw 'Not a managed experiment collection.' }
+    if ($Context.collection -notmatch '^molelaw_exp_(embeddinggemma|bge_m3|kure_v1)_c700_[a-f0-9]{8}_[a-f0-9]{8}$') { throw 'Not a managed experiment collection.' }
     foreach ($field in @('owner','model','model_digest','corpus_sha256','chunking_version','input_mode','dimensions','chunk_count')) {
         if ($null -eq $Context.metadata.$field -or $Info.config.metadata.$field -ne $Context.metadata.$field) { throw "Collection ownership/identity mismatch: $field" }
     }
@@ -65,6 +65,9 @@ function Read-QdrantLabCache($Context) {
     $directory=Join-Path $ResultsRoot "shared-cache/$key"
     $metadata=Get-Content -Raw -Encoding UTF8 (Join-Path $directory 'metadata.json') | ConvertFrom-Json
     foreach ($field in @('modelDigest','dimensions','inputMode','documentFormat','queryFormat')) { if ($metadata.$field -ne $Context.baseline.model.$field) { throw "Cache mismatch: $field" } }
+    if ($Context.profile.runtime -eq 'sentence-transformers') {
+        foreach ($field in @('inferenceRuntimeVersion','dtype','device')) { if ($metadata.$field -ne $Context.baseline.model.$field) { throw "Cache runtime mismatch: $field" } }
+    }
     $cache=[LegalDenseIndex]::new([int]$Context.profile.dimensions)
     foreach ($file in Get-ChildItem -LiteralPath $directory -Filter '*.bin' | Sort-Object Name) { $cache.ReadBatch($file.FullName) }
     return $cache
@@ -87,8 +90,15 @@ function Invoke-QdrantLabGroups($Context,[single[]]$Vector,[int]$Limit=10,[bool]
     return $response.result.groups
 }
 
+function Assert-QdrantLabRuntime($Context,$Version) {
+    if ($Context.profile.runtime -eq 'sentence-transformers') {
+        if ($Version.runtime -ne 'sentence-transformers' -or $Version.version -ne $Context.baseline.model.inferenceRuntimeVersion -or $Version.revision -ne $Context.baseline.model.modelDigest -or $Version.dtype -ne $Context.baseline.model.dtype -or $Version.device -ne $Context.baseline.model.device) { throw 'Pinned Sentence Transformers runtime mismatch.' }
+    } elseif ($Version.version -ne $Context.baseline.model.ollamaVersion) { throw 'Ollama runtime changed since baseline.' }
+}
+
 function Get-QdrantLabQueryVector($Context,[string]$Query,[int]$OllamaPort,[string]$KeepAlive='0') {
     $uri="http://127.0.0.1:$OllamaPort"
+    Assert-QdrantLabRuntime $Context (Invoke-RestMethod "$uri/api/version" -TimeoutSec 10)
     $tags=Invoke-RestMethod "$uri/api/tags" -TimeoutSec 10
     $tag=@($tags.models | Where-Object name -eq $Context.profile.tag)
     if ($tag.Count -ne 1 -or $tag[0].digest -ne $Context.baseline.model.modelDigest) { throw 'Ollama model digest mismatch.' }
@@ -97,5 +107,8 @@ function Get-QdrantLabQueryVector($Context,[string]$Query,[int]$OllamaPort,[stri
     $body=@{model=$Context.profile.tag;input=@($Context.profile.queryFormat.Replace('{text}',$Query));truncate=$false;keep_alive=$KeepAlive;options=@{num_thread=6;num_gpu=0}}
     $result=Invoke-RestMethod -Method Post -Uri "$uri/api/embed" -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes(($body | ConvertTo-Json -Depth 6 -Compress))) -TimeoutSec 300
     if ($result.embeddings.Count -ne 1 -or $result.embeddings[0].Count -ne $Context.profile.dimensions) { throw 'Invalid query embedding.' }
+    if ($Context.profile.runtime -eq 'sentence-transformers' -and $KeepAlive -eq '0') {
+        $null=Invoke-RestMethod -Method Post -Uri "$uri/api/embed" -ContentType 'application/json' -Body (@{model=$Context.profile.tag;input=@();keep_alive=0} | ConvertTo-Json -Compress) -TimeoutSec 30
+    }
     return ,([single[]]$result.embeddings[0])
 }

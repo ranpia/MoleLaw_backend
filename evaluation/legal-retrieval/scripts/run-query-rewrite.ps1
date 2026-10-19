@@ -1,7 +1,8 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3')][string]$Model, [int]$Port=11435)
+param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v1')][string]$Model, [int]$Port=0)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
+if (!$Port) { $Port=$(if ($Model -eq 'kure-v1') {11436} else {11435}) }
 $version = 'char700-overlap64-article-v1'
 $dataset = Join-Path $DataRoot "variants/$version"
 $rewrites = Join-Path $ReviewRoot 'query-rewrites-v1.json'
@@ -14,7 +15,7 @@ $report = Get-Content -Raw -Encoding UTF8 (Join-Path $pointer.directory 'report.
 $baseline = Get-Content -Raw -Encoding UTF8 (Join-Path $ReportsRoot "$Model/$version/summary.json") | ConvertFrom-Json
 if ($report.queryRewritesSha256 -ne $rewriteHash -or $report.queryMode -ne 'llm-rewrite-v1' -or $report.newVectors -ne 0) { throw 'Invalid rewrite run provenance.' }
 foreach ($field in @('datasetSha256','corpusSha256','chunkingVersion','threads','batchSize')) { if ($report.$field -ne $baseline.$field) { throw "Baseline mismatch: $field" } }
-foreach ($field in @('modelDigest','dimensions','inputMode','documentFormat','queryFormat','ollamaVersion')) { if ($report.model.$field -ne $baseline.model.$field) { throw "Baseline model mismatch: $field" } }
+foreach ($field in @('modelDigest','dimensions','inputMode','documentFormat','queryFormat','ollamaVersion','inferenceRuntime','inferenceRuntimeVersion','dtype','device')) { if ($report.model.$field -ne $baseline.model.$field) { throw "Baseline model mismatch: $field" } }
 $queries = @(Import-Csv (Join-Path $pointer.directory 'queries.csv'))
 $hits = @(Import-Csv (Join-Path $pointer.directory 'top10.csv'))
 if ($queries.Count -ne 110 -or @($queries.queryId | Select-Object -Unique).Count -ne 110 -or $hits.Count -ne 1100) { throw 'Incomplete rewritten query results.' }

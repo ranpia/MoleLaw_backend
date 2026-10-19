@@ -2,7 +2,7 @@
 
 전체 질문 비교는 [Qdrant 검색 벤치마크](benchmark/comparison.md)에 기록한다. 모델별 원본 110개·정제 110개에 같은 질문 벡터를 사용하고 기존 전수 계산·Qdrant 전수·근사 검색을 비교한다. 질문 임베딩을 제외한 검색 시간은 각 방식 3회씩 측정한다.
 
-2026-10-19 두 모델의 전체 질문 비교 완료: 총 440개 질문 변형·2,640개 검색 시간 표본이다. 모든 질문에서 Qdrant 전수 검색 점수가 기존 계산과 허용 오차 이내에서 일치했고, 근사 검색으로 Recall@5가 바뀐 질문은 없었다. 상위 10개 조문 집합은 평균 99.55~99.91% 일치했으며 Gemma 정제 질문 1개는 nDCG@10이 달라졌다. 반복 지연시간은 동시 사용자 부하 시험과 구별한다.
+2026-10-19 세 모델의 전체 질문 비교 완료: 총 660개 질문 변형·3,960개 검색 시간 표본이다. 모든 질문에서 Qdrant 전수 검색 점수가 기존 계산과 허용 오차 이내에서 일치했고, 근사 검색으로 Recall@5가 바뀐 질문은 없었다. 상위 10개 조문 집합은 평균 99.55~99.91% 일치했으며 Gemma 정제 질문 1개는 nDCG@10이 달라졌다. 반복 지연시간은 동시 사용자 부하 시험과 구별한다.
 
 로컬 Qdrant를 이용해 기존 법령 벡터를 보관하고 검색하는 실험 환경이다. 별도 Qdrant 컨테이너를 늘리지 않고 이미 실행 중인 인스턴스에 실험용 컬렉션을 만든다. 서비스의 Spring 설정·기본 컬렉션은 변경하지 않는다. 새 컨테이너 이미지나 임베딩 모델 다운로드는 필요하지 않다.
 
@@ -12,6 +12,7 @@
 | --- | ---: | ---: | --- |
 | EmbeddingGemma | 768 | 700문자 / 중복 64 | `molelaw_exp_embeddinggemma_c700_66106d14_85462619` |
 | BGE-M3 | 1024 | 700문자 / 중복 64 | `molelaw_exp_bge_m3_c700_66106d14_79076464` |
+| KURE-v1 | 1024 | 700문자 / 중복 64 | `molelaw_exp_kure_v1_c700_66106d14_8b418a58` |
 
 각 컬렉션에는 같은 법령 코퍼스의 청크 6,031개가 들어간다. 벡터를 새로 만들지 않고 이전 평가의 캐시를 사용한다. 차원이 같아도 다른 모델의 벡터는 섞지 않는다. 질문을 정제하더라도 문서 벡터는 같으므로 질문별 컬렉션을 따로 만들 필요는 없다.
 
@@ -28,6 +29,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 # 자료 적재 또는 재적재: 같은 ID를 갱신하므로 중복 생성되지 않는다
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/qdrant-lab.ps1 -Action Index -Model embeddinggemma
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/qdrant-lab.ps1 -Action Index -Model bge-m3
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/qdrant-lab.ps1 -Action Index -Model kure-v1
 ```
 
 컬렉션 이름의 끝은 코퍼스·모델 해시다. 현재 스크립트는 고정된 700문자 평가 데이터만 받는다. 다른 법령 버전이나 청크 실험으로 확장할 때는 별도 컬렉션을 만들고 입력 검증도 함께 갱신해야 한다. 다른 내용의 자료를 기존 컬렉션에 섞지 않는다.
@@ -35,6 +37,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 ## 질문으로 검색하기
 
 질문 검색에는 기존 Ollama 실험 컨테이너가 필요하다. 처음 한 번 `docker start molelaw-embedding-lab-ollama-1`로 켠다. Spring 서버나 OpenAI 호출은 필요 없다. 기본 Ollama 포트는 11435, Qdrant HTTP 포트는 6333이다.
+
+KURE 질문 검색은 Ollama 대신 공식 모델을 실행하는 어댑터를 사용한다. `docker start molelaw-kure-lab-kure-1` 후 `-Model kure-v1`을 지정하면 기본 포트를 11436으로 선택한다. 공식 revision·라이브러리 버전·float32·CPU 설정이 이전 평가와 다르면 실행을 거부한다. 인덱스 적재나 문서 벡터 검증만 할 때는 어댑터가 필요 없다.
 
 ```powershell
 # BGE-M3로 상위 조문 5개 검색
@@ -57,6 +61,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 # 전체 질문 품질·반복 검색 시간 비교 (자료 재색인 없음)
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/benchmark-qdrant.ps1 -Model embeddinggemma
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/benchmark-qdrant.ps1 -Model bge-m3
+powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/benchmark-qdrant.ps1 -Model kure-v1
 powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/scripts/compare-qdrant-benchmark.ps1
 ```
 
@@ -79,3 +84,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 `Verify`는 문서 벡터 3개를 사용해 저장 벡터·원문의 왕복 확인, 기존 전수 코사인 계산과 Qdrant의 상위 10개 점수 비교, 조문 묶음과 법령 필터를 검사한다. 동점이면 같은 점수의 조문 순서가 다를 수 있어 점수 일치와 근사 검색 조문 겹침을 별도로 기록한다. 모델별 `*-verification.json`에 이 간단 검증 기록을 보존한다. 전체 질문 품질·반복 지연시간은 별도 `benchmark/` 결과를 사용한다.
 
 2026-10-19: Gemma·BGE-M3 각각 6,031개, 합계 12,062개 벡터 적재 완료. 두 모델의 문서 벡터 검증과 실제 질문 검색을 확인했다. Gemma는 재적재 후에도 6,031개로 유지되어 중복 방지를 확인했다. 기존 Qdrant에는 컬렉션이 없었으며 이번 작업에서는 실험 컬렉션만 생성했다. 전체 평가 지표는 [원본 질문 비교](../comparison.md), [정제 질문 비교](../query-rewrite-v1/comparison.md)를 참고한다.
+
+이어서 KURE-v1 6,031개를 추가해 총 18,093개를 세 컬렉션에 보관한다. KURE의 원본·정제 질문에서 전수·근사 검색의 상위 10개 조문은 각각 99.82%·99.91% 일치했고 질문별 Recall@5는 모두 유지됐다. 실험 후 KURE 어댑터는 중지하고 모델 볼륨·캐시·Qdrant 컬렉션은 보존한다.

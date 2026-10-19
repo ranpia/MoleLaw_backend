@@ -14,7 +14,7 @@ $rewritesPath = Join-Path $ReviewRoot 'query-rewrites-v1.json'
 $rewrites = Read-QueryRewrites $rewritesPath $data (Get-FileHash $dataPath).Hash $identity
 $target = Join-Path $ReportsRoot 'query-rewrite-v1'
 $summaryRows = @(); $pairedRows = @()
-foreach ($model in @('embeddinggemma','bge-m3')) {
+foreach ($model in @('embeddinggemma','bge-m3','kure-v1')) {
     $baselineDirectory = Join-Path $ReportsRoot "$model/$version"
     $baseline = Get-Content -Raw -Encoding UTF8 (Join-Path $baselineDirectory 'summary.json') | ConvertFrom-Json
     $maps = @{}
@@ -24,7 +24,7 @@ foreach ($model in @('embeddinggemma','bge-m3')) {
         $report = Get-Content -Raw -Encoding UTF8 (Join-Path $directory $reportFile) | ConvertFrom-Json
         if ($report.datasetSha256 -ne (Get-FileHash $dataPath).Hash -or $report.comparisonIdentitySha256 -ne $identity -or $report.corpusSha256 -ne $data.corpus.sha256) { throw 'Incompatible input identity.' }
         foreach ($field in @('threads','batchSize','chunkingVersion')) { if ($report.$field -ne $baseline.$field) { throw "Changed run condition: $field" } }
-        foreach ($field in @('modelDigest','dimensions','inputMode','queryFormat','documentFormat','ollamaVersion')) { if ($report.model.$field -ne $baseline.model.$field) { throw "Changed model condition: $field" } }
+        foreach ($field in @('modelDigest','dimensions','inputMode','queryFormat','documentFormat','ollamaVersion','inferenceRuntime','inferenceRuntimeVersion','dtype','device')) { if ($report.model.$field -ne $baseline.model.$field) { throw "Changed model condition: $field" } }
         if ($mode -eq 'rewritten' -and ($report.queryRewritesSha256 -ne (Get-FileHash $rewritesPath).Hash -or $report.queryMode -ne 'llm-rewrite-v1' -or $report.newVectors -ne 0)) { throw 'Invalid rewrite provenance.' }
         $queries = @(Import-Csv (Join-Path $directory 'queries.csv'))
         $hits = @(Import-Csv (Join-Path $directory 'top10.csv'))
@@ -80,7 +80,7 @@ foreach ($model in @('embeddinggemma','bge-m3')) {
 }
 $summaryRows | Export-Csv (Join-Path $target 'comparison.csv') -NoTypeInformation -Encoding UTF8
 $pairedRows | Export-Csv (Join-Path $target 'paired-queries.csv') -NoTypeInformation -Encoding UTF8
-$lines=@('# 질문 정제 전후 검색 성능', '', '같은 원문·정답·질문 분할·700문자 청크·모델 버전·문서 벡터를 사용하고 검색 질문만 바꿨다. 정제본 110개를 고정해 Gemma와 BGE-M3에 동일하게 적용했다.', '', '정제 방식은 GPT-4 API 실행이 아니라 대화형 Codex 어시스턴트가 작성한 질문이다. 정제 시 원본 질문만 사용했으나 대화에 기존 결과가 있었으므로 독립적인 블라인드 검증은 아니다. 프롬프트를 결과에 맞춰 재작성하지 않았다.', '', '## 원본과 정제본 비교', '', '| 모델 | 질문 | 분할 | Recall@5 | Recall@10 | 1위 적중률 | Hit@5 | Complete@5 | Precision@5 | MRR | nDCG@5 | nDCG@10 |', '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
+$lines=@('# 질문 정제 전후 검색 성능', '', '같은 원문·정답·질문 분할·700문자 청크·모델 버전·문서 벡터를 사용하고 검색 질문만 바꿨다. 정제본 110개를 고정해 Gemma·BGE-M3·KURE-v1에 동일하게 적용했다.', '', '정제 방식은 GPT-4 API 실행이 아니라 대화형 Codex 어시스턴트가 작성한 질문이다. 정제 시 원본 질문만 사용했으나 대화에 기존 결과가 있었으므로 독립적인 블라인드 검증은 아니다. 프롬프트를 결과에 맞춰 재작성하지 않았다.', '', '## 원본과 정제본 비교', '', '| 모델 | 질문 | 분할 | Recall@5 | Recall@10 | 1위 적중률 | Hit@5 | Complete@5 | Precision@5 | MRR | nDCG@5 | nDCG@10 |', '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
 foreach ($row in $summaryRows) {
     $cells=@($row.model,$row.queryMode,$row.split)
     foreach ($metric in @('recallAt5','recallAt10','top1HitRate','hitAt5','completeAt5','precisionAt5')) { $cells+=([math]::Round(100*$row.$metric,2)).ToString()+'%' }
@@ -88,7 +88,7 @@ foreach ($row in $summaryRows) {
     $lines+='| '+($cells -join ' | ')+' |'
 }
 $lines+=@('', 'original은 원본 질문, rewritten은 정제 질문이다. development는 개발용 양성 30개, held_out은 검증용 양성 70개다. 정답 없는 질문은 위 표에서 제외했다.', '', '## 얼마나 바뀌었나?', '', '| 모델 | 분할 | Recall@5 변화 | 개선된 질문 | 악화된 질문 | 동일한 질문 |', '| --- | --- | ---: | ---: | ---: | ---: |')
-foreach ($model in @('embeddinggemma','bge-m3')) {
+foreach ($model in @('embeddinggemma','bge-m3','kure-v1')) {
     foreach ($split in @('development','held_out')) {
         $rows=@($pairedRows | Where-Object { $_.model -eq $model -and $_.split -eq $split -and $_.answerability -eq 'in_corpus' })
         $delta=($rows | Measure-Object recallAt5Delta -Average).Average
@@ -100,7 +100,8 @@ foreach ($model in @('embeddinggemma','bge-m3')) {
 $lines+=@('', '개선·악화는 질문별 Recall@5 변화 기준이다. 평균 점수만 높아져도 일부 질문은 나빠질 수 있으므로 [질문별 전후 결과](paired-queries.csv)를 함께 확인한다.', '',
     '## 쉽게 풀어 읽으면', '',
     '개발용 Recall@5는 Gemma 64.22% → 72.00%, BGE-M3 65.72% → 70.17%로 둘 다 올랐다. 별도로 남겨 둔 검증용에서는 Gemma 78.14% → 78.43%로 거의 같고, BGE-M3는 73.62% → 80.95%로 7.33%p 올랐다. 이번 정제본은 BGE-M3에서 더 큰 효과를 보였다.', '',
-    '검증용 70문제에서 필요한 정답을 모두 상위 5개에 넣은 Complete@5는 Gemma 46문제 → 44문제로 줄고, BGE-M3는 42문제 → 48문제로 늘었다. 정제했다고 모든 질문이 좋아지는 것은 아니다. 정제본끼리 비교하면 검증용 Recall@5·MRR·nDCG@5는 BGE-M3가 높지만, 개발용에서는 Gemma가 높아 모델 우열의 확정으로 해석하지 않는다.', '',
+    '검증용 70문제에서 필요한 정답을 모두 상위 5개에 넣은 Complete@5는 Gemma 46문제 → 44문제로 줄고, BGE-M3는 42문제 → 48문제로 늘었다. 정제했다고 모든 질문이 좋아지는 것은 아니다. 이 두 모델끼리 비교하면 정제본의 검증용 Recall@5·MRR·nDCG@5는 BGE-M3가 높지만, 개발용에서는 Gemma가 높다.', '',
+    'KURE-v1도 같은 정제본으로 평가했다. 개발용 Recall@5는 58.39% → 73.50%, 검증용은 76.48% → 81.12%다. 정제 후 검증용 Recall@5에서 BGE-M3 80.95%보다 약 0.17%p 높지만 작은 차이이므로 확정적인 우열로 보지 않는다. 각 모델은 원본 질문과 정제 질문에 다르게 반응하므로 모델과 질문 입력 방식을 함께 검토해야 한다.', '',
     '## 좋아진 질문과 나빠진 질문', '',
     '아래는 결과를 확인한 뒤 고른 설명용 사례다. 전체 성능을 대표하는 무작위 표본은 아니다.', '',
     '| 모델 | 질문 ID | Recall@5 원본 → 정제 | 검색 1위 원본 → 정제 |', '| --- | --- | --- | --- |')
