@@ -1,0 +1,3 @@
+﻿"model","queryMode","questions","meanAnnExactTop10Overlap","meanLocalExactTop10Overlap","maxExactScoreError","historicalRecallAt5ChangedQueries"
+"embeddinggemma","original","110","0.997272727272727","1","9.6165056E-08","0"
+"embeddinggemma","rewritten","110","0.995454545454546","1","1.01451653E-07","0"
