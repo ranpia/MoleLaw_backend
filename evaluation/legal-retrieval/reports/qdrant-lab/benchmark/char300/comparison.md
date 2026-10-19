@@ -20,6 +20,18 @@ original은 원본 질문, rewritten은 정제 질문이다. development는 개�
 | embeddinggemma | rewritten | held_out | local | 77.9% | 85.43% | 68.57% | 64.29% | 0.7789 | 0.7283 | 0.76 |
 | embeddinggemma | rewritten | held_out | exact | 77.9% | 85.43% | 68.57% | 64.29% | 0.7789 | 0.7283 | 0.76 |
 | embeddinggemma | rewritten | held_out | ann | 77.9% | 85.43% | 68.57% | 64.29% | 0.7789 | 0.7283 | 0.76 |
+| bge-m3 | original | development | local | 57.39% | 70.83% | 36.67% | 43.33% | 0.5166 | 0.4725 | 0.5238 |
+| bge-m3 | original | development | exact | 57.39% | 70.83% | 36.67% | 43.33% | 0.5166 | 0.4725 | 0.5238 |
+| bge-m3 | original | development | ann | 57.39% | 70.83% | 36.67% | 43.33% | 0.5166 | 0.4725 | 0.5238 |
+| bge-m3 | original | held_out | local | 72.79% | 84.86% | 52.86% | 60% | 0.6732 | 0.6275 | 0.6764 |
+| bge-m3 | original | held_out | exact | 72.79% | 84.86% | 52.86% | 60% | 0.6732 | 0.6275 | 0.6764 |
+| bge-m3 | original | held_out | ann | 72.79% | 84.86% | 52.86% | 60% | 0.6732 | 0.6275 | 0.6764 |
+| bge-m3 | rewritten | development | local | 71% | 81.28% | 56.67% | 50% | 0.6783 | 0.612 | 0.6514 |
+| bge-m3 | rewritten | development | exact | 71% | 81.28% | 56.67% | 50% | 0.6783 | 0.612 | 0.6514 |
+| bge-m3 | rewritten | development | ann | 71% | 81.28% | 56.67% | 50% | 0.6783 | 0.612 | 0.6514 |
+| bge-m3 | rewritten | held_out | local | 80.83% | 88.24% | 62.86% | 68.57% | 0.756 | 0.7205 | 0.7503 |
+| bge-m3 | rewritten | held_out | exact | 80.83% | 88.24% | 62.86% | 68.57% | 0.756 | 0.7205 | 0.7503 |
+| bge-m3 | rewritten | held_out | ann | 80.83% | 88.24% | 62.86% | 68.57% | 0.756 | 0.7205 | 0.7503 |
 | kure-v1 | original | development | local | 57.11% | 72.22% | 53.33% | 43.33% | 0.6106 | 0.5316 | 0.5856 |
 | kure-v1 | original | development | exact | 57.11% | 72.22% | 53.33% | 43.33% | 0.6106 | 0.5316 | 0.5856 |
 | kure-v1 | original | development | ann | 57.11% | 72.22% | 53.33% | 43.33% | 0.6106 | 0.5316 | 0.5856 |
@@ -41,6 +53,8 @@ MRR@10은 첫 정답이 10위 밖이면 0으로 처리한다. 이전 보고서�
 | --- | --- | ---: | ---: | ---: |
 | embeddinggemma | original | 99.45% | 100% | 0 |
 | embeddinggemma | rewritten | 99.64% | 100% | 0 |
+| bge-m3 | original | 99.82% | 100% | 0 |
+| bge-m3 | rewritten | 99.36% | 100% | 0 |
 | kure-v1 | original | 99.45% | 100% | 0 |
 | kure-v1 | rewritten | 99.64% | 100% | 0 |
 
@@ -50,6 +64,8 @@ MRR@10은 첫 정답이 10위 밖이면 0으로 처리한다. 이전 보고서�
 | --- | --- | ---: | ---: | ---: |
 | embeddinggemma | original | 6 | 0 | 0 |
 | embeddinggemma | rewritten | 4 | 0 | 0 |
+| bge-m3 | original | 2 | 0 | 0 |
+| bge-m3 | rewritten | 5 | 0 | 0 |
 | kure-v1 | original | 5 | 0 | 0 |
 | kure-v1 | rewritten | 4 | 0 | 0 |
 
@@ -67,6 +83,10 @@ MRR@10은 첫 정답이 10위 밖이면 0으로 처리한다. 이전 보고서�
 | embeddinggemma | original | ann | 330 | 27.073 | 32.953 | 2.226 | 5.859 |
 | embeddinggemma | rewritten | exact | 330 | 30.373 | 35.591 | 5.487 | 8.833 |
 | embeddinggemma | rewritten | ann | 330 | 26.873 | 32.177 | 2.187 | 4.05 |
+| bge-m3 | original | exact | 330 | 29.563 | 33.102 | 6.211 | 9.228 |
+| bge-m3 | original | ann | 330 | 25.469 | 30.1 | 2.157 | 5.127 |
+| bge-m3 | rewritten | exact | 330 | 29.569 | 32.988 | 6.172 | 7.428 |
+| bge-m3 | rewritten | ann | 330 | 25.409 | 28.95 | 2.058 | 2.936 |
 | kure-v1 | original | exact | 330 | 30.213 | 39.169 | 6.603 | 11.103 |
 | kure-v1 | original | ann | 330 | 25.878 | 31.058 | 2.309 | 5.111 |
 | kure-v1 | rewritten | exact | 330 | 29.623 | 33.349 | 6.199 | 7.757 |

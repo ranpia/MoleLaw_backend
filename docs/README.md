@@ -23,6 +23,7 @@
 | Gemma·BGE-M3·KURE-v1 700문자에서 LLM 질문 정제의 효과 | [질문 정제 전후 비교](../evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md) |
 | Qdrant 실험 컬렉션 적재·조회·검색·재색인·삭제 | [Qdrant 실험 환경](../evaluation/legal-retrieval/reports/qdrant-lab/README.md) |
 | 전체 질문의 Qdrant 전수·근사 검색 품질과 반복 지연시간 | [Qdrant 벤치마크](../evaluation/legal-retrieval/reports/qdrant-lab/benchmark/comparison.md) |
+| 세 모델 × 300·500·700문자 × 원본·정제 질문 통합 비교 | [청크·질문 정제 종합 결과](../evaluation/legal-retrieval/reports/chunk-experiments/comparison.md) |
 | 임베딩 실험 캐시·정답 검증·보안 검토 | [2026-10-15 실험 검토](embedding-experiment-review-2026-10-15.md) |
 | 역할별 에이전트와 모델 평가 | [오케스트레이션·모델 계획](plans/orchestration-models.md) |
 | 단계별 완료 조건·평가·복구 | [구현·검증 계획](plans/delivery-validation.md) |

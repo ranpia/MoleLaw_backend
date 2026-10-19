@@ -43,7 +43,7 @@ foreach ($model in $Models) {
                 $record.annNdcgAt10=($ann | ForEach-Object { [double]$_.ndcgAt10 } | Measure-Object -Average).Average
                 $rows+=[pscustomobject]$record
             }
-            $comparison=@($qrows | Where-Object { $_.queryMode -eq $mode -and $_.engine -eq 'local' })
+            $comparison=@($qrows | Where-Object { $_.queryMode -eq $mode -and $_.engine -eq 'exact' })
             $changed=0
             foreach ($query in @($comparison | Where-Object answerability -eq 'in_corpus')) {
                 $annQuery=@($qrows | Where-Object { $_.queryMode -eq $mode -and $_.engine -eq 'ann' -and $_.queryId -eq $query.queryId })[0]
@@ -80,6 +80,15 @@ foreach ($model in $Models) {
         $lines+='| '+$model+' | '+$size+' | '+([math]::Round(100*$a.recallAt5,2))+'% → '+([math]::Round(100*$b.recallAt5,2))+'% | '+([math]::Round(100*$c.recallAt5,2))+'% → '+([math]::Round(100*$d.recallAt5,2))+'% | '+([math]::Round($d.mrr,4))+' |'
     }
 }
+$dev=@($rows | Where-Object { $_.queryMode -eq 'rewritten' -and $_.split -eq 'development' })
+$bestValue=($dev | Measure-Object recallAt5 -Maximum).Maximum
+$best=@($dev | Where-Object { [math]::Abs($_.recallAt5-$bestValue) -lt 1e-8 })
+$bestLabels=@($best | ForEach-Object { $_.model+' '+$_.maxChars+'문자' }) -join ', '
+$bestSentence='완료된 구성 중 개발용 정제 Recall@5가 가장 높은 것은 '+$bestLabels+' ('+([math]::Round(100*$bestValue,2))+'%)다. 이것은 필요한 근거를 상위 5개 안에 얼마나 회수했는지에 따른 우선 후보다. 모델의 첫 정답 순위나 모든 근거 확보 여부까지 항상 최고라는 뜻은 아니다.'
+$lines+=@('', '## 결과를 읽는 순서', '',
+    $bestSentence, '',
+    '청크를 작게 나누면 검색 대상 조각은 늘어나지만 질문에 필요한 문맥이 짧아진다. 크게 나누면 문맥은 늘어나지만 덜 관련된 문장이 함께 들어갈 수 있다. 따라서 300·500·700 중 어느 쪽이 항상 좋다고 가정하지 않고 같은 질문에서 측정했다.', '',
+    '검증용 결과는 별도로 남겨 둔 질문에서의 확인값이다. 이미 공개된 작은 평가셋이므로 이 수치만 보고 반복 조정하거나 한국어 법령 전체의 우열로 확정하지 않는다. 첫 정답을 빨리 찾는 것이 중요하면 MRR, 여러 근거의 누락이 중요하면 Recall과 Complete를 함께 본다.')
 foreach ($split in @('development','held_out')) {
     $lines+=@('', "## $split 전체 지표", '', '| 모델 | 문자 | 질문 | Recall@5 | Recall@10 | 1위 적중률 | Hit@5 | Complete@5 | Precision@5 | MRR | nDCG@5 | nDCG@10 |', '| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |')
     foreach ($row in @($rows | Where-Object split -eq $split)) {
