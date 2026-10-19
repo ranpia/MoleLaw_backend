@@ -1,0 +1,28 @@
+{
+    "metadata":  {
+                     "owner":  "molelaw-legal-retrieval-lab-v1",
+                     "corpus_sha256":  "5476BA7333F16A26965B32FFB59EBE3EC82A07FDCC3B1CE8FDA51F3182A3EEAB",
+                     "model":  "bge-m3",
+                     "input_mode":  "bge-m3-title-text-v1",
+                     "dimensions":  1024,
+                     "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                     "chunking_version":  "char500-overlap64-article-v1",
+                     "chunk_count":  6634
+                 },
+    "latencyScope":  "Sequential warm HTTP grouped queries; embedding excluded; 3+ repeated samples per question. Local scan is in-process and not HTTP-comparable.",
+    "hnswEf":  128,
+    "qdrantVersion":  "1.19.1",
+    "indexedVectors":  6634,
+    "qualityScope":  "First repetition only; positive-query macro averages; MRR@10 is truncated and differs from historical full MRR. ANN means exact=false, not proof HNSW was selected.",
+    "ollamaVersion":  "0.40.3",
+    "points":  6634,
+    "queryRewritesSha256":  "981FD202C9E24019A2BD79848906A500A8192D11045FA90BE24C02AF968DE123",
+    "model":  "bge-m3",
+    "questionDatasetSha256":  "A06B9ECAE98AA9E691C811FA71CC3BB22D6010230832A7425781983EA0D393E3",
+    "timestampUtc":  "2026-10-19T02:27:43.5903237Z",
+    "repeats":  3,
+    "segments":  2,
+    "collection":  "molelaw_exp_bge_m3_c500_5476ba73_79076464",
+    "newQueryVectors":  0,
+    "indexingThresholdKiB":  1000
+}
