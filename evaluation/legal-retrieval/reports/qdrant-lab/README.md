@@ -29,6 +29,18 @@
 
 [Qwen3 실행 환경](../../../../docker/qwen3/README.md)과 [검색 평가 실행 안내](../../README.md)를 참고한다.
 
+## 선정 후 확대 검증 자료
+
+기존 12개 구성과 별도 컬렉션으로 보존했다. 아래는 완료 보고서 기준이며 현재 DB를 다시 조회한 실시간 통계는 아니다.
+
+| 자료 | 컬렉션 | 규모 |
+| --- | --- | ---: |
+| KURE 300자 확대 문서 | `molelaw_validation_kure_v1_c300_1117ada1_8b418a58` | 10,999포인트 |
+| 원본·정제 질문 및 검색 결과 | 위 문서 컬렉션 이름 + `_queries` | 540포인트 |
+| 고정 입력·manifest·보고서 | `molelaw_validation_final_v1_manifest_<freezeSHA8>` | 1포인트 |
+
+기존 관리 스크립트의 모델·크기 지정 명령은 원래 12개 구성용이다. 확대 검증은 별도 `run-kure-final-validation.ps1` 경로로 관리한다. 완료 후 KURE 컨테이너는 중지했고 DB는 보존했다. [최종 요약](../final-summary.md)과 [확대 결과](../final-validation-v1/kure-v1/README.md)를 참고한다.
+
 ## 이전 단계의 검증 기록
 
 아래는 Qwen3 추가 전부터 남긴 단계별 검증과 명령의 기록이다. 당시 컬렉션 수·측정 수치를 현재 전체 규모로 읽지 않는다.
