@@ -151,3 +151,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 ## 독립 질문 검증 아카이브 (2026-10-20)
 
 기존 확대 문서 컬렉션 10,999포인트를 읽고 새 질문·벡터·정답·점수·상위 10개를 별도 컬렉션에 저장했다. 문서 재색인은 하지 않았다. 질문 컬렉션은 `molelaw_independent_kure_v1_b2b30df8`이며 실행 후 정확한 건수 200포인트와 manifest 해시를 확인했다. [집계·해석](../independent-validation-v1/kure-v1/interpretation.md)을 참고한다. 기존 모델별 질문 880포인트 및 확대 검증 질문 540포인트와 섞어 기존 12개 구성 비교를 재집계하지 않는다.
+
+## 법률 쟁점 질의 변환 아카이브 (2026-10-20)
+
+원래 확대 문서 10,999개를 재사용하고 새 질의 벡터·원본·변환문·고정 정답·상위 10개·지표 100개를 `molelaw_legal_query_kure_v1_a15c853e`에 저장했다. 원본·기존 정제 200건은 이전 결과를 읽어 비교했으며 새 컬렉션에 중복 저장하지 않았다. [결과·검증 근거](../legal-query-transform-v1/kure-v1/interpretation.md)를 참고한다.

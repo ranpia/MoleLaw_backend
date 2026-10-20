@@ -35,3 +35,7 @@ Start-Process powershell.exe -ArgumentList @('-NoExit','-NoProfile','-ExecutionP
 ## 실행 전 준비 완료
 
 변환 100개와 원본 일치를 확인했고 별도 검수에서 사실·결론 단정 위험 4건을 수정한 뒤 재검수했다. 원본 질문·정답·기존 정제는 변경하지 않았다. 미해결 검수 항목은 0개다. [변환문](transforms.json), [검수 이력](audit.json), [고정 manifest](../../data/legal-query-transform-v1/manifest.json)에 보존한다. 오프라인 사전검사에서 입력 해시·원본 일치·기존 200개 결과·8개 집계 행의 모든 지표 재계산 일치를 확인했다. 아직 실행 결과의 개선을 주장하지 않는다.
+
+## 실행 완료
+
+2026-10-20 원본·기존 정제 200건의 재사용과 새 변환 100건 평가를 완료했다. 새 변환의 코퍼스 내 Recall@5 28.70%, Complete@5 8.33%, MRR@10 0.3540이며 원본·정답·변환문은 실행 후 변경하지 않았다. [집계](../../reports/legal-query-transform-v1/kure-v1/README.md)와 [그래프·해석](../../reports/legal-query-transform-v1/kure-v1/interpretation.md)을 참고한다.
