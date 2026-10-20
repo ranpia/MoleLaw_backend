@@ -1,0 +1,27 @@
+{
+    "id":  "legal-query-transform-v1",
+    "frozenAtUtc":  "2026-10-20T00:42:47.2756553Z",
+    "transformsSha256":  "47E88701CE6F47F4C6C052BB9B60F66A91743ABB6756117540179729AA367031",
+    "auditSha256":  "6AD2C6D783BB5F2944A63EA1A0DC6FD01172146E02604A2E9EAAC795679D64E9",
+    "authoredQuestionsSha256":  "6FA0336B5126F35C200AB841499525B0F02EE66E8460591F57B67C9F6A4891E0",
+    "originalQuestionsSha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB",
+    "baselineManifestSha256":  "266C332B0331CFBA0950B116BAA2D131E6840A0B4B6ED049B152DE97E26BB356",
+    "baselineQueriesSha256":  "147010D3650A9F7A140AF376EFD5F327C6290541B5BC73EE8063E5CDF30B060E",
+    "baselineTop10Sha256":  "A77E62F8EDF40CFE4C68D9BB1E7A0E334BCBE678A9F42F34FD71C65A036DFC6E",
+    "corpusSha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+    "modelRevision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+    "collection":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58",
+    "threshold":  0.59829341466087427,
+    "questionCount":  100,
+    "newQueryMode":  "legal_transformed",
+    "queryModes":  [
+                       "original",
+                       "rewritten",
+                       "legal_transformed"
+                   ],
+    "singleVectorPerQuestion":  true,
+    "serviceReady":  false,
+    "evaluationPolicy":  "Exploratory strategy comparison on a previously examined and threshold-tuned dataset; not new independent held-out evidence",
+    "authorIsolation":  "Original questions only; no corpus, gold, previous rewrites or search results",
+    "actualServiceLlmEvaluated":  false
+}

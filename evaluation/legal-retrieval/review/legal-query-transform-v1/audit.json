@@ -1,0 +1,54 @@
+{
+    "completed":  true,
+    "reviewedCount":  100,
+    "unresolvedIds":  [
+
+                      ],
+    "transformsSha256":  "47e88701ce6f47f4c6c052bb9b60f66a91743abb6756117540179729aa367031",
+    "originalSha256":  "6fa0336b5126f35c200ab841499525b0f02ee66e8460591f57b67c9f6a4891e0",
+    "findings":  [
+                     {
+                         "ids":  [
+                                     "ind-028",
+                                     "ind-054",
+                                     "ind-062",
+                                     "ind-074"
+                                 ],
+                         "status":  "resolved",
+                         "description":  "Initial wording risked assuming perpetrator status, concluding guaranty extinguishment, treating received funds as a gift, or fixing the transport mode. Requested neutral wording from the author; reread and accepted all four revised searchText and concepts fields."
+                     },
+                     {
+                         "ids":  "ind-001 through ind-100",
+                         "status":  "passed",
+                         "description":  "Manually reviewed all 100 original questions against searchText and concepts for semantic fidelity, factual invention, legal conclusions, statute/article invention, numbers, dates, negation, jurisdiction, and roles. Foreign jurisdiction retained in 081-090; actual private-status intent retained in 091-095; missing facts retained in 096-100. All 100 ids and originalText values match the original."
+                     }
+                 ],
+    "changes":  [
+                    {
+                        "id":  "ind-028",
+                        "requested":  "Replace assumed perpetrator status with the other child and liability assessment.",
+                        "result":  "Author revised searchText and concepts; accepted."
+                    },
+                    {
+                        "id":  "ind-054",
+                        "requested":  "Replace guaranty extinguishment conclusion with whether guaranty remains.",
+                        "result":  "Author revised searchText and concepts; accepted."
+                    },
+                    {
+                        "id":  "ind-062",
+                        "requested":  "Preserve uncertainty about the nature of the received funds and whether a prior gift exists.",
+                        "result":  "Author revised searchText and concepts; accepted."
+                    },
+                    {
+                        "id":  "ind-074",
+                        "requested":  "Preserve transport-mode and contractual uncertainty rather than fixing maritime-carrier status.",
+                        "result":  "Author revised searchText and concepts; accepted."
+                    }
+                ],
+    "limitations":  [
+                        "Only authored-questions.json and transforms.json were read for substantive review. No source laws, answer keys, earlier normalized queries, search results, evaluation metrics, or web sources were consulted. This access statement is self-reported and is not independent proof of non-access.",
+                        "Review assesses transformation fidelity and leakage risk from the two allowed files; it does not establish legal correctness, answerability, retrieval quality, or the absence of all possible semantic ambiguity.",
+                        "Legal concepts used as open questions can guide retrieval, but do not establish that those concepts apply or resolve the underlying legal question."
+                    ],
+    "reviewMethod":  "Independent manual semantic review of all 100 original/transformed pairs, author-mediated correction of four items, rereview of corrections, and final count/originalText/hash checks."
+}
