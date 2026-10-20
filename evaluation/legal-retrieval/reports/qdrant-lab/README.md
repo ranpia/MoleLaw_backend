@@ -166,3 +166,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 | 700 | `molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58` | 7396 | 300 |
 
 질문 컬렉션은 각 문서 컬렉션 이름에 `_queries`를 붙인다. 기존 300자 결과 300개는 읽어 통합 비교했으며 새 두 컬렉션에 같은 질문 벡터로 각 크기 검색 결과를 저장했다. 기존 문서·질문 컬렉션은 보존했다. [집계·검증 범위](../legal-query-chunks-v1/kure-v1/interpretation.md)를 참고한다.
+
+## Recall@50 후보 진단 아카이브 (2026-10-20)
+
+기존 질문 벡터를 재사용해 코퍼스 내 36문항·세 입력·세 크기의 324회 전수 검색 결과와 상위 50개를 보존했다. `molelaw_recall50_kure_v1_c<size>_e8ec1af6` 컬렉션에 크기별 108개 포인트가 있으며 기존 검색 결과를 덮어쓰지 않았다. 모델 추론과 임계값 변경은 하지 않았다. [지표·후보 한계](../recall50-v1/kure-v1/README.md)를 참고한다.
