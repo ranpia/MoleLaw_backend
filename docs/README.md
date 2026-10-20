@@ -18,6 +18,7 @@
 | 개선 전 인증 위험과 설계 근거 | [JWT 보안 검토](jwt-security-review.md) |
 | 수집·청킹·벡터 검색·근거·Advisor | [RAG·ETL 계획](plans/rag-etl.md) |
 | 주 법령 20개·보충 근거·질문 110개의 임베딩 검색 평가 | [검색 평가 실행 안내](../evaluation/legal-retrieval/README.md) |
+| 실험 최종 결론·확대 검증·한계 | [임베딩 실험 최종 정리](../evaluation/legal-retrieval/reports/final-summary.md) |
 | 임베딩 모델·차원·청크 선정 근거 | [KURE-v1 선정](../evaluation/legal-retrieval/review/model-selection.md) |
 | Qwen3의 세 청크·원본/정제 질문 결과 | [Qwen3 결과](../evaluation/legal-retrieval/reports/qwen3-0.6b/README.md) |
 | 완료된 모델·청크의 원본 질문 평가지표와 해석 | [모델·청크 비교](../evaluation/legal-retrieval/reports/comparison.md) |
