@@ -1,0 +1,1541 @@
+[
+    {
+        "id":  "ind-001",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "housing:276291:000303",
+                            "housing:276291:000400",
+                            "civil:284415:053600"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276291\u0026chrClsCd=010202\u0026efYd=20260102",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "주택임대차보호법 제3조의3( 임차권등기명령 ); 주택임대차보호법 제4조(임대차기간 등); 민법 제536조(동시이행의 항변권). 계약 종료 후 보증금 미반환과 이사 시 임차권등기 필요성. 등기 완료 전 전출 여부를 확인해야 한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-002",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:062300",
+                            "civil:284415:039000"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제623조(임대인의 의무); 민법 제390조(채무불이행과 손해배상). 임대인의 유지의무와 임차인 귀책에 따른 손해배상 책임을 구분한다. 곰팡이 원인과 환기·구조적 결함의 입증은 추가 확인사항이다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-003",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "housing:276291:000300"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276291\u0026chrClsCd=010202\u0026efYd=20260102"
+                       ],
+        "reason":  "주택임대차보호법 제3조( 대항력 등 ). 주택 인도·주민등록에 따른 대항력과 양수인의 임대인 지위 승계. 대항요건 충족 여부에 따라 결론이 달라진다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-004",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:065400",
+                            "civil:284415:061500",
+                            "civil:284415:039000"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제654조(준용규정); 민법 제615조(차주의 원상회복의무와 철거권); 민법 제390조(채무불이행과 손해배상). 원상회복 준용과 채무불이행 책임. 통상손모와 실제 훼손, 특약·수선 경위를 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-005",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:059800",
+                            "civil:284415:060300",
+                            "civilprocedure:290113:020200"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290113\u0026chrClsCd=010202\u0026efYd=20261002"
+                       ],
+        "reason":  "민법 제598조(소비대차의 의의); 민법 제603조(반환시기); 민사소송법 제202조(자유심증주의). 소비대차 반환과 자유심증에 따른 송금·대화 자료의 평가. 차용증 부존재만으로 청구가 배제되지 않는다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-006",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:058000",
+                            "civil:284415:057500",
+                            "civil:284415:058200"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제580조(매도인의 하자담보책임); 민법 제575조(제한물권있는 경우와 매도인의 담보책임); 민법 제582조(전2조의 권리행사기간). 개인 매매의 하자담보와 해제·배상 및 행사기간. 고지 내용·하자 인식 시점을 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-007",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/상법"
+                       ],
+        "reason":  "상법 제135조(운송인의 손해배상책임) 등 운송 계약상 책임과 인도 완료 판단이 필요하다. 민법상 채무불이행만으로 택배사와 판매자 책임 배분을 확정할 수 없다. 배송 장소 합의와 인도 시점도 확인해야 한다.",
+        "requiredLaws":  [
+                             "상법"
+                         ]
+    },
+    {
+        "id":  "ind-008",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/학원의설립ㆍ운영및과외교습에관한법률",
+                           "https://www.law.go.kr/법령/학원의설립ㆍ운영및과외교습에관한법률시행령",
+                           "https://www.law.go.kr/법령/평생교육법"
+                       ],
+        "reason":  "온라인 강의의 등록 형태에 따라 학원법 제18조, 시행령 제18조·별표 4의 반환기준 또는 평생교육법 제28조 등이 필요하다. 전자상거래법의 디지털콘텐츠 청약철회만으로 수강 후 중도해지·할인 산정 문제를 모두 답할 수 없다. 시설 유형 확인도 필요하다.",
+        "requiredLaws":  [
+                             "학원의 설립ㆍ운영 및 과외교습에 관한 법률",
+                             "학원의 설립ㆍ운영 및 과외교습에 관한 법률 시행령",
+                             "평생교육법"
+                         ]
+    },
+    {
+        "id":  "ind-009",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/할부거래에관한법률"
+                       ],
+        "reason":  "할부거래법 제16조 소비자의 항변권 및 제3조 적용범위가 핵심이다. 카드 일시불/할부·결제액·잔여 할부금에 따라 다르며, 항변권은 이미 납부한 금액의 자동 반환권과 다르다. corpus의 방문판매법 계속거래 해지만으로 카드사 청구를 해결할 수 없다.",
+        "requiredLaws":  [
+                             "할부거래에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-010",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:075000",
+                            "civil:284415:039300",
+                            "civil:284415:076300"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제750조(불법행위의 내용); 민법 제393조(손해배상의 범위); 민법 제763조(준용규정). 음식과 증상 사이 인과관계·과실 및 상당인과관계 있는 치료비를 확인한다. 행정 제재가 아니라 음식값 외 손해배상의 근거 매핑이다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-011",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "minimum:218303:000500",
+                            "minimum-decree:206564:000300",
+                            "minimum-notice"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/admRulLsInfoR.do?admRulSeq=2100000118064\u0026chrClsCd=010202",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=206564\u0026chrClsCd=010202\u0026efYd=20190101",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=218303\u0026chrClsCd=010202\u0026efYd=20200526"
+                       ],
+        "reason":  "최저임금법 제5조(최저임금액); 최저임금법 시행령 제3조(수습 중에 있는 근로자에 대한 최저임금액); 최저임금법 제5조에 따른 단순노무직종 근로자 지정 고시. 수습 감액 요건 및 단순노무 제외. 계약기간·수습기간·직종을 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-012",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "labor:285279:003600",
+                            "retirement:284455:000400",
+                            "retirement:284455:000900"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284455\u0026chrClsCd=010202\u0026efYd=20260918",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285279\u0026chrClsCd=010202\u0026efYd=20261008"
+                       ],
+        "reason":  "근로기준법 제36조(금품 청산); 근로자퇴직급여 보장법 제4조(퇴직급여제도의 설정); 근로자퇴직급여 보장법 제9조(퇴직금의 지급 등). 퇴직 후 임금 청산과 퇴직금 지급 및 적용 요건. 퇴직급여 제도·계속근로기간·소정근로시간을 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-013",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "labor:285279:005000"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285279\u0026chrClsCd=010202\u0026efYd=20261008"
+                       ],
+        "reason":  "근로기준법 제50조(근로시간). 사용자 지휘·감독 아래 준비시간의 근로시간 포함 여부. 사업장 규모와 실제 지시·대기 상태를 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-014",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "labor:285279:001100",
+                            "labor:285279:002300",
+                            "labor:285279:002600",
+                            "labor:285279:002700",
+                            "labor:285279:002800"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285279\u0026chrClsCd=010202\u0026efYd=20261008"
+                       ],
+        "reason":  "근로기준법 제11조(적용 범위); 근로기준법 제23조(해고 등의 제한); 근로기준법 제26조(해고의 예고); 근로기준법 제27조(해고사유 등의 서면통지); 근로기준법 제28조(부당해고등의 구제신청). 해고 정당성·예고·서면통지·구제. 상시 근로자 수와 계속근로기간에 따른 적용 차이를 조건부로 다룬다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-015",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "employment:284457:001900"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284457\u0026chrClsCd=010202\u0026efYd=20260918"
+                       ],
+        "reason":  "남녀고용평등과 일ㆍ가정 양립 지원에 관한 법률 제19조(육아휴직). 육아휴직을 이유로 한 해고·불리한 처우 금지와 복귀 보장. 승진·전보의 실제 사유를 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-016",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "labor:285279:001100",
+                            "labor:285279:007602",
+                            "labor:285279:007603",
+                            "labor:285279:005000"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285279\u0026chrClsCd=010202\u0026efYd=20261008"
+                       ],
+        "reason":  "근로기준법 제11조(적용 범위); 근로기준법 제76조의2(직장 내 괴롭힘의 금지); 근로기준법 제76조의3(직장 내 괴롭힘 발생 시 조치); 근로기준법 제50조(근로시간). 괴롭힘 해당성·신고 후 조사 및 불이익 금지, 지휘감독하 업무시간. 사업장 규모와 행위 양태 확인이 필요하다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-017",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/산업재해보상보험법",
+                           "https://www.law.go.kr/법령/산업재해보상보험법시행령"
+                       ],
+        "reason":  "산재보험법 제37조 업무상 재해, 제91조의15 이하 노무제공자 특례 및 시행령상 적용 직종이 핵심이다. 근로기준법상 근로자성만으로 개인사업자 계약 배달 종사자의 보험급여 가능성을 배제할 수 없다.",
+        "requiredLaws":  [
+                             "산업재해보상보험법",
+                             "산업재해보상보험법 시행령"
+                         ]
+    },
+    {
+        "id":  "ind-018",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "labor:285279:004300",
+                            "civil:284415:075000"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285279\u0026chrClsCd=010202\u0026efYd=20261008"
+                       ],
+        "reason":  "근로기준법 제43조(임금 지급); 민법 제750조(불법행위의 내용). 임금 전액 지급 원칙과 별도 손해배상 책임을 구분한다. 근로자의 과실만으로 동의 없는 전액 공제를 정당화할 수 없다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-019",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:075800",
+                            "civil:284415:075000"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제758조(공작물등의 점유자, 소유자의 책임); 민법 제750조(불법행위의 내용). 누수 원인에 따른 공작물 점유자·소유자 책임과 일반 불법행위. 전유·공용부분과 관리상 과실 확인이 필요하다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-020",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/공동주택관리법"
+                       ],
+        "reason":  "공동주택관리법 제20조 층간소음 방지·관리주체 조치·분쟁조정 절차가 핵심이다. 민법 제750조나 형법 조문 일부만으로 소음 대응과 역신고 위험을 충분히 안내하기 어렵다. 천장을 두드린 빈도·강도도 확인한다.",
+        "requiredLaws":  [
+                             "공동주택관리법"
+                         ]
+    },
+    {
+        "id":  "ind-021",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:075900",
+                            "civil:284415:075100",
+                            "civil:284415:076300",
+                            "civil:284415:039300"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제759조(동물의 점유자의 책임); 민법 제751조(재산 이외의 손해의 배상); 민법 제763조(준용규정); 민법 제393조(손해배상의 범위). 동물 점유자의 관리책임 및 치료비·정신적 손해 등 범위. 목줄 행정제재가 아니라 추가 민사배상 요구가 질문의 핵심이다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-022",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "privacy:283839:003500",
+                            "privacy-decree:289537:004100",
+                            "privacy-decree:289537:004200"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=283839\u0026chrClsCd=010202\u0026efYd=20260911",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289537\u0026chrClsCd=010202\u0026efYd=20260911"
+                       ],
+        "reason":  "개인정보 보호법 제35조(개인정보의 열람); 개인정보 보호법 시행령 제41조(개인정보의 열람절차 등); 개인정보 보호법 시행령 제42조(개인정보 열람의 제한ㆍ연기 및 거절). 자신이 촬영된 영상인지에 따른 열람권·제한을 구분한다. 차량만 촬영되거나 타인만 나오는 경우 자신의 정보 열람청구로 당연히 제공받을 수 있다는 뜻이 아니다. 수사기관 요청 가능성은 별도이다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-023",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/정보통신망이용촉진및정보보호등에관한법률"
+                       ],
+        "reason":  "정보통신망법 제44조의2 삭제·임시조치 및 제70조 온라인 명예훼손과 형법 제311조 모욕의 구분이 필요하다. 민법상 인격권과 형법 일부만으로 온라인 게시물 삭제·처벌의 전체 경로를 다룰 수 없다.",
+        "requiredLaws":  [
+                             "정보통신망 이용촉진 및 정보보호 등에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-024",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:075000",
+                            "civil:284415:075100",
+                            "criminal:290185:030700"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290185\u0026chrClsCd=010202\u0026efYd=20261002"
+                       ],
+        "reason":  "민법 제750조(불법행위의 내용); 민법 제751조(재산 이외의 손해의 배상); 형법 제307조(명예훼손). 사생활·인격권 침해의 민사책임과 사실 적시 명예훼손 가능성을 구분한다. 대화 내용·전파 범위·공익성에 따라 형사 결론은 달라지므로 무조건 범죄라고 단정하지 않는다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-025",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/정보통신망이용촉진및정보보호등에관한법률"
+                       ],
+        "reason":  "정보통신망법 제50조 영리목적 광고성 정보 전송 제한 및 제64조 등 감독·신고 근거가 필요하다. 개인정보 삭제·처리정지 조문만으로 수신거부 후 광고 문자 신고의 특별법 계약을 대체할 수 없다.",
+        "requiredLaws":  [
+                             "정보통신망 이용촉진 및 정보보호 등에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-026",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/의료법"
+                       ],
+        "reason":  "의료법 제19조 정보 누설 금지, 제21조 기록 열람과 가족 제공 예외·동의 요건 및 시행규칙이 필요하다. 개인정보 보호법은 존재하지만 의료기록 제공의 구체적 예외를 대체하지 못한다. 구두 누설인지 기록 교부인지도 구분한다.",
+        "requiredLaws":  [
+                             "의료법"
+                         ]
+    },
+    {
+        "id":  "ind-027",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "privacy:283839:001500",
+                            "privacy:283839:001800",
+                            "privacy:283839:002500"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=283839\u0026chrClsCd=010202\u0026efYd=20260911"
+                       ],
+        "reason":  "개인정보 보호법 제15조(개인정보의 수집ㆍ이용); 개인정보 보호법 제18조(개인정보의 목적 외 이용ㆍ제공 제한); 개인정보 보호법 제25조(고정형 영상정보처리기기의 설치ㆍ운영 제한). CCTV 설치 목적과 다른 홍보 이용 및 정보주체 동의 등 적법근거. 영상 게시의 대상·식별가능성·별도 동의를 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-028",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:075000",
+                            "civil:284415:075300",
+                            "civil:284415:075500"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제750조(불법행위의 내용); 민법 제753조(미성년자의 책임능력); 민법 제755조(감독자의 책임). 장난 여부보다 가해행위·과실·책임능력 및 감독의무가 치료비 책임의 핵심이다. 나이·감독 상황을 확인한다. 학교안전공제 신청까지 묻는 것으로 확장하지 않는다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-029",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/학교폭력예방및대책에관한법률"
+                       ],
+        "reason":  "학교폭력예방법 제2조 사이버폭력 정의, 제16조 피해학생 보호, 제20조 신고 등이 학교 절차의 핵심이다. 형법·형사소송법의 신고 관련 조문만으로 학교 신고와 경찰 신고 병행의 체계를 답할 수 없다.",
+        "requiredLaws":  [
+                             "학교폭력예방 및 대책에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-030",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/가사소송법"
+                       ],
+        "reason":  "민법 제826조·제833조는 corpus에 있지만 당장 생활비 확보를 위한 가사소송법 제62조 사전처분, 제63조 가압류·가처분 등 절차가 누락되어 있다. 혼인 관계·진행 중 사건·계좌의 자금 성격을 확인해야 한다.",
+        "requiredLaws":  [
+                             "가사소송법"
+                         ]
+    },
+    {
+        "id":  "ind-031",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/가사소송법",
+                           "https://www.law.go.kr/법령/양육비이행확보및지원에관한법률"
+                       ],
+        "reason":  "가사소송법 제63조의2 직접지급명령, 제64조 이행명령 및 양육비이행법상 이행지원·제재·주소 파악 지원이 필요하다. 민법상 양육의무나 일반 민사집행 조문만으로 연락 두절 상태의 실제 회수 경로를 충분히 답하지 못한다.",
+        "requiredLaws":  [
+                             "가사소송법",
+                             "양육비 이행확보 및 지원에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-032",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:083602",
+                            "civil:284415:083700",
+                            "civil:284415:083902"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제836조의2(이혼의 절차); 민법 제837조(이혼과 자의 양육책임); 민법 제839조의2(재산분할청구권). 미성년 자녀의 양육·친권 협의서 또는 심판정본과 재산분할의 별도 청구를 구분한다. 재산 미합의와 자녀 관련 미합의의 효과는 다르다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-033",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:101900",
+                            "civil:284415:102800",
+                            "civil:284415:103000",
+                            "civil:284415:104100",
+                            "civil:284415:102600"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제1019조(승인, 포기의 기간); 민법 제1028조(한정승인의 효과); 민법 제1030조(한정승인의 방식); 민법 제1041조(포기의 방식); 민법 제1026조(법정단순승인). 상속 승인·포기, 특별한정승인과 처분행위에 따른 단순승인을 구분한다. 상속개시·채무 초과 인지 시점과 중과실 여부 확인이 필요하다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-034",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:100600",
+                            "civil:284415:101300",
+                            "civil:284415:074100"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제1006조(공동상속과 재산의 공유); 민법 제1013조(협의에 의한 분할); 민법 제741조(부당이득의 내용). 상속재산 공유·분할과 권한 없는 인출에 대한 부당이득. 생전 증여·인출 위임·상속재산 분할 합의 여부를 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-035",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/가사소송법",
+                           "https://law.go.kr/LSW/precInfoP.do?precSeq=69745"
+                       ],
+        "reason":  "민법 제839조의2는 corpus에 있지만 사실혼에 대한 재산분할 준용은 조문 자체에 명시되지 않아 판례와 가사소송법상 관할·절차를 함께 확인해야 한다. 단순 동거와 사실혼의 구분 및 공동 형성 재산이 핵심이다. 사실혼 해소 재산분할 판례가 frozen corpus에 없다.",
+        "requiredLaws":  [
+                             "가사소송법"
+                         ]
+    },
+    {
+        "id":  "ind-036",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "traffic:291133:000200",
+                            "traffic:291133:004400"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=291133\u0026chrClsCd=010202\u0026efYd=20261013"
+                       ],
+        "reason":  "도로교통법 제2조(정의); 도로교통법 제44조(술에 취한 상태에서의 운전 금지). 운전 정의의 도로 외 장소 포함과 음주 기준이 핵심이다. 주차장이라는 장소나 짧은 거리만으로 제외되지 않으며 실제 음주 수치·차량 조작 경위를 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-037",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:073100",
+                            "civil:284415:073300",
+                            "civil:284415:075000",
+                            "civil:284415:076300"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제731조(화해의 의의); 민법 제733조(화해의 효력과 착오); 민법 제750조(불법행위의 내용); 민법 제763조(준용규정). 치료 중 화해의 효력과 손해배상 범위. 합의서의 면책 문구·예측 못한 후유증은 개별 판단사항이므로 합의 유불리를 확정하는 정답이 아니다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-038",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/교통사고처리특례법"
+                       ],
+        "reason":  "도로교통법 제43조·제80조·제156조와 민법 제750조는 corpus에 있지만 인적 사고의 형사처리·보험 부재 효과에는 교통사고처리 특례법 제3조·제4조가 필요하다. 기기의 개인형 이동장치 해당 여부도 확인한다.",
+        "requiredLaws":  [
+                             "교통사고처리 특례법"
+                         ]
+    },
+    {
+        "id":  "ind-039",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "criminal:290185:036000",
+                            "criminalprocedure:290189:030700"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290185\u0026chrClsCd=010202\u0026efYd=20261002",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290189\u0026chrClsCd=010202\u0026efYd=20261002"
+                       ],
+        "reason":  "형법 제360조(점유이탈물횡령); 형사소송법 제307조(증거재판주의). 점유이탈물횡령의 불법영득 의사와 범죄사실 증명의 구분. 보관 기간과 반환만으로 범죄 성립·불성립을 단정하지 않고 돈 취득 증거를 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-040",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/통신비밀보호법"
+                       ],
+        "reason":  "통신비밀보호법 제3조·제14조의 타인 간 비공개 대화 녹음 금지 범위가 핵심이다. 대화 참여자 여부·녹음 방식과 이후 유포의 별도 문제를 구분해야 하며 해당 법률이 corpus에 없다.",
+        "requiredLaws":  [
+                             "통신비밀보호법"
+                         ]
+    },
+    {
+        "id":  "ind-041",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/정보통신망이용촉진및정보보호등에관한법률"
+                       ],
+        "reason":  "형법 제307조·제310조는 corpus에 있으나 인터넷 리뷰는 정보통신망법 제70조의 비방 목적·진실 및 공익 판단을 함께 검토해야 한다. 진실이라는 사정만으로 처벌 가능성을 일괄 배제할 수 없다.",
+        "requiredLaws":  [
+                             "정보통신망 이용촉진 및 정보보호 등에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-042",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/전기통신금융사기피해방지및피해자산환급에관한특별법",
+                           "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202\u0026lsJoLnkSeq=1025193115"
+                       ],
+        "reason":  "2026-09-08 시행 법률 제21909호의 현행 명칭은 피해금이 아니라 피해자산 환급이다. 제4조 지급정지, 제7조 이의제기, 제8조 종료와 전자금융거래법상 접근매체 관련 규정이 필요하다. 형법상 고의 판단만으로 은행 제한 해제 절차를 답할 수 없다.",
+        "requiredLaws":  [
+                             "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법"
+                         ]
+    },
+    {
+        "id":  "ind-043",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/경찰수사규칙",
+                           "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110202\u0026flSeq=156676793\u0026gubun="
+                       ],
+        "reason":  "형사소송법 제221조·제221조의2는 corpus에 있어 참고인 출석의 성격을 확인할 수 있지만, 일반 참고인의 변호인 등 조력인 참여 실무에는 경찰수사규칙상 변호인 외 사람의 참여 관련 규정과 운용 확인이 필요하다. 피의자 변호인 참여권 조문을 일반 참고인에게 그대로 적용하면 안 된다. 공식 경찰수사규칙 별지 제10호서식 변호인 참여 신청서는 피혐의자·피해자·참고인 조사에도 준용됨을 명시한다.",
+        "requiredLaws":  [
+                             "경찰수사규칙"
+                         ]
+    },
+    {
+        "id":  "ind-044",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/질서위반행위규제법"
+                       ],
+        "reason":  "도로교통법 제160조는 corpus에 있으나 운전자 특정에 따른 의견제출·이의제기 절차는 질서위반행위규제법 제16조·제20조가 필요하다. 차량 소유·관리관계와 실제 운전자 확인 방식에 따라 다르다.",
+        "requiredLaws":  [
+                             "질서위반행위규제법"
+                         ]
+    },
+    {
+        "id":  "ind-045",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/국민기초생활보장법"
+                       ],
+        "reason":  "국민기초생활 보장법 제26조 결정 통지, 제38조 이하 이의신청의 특별절차와 수급 요건이 필요하다. 일반 행정심판 조문만으로 특별법상 재심 경로·결정 이유를 대체할 수 없다.",
+        "requiredLaws":  [
+                             "국민기초생활 보장법"
+                         ]
+    },
+    {
+        "id":  "ind-046",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "final-v1:admin_appeal:249041:003000",
+                            "final-v1:admin_litigation:285913:002300"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=249041\u0026chrClsCd=010202\u0026efYd=20230321",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285913\u0026chrClsCd=010202\u0026efYd=20260512"
+                       ],
+        "reason":  "행정심판법 제30조(집행정지); 행정소송법 제23조(집행정지). 취소 다툼 제기만으로 처분 효력이 정지되지 않으며 집행정지 요건을 별도로 심사한다. 처분서·불복기간·긴급 손해·공공복리 판단이 필요하다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-047",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "final-v1:information_disclosure:251019:000900",
+                            "final-v1:information_disclosure:251019:001800",
+                            "final-v1:information_disclosure:251019:001900",
+                            "final-v1:information_disclosure:251019:002000"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=251019\u0026chrClsCd=010202\u0026efYd=20231117"
+                       ],
+        "reason":  "공공기관의 정보공개에 관한 법률 제9조(비공개 대상 정보); 공공기관의 정보공개에 관한 법률 제18조(이의신청); 공공기관의 정보공개에 관한 법률 제19조(행정심판); 공공기관의 정보공개에 관한 법률 제20조(행정소송). 비공개 사유와 이의신청·행정심판·행정소송의 경로. 정보공개청구인지 일반 민원서류 발급인지 확인이 필요하다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-048",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/공익사업을위한토지등의취득및보상에관한법률",
+                           "https://www.law.go.kr/법령/국가배상법"
+                       ],
+        "reason":  "토지보상법 제77조 영업손실 보상과 시행규칙 제45조 이하, 국가배상법 제2조 위법한 공무집행 책임 등 원인별 근거가 필요하다. 단순 통행 불편인지 영업시설 편입·접근 단절인지에 따라 다르며 매출 감소만으로 보상이 당연하지 않다.",
+        "requiredLaws":  [
+                             "공익사업을 위한 토지 등의 취득 및 보상에 관한 법률",
+                             "국가배상법"
+                         ]
+    },
+    {
+        "id":  "ind-049",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/국가배상법"
+                       ],
+        "reason":  "민법 제750조·제756조의 공사업체 책임은 corpus에 있으나 구청에 대한 국가배상법 제2조·제5조 공공영조물 설치관리 하자 책임이 누락되어 있다. 도로 관리주체와 위험 자재 방치·관리상 하자를 확인한다.",
+        "requiredLaws":  [
+                             "국가배상법"
+                         ]
+    },
+    {
+        "id":  "ind-050",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/행정규칙/소비자분쟁해결기준"
+                       ],
+        "reason":  "민법 제563조와 소비자기본법 제16조는 corpus에 있지만 소비자분쟁해결기준 별표 2 의복류의 교환·환급 기준이 누락되어 실제 환급 요구 가능성의 최소충분 근거가 부족하다. 오프라인 거래에 전자상거래법 철회기간을 적용해서는 안 된다. 기준의 합의·권고 성격과 매장 약정, 사용·훼손 여부도 확인해야 한다.",
+        "requiredLaws":  [
+                             "소비자분쟁해결기준"
+                         ]
+    },
+    {
+        "id":  "ind-051",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:039800",
+                            "terms:260021:000600",
+                            "terms:260021:000800"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=260021\u0026chrClsCd=010202\u0026efYd=20240807",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제398조(배상액의 예정); 약관의 규제에 관한 법률 제6조(일반원칙); 약관의 규제에 관한 법률 제8조(손해배상액의 예정). 서명 사실만으로 과도한 손해배상 예정·불공정 약관의 심사를 배제하지 않는다. 취소 시점·약관 개별교섭·손해액을 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-052",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:039000",
+                            "civil:284415:039300"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제390조(채무불이행과 손해배상); 민법 제393조(손해배상의 범위). 여행사 귀책과 별도 숙박비의 특별손해 예견가능성이 핵심이다. 불가항력 취소인지, 별도 예약을 알렸는지 및 환불 가능성을 확인한다. 부득이한 사유가 확인되면 제674조의4가 추가 참고근거이지만 질문에 그 사유가 확정되지 않아 최소 gold에서는 제외한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-053",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:000500",
+                            "civil:284415:000600",
+                            "civil:284415:001700",
+                            "civil:284415:014100"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제5조(미성년자의 능력); 민법 제6조(처분을 허락한 재산); 민법 제17조(제한능력자의 속임수); 민법 제141조(취소의 효과). 미성년 계약 취소·처분 허락 재산과 속임수 예외 및 원상회복 범위. 결제 주체·동의·나이와 사용 이익을 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-054",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/채권의공정한추심에관한법률"
+                       ],
+        "reason":  "민법 제428조·제430조 등의 보증채무 부종성은 corpus에 있으나 반복 추심 중단에는 채권추심법 제5조 채무확인서 요청, 제9조 금지행위 등 특별법 확인이 필요하다. 실제 변제 증빙과 추심자 유형을 확인한다.",
+        "requiredLaws":  [
+                             "채권의 공정한 추심에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-055",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "rehabilitation:290631:059300",
+                            "rehabilitation:290631:060000",
+                            "rehabilitation:290631:061500"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290631\u0026chrClsCd=010202\u0026efYd=20261002"
+                       ],
+        "reason":  "채무자 회생 및 파산에 관한 법률 제593조(중지명령); 채무자 회생 및 파산에 관한 법률 제600조(다른 절차의 중지 등); 채무자 회생 및 파산에 관한 법률 제615조(변제계획인가의 효력). 신청·중지명령·개시결정·변제계획 인가에 따른 정지와 실효를 구분한다. 개인회생 신청만으로 급여 압류가 즉시 해제되는 구조가 아니다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-056",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "criminal:290185:034700",
+                            "criminalprocedure:290189:022300",
+                            "civil:284415:054400",
+                            "civil:284415:054800"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290185\u0026chrClsCd=010202\u0026efYd=20261002",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290189\u0026chrClsCd=010202\u0026efYd=20261002"
+                       ],
+        "reason":  "형법 제347조(사기); 형사소송법 제223조(고소권자); 민법 제544조(이행지체와 해제); 민법 제548조(해제의 효과, 원상회복의무). 처음부터 편취 의사 있었는지 형사 사기와 민사 이행지체·해제·반환을 구분하며 병행 가능성의 근거를 매핑한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-057",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/precInfoP.do?mode=0\u0026precSeq=221985"
+                       ],
+        "reason":  "방문판매법 제8조·제9조의 기간 내 청약철회 경로는 corpus에 있지만 치매로 계약 내용을 이해하기 어려웠다는 핵심 사정에 대한 의사능력 판단·무효 판례가 누락되어 있다. 민법 제9조·제10조를 적용할 성년후견 심판 사실을 가정할 수 없다. 의사능력은 계약의 법적 의미·효과를 이해했는지 개별 판단한다(대법원 판례 precSeq=221985 및 그 인용판례). 부분적 대체경로만으로 완전 in_corpus로 분류하지 않는다.",
+        "requiredLaws":  [
+                             "민법 의사능력 판단 및 의사무능력 법률행위 무효 판례"
+                         ]
+    },
+    {
+        "id":  "ind-058",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:020400",
+                            "civil:284415:020500",
+                            "criminal:290185:031900",
+                            "criminal:290185:032300"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317",
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290185\u0026chrClsCd=010202\u0026efYd=20261002"
+                       ],
+        "reason":  "민법 제204조(점유의 회수); 민법 제205조(점유의 보유); 형법 제319조(주거침입, 퇴거불응); 형법 제323조(권리행사방해). 점유 회수·방해제거 및 주거침입·권리행사방해 가능성을 검토한다. 차임 연체가 강제 퇴거·짐 반출을 당연히 정당화하지 않는다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-059",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civil:284415:075000",
+                            "civil:284415:075800",
+                            "civil:284415:076300",
+                            "civil:284415:039600"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=284415\u0026chrClsCd=010202\u0026efYd=20260317"
+                       ],
+        "reason":  "민법 제750조(불법행위의 내용); 민법 제758조(공작물등의 점유자, 소유자의 책임); 민법 제763조(준용규정); 민법 제396조(과실상계). 관리상 과실·공작물 하자 및 피해자 과실상계. 표지판의 존재만으로 책임이 당연히 면제되지 않으며 위치·시인성·바닥 상태를 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-060",
+        "cohort":  "in_corpus",
+        "goldUnitIds":  [
+                            "civilprocedure:290113:047000",
+                            "civilprocedure:290113:047200",
+                            "civilprocedure:290113:047400"
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290113\u0026chrClsCd=010202\u0026efYd=20261002"
+                       ],
+        "reason":  "민사소송법 제470조(이의신청의 효력); 민사소송법 제472조(소송으로의 이행); 민사소송법 제474조(지급명령의 효력). 적법 기간 내 지급명령 이의신청과 소송절차 이행·확정 효과를 구분한다. 실제 송달일과 다투는 금액을 확인한다. 근거 버전은 unitId의 mst 및 sourceUrl의 lsiSeq에 고정한다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-061",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/상속세및증여세법",
+                           "https://www.law.go.kr/법령/소득세법",
+                           "https://www.law.go.kr/법령/지방세법"
+                       ],
+        "reason":  "상증세법 제47조 부담부증여 과세가액, 소득세법 제88조 부담부증여의 유상양도 부분, 지방세법 제7조·제11조 취득세가 핵심이다. 지방세기본법만으로 세목별 과세를 설명할 수 없다. 채무 인수·부모 채무 입증 및 주택 요건 확인이 필요하다.",
+        "requiredLaws":  [
+                             "상속세 및 증여세법",
+                             "소득세법",
+                             "지방세법"
+                         ]
+    },
+    {
+        "id":  "ind-062",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/상속세및증여세법",
+                           "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202\u0026lsJoLnkSeq=1029615479"
+                       ],
+        "reason":  "2026-01-02 시행 법률 제21065호 제13조 사전증여재산의 상속세 과세가액 합산이 핵심이다. 수증자가 상속인인지·증여 시점·재산 유형을 확인한다.",
+        "requiredLaws":  [
+                             "상속세 및 증여세법"
+                         ]
+    },
+    {
+        "id":  "ind-063",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/상속세및증여세법"
+                       ],
+        "reason":  "상증세법 제46조 제5호 피부양자 생활비 등 비과세와 제53조 증여재산 공제가 핵심이다. 실제 부양 필요·소비 용도와 자산 축적 여부에 따라 달라진다.",
+        "requiredLaws":  [
+                             "상속세 및 증여세법"
+                         ]
+    },
+    {
+        "id":  "ind-064",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/소득세법",
+                           "https://www.law.go.kr/법령/국제조세조정에관한법률"
+                       ],
+        "reason":  "소득세법의 가상자산 소득 과세 규정 및 부칙의 시행시기, 국제조세조정법 제53조 해외금융계좌 신고와 가상자산계좌 포함 여부가 필요하다. 거래연도·거주자성·월말잔액·계좌 구조를 확인하며 과세시기 수치 답변은 생성하지 않는다.",
+        "requiredLaws":  [
+                             "소득세법",
+                             "국제조세조정에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-065",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/특허법",
+                           "https://law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202\u0026lsJoLnkSeq=1030489237"
+                       ],
+        "reason":  "2025-11-11 시행 특허법 제29조 신규성·진보성과 제30조 공지예외 및 제출 절차가 핵심이다. 공개일·공개 주체·공개 방식과 앱 기능의 발명 해당성을 확인한다.",
+        "requiredLaws":  [
+                             "특허법"
+                         ]
+    },
+    {
+        "id":  "ind-066",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/상표법",
+                           "https://www.law.go.kr/법령/부정경쟁방지및영업비밀보호에관한법률",
+                           "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1021821857"
+                       ],
+        "reason":  "상표법 제58조 손실보상청구권, 제89조 상표권 효력과 부정경쟁방지법 제2조·제4조의 주지표지 보호를 구분해야 한다. 출원·공고·등록 시점, 인지도와 상품·서비스 유사성이 필요하다.",
+        "requiredLaws":  [
+                             "상표법",
+                             "부정경쟁방지 및 영업비밀보호에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-067",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/발명진흥법",
+                           "https://www.law.go.kr/법령/특허법"
+                       ],
+        "reason":  "발명진흥법 제10조~제13조 직무발명 권리 귀속·통지·승계와 특허법 제33조 특허받을 권리가 핵심이다. 직무·발명 완성일·직무발명 규정·사용자 승계 여부를 확인한다.",
+        "requiredLaws":  [
+                             "발명진흥법",
+                             "특허법"
+                         ]
+    },
+    {
+        "id":  "ind-068",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/출입국관리법"
+                       ],
+        "reason":  "출입국관리법 제21조 근무처 변경·추가, 제24조 체류자격 변경허가와 시행령상 자격별 요건이 필요하다. 현재 자격과 새 업무·고용주에 따라 허가/신고 순서가 달라진다.",
+        "requiredLaws":  [
+                             "출입국관리법"
+                         ]
+    },
+    {
+        "id":  "ind-069",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/출입국관리법",
+                           "https://www.law.go.kr/법령/출입국관리법시행령"
+                       ],
+        "reason":  "출입국관리법 제20조 체류자격 외 활동허가 및 시행령 제25조, 유학 자격별 허용활동 규정이 필요하다. 유학 세부 자격·시간제취업 허가와 배달 업무 허용 여부를 확인한다.",
+        "requiredLaws":  [
+                             "출입국관리법",
+                             "출입국관리법 시행령"
+                         ]
+    },
+    {
+        "id":  "ind-070",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/출입국관리법",
+                           "https://www.law.go.kr/법령/출입국관리법시행령"
+                       ],
+        "reason":  "출입국관리법 제25조 체류기간 연장허가와 시행령의 결혼이민 자격 유지 요건이 핵심이다. 질문자가 어느 배우자인지, 실제 국적·체류자격·별거 사유·자녀·혼인 상태 확인도 필요하다.",
+        "requiredLaws":  [
+                             "출입국관리법",
+                             "출입국관리법 시행령"
+                         ]
+    },
+    {
+        "id":  "ind-071",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/병역법",
+                           "https://www.law.go.kr/법령/국적법",
+                           "https://www.law.go.kr/법령/재외동포의출입국과법적지위에관한법률"
+                       ],
+        "reason":  "병역법 제70조 국외여행 허가와 국외이주 관련 특례, 국적법 제12조 국적선택, 재외동포법 제5조 체류자격 제한 등 적용 검토가 필요하다. 나이·한국국적 보유·출생·거주 이력 없이 특정 결론을 내릴 수 없다.",
+        "requiredLaws":  [
+                             "병역법",
+                             "국적법",
+                             "재외동포의 출입국과 법적 지위에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-072",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/병역법",
+                           "https://www.law.go.kr/법령/병역법시행령"
+                       ],
+        "reason":  "병역법 제60조·제61조 입영 연기와 시행령 제124조 학교별 제한연령·제129조 입영일 연기가 필요하다. 대학원 과정·연령·질병 상태·입영일과 증빙을 확인한다.",
+        "requiredLaws":  [
+                             "병역법",
+                             "병역법 시행령"
+                         ]
+    },
+    {
+        "id":  "ind-073",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/어선원및어선재해보상보험법",
+                           "https://www.law.go.kr/법령/선원법",
+                           "https://www.law.go.kr/법령/산업재해보상보험법"
+                       ],
+        "reason":  "어선원재해보험법 제6조 적용범위·제21조 요양급여 등과 선원법 제94조 이하 재해보상, 산재보험법 제6조의 적용제외 관계를 확인해야 한다. 어선 규모·등록·승선 및 고용관계가 필요하다.",
+        "requiredLaws":  [
+                             "어선원 및 어선 재해보상보험법",
+                             "선원법",
+                             "산업재해보상보험법"
+                         ]
+    },
+    {
+        "id":  "ind-074",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/상법"
+                       ],
+        "reason":  "상법 제795조 운송인의 주의의무와 제796조 면책, 제797조 책임한도·제814조 제척기간 등 해상운송 특별규정이 필요하다. 선하증권·운송구간·준거법·화물 손상 시점·통지와 포장 상태를 확인한다.",
+        "requiredLaws":  [
+                             "상법"
+                         ]
+    },
+    {
+        "id":  "ind-075",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/농지법"
+                       ],
+        "reason":  "농지법 제6조 소유 제한의 상속 예외, 제7조 소유상한·제23조 임대차 허용 등이 핵심이다. 상속 면적·농업경영 여부·처분·임대 계획을 확인한다.",
+        "requiredLaws":  [
+                             "농지법"
+                         ]
+    },
+    {
+        "id":  "ind-076",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/소음ㆍ진동관리법",
+                           "https://www.law.go.kr/법령/산업집적활성화및공장설립에관한법률"
+                       ],
+        "reason":  "소음ㆍ진동관리법 제8조 배출시설 신고·허가, 제14조 가동개시 신고·제21조 생활소음 규제와 공장설립법 제13조 승인·제15조 완료신고 관계가 필요하다. 공장 증설 승인만으로 모든 환경절차가 끝났다고 볼 수 없다. 시설 종류·입지와 소음 배출시설 해당성을 확인한다.",
+        "requiredLaws":  [
+                             "소음ㆍ진동관리법",
+                             "산업집적활성화 및 공장설립에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-077",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/의료법",
+                           "https://www.law.go.kr/법령/의료사고피해구제및의료분쟁조정등에관한법률"
+                       ],
+        "reason":  "의료법 제21조 진료기록 열람·사본과 의료분쟁조정법 제27조 조정 신청, 감정 관련 규정이 핵심이다. 민법상 손해배상이나 개인정보 열람 조문만으로 전문 의료감정·조정 절차를 대체할 수 없다.",
+        "requiredLaws":  [
+                             "의료법",
+                             "의료사고 피해구제 및 의료분쟁 조정 등에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-078",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/상법",
+                           "https://www.law.go.kr/법령/벤처투자촉진에관한법률",
+                           "https://www.law.go.kr/법령/벤처투자촉진에관한법률시행령"
+                       ],
+        "reason":  "민법 제428조의2 보증 방식과 제428조의3 근보증 한도는 corpus에 있지만 투자계약상 회사·대표 책임 분리에는 상법 제331조 주주 유한책임·제401조 이사 제3자 책임과 투자자 유형별 연대책임 제한의 적용을 검토해야 한다. 벤처투자법·시행령의 현행 행위제한 적용 범위는 별도 확인이 필요하며 투자 유형 미확인 상태에서 특정 조항 번호를 확정하지 않는다. 투자 형태·투자자 자격·보증 문구·예외 귀책사유가 필요하다.",
+        "requiredLaws":  [
+                             "상법",
+                             "벤처투자 촉진에 관한 법률",
+                             "벤처투자 촉진에 관한 법률 시행령"
+                         ]
+    },
+    {
+        "id":  "ind-079",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/국가를당사자로하는계약에관한법률",
+                           "https://www.law.go.kr/법령/지방자치단체를당사자로하는계약에관한법률",
+                           "https://www.law.go.kr/법령/공공기관의운영에관한법률"
+                       ],
+        "reason":  "국가계약법 제27조 및 시행령 제76조, 지방계약법 제31조, 공공기관운영법 제39조의 제재·입찰참가 제한 체계와 기관 간 효력 범위를 구분해야 한다. 처분기관·법적 근거·효력 발생일·집행정지 여부를 확인한다.",
+        "requiredLaws":  [
+                             "국가를 당사자로 하는 계약에 관한 법률",
+                             "지방자치단체를 당사자로 하는 계약에 관한 법률",
+                             "공공기관의 운영에 관한 법률"
+                         ]
+    },
+    {
+        "id":  "ind-080",
+        "cohort":  "missing_corpus",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+                           "https://www.law.go.kr/법령/화장품법",
+                           "https://www.law.go.kr/법령/화장품법시행규칙"
+                       ],
+        "reason":  "화장품법 제3조 책임판매업 등록, 제4조 기능성화장품 심사·보고, 제10조 표시·제12조 기재상 주의 등이 핵심이다. 수입자 역할·제품 유형·성분·기능성 및 통관 요건을 확인하며 전자상거래법 신고만으로 충분하지 않다.",
+        "requiredLaws":  [
+                             "화장품법",
+                             "화장품법 시행규칙"
+                         ]
+    },
+    {
+        "id":  "ind-081",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-082",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-083",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-084",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-085",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-086",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-087",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-088",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-089",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-090",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "외국 관할의 현지 법률·절차를 직접 요청한다. 대한민국 법령 frozen corpus로 현지법 정답을 지원할 수 없다. 한국인 또는 한국 귀국이라는 요소만으로 국내법 문제로 바꾸지 않는다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-091",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "개인 사건·신청의 현재 진행상태 실시간 조회 요청이다. 인증된 사건정보·행정시스템 접근이 필요하며 법령 검색 corpus로 결과를 확인할 수 없다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-092",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "개인 사건·신청의 현재 진행상태 실시간 조회 요청이다. 인증된 사건정보·행정시스템 접근이 필요하며 법령 검색 corpus로 결과를 확인할 수 없다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-093",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "개인 사건·신청의 현재 진행상태 실시간 조회 요청이다. 인증된 사건정보·행정시스템 접근이 필요하며 법령 검색 corpus로 결과를 확인할 수 없다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-094",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "개인 사건·신청의 현재 진행상태 실시간 조회 요청이다. 인증된 사건정보·행정시스템 접근이 필요하며 법령 검색 corpus로 결과를 확인할 수 없다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-095",
+        "cohort":  "unsupported",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "개인 사건·신청의 현재 진행상태 실시간 조회 요청이다. 인증된 사건정보·행정시스템 접근이 필요하며 법령 검색 corpus로 결과를 확인할 수 없다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-096",
+        "cohort":  "needs_clarification",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "계약 종류·체결 경위·당사자·취소 사유·날짜가 없어 적용할 취소·철회·해제 규정을 특정할 수 없다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-097",
+        "cohort":  "needs_clarification",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "피상속인과의 관계·다른 상속인·배우자·상속재산·채무·유언·특별수익 등이 없어 상속분을 특정할 수 없다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-098",
+        "cohort":  "needs_clarification",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "근로자성·사업장 규모·고용형태·해고일·사유·절차·근속기간 확인이 필요하다. 부당해고 정답을 특정할 핵심 사실을 명시적으로 보류한 질문이다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-099",
+        "cohort":  "needs_clarification",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "채권 발생 원인·당사자·변제기·증거·시효 관련 날짜를 확인해야 하므로 소송 가능성의 특정 정답과 최소 근거조문을 확정할 수 없다.",
+        "requiredLaws":  [
+
+                         ]
+    },
+    {
+        "id":  "ind-100",
+        "cohort":  "needs_clarification",
+        "goldUnitIds":  [
+
+                        ],
+        "sourceUrls":  [
+
+                       ],
+        "reason":  "사진의 저작자·촬영 대상·이용 허락·공개 상태·이용 목적을 확인해야 한다. 핵심 사실 확인 전 저작권·초상권·개인정보 규정을 임의로 고를 수 없다.",
+        "requiredLaws":  [
+
+                         ]
+    }
+]
