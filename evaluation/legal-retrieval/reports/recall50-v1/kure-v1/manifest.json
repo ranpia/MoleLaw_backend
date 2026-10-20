@@ -1,0 +1,66 @@
+{
+    "id":  "recall50-v1",
+    "goldQuestionsSha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB",
+    "baselineQueriesSha256":  "49EAD3847681FEE4CE7D487B4ED30E382E91A4BB29E70353DDB04929E6402CA5",
+    "modelRevision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+    "maxRank":  50,
+    "positiveQuestions":  36,
+    "queryModes":  [
+                       "original",
+                       "rewritten",
+                       "legal_transformed"
+                   ],
+    "sizes":  [
+                  300,
+                  500,
+                  700
+              ],
+    "sources":  [
+                    {
+                        "size":  300,
+                        "query":  "molelaw_independent_kure_v1_b2b30df8",
+                        "document":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58",
+                        "freeze":  "266C332B0331CFBA0950B116BAA2D131E6840A0B4B6ED049B152DE97E26BB356",
+                        "modes":  [
+                                      "original",
+                                      "rewritten"
+                                  ],
+                        "corpus":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659"
+                    },
+                    {
+                        "size":  300,
+                        "query":  "molelaw_legal_query_kure_v1_a15c853e",
+                        "document":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58",
+                        "freeze":  "A15C853E79D1DB17926CA563C386D8F1A7E92DC2DFD710DA43958442957BABC9",
+                        "modes":  [
+                                      "legal_transformed"
+                                  ],
+                        "corpus":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659"
+                    },
+                    {
+                        "size":  500,
+                        "query":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58_queries",
+                        "document":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58",
+                        "freeze":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+                        "modes":  [
+                                      "original",
+                                      "rewritten",
+                                      "legal_transformed"
+                                  ],
+                        "corpus":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E"
+                    },
+                    {
+                        "size":  700,
+                        "query":  "molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58_queries",
+                        "document":  "molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58",
+                        "freeze":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+                        "modes":  [
+                                      "original",
+                                      "rewritten",
+                                      "legal_transformed"
+                                  ],
+                        "corpus":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0"
+                    }
+                ],
+    "policy":  "Exploratory candidate coverage; same vectors and gold; no model inference or threshold tuning"
+}

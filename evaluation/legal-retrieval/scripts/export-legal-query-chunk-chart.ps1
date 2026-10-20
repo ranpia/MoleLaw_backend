@@ -10,15 +10,15 @@ try{
  $chart.Width=1600;$chart.Height=740;$chart.BackColor=[Drawing.Color]::White;$chart.AntiAliasing='All'
  $title=$chart.Titles.Add('KURE · 청크 크기와 질의 변환 비교');$title.Font=[Drawing.Font]::new('Malgun Gothic',24)
  $sub=$chart.Titles.Add('동일 원문 6,527개 단위 · 코퍼스 내 질문 36개 · 중복 64자 · 고정 정답 기준');$sub.Font=[Drawing.Font]::new('Malgun Gothic',13)
- $legend=$chart.Legends.Add('modes');$legend.Docking='Bottom';$legend.Font=[Drawing.Font]::new('Malgun Gothic',12)
+ $legend=$chart.Legends.Add('modes');$legend.Docking='Bottom';$legend.Font=[Drawing.Font]::new('Malgun Gothic',11)
  $labels=@{original='원본';rewritten='기존 의미 보존 정제';legal_transformed='법률 쟁점 중심 변환'};$colors=@{original='SlateGray';rewritten='RoyalBlue';legal_transformed='SeaGreen'}
- foreach($spec in @(@{key='recallAt5';title='필요 근거 회수율 (Recall@5)';max=100;factor=100;format="0.00'%'"},@{key='mrrAt10';title='첫 정답 순위 (MRR@10)';max=1;factor=1;format='0.0000'})){
-  $area=$chart.ChartAreas.Add($spec.key);$area.Position=[System.Windows.Forms.DataVisualization.Charting.ElementPosition]::new($(if($spec.key -eq 'recallAt5'){3}else{52}),20,46,61)
+ foreach($spec in @(@{key='hitAt5';title='정답을 하나 이상 찾은 질문 (Hit@5)';max=100;factor=100;format="0.0'%'"},@{key='completeAt5';title='필요 근거를 전부 찾은 질문 (Complete@5)';max=100;factor=100;format="0.0'%'"})){
+  $area=$chart.ChartAreas.Add($spec.key);$area.Position=[System.Windows.Forms.DataVisualization.Charting.ElementPosition]::new($(if($spec.key -eq 'hitAt5'){3}else{52}),20,46,61)
   $area.AxisY.Minimum=0;$area.AxisY.Maximum=$spec.max;$area.AxisY.MajorGrid.LineColor=[Drawing.Color]::LightGray;$area.AxisX.MajorGrid.Enabled=$false;$area.AxisX.Interval=1;$area.AxisX.LabelStyle.Font=[Drawing.Font]::new('Malgun Gothic',13)
   $area.AxisY.LabelStyle.Format=$(if($spec.factor -eq 100){"0'%'"}else{'0.0'})
   $caption=$chart.Titles.Add($spec.title);$caption.DockedToChartArea=$spec.key;$caption.Font=[Drawing.Font]::new('Malgun Gothic',16)
   foreach($mode in @('original','rewritten','legal_transformed')){
-   $series=$chart.Series.Add($spec.key+'-'+$mode);$series.ChartArea=$spec.key;$series.ChartType='Column';$series.Color=[Drawing.Color]::FromName($colors[$mode]);$series.LegendText=$labels[$mode];$series.IsVisibleInLegend=$spec.key -eq 'recallAt5';$series.IsValueShownAsLabel=$true;$series.SmartLabelStyle.Enabled=$false;$series.LabelFormat=$spec.format;$series.Font=[Drawing.Font]::new('Malgun Gothic',12)
+   $series=$chart.Series.Add($spec.key+'-'+$mode);$series.ChartArea=$spec.key;$series.ChartType='Column';$series.Color=[Drawing.Color]::FromName($colors[$mode]);$series.LegendText=$labels[$mode];$series.IsVisibleInLegend=$spec.key -eq 'hitAt5';$series.IsValueShownAsLabel=$true;$series.SmartLabelStyle.Enabled=$false;$series.LabelFormat=$spec.format;$series.Font=[Drawing.Font]::new('Malgun Gothic',11)
    foreach($size in @(300,500,700)){$matches=@($rows|Where-Object {$_.queryMode -eq $mode -and [int]$_.maxChars -eq $size});if($matches.Count -ne 1){throw 'Missing chart configuration'};$null=$series.Points.AddXY("${size}자",$spec.factor*[double]$matches[0].($spec.key))}
   }
  }
