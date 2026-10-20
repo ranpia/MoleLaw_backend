@@ -1,0 +1,29 @@
+{
+    "id":  "legal-query-chunks-v1",
+    "sourceCorpusSha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+    "sourceUnitsSha256":  "0bbe79049c3a2fbb7ebd1f974cb284249b64c19bb5b674abdc48a160d415c726",
+    "questionCount":  100,
+    "modelRevision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+    "dimensions":  1024,
+    "overlapChars":  64,
+    "sizes":  [
+                  {
+                      "maxChars":  500,
+                      "corpusSha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                      "chunkCount":  8286,
+                      "collection":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58"
+                  },
+                  {
+                      "maxChars":  700,
+                      "corpusSha256":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0",
+                      "chunkCount":  7396,
+                      "collection":  "molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58"
+                  }
+              ],
+    "transformsSha256":  "47E88701CE6F47F4C6C052BB9B60F66A91743ABB6756117540179729AA367031",
+    "transformManifestSha256":  "A15C853E79D1DB17926CA563C386D8F1A7E92DC2DFD710DA43958442957BABC9",
+    "questionsSha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB",
+    "baseline300ReportSha256":  "F973CF9097DE33CFE0724F3C495D4003A1655B2E3FF0FC0BF19AED0B57AE4E89",
+    "baseline300QueriesSha256":  "6F092852F42670426807EA07CCB93DA8AA07C5C796D5565E794A1C2C6DCEC7C1",
+    "baseline300Top10Sha256":  "1E3D025CF9D015C42869F31C134878D0670C9E1506FC466A528F19C3F416076B"
+}
