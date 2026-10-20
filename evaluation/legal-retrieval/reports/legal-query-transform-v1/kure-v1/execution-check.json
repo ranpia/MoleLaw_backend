@@ -1,0 +1,63 @@
+{
+    "checkedAtUtc":  "2026-10-20T00:46:42.2757161Z",
+    "passed":  true,
+    "reviewer":  "independent execution-check agent",
+    "manifestSha256":  "A15C853E79D1DB17926CA563C386D8F1A7E92DC2DFD710DA43958442957BABC9",
+    "transformsSha256":  "47E88701CE6F47F4C6C052BB9B60F66A91743ABB6756117540179729AA367031",
+    "queryRows":  300,
+    "top10Rows":  3000,
+    "baselineQueryRowsCompared":  200,
+    "baselineTop10RowsCompared":  2000,
+    "baselineAllFieldsEqual":  true,
+    "numericComparisonTolerance":  1E-12,
+    "newModeQueryRows":  100,
+    "allModesHaveUnique100IdsAndRanks1Through10":  true,
+    "qdrantQueryCollection":  "molelaw_legal_query_kure_v1_a15c853e",
+    "qdrantPointCount":  100,
+    "qdrantMetadataMatched":  true,
+    "all100PayloadsComparedWithCsv":  true,
+    "all100VectorsFiniteUnitNormalized1024":  true,
+    "sampleSelection":  "Lexicographically first query ID in each of in_corpus, missing_corpus, unsupported",
+    "sampleChecks":  [
+                         {
+                             "queryId":  "ind-001",
+                             "cohort":  "in_corpus",
+                             "cacheVectorMaxAbsDifference":  3.5791778568716737E-09,
+                             "exactTop10UnitOrderMatches":  true,
+                             "exactTop10MaxScoreDifference":  0
+                         },
+                         {
+                             "queryId":  "ind-007",
+                             "cohort":  "missing_corpus",
+                             "cacheVectorMaxAbsDifference":  3.6960792482165772E-09,
+                             "exactTop10UnitOrderMatches":  true,
+                             "exactTop10MaxScoreDifference":  0
+                         },
+                         {
+                             "queryId":  "ind-081",
+                             "cohort":  "unsupported",
+                             "cacheVectorMaxAbsDifference":  3.5780525209361258E-09,
+                             "exactTop10UnitOrderMatches":  true,
+                             "exactTop10MaxScoreDifference":  0
+                         }
+                     ],
+    "inferenceInvoked":  false,
+    "limitations":  [
+                        "Read-only re-search used existing query vectors; model embedding inference was not rerun.",
+                        "Three exact-search/cache samples only, not all 100 queries.",
+                        "Gold labels and legal adequacy were not independently adjudicated.",
+                        "This is exploratory tuning on known questions, not a new independent holdout or service LLM prompt evaluation."
+                    ],
+    "frozenInputShaFieldsChecked":  [
+                                        "auditSha256",
+                                        "authoredQuestionsSha256",
+                                        "baselineManifestSha256",
+                                        "baselineQueriesSha256",
+                                        "baselineTop10Sha256",
+                                        "corpusSha256",
+                                        "originalQuestionsSha256",
+                                        "transformsSha256"
+                                    ],
+    "documentCollectionMetadataMatched":  true,
+    "documentPointCount":  10999
+}
