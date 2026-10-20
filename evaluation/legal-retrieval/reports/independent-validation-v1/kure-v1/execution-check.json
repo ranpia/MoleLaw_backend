@@ -1,0 +1,77 @@
+{
+    "checkedAtUtc":  "2026-10-20T00:28:20.5744225Z",
+    "reviewer":  "independent_runner",
+    "scope":  "Read-only post-run execution audit: first three in-corpus rewritten queries; not an exhaustive 200-query audit",
+    "additionalModelInferenceRun":  false,
+    "inputsOrOriginalReportsModified":  false,
+    "documentCollection":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58",
+    "queryCollection":  "molelaw_independent_kure_v1_b2b30df8",
+    "documentIdentityMatches":  true,
+    "runtimeMatchesPinnedBaseline":  true,
+    "runtime":  {
+                    "version":  "sentence-transformers/6.1.0;torch/2.14.1+cpu;transformers/5.20.0",
+                    "runtime":  "sentence-transformers",
+                    "revision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                    "dtype":  "float32",
+                    "device":  "cpu"
+                },
+    "cacheMetadata":  {
+                          "runtime":  "sentence-transformers/6.1.0;torch/2.14.1+cpu;transformers/5.20.0",
+                          "modelRevision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                          "dtype":  "float32",
+                          "inputMode":  "kure-st-cls-normalized-v1",
+                          "questionsSha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB"
+                      },
+    "profile":  {
+                    "tag":  "kure-v1:official",
+                    "inputMode":  "kure-st-cls-normalized-v1",
+                    "dimensions":  1024,
+                    "queryFormat":  "{text}",
+                    "revision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                    "documentFormat":  "{title}\n{text}"
+                },
+    "cacheRuntimeAndModelMatch":  true,
+    "staticMappingReview":  "Query inputs formatted with fixed queryFormat, SHA256 UTF8 keyed; sorted batch keys map response embeddings by unchanged index; cache normalizes vectors and Qdrant cosine normalizes again. Gold matching uses exact unit IDs.",
+    "samples":  [
+                    {
+                        "queryId":  "ind-001",
+                        "queryMode":  "rewritten",
+                        "cacheArchiveMaxAbsoluteVectorDelta":  4.4453811742783955E-09,
+                        "exactTop10IdsMatch":  true,
+                        "goldIdsMatch":  true,
+                        "retrievalTextMatches":  true,
+                        "top1UnitId":  "housing:276291:000302",
+                        "top1QdrantScore":  0.6571224,
+                        "top1UnitChunkCount":  8,
+                        "top1DirectMaximumChunkCosine":  0.657122368401868,
+                        "absoluteCosineScoreDelta":  3.1598131999821533E-08
+                    },
+                    {
+                        "queryId":  "ind-002",
+                        "queryMode":  "rewritten",
+                        "cacheArchiveMaxAbsoluteVectorDelta":  4.1847992016119662E-09,
+                        "exactTop10IdsMatch":  true,
+                        "goldIdsMatch":  true,
+                        "retrievalTextMatches":  true,
+                        "top1UnitId":  "commercial-decree:287139:000800",
+                        "top1QdrantScore":  0.50204885,
+                        "top1UnitChunkCount":  3,
+                        "top1DirectMaximumChunkCosine":  0.50204883440473036,
+                        "absoluteCosineScoreDelta":  1.5595269631241138E-08
+                    },
+                    {
+                        "queryId":  "ind-003",
+                        "queryMode":  "rewritten",
+                        "cacheArchiveMaxAbsoluteVectorDelta":  4.4144058131134756E-09,
+                        "exactTop10IdsMatch":  true,
+                        "goldIdsMatch":  true,
+                        "retrievalTextMatches":  true,
+                        "top1UnitId":  "housing:276291:000603",
+                        "top1QdrantScore":  0.6102164,
+                        "top1UnitChunkCount":  6,
+                        "top1DirectMaximumChunkCosine":  0.610216400575528,
+                        "absoluteCosineScoreDelta":  5.7552795862392259E-10
+                    }
+                ],
+    "conclusion":  "No execution mapping, collection identity, cached vector, sampled gold ID or sampled exact ranking mismatch found. Observed cosine differences are below 4e-8. This does not establish gold completeness or eliminate all model inference errors. MRR@10 here is not the earlier full-rank MRR."
+}
