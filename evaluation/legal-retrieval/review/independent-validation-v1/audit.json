@@ -1,0 +1,144 @@
+﻿{
+    "completed":  true,
+    "reviewedCount":  100,
+    "rewriteReviewedCount":  100,
+    "goldReviewedCount":  100,
+    "unresolvedIds":  [
+
+                      ],
+    "rewriteFindings":  [
+
+                        ],
+    "goldFindings":  [
+                         {
+                             "issue":  "곰팡이 수선과 무관한 연대채무자 무효·취소 조문 포함",
+                             "status":  "resolved",
+                             "id":  "ind-002"
+                         },
+                         {
+                             "issue":  "준비시간 인정 질문에 연장수당 조문 과대 포함",
+                             "status":  "resolved",
+                             "id":  "ind-013"
+                         },
+                         {
+                             "issue":  "인도 완료된 매장 구매에 해약금 조문 과대 포함 및 의복류 환급 기준 누락 상태의 in_corpus 분류",
+                             "status":  "resolved",
+                             "id":  "ind-050"
+                         },
+                         {
+                             "issue":  "부득이한 사유가 확인되지 않았는데 해당 해지 조문을 필수 gold로 포함",
+                             "status":  "resolved",
+                             "id":  "ind-052"
+                         },
+                         {
+                             "issue":  "후견 심판 사실 없이 후견 조문 포함 및 치매 의사능력 판례 누락 상태의 in_corpus 분류",
+                             "status":  "resolved",
+                             "id":  "ind-057"
+                         }
+                     ],
+    "changes":  [
+                    {
+                        "reason":  "무관한 민법415조를 임차인 귀책 손해배상390조로 교체",
+                        "before":  [
+                                       "civil:284415:062300",
+                                       "civil:284415:041500"
+                                   ],
+                        "id":  "ind-002",
+                        "after":  [
+                                      "civil:284415:062300",
+                                      "civil:284415:039000"
+                                  ]
+                    },
+                    {
+                        "reason":  "최소 근거인 근로시간 조문만 유지",
+                        "before":  [
+                                       "labor:285279:005000",
+                                       "labor:285279:005600"
+                                   ],
+                        "id":  "ind-013",
+                        "after":  [
+                                      "labor:285279:005000"
+                                  ]
+                    },
+                    {
+                        "id":  "ind-050",
+                        "afterCohort":  "missing_corpus",
+                        "beforeCohort":  "in_corpus",
+                        "reason":  "565조 제외 후 의복류 소비자분쟁해결기준 누락을 분류에 반영; 부모·gold담당 합의",
+                        "intermediate":  [
+                                             "civil:284415:056300",
+                                             "consumer:283837:001600"
+                                         ],
+                        "before":  [
+                                       "civil:284415:056300",
+                                       "civil:284415:056500",
+                                       "consumer:283837:001600"
+                                   ],
+                        "after":  [
+
+                                  ]
+                    },
+                    {
+                        "reason":  "674의4는 사유 확인시 추가 참고로만 reason에 유지",
+                        "before":  [
+                                       "civil:284415:039000",
+                                       "civil:284415:039300",
+                                       "civil:284415:067404"
+                                   ],
+                        "id":  "ind-052",
+                        "after":  [
+                                      "civil:284415:039000",
+                                      "civil:284415:039300"
+                                  ]
+                    },
+                    {
+                        "id":  "ind-057",
+                        "afterCohort":  "missing_corpus",
+                        "beforeCohort":  "in_corpus",
+                        "reason":  "후견9·10 제외 후 치매 의사능력·무효 판례 누락을 분류에 반영; 부모·gold담당 합의",
+                        "intermediate":  [
+                                             "door:290239:000800",
+                                             "door:290239:000900"
+                                         ],
+                        "before":  [
+                                       "door:290239:000800",
+                                       "door:290239:000900",
+                                       "civil:284415:000900",
+                                       "civil:284415:001000"
+                                   ],
+                        "after":  [
+
+                                  ]
+                    },
+                    {
+                        "id":  "ind-078",
+                        "reason":  "gold담당 자체 재확인: 부정확한 벤처투자법67조 인용 제거, 상법331·401 및 투자유형별 특별규정 확인 한계 기록"
+                    },
+                    {
+                        "id":  "ind-043",
+                        "reason":  "gold담당 공식 경찰수사규칙 별지10호 참고인 조사 변호인참여준용 서식 링크 추가"
+                    },
+                    {
+                        "id":  "sourceUrls",
+                        "reason":  "gold담당 in_corpus sourceUrls의 literal unicode ampersand 표기를 정상화"
+                    }
+                ],
+    "reviewedHashes":  {
+                           "authored-questions.json":  "6FA0336B5126F35C200AB841499525B0F02EE66E8460591F57B67C9F6A4891E0",
+                           "rewrites.json":  "7B09200422B5852A9B693102A3485C95D6A66ADE481C29B311F319E7D835DC27",
+                           "gold-review.json":  "8DFB13FA1E87DC60F4262B7E8DB5768BE3A6F32C08707391C947D3A772BFDF58"
+                       },
+    "cohortCounts":  {
+                         "unsupported":  15,
+                         "missing_corpus":  44,
+                         "in_corpus":  36,
+                         "needs_clarification":  5
+                     },
+    "limitations":  [
+                        "기존 평가질문·성능결과·검색결과를 열람하지 않았으며 임베딩검색을 실행하지 않았다. 원본질문과 정제문은 수정하지 않았다.",
+                        "100개 원본/정제 의미보존을 검수하고 gold 분류·근거 적절성을 공식 고정 corpus-unit-inventory 원문과 대조했다. 외부 특별법·판례 공식출처 추가 확인은 gold담당의 검증 결과를 함께 사용했다.",
+                        "조건부 일반 답변이 가능해도 핵심 특별기준·판례가 누락된 ind-050/057은 완전한 in_corpus에서 제외했다.",
+                        "ind-070은 질문자 국적·체류자격과 어느 배우자인지 모호하며 reason의 추가 사실확인 요구를 유지했다.",
+                        "in_corpus는 추가 사실확인 없이 특정 결론을 확정할 수 있다는 뜻이 아니다. 고정 gold 외 합리적 근거가 존재할 수 있으며 사람 법률전문가의 검증을 대체하지 않는다."
+                    ]
+}

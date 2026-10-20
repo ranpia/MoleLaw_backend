@@ -1,0 +1,9 @@
+{
+    "authoredSha256":  "6FA0336B5126F35C200AB841499525B0F02EE66E8460591F57B67C9F6A4891E0",
+    "recordedAtUtc":  "2026-10-20T00:15:55.0952104Z",
+    "questionCount":  100,
+    "legacyExactDuplicates":  0,
+    "authorHistoryFork":  "none",
+    "authorRestrictions":  "No previous question/gold/source/result reading; no browsing or inference calls",
+    "note":  "Self-reported role isolation; same model family, not human blind evaluation"
+}
