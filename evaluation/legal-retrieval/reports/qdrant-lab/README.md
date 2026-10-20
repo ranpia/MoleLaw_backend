@@ -155,3 +155,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 ## 법률 쟁점 질의 변환 아카이브 (2026-10-20)
 
 원래 확대 문서 10,999개를 재사용하고 새 질의 벡터·원본·변환문·고정 정답·상위 10개·지표 100개를 `molelaw_legal_query_kure_v1_a15c853e`에 저장했다. 원본·기존 정제 200건은 이전 결과를 읽어 비교했으며 새 컬렉션에 중복 저장하지 않았다. [결과·검증 근거](../legal-query-transform-v1/kure-v1/interpretation.md)를 참고한다.
+
+## 500·700자 추가 비교 아카이브 (2026-10-20)
+
+같은 원문과 기존 질문 벡터를 사용해 두 크기를 순차 평가했다. 완료 보고서 기준 문서·질문 컬렉션은 다음과 같다.
+
+| 문자 | 문서 컬렉션 | 문서 수 | 질문 수 |
+| ---: | --- | ---: | ---: |
+| 500 | `molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58` | 8286 | 300 |
+| 700 | `molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58` | 7396 | 300 |
+
+질문 컬렉션은 각 문서 컬렉션 이름에 `_queries`를 붙인다. 기존 300자 결과 300개는 읽어 통합 비교했으며 새 두 컬렉션에 같은 질문 벡터로 각 크기 검색 결과를 저장했다. 기존 문서·질문 컬렉션은 보존했다. [집계·검증 범위](../legal-query-chunks-v1/kure-v1/interpretation.md)를 참고한다.

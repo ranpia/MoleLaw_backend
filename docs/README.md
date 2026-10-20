@@ -18,6 +18,7 @@
 | 개선 전 인증 위험과 설계 근거 | [JWT 보안 검토](jwt-security-review.md) |
 | 수집·청킹·벡터 검색·근거·Advisor | [RAG·ETL 계획](plans/rag-etl.md) |
 | 주 법령 20개·보충 근거·질문 110개의 임베딩 검색 평가 | [검색 평가 실행 안내](../evaluation/legal-retrieval/README.md) |
+| 동일한 새 질문·세 입력의 300·500·700자 효과 | [질의·청크 추가 비교](../evaluation/legal-retrieval/reports/legal-query-chunks-v1/kure-v1/interpretation.md) |
 | 원본·문장 정제·법률 쟁점 변환의 검색 효과 | [단일 질의 변환 비교](../evaluation/legal-retrieval/reports/legal-query-transform-v1/kure-v1/interpretation.md) |
 | 독립 작성 100문항 결과·정답지 한계·서비스 적용 보류 | [독립 질문 검증](../evaluation/legal-retrieval/reports/independent-validation-v1/kure-v1/interpretation.md) |
 | 실험 최종 결론·확대 검증·한계 | [임베딩 실험 최종 정리](../evaluation/legal-retrieval/reports/final-summary.md) |

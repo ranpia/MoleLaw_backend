@@ -1,0 +1,94 @@
+{
+    "checkedAtUtc":  "2026-10-20T01:44:01.0071088Z",
+    "passed":  true,
+    "reviewer":  "independent execution-check agent",
+    "manifestSha256":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+    "transformsSha256":  "47E88701CE6F47F4C6C052BB9B60F66A91743ABB6756117540179729AA367031",
+    "queryRows":  900,
+    "top10Rows":  9000,
+    "summaryRows":  36,
+    "baseline300QueryRowsCompared":  300,
+    "baseline300Top10RowsCompared":  3000,
+    "baselineAllFieldsEqual":  true,
+    "numericComparisonTolerance":  1E-12,
+    "all9SizeModeGroupsHave100UniqueIdsAndRanks1Through10":  true,
+    "sourceArchivePointCount":  300,
+    "sourceArchiveFreezeAndMetadataMatched":  true,
+    "frozenInputShaFieldsChecked":  [
+                                        "baseline300QueriesSha256",
+                                        "baseline300ReportSha256",
+                                        "baseline300Top10Sha256",
+                                        "questionsSha256",
+                                        "sourceCorpusSha256",
+                                        "transformManifestSha256",
+                                        "transformsSha256"
+                                    ],
+    "sizeChecks":  [
+                       {
+                           "maxChars":  500,
+                           "queryRows":  300,
+                           "top10Rows":  3000,
+                           "summaryRows":  12,
+                           "individualReportsMatchCombined":  true,
+                           "documentCollection":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58",
+                           "documentPointCount":  8286,
+                           "queryCollection":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58_queries",
+                           "queryPointCount":  300,
+                           "metadataMatched":  true,
+                           "all300PayloadsComparedWithCsv":  true,
+                           "all300QueryVectorsComparedWithSourceArchive":  true,
+                           "queryVectorMaxAbsDifference":  0,
+                           "exactReSearchSamples":  [
+                                                        {
+                                                            "queryId":  "ind-001",
+                                                            "queryMode":  "original",
+                                                            "exactTop10UnitOrderMatches":  true,
+                                                            "exactTop10MaxScoreDifference":  0
+                                                        },
+                                                        {
+                                                            "queryId":  "ind-001",
+                                                            "queryMode":  "legal_transformed",
+                                                            "exactTop10UnitOrderMatches":  true,
+                                                            "exactTop10MaxScoreDifference":  0
+                                                        }
+                                                    ]
+                       },
+                       {
+                           "maxChars":  700,
+                           "queryRows":  300,
+                           "top10Rows":  3000,
+                           "summaryRows":  12,
+                           "individualReportsMatchCombined":  true,
+                           "documentCollection":  "molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58",
+                           "documentPointCount":  7396,
+                           "queryCollection":  "molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58_queries",
+                           "queryPointCount":  300,
+                           "metadataMatched":  true,
+                           "all300PayloadsComparedWithCsv":  true,
+                           "all300QueryVectorsComparedWithSourceArchive":  true,
+                           "queryVectorMaxAbsDifference":  0,
+                           "exactReSearchSamples":  [
+                                                        {
+                                                            "queryId":  "ind-001",
+                                                            "queryMode":  "original",
+                                                            "exactTop10UnitOrderMatches":  true,
+                                                            "exactTop10MaxScoreDifference":  0
+                                                        },
+                                                        {
+                                                            "queryId":  "ind-001",
+                                                            "queryMode":  "legal_transformed",
+                                                            "exactTop10UnitOrderMatches":  true,
+                                                            "exactTop10MaxScoreDifference":  0
+                                                        }
+                                                    ]
+                       }
+                   ],
+    "inferenceInvoked":  false,
+    "limitations":  [
+                        "No model inference was rerun; existing Qdrant vectors and exact search were checked.",
+                        "All 600 newly archived query vectors were compared with the original 300-query archives; exact search was rechecked for only 2 queries per size.",
+                        "Document collection point counts and metadata were checked; every stored document vector was not independently re-embedded.",
+                        "Ground-truth legal adequacy and alternative relevant articles were not re-adjudicated.",
+                        "Existing known questions and tuned query transformations do not constitute a new blind holdout or actual service LLM evaluation."
+                    ]
+}

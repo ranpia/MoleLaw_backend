@@ -42,3 +42,7 @@ Start-Process powershell.exe -ArgumentList @('-NoExit','-NoProfile','-ExecutionP
 ## 해석의 한계
 
 이 질문셋은 이미 결과와 임계값을 보고 전략을 설계한 튜닝 자료다. 질문과 정답을 고정해도 새로운 독립 held-out 평가가 되지 않는다. 크기 변경 효과를 확인하고 실제 답변 정확도·서비스 LLM 변환 품질·근거 충분성 판단·운영 최적값으로 확대 해석하지 않는다. 원문과 질문을 보고 만든 고정 정답의 대체 근거 누락 가능성도 유지한다. 서비스 준비 상태는 false다.
+
+## 실행 완료
+
+500자 평가·저장 후 700자를 순차 평가했고 통합 900개 질문·9,000개 순위 행·36개 집계를 보존했다. 실제 신규 문서 입력은 500자 1,206개·700자 680개였다. 모델은 완료 후 중지했다. [집계](../../reports/legal-query-chunks-v1/kure-v1/README.md)와 [그래프·해석](../../reports/legal-query-chunks-v1/kure-v1/interpretation.md)을 참고한다.
