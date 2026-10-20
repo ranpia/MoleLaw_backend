@@ -89,7 +89,9 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 [모델·청크·질문 정제 통합 비교](evaluation/legal-retrieval/reports/chunk-experiments/comparison.md)는 완료된 구성에 동일한 원본·정제 질문 110개를 적용합니다. 주요 검색 지표는 Qdrant 전수 검색 결과이며, 전체 순위 MRR은 기존 전체 순위 평가 원자료를 Qdrant에 저장해 집계합니다. 검색 시간은 임베딩·정제·답변 생성을 제외한 과거 상세 측정 기록으로 구분합니다.
 
-정제 입력의 개발용 Recall@5는 KURE 300문자(75.17%)가 가장 높았습니다. Gemma는 세 크기 모두 72.00%, BGE-M3는 500문자(72.67%)가 해당 모델 안에서 가장 높았습니다. 원본 입력과 유리한 청크가 달라 모델·질문 입력 방식·청크를 함께 비교해야 합니다. 대화형 LLM이 작성한 고정 정제본을 재사용한 탐색 실험이며 자동 정제 API의 시간·비용이나 독립 블라인드 검증을 뜻하지 않습니다. 검증용 결과와 전체 MRR·nDCG·근거 전체 회수율은 통합 표에서 함께 확인할 수 있습니다. 기존 [700문자 상세 비교](evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md)도 보존했습니다.
+2026-10-20 후속 독립 질문 검증에서는 고정 정답 기준 정제 Recall@5가 16.44%여서 서비스 적용 확정은 보류했습니다. [독립 결과와 정답지 한계](evaluation/legal-retrieval/reports/independent-validation-v1/kure-v1/interpretation.md)를 먼저 참고하세요.
+
+아래 기존 비교에서 정제 입력의 개발용 Recall@5는 KURE 300문자(75.17%)가 가장 높았습니다. Gemma는 세 크기 모두 72.00%, BGE-M3는 500문자(72.67%)가 해당 모델 안에서 가장 높았습니다. 원본 입력과 유리한 청크가 달라 모델·질문 입력 방식·청크를 함께 비교해야 합니다. 대화형 LLM이 작성한 고정 정제본을 재사용한 탐색 실험이며 자동 정제 API의 시간·비용이나 독립 블라인드 검증을 뜻하지 않습니다. 검증용 결과와 전체 MRR·nDCG·근거 전체 회수율은 통합 표에서 함께 확인할 수 있습니다. 기존 [700문자 상세 비교](evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md)도 보존했습니다.
 
 실험 자료는 Qdrant에서 관리합니다. 법령 컬렉션과 별도로 모델별 질문 컬렉션에 원본·정제 질문 벡터, 정답 조문 ID, 300·500·700문자 검색 상위 10개와 유사도·평가지표를 저장합니다. 로컬·Qdrant 정확도 비교는 주요 표에서 제외하고 상세 기록으로 보존합니다. [Qwen3 실행 조건](docker/qwen3/README.md)을 참고하세요.
 
@@ -260,3 +262,7 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 ### KURE 최종 확대 검증 완료 (2026-10-19)
 
 주 법령 30개·질문 270개·10,999개 청크의 사전 고정 검색 기준을 모두 통과해 KURE-v1 1024차원·300자·중복 64자와 질문 정제 구성을 유지한다. 신규 정제 Recall@5 99.17%, Complete@5 98.33%, 기존 검증용 정제 Recall@5 80.52%다. 신규 질문은 원문을 보고 작성한 표적 평가이며, 음성 오수용률 27.5%는 유사도 기준값 통과율이다. 실제 LLM 판단·답변과 운영 준비는 별도 검증 대상이다. [최종 정리와 한계](evaluation/legal-retrieval/reports/final-summary.md)를 참고한다.
+
+### 독립 질문 검증 완료 (2026-10-20)
+
+기존 평가 자료를 읽지 않은 역할이 작성한 100문항을 별도 정답 검수 후 평가했습니다. 코퍼스 내 36문항의 고정 정답 기준 정제 Recall@5는 16.44%, 근거 전체 확보율은 8.33%(3/36)입니다. 정답 목록 외 관련 조문이 검색되는 사례도 있어 실제 답변 실패율과 같지는 않습니다. KURE를 기존 비교의 기준 모델로 보존하되 서비스 적용 확정은 보류합니다. 앞선 원문 기반 확대 검증 99.17%를 서비스 일반 성능으로 해석하지 않습니다. [결과와 한계](evaluation/legal-retrieval/reports/independent-validation-v1/kure-v1/interpretation.md)를 참고하세요.

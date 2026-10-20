@@ -51,3 +51,7 @@ Start-Process powershell.exe -ArgumentList @('-NoExit','-NoProfile','-ExecutionP
 독립 검수에서 정답 관련 5문항을 수정했고 원본 질문과 정제문은 변경하지 않았다. 최종 분류는 코퍼스 내 36개, 추가 자료 필요 44개, 지원 범위 밖 15개, 사실 부족 5개다. 정제와 정답 100개 전수 검수 및 미해결 항목 0개를 확인했다. [고정 입력](../../data/independent-validation-v1/manifest.json), [검수와 변경 이력](audit.json)을 참고한다.
 
 모델 실행 전 사전 검사에서 manifest의 분류 집계 메타데이터 오류를 수정했고 manifest에 이전 해시와 수정 사유를 기록했다. 질문·정제·정답·기준값은 변경하지 않았다. 고정 입력과 검토 파일 무결성 검사를 통과한 뒤 실행한다.
+
+## 실행 완료
+
+2026-10-20 원본·정제 200회 검색을 완료했다. 코퍼스 내 36문항의 정제 Recall@5는 16.44%, Complete@5는 8.33%, MRR@10은 0.1463이다. 고정 입력과 정답을 변경하지 않았으며 KURE는 종료했다. [집계](../../reports/independent-validation-v1/kure-v1/README.md)와 [해석·한계](../../reports/independent-validation-v1/kure-v1/interpretation.md)를 참고한다.

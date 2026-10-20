@@ -1,6 +1,6 @@
 # KURE-v1 법령 검색 평가
 
-최종 상태: KURE-v1 1024차원·300자·중복 64자·질문 정제를 선정했고 확대 검증의 사전 검색 기준을 모두 통과했다. [최종 요약](../final-summary.md)과 [확대 결과](../final-validation-v1/kure-v1/README.md)를 먼저 참고한다. 아래 청크별 비교와 초기 원본 질문 기록은 당시 범위의 결과다.
+현재 상태: 기존 비교에서 KURE-v1 1024차원·300자·중복 64자·질문 정제를 선정했고 원문 기반 확대 검증의 사전 검색 기준을 통과했다. 이후 독립 질문에서는 고정 정답 기준 정제 Recall@5 16.44%, Complete@5 8.33%여서 서비스 적용은 보류한다. [독립 결과와 한계](../independent-validation-v1/kure-v1/interpretation.md)를 함께 읽는다. [최종 요약](../final-summary.md)과 [확대 결과](../final-validation-v1/kure-v1/README.md)를 먼저 참고한다. 아래 청크별 비교와 초기 원본 질문 기록은 당시 범위의 결과다.
 
 ## 300·500·700문자 정제 질문 비교
 

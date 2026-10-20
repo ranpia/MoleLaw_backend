@@ -147,3 +147,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File evaluation/legal-retrieval/s
 2026-10-19: Gemma·BGE-M3 각각 6,031개, 합계 12,062개 벡터 적재 완료. 두 모델의 문서 벡터 검증과 실제 질문 검색을 확인했다. Gemma는 재적재 후에도 6,031개로 유지되어 중복 방지를 확인했다. 기존 Qdrant에는 컬렉션이 없었으며 이번 작업에서는 실험 컬렉션만 생성했다. 전체 평가 지표는 [원본 질문 비교](../comparison.md), [정제 질문 비교](../query-rewrite-v1/comparison.md)를 참고한다.
 
 이어서 KURE-v1 6,031개를 추가해 총 18,093개를 세 컬렉션에 보관한다. KURE의 원본·정제 질문에서 전수·근사 검색의 상위 10개 조문은 각각 99.82%·99.91% 일치했고 질문별 Recall@5는 모두 유지됐다. 실험 후 KURE 어댑터는 중지하고 모델 볼륨·캐시·Qdrant 컬렉션은 보존한다.
+
+## 독립 질문 검증 아카이브 (2026-10-20)
+
+기존 확대 문서 컬렉션 10,999포인트를 읽고 새 질문·벡터·정답·점수·상위 10개를 별도 컬렉션에 저장했다. 문서 재색인은 하지 않았다. 질문 컬렉션은 `molelaw_independent_kure_v1_b2b30df8`이며 실행 후 정확한 건수 200포인트와 manifest 해시를 확인했다. [집계·해석](../independent-validation-v1/kure-v1/interpretation.md)을 참고한다. 기존 모델별 질문 880포인트 및 확대 검증 질문 540포인트와 섞어 기존 12개 구성 비교를 재집계하지 않는다.
