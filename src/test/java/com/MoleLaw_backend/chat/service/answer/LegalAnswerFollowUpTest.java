@@ -15,6 +15,8 @@ import com.MoleLaw_backend.common.ai.exception.GptApiException;
 import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.user.entity.User;
+import com.MoleLaw_backend.law.service.LegalEvidenceCollector;
+import org.springframework.ai.chat.client.ChatClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,22 +35,25 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class FollowUpAnswerServiceTest {
+class LegalAnswerFollowUpTest {
     private static final String EVIDENCE_ID = "00000000-0000-0000-0000-000000000001";
     private static final String CITED_ANSWER = "new answer [[" + EVIDENCE_ID + "]]";
     private final MessageRepository messages = mock(MessageRepository.class);
     private final ChatRoomRepository rooms = mock(ChatRoomRepository.class);
     private final ChatModel model = mock(ChatModel.class);
     private final ChatEvidenceService evidence = mock(ChatEvidenceService.class);
-    private FollowUpAnswerService service;
+    private final LegalEvidenceCollector collector = mock(LegalEvidenceCollector.class);
+    private LegalAnswerService service;
 
     @BeforeEach
     void setUp() {
         var memory = new PersistedChatMemory(messages, rooms, 20);
         var builder = new AiConfig().baseAiChatClientBuilder(model);
         var config = new AnswerChatClientConfig();
-        service = new FollowUpAnswerService(config.followUpAnswerChatClient(
-                config.legalAnswerChatClient(builder, 0.3, 4096, mock(com.MoleLaw_backend.common.ai.AiPrompts.class)), memory), evidence, new CitationValidator(), new EvidencePromptBuilder());
+        service = new LegalAnswerService(collector, mock(ChatClient.class),
+                config.followUpAnswerChatClient(config.legalAnswerChatClient(builder, 0.3, 4096,
+                        mock(com.MoleLaw_backend.common.ai.AiPrompts.class)), memory), evidence,
+                new EvidencePromptBuilder(), new CitationValidator(), new EvidenceRenderer());
         when(evidence.load(1L, 2L)).thenReturn(List.of(new EvidenceItem(EVIDENCE_ID,
                 "LAW_CHUNK", "law-1", "Civil law article", "https://www.law.go.kr/law/1", "original statute text")));
     }
@@ -63,7 +68,7 @@ class FollowUpAnswerServiceTest {
         when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(
                 List.of(new Generation(new AssistantMessage(CITED_ANSWER)))));
 
-        assertThat(service.generateAnswerWithContext(1L, 2L, "current question").getAnswer())
+        assertThat(service.answerFollowUp(1L, 2L, "current question").getAnswer())
                 .isEqualTo(CITED_ANSWER);
         ArgumentCaptor<Prompt> prompt = ArgumentCaptor.forClass(Prompt.class);
         verify(model).call(prompt.capture());
@@ -77,6 +82,7 @@ class FollowUpAnswerServiceTest {
         assertThat(texts).doesNotContain("private metadata");
         verify(messages, never()).save(any());
         verify(messages, never()).deleteAll();
+        verifyNoInteractions(collector);
     }
 
     @Test
@@ -84,7 +90,7 @@ class FollowUpAnswerServiceTest {
         when(evidence.load(1L, 2L)).thenThrow(new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS));
         when(rooms.findById(2L)).thenReturn(Optional.of(ChatRoom.builder()
                 .id(2L).user(User.builder().id(9L).build()).build()));
-        assertThatThrownBy(() -> service.generateAnswerWithContext(1L, 2L, "question"))
+        assertThatThrownBy(() -> service.answerFollowUp(1L, 2L, "question"))
                 .isInstanceOf(MolelawException.class);
         verifyNoInteractions(messages);
         verify(model, never()).call(any(Prompt.class));
@@ -103,7 +109,7 @@ class FollowUpAnswerServiceTest {
     @Test
     void missingSnapshotStopsBeforeHistoryAndProvider() {
         when(evidence.load(1L, 2L)).thenThrow(new MolelawException(ErrorCode.GPT_API_FAILURE));
-        assertThatThrownBy(() -> service.generateAnswerWithContext(1L, 2L, "question"))
+        assertThatThrownBy(() -> service.answerFollowUp(1L, 2L, "question"))
                 .isInstanceOf(MolelawException.class);
         verifyNoInteractions(messages);
         verify(model, never()).call(any(Prompt.class));
@@ -114,7 +120,7 @@ class FollowUpAnswerServiceTest {
         when(messages.findByChatRoomIdOrderByTimestampAsc(2L)).thenReturn(List.of());
         when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(
                 List.of(new Generation(new AssistantMessage(answer)))));
-        assertThatThrownBy(() -> service.generateAnswerWithContext(1L, 2L, "question"))
+        assertThatThrownBy(() -> service.answerFollowUp(1L, 2L, "question"))
                 .isInstanceOf(GptApiException.class);
         verify(messages, never()).save(any());
         verify(evidence, never()).freeze(any(), any());
@@ -125,7 +131,7 @@ class FollowUpAnswerServiceTest {
         ownRoom();
         when(messages.findByChatRoomIdOrderByTimestampAsc(2L)).thenReturn(List.of());
         when(model.call(any(Prompt.class))).thenThrow(new IllegalStateException("provider failure"));
-        assertThatThrownBy(() -> service.generateAnswerWithContext(1L, 2L, "question"))
+        assertThatThrownBy(() -> service.answerFollowUp(1L, 2L, "question"))
                 .isInstanceOf(GptApiException.class);
         verify(messages).findByChatRoomIdOrderByTimestampAsc(2L);
         verifyNoMoreInteractions(messages);

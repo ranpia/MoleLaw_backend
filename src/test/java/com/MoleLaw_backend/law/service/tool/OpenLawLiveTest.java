@@ -55,7 +55,7 @@ class OpenLawLiveTest {
         try {
             var testController = new com.MoleLaw_backend.law.controller.TestController(laws,
                     mock(com.MoleLaw_backend.law.service.ExtractKeyword.class),
-                    mock(com.MoleLaw_backend.chat.service.answer.InitialAnswerService.class),
+                    mock(com.MoleLaw_backend.chat.service.answer.LegalAnswerService.class),
                     new com.MoleLaw_backend.law.service.CaseSearchServiceImpl(cases, mapper),
                     mock(com.MoleLaw_backend.law.service.LawEmbeddingService.class));
             var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(testController).build();

@@ -11,7 +11,7 @@ import com.MoleLaw_backend.law.dto.response.LawDto;
 import com.MoleLaw_backend.law.dto.response.PrecedentDetailResponse;
 import com.MoleLaw_backend.law.service.CaseSearchService;
 import com.MoleLaw_backend.law.service.ExtractKeyword;
-import com.MoleLaw_backend.chat.service.answer.InitialAnswerService;
+import com.MoleLaw_backend.chat.service.answer.LegalAnswerService;
 import com.MoleLaw_backend.law.service.LawEmbeddingService;
 import com.MoleLaw_backend.law.service.LawSearchService;
 import com.MoleLaw_backend.auth.security.CustomUserDetails;
@@ -38,7 +38,7 @@ public class TestController {
 
     private final LawSearchService lawSearchService;
     private final ExtractKeyword extractKeyword;
-    private final InitialAnswerService initialAnswers;
+    private final LegalAnswerService initialAnswers;
     private final CaseSearchService caseSearchService;
     private final LawEmbeddingService lawEmbeddingService;
 

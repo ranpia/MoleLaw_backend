@@ -69,11 +69,13 @@ Advisor 연결: 후속 Client만 MessageChatMemoryAdvisor를 사용한다. 기�
 
 답변 분리·정리 검증: `test bootJar` 통과(일반 226개 중 225개 통과·선택 Postman 1개 건너뜀). 최초·후속 모델 호출을 별도 서비스로 옮기고 근거 수집·프롬프트·서버 출처 표시를 분리했다. 미사용 DTO 3개와 조회 메서드·일반 텍스트 호출·미사용 필드/인자를 제거했다. 마지막 RAG 생성자·Swagger 샘플 정리도 해당 기능·OpenAPI 테스트와 JAR 재생성으로 검증했다.
 
+서비스 단순화: 최초·후속 생성 서비스는 `LegalAnswerService`로, 저장 서비스는 `ChatTurnService`로 통합했다. `ChatService`의 의존성은 7개에서 5개로 줄이고 소유권 검사와 모델 호출·검증 중복을 제거했다. 각 저장 공개 메서드의 트랜잭션, 초기/후속 Client 분리와 근거 검증은 유지한다. 최종 `test bootJar`는 231개 중 230개 통과·선택 Postman 1개 건너뜀, JAR 생성 통과다. H2에서 후속 두 메시지 저장과 중간 실패 롤백, 비인증 조회·삭제와 타인 방 삭제 차단을 추가 검증했다.
+
 독립 벡터 Tool을 기존 상담 흐름에 연결하는 시점은 별도 결정한다. LLM 역할 분리 전후 HTTP 응답 계약을 유지하며 다음 항목은 후속 계획이다.
 
 1. **계약:** 질문·근거·대화 입력과 답변·인용 ID·근거 부족 여부를 정의한다.
 2. **수집 Client 연결:** 미연결 근거 수집 Client의 구조화 판단과 Tool 실행 서비스를 연결한다. 최초·후속 답변 Client 연결은 완료했다.
-3. **역할 경계 유지:** `LegalEvidenceCollector`, `InitialAnswerService`, `FollowUpAnswerService`, `EvidencePromptBuilder`, `EvidenceRenderer`, `CitationValidator`를 분리했다. 향후 키워드 추출 재구성이나 근거 수집 반복에서 책임을 다시 합치지 않는다.
+3. **역할 경계 유지:** `ChatService`(조정·권한), `LegalAnswerService`(생성·검증), `ChatTurnService`(저장)를 중심으로 정리했다. 근거 수집·메모리·스냅샷·포맷팅·인용 검증은 별도 책임을 유지하며 같은 흐름의 중복 서비스는 만들지 않는다.
 4. **기준선:** 고정 근거로 단일 LLM의 정상 답변·근거 부족·잘못된 인용·실패를 검증한다. 실제 검색 품질과 답변 품질을 분리해 평가한다.
 5. **대화:** 구현된 Advisor·근거 스냅샷·성공 턴 저장에 토큰 예산과 동시 요청 제어를 보강한다. 멀티 에이전트는 이후 단계다.
 

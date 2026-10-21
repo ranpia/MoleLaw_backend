@@ -6,7 +6,7 @@
 
 ## 현재 개발 기준
 
-2026-10-21: 답변은 `InitialAnswerService`·`FollowUpAnswerService`로 분리했고 근거 수집·프롬프트·출처 표시를 별도 클래스로 관리한다. 최초 Client는 메모리가 없고 후속 Client만 `MessageChatMemoryAdvisor`로 DB 대화를 복원한다. 키워드 추출과 미연결 근거 수집 Client에도 메모리를 붙이지 않는다. [역할별 Client·저장·권한 계약](role-chat-clients.md)을 따른다.
+2026-10-21: 서비스는 `ChatService`(조정·권한) → `LegalAnswerService`(생성·검증) → `ChatTurnService`(원자적 저장)로 정리했다. 근거 수집·프롬프트·출처 표시는 별도 책임으로 유지한다. 최초 Client는 메모리가 없고 후속 Client만 `MessageChatMemoryAdvisor`로 DB 대화를 복원한다. 키워드 추출과 미연결 근거 수집 Client에는 메모리를 붙이지 않는다. [역할별 Client·저장·권한 계약](role-chat-clients.md)을 따른다.
 
 패키지는 `auth`, `user`, `chat`, `law`, `common`으로 구성하며 [도메인 구조 스킬](../.agents/skills/domain-structure/SKILL.md)을 따른다. 법령 Tool 구현은 `law.service.tool`, 인증 구현은 `auth.security`와 `auth.oauth`에 있다.
 
