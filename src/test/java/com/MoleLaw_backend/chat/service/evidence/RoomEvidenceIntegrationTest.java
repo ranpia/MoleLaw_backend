@@ -4,7 +4,7 @@ import com.MoleLaw_backend.chat.entity.ChatRoom;
 import com.MoleLaw_backend.chat.repository.ChatEvidenceSnapshotRepository;
 import com.MoleLaw_backend.chat.repository.ChatRoomRepository;
 import com.MoleLaw_backend.chat.repository.MessageRepository;
-import com.MoleLaw_backend.chat.service.InitialChatPersistenceService;
+import com.MoleLaw_backend.chat.service.ChatTurnService;
 import com.MoleLaw_backend.chat.dto.response.GptAnswerResponse;
 import com.MoleLaw_backend.chat.util.EncryptUtil;
 import com.MoleLaw_backend.chat.service.answer.PreparedLegalAnswer;
@@ -34,14 +34,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest(properties = "spring.datasource.url=jdbc:h2:mem:room-evidence-test;MODE=MySQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-@Import({ChatEvidenceService.class, InitialChatPersistenceService.class, RoomEvidenceIntegrationTest.JsonConfiguration.class})
+@Import({ChatEvidenceService.class, ChatTurnService.class, RoomEvidenceIntegrationTest.JsonConfiguration.class})
 class RoomEvidenceIntegrationTest {
     @Autowired private ChatEvidenceService service;
     @Autowired private ChatEvidenceSnapshotRepository snapshots;
     @Autowired private ChatRoomRepository rooms;
     @Autowired private EntityManager entityManager;
     @Autowired private PlatformTransactionManager transactions;
-    @Autowired private InitialChatPersistenceService initialTurns;
+    @Autowired private ChatTurnService initialTurns;
     @Autowired private MessageRepository messages;
 
     @Test
@@ -131,7 +131,7 @@ class RoomEvidenceIntegrationTest {
         long snapshotCount = snapshots.count();
         long messageCount = messages.count();
         try {
-            assertThatThrownBy(() -> initialTurns.save(user, "failed", "question",
+            assertThatThrownBy(() -> initialTurns.saveInitialTurn(user, "failed", "question",
                     new PreparedLegalAnswer(new GptAnswerResponse("answer", "info"), List.of())))
                     .isInstanceOf(MolelawException.class);
             assertThat(rooms.count()).isEqualTo(roomCount);
@@ -146,7 +146,7 @@ class RoomEvidenceIntegrationTest {
     @Test
     void initialPersistenceSavesSnapshotAndThreeEncryptedMessages() {
         ChatRoom seed = room();
-        ChatRoom created = initialTurns.save(seed.getUser(), "new room", "first question",
+        ChatRoom created = initialTurns.saveInitialTurn(seed.getUser(), "new room", "first question",
                 new PreparedLegalAnswer(new GptAnswerResponse("cited answer", "source info"), evidence()));
         entityManager.flush();
         entityManager.clear();
@@ -158,6 +158,41 @@ class RoomEvidenceIntegrationTest {
                 .containsExactly("first question", "cited answer", "source info");
         assertThat(storedMessages).extracting(com.MoleLaw_backend.chat.entity.Message::getContent)
                 .doesNotContain("first question", "cited answer", "source info");
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void failedFollowUpRollsBackAlreadyInsertedQuestion() {
+        ChatRoom room = new TransactionTemplate(transactions).execute(status -> room());
+        long messageCount = messages.count();
+        try {
+            // The question insert succeeds before encryption of the invalid answer fails.
+            assertThatThrownBy(() -> initialTurns.saveFollowUpTurn(room, "new question", null))
+                    .isInstanceOf(RuntimeException.class);
+            assertThat(messages.findByChatRoomIdOrderByTimestampAsc(room.getId())).isEmpty();
+            assertThat(messages.count()).isEqualTo(messageCount);
+        } finally {
+            new TransactionTemplate(transactions).executeWithoutResult(status -> {
+                rooms.deleteById(room.getId());
+                rooms.flush();
+                entityManager.remove(entityManager.find(User.class, room.getUser().getId()));
+            });
+        }
+    }
+
+    @Test
+    void successfulFollowUpSavesBothEncryptedMessages() {
+        ChatRoom room = room();
+        initialTurns.saveFollowUpTurn(room, "new question", "new answer");
+        entityManager.flush();
+        entityManager.clear();
+        var stored = messages.findByChatRoomIdOrderByTimestampAsc(room.getId());
+        assertThat(stored).hasSize(2);
+        assertThat(stored).extracting(message -> EncryptUtil.decrypt(message.getContent()))
+                .containsExactly("new question", "new answer");
+        assertThat(stored).extracting(com.MoleLaw_backend.chat.entity.Message::getSender)
+                .containsExactly(com.MoleLaw_backend.chat.entity.Message.Sender.USER,
+                        com.MoleLaw_backend.chat.entity.Message.Sender.BOT);
     }
 
     private ChatRoom room() {

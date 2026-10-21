@@ -3,7 +3,7 @@ package com.MoleLaw_backend.law.controller;
 import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
 import com.MoleLaw_backend.law.service.CaseSearchService;
 import com.MoleLaw_backend.law.service.ExtractKeyword;
-import com.MoleLaw_backend.chat.service.answer.InitialAnswerService;
+import com.MoleLaw_backend.chat.service.answer.LegalAnswerService;
 import com.MoleLaw_backend.law.service.LawEmbeddingService;
 import com.MoleLaw_backend.law.service.LawSearchService;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@ class TestControllerTest {
     @BeforeEach
     void setUp() {
         mvc = MockMvcBuilders.standaloneSetup(new TestController(laws, mock(ExtractKeyword.class),
-                        mock(InitialAnswerService.class), mock(CaseSearchService.class), mock(LawEmbeddingService.class)))
+                        mock(LegalAnswerService.class), mock(CaseSearchService.class), mock(LawEmbeddingService.class)))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 

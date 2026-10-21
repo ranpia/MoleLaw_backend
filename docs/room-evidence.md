@@ -2,9 +2,9 @@
 
 ## 저장과 사용
 
-`LegalEvidenceCollector.collect`가 실제 사용할 법령 청크와 판례 목록 메타데이터를 `EvidenceItem`으로 복사하고 `InitialAnswerService.prepareAnswer`가 최초 답변을 생성합니다. 각 항목은 서버가 만든 UUID, 종류, 원본 식별자, 제목, 출처 URL, 사용한 본문을 갖습니다. 법령 청크는 전체 법령 원문을 의미하지 않으며 `CASE_METADATA`는 판시사항·판결 이유의 근거가 아닙니다.
+`LegalEvidenceCollector.collect`가 실제 사용할 법령 청크와 판례 목록 메타데이터를 `EvidenceItem`으로 복사하고 `LegalAnswerService.prepareInitialAnswer`가 최초 답변을 생성합니다. 각 항목은 서버가 만든 UUID, 종류, 원본 식별자, 제목, 출처 URL, 사용한 본문을 갖습니다. 법령 청크는 전체 법령 원문을 의미하지 않으며 `CASE_METADATA`는 판시사항·판결 이유의 근거가 아닙니다.
 
-모델이 이 ID로 인용한 답변을 생성하면 서버가 검증합니다. `InitialChatPersistenceService`는 모델 호출이 끝난 후 방·근거·암호화된 USER/BOT/INFO를 한 트랜잭션으로 저장합니다. 실패하면 방도 남기지 않습니다. 근거가 없으면 최초 답변을 생성하지 않습니다.
+모델이 이 ID로 인용한 답변을 생성하면 서버가 검증합니다. `ChatTurnService.saveInitialTurn`은 모델 호출이 끝난 후 방·근거·암호화된 USER/BOT/INFO를 한 트랜잭션으로 저장합니다. 실패하면 방도 남기지 않습니다. 후속 USER/BOT도 같은 서비스의 별도 공개 트랜잭션에서 함께 저장합니다. 근거가 없으면 최초 답변을 생성하지 않습니다.
 
 `chat_evidence_snapshot`은 `room_id` 기본 키로 방당 한 행만 보관합니다. 최초 근거 JSON·SHA-256·저장 시각을 고정하고 덮어쓰지 않습니다. 최대 100항목·UTF-8 JSON 2MiB이며 방을 삭제하면 함께 삭제합니다. 업무 DB의 기존 법령 청크나 벡터 색인이 바뀌어도 이 사본은 바뀌지 않습니다. Flyway V2로 테이블을 생성합니다.
 

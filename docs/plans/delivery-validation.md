@@ -48,7 +48,7 @@ MySQL 초기 기반: 기존 데이터 이관 없이 Flyway V1으로 빈 DB를 �
 
 ## 배포·기존 코드 정리
 
-`FinalAnswer`는 제거하고 `LegalEvidenceCollector`·`InitialAnswerService`·`FollowUpAnswerService`·`EvidencePromptBuilder`·`EvidenceRenderer`로 책임을 분리했다. 목록 N+1·정렬·지연 로딩·암호화 키 관리는 후속 점검 대상이다. 긴 외부 호출은 DB 트랜잭션 밖에서 실행한다.
+`FinalAnswer`는 제거했고 `ChatService`(조정)·`LegalAnswerService`(생성/검증)·`ChatTurnService`(저장)로 정리했다. 근거 수집·프롬프트·출처 표시는 별도 책임을 유지한다. 목록 N+1·정렬·지연 로딩·암호화 키 관리는 후속 점검 대상이다. 긴 외부 호출은 DB 트랜잭션 밖에서 실행한다.
 
 기존 LawEmbedding 경로는 새 경로 검증 후 제거한다. 스키마 전환은 백업·검증·복구 방법을 포함하고 대량 삭제/초기화는 별도 작업으로 취급한다. 운영 배포는 현재 Compose 검증과 별개이며 배포 설정·비밀값·TLS·헬스체크·롤백을 준비한 뒤 진행한다.
 
