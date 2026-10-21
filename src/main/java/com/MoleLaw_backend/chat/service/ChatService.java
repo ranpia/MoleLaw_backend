@@ -15,9 +15,9 @@ import com.MoleLaw_backend.chat.dto.response.MessageResponse;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.law.service.ExtractKeyword;
-import com.MoleLaw_backend.law.service.FinalAnswer;
+import com.MoleLaw_backend.chat.service.answer.InitialAnswerService;
+import com.MoleLaw_backend.chat.service.answer.FollowUpAnswerService;
 import com.MoleLaw_backend.chat.util.EncryptUtil;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,9 +31,10 @@ public class ChatService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final MessageRepository messageRepository;
-    private final FinalAnswer finalAnswer;
-    private final GptService gptService;
-    private final EntityManager entityManager;
+    private final InitialAnswerService initialAnswers;
+    private final FollowUpAnswerService followUpAnswers;
+    private final ChatTurnPersistenceService turnPersistence;
+    private final InitialChatPersistenceService initialPersistence;
     private final ExtractKeyword extractKeyword;
 
     public ChatRoom createChatRoom(User user, String title) {
@@ -77,6 +78,9 @@ public class ChatService {
     }
 
     public MessageResponse askQuestion(User user, Long chatRoomId, MessageRequest request) {
+        if (user == null || user.getId() == null) {
+            throw new MolelawException(ErrorCode.USER_NOT_AUTHENTICATED);
+        }
         ChatRoom room = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
 
@@ -84,28 +88,9 @@ public class ChatService {
             throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
         }
 
-        messageRepository.save(Message.builder()
-                .chatRoom(room)
-                .sender(Message.Sender.USER)
-                .content(EncryptUtil.encrypt(request.getContent()))
-                .build());
-
-        List<Message> messages = messageRepository.findByChatRoomIdOrderByTimestampAsc(chatRoomId);
-
-        String firstBotQuestion = messages.stream()
-                .filter(m -> m.getSender() == Message.Sender.BOT)
-                .map(m -> EncryptUtil.decrypt(m.getContent()))
-                .findFirst()
-                .orElse(request.getContent());
-
         try {
-            GptAnswerResponse answer = gptService.generateAnswerWithContext(firstBotQuestion, request.getContent());
-
-            Message botMessage = messageRepository.save(Message.builder()
-                    .chatRoom(room)
-                    .sender(Message.Sender.BOT)
-                    .content(EncryptUtil.encrypt(answer.getAnswer()))
-                    .build());
+            GptAnswerResponse answer = followUpAnswers.generateAnswerWithContext(user.getId(), chatRoomId, request.getContent());
+            Message botMessage = turnPersistence.saveSuccessfulTurn(room, request.getContent(), answer.getAnswer());
             return MessageResponse.from(botMessage);
         } catch (Exception e) {
             throw new MolelawException(ErrorCode.GPT_API_FAILURE, "GPT 응답 생성 중 오류 발생", e);
@@ -113,6 +98,7 @@ public class ChatService {
     }
 
     public FirstMessageResponse createRoomAndAsk(User user, FirstMessageRequest request) {
+        if (user == null || user.getId() == null) throw new MolelawException(ErrorCode.USER_NOT_AUTHENTICATED);
         if (request == null || request.getContent().trim().isEmpty()) {
             throw new MolelawException(ErrorCode.INVALID_REQUEST, "입력 내용 없음");
         }
@@ -124,28 +110,10 @@ public class ChatService {
             throw new MolelawException(ErrorCode.KEYWORD_EXTRACTION_FAILED, "입력 내용: " + request.getContent(), e);
         }
 
-        ChatRoom chatRoom = createChatRoom(user, keywordAndTitle.getSummary());
-
-        messageRepository.save(Message.builder()
-                .chatRoom(chatRoom)
-                .sender(Message.Sender.USER)
-                .content(EncryptUtil.encrypt(request.getContent()))
-                .build());
-
+        ChatRoom chatRoom;
         try {
-            GptAnswerResponse gptAnswerResponse = finalAnswer.getAnswer(request.getContent(), keywordAndTitle);
-
-            messageRepository.save(Message.builder()
-                    .chatRoom(chatRoom)
-                    .sender(Message.Sender.BOT)
-                    .content(EncryptUtil.encrypt(gptAnswerResponse.getAnswer()))
-                    .build());
-
-            messageRepository.save(Message.builder()
-                    .chatRoom(chatRoom)
-                    .sender(Message.Sender.INFO)
-                    .content(EncryptUtil.encrypt(gptAnswerResponse.getInfo()))
-                    .build());
+            var prepared = initialAnswers.prepareAnswer(request.getContent());
+            chatRoom = initialPersistence.save(user, keywordAndTitle.getSummary(), request.getContent(), prepared);
 
         } catch (Exception e) {
             throw new MolelawException(ErrorCode.GPT_API_FAILURE, "초기 GPT 응답 생성 실패", e);

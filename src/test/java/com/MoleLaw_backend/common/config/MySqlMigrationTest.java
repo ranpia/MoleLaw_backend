@@ -60,7 +60,7 @@ class MySqlMigrationTest {
             runner(db).run(context -> {
                 assertThat(context).hasNotFailed();
                 var flyway = context.getBean(Flyway.class);
-                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("1");
+                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("2");
                 assertThat(flyway.migrate().migrationsExecuted).isZero();
                 assertThat(flyway.getConfiguration().isCleanDisabled()).isTrue();
                 assertThat(flyway.getConfiguration().isBaselineOnMigrate()).isFalse();
@@ -109,7 +109,7 @@ class MySqlMigrationTest {
                 var jdbc = new JdbcTemplate(context.getBean(DataSource.class));
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM message", Integer.class)).isEqualTo(1);
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1",
-                        Integer.class)).isEqualTo(1);
+                        Integer.class)).isEqualTo(2);
                 assertThat(context.getBean(Flyway.class).migrate().migrationsExecuted).isZero();
             });
         }

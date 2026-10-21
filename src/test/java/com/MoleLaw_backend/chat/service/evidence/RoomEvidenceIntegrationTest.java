@@ -1,0 +1,179 @@
+package com.MoleLaw_backend.chat.service.evidence;
+
+import com.MoleLaw_backend.chat.entity.ChatRoom;
+import com.MoleLaw_backend.chat.repository.ChatEvidenceSnapshotRepository;
+import com.MoleLaw_backend.chat.repository.ChatRoomRepository;
+import com.MoleLaw_backend.chat.repository.MessageRepository;
+import com.MoleLaw_backend.chat.service.InitialChatPersistenceService;
+import com.MoleLaw_backend.chat.dto.response.GptAnswerResponse;
+import com.MoleLaw_backend.chat.util.EncryptUtil;
+import com.MoleLaw_backend.chat.service.answer.PreparedLegalAnswer;
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.user.entity.User;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+@DataJpaTest(properties = "spring.datasource.url=jdbc:h2:mem:room-evidence-test;MODE=MySQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("test")
+@Import({ChatEvidenceService.class, InitialChatPersistenceService.class, RoomEvidenceIntegrationTest.JsonConfiguration.class})
+class RoomEvidenceIntegrationTest {
+    @Autowired private ChatEvidenceService service;
+    @Autowired private ChatEvidenceSnapshotRepository snapshots;
+    @Autowired private ChatRoomRepository rooms;
+    @Autowired private EntityManager entityManager;
+    @Autowired private PlatformTransactionManager transactions;
+    @Autowired private InitialChatPersistenceService initialTurns;
+    @Autowired private MessageRepository messages;
+
+    @Test
+    void restoresFrozenContentAfterPersistenceContextClear() {
+        ChatRoom room = room();
+        List<EvidenceItem> original = evidence();
+        service.freeze(room, original);
+        entityManager.clear();
+
+        assertThat(service.load(room.getUser().getId(), room.getId())).isEqualTo(original);
+        assertThatThrownBy(() -> service.load(room.getUser().getId(), room.getId()).clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void secondFreezeCannotReplaceOriginalEvidence() {
+        ChatRoom room = room();
+        service.freeze(room, evidence());
+
+        assertThatThrownBy(() -> service.freeze(room, evidence())).isInstanceOf(MolelawException.class);
+        assertThat(snapshots.findById(room.getId()).orElseThrow().getEvidenceJson())
+                .contains("original statute body");
+    }
+
+    @Test
+    void differentOwnerCannotReadSnapshot() {
+        ChatRoom room = room();
+        service.freeze(room, evidence());
+
+        assertThatThrownBy(() -> service.load(room.getUser().getId() + 1, room.getId()))
+                .isInstanceOf(MolelawException.class);
+    }
+
+    @Test
+    void changedStoredContentFailsHashVerification() {
+        ChatRoom room = room();
+        service.freeze(room, evidence());
+        entityManager.createNativeQuery("update chat_evidence_snapshot set evidence_json = :json where room_id = :id")
+                .setParameter("json", "[]").setParameter("id", room.getId()).executeUpdate();
+        entityManager.clear();
+
+        assertThatThrownBy(() -> service.load(room.getUser().getId(), room.getId()))
+                .isInstanceOf(MolelawException.class);
+    }
+
+    @Test
+    void snapshotAndRoomCanBeDeletedTogetherWithoutRemovingOwner() {
+        ChatRoom room = room();
+        Long ownerId = room.getUser().getId();
+        service.freeze(room, evidence());
+
+        entityManager.clear();
+        rooms.deleteById(room.getId());
+        rooms.flush();
+        entityManager.clear();
+
+        assertThat(snapshots.findById(room.getId())).isEmpty();
+        assertThat(rooms.findById(room.getId())).isEmpty();
+        assertThat(entityManager.find(User.class, ownerId)).isNotNull();
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void failedInitialTurnRollsBackRoomAndSnapshotTogether() {
+        AtomicReference<Long> roomId = new AtomicReference<>();
+        assertThatThrownBy(() -> new TransactionTemplate(transactions).executeWithoutResult(status -> {
+            ChatRoom room = room();
+            roomId.set(room.getId());
+            service.freeze(room, evidence());
+            throw new IllegalStateException("initial turn persistence failed");
+        })).isInstanceOf(IllegalStateException.class);
+
+        assertThat(roomId.get()).isNotNull();
+        assertThat(rooms.findById(roomId.get())).isEmpty();
+        assertThat(snapshots.findById(roomId.get())).isEmpty();
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void initialPersistenceRejectsInvalidEvidenceAndRollsBackNewRoom() {
+        User user = new TransactionTemplate(transactions).execute(status -> {
+            User owner = User.builder().email("rollback@example.test").provider("local").build();
+            entityManager.persist(owner);
+            return owner;
+        });
+        long roomCount = rooms.count();
+        long snapshotCount = snapshots.count();
+        long messageCount = messages.count();
+        try {
+            assertThatThrownBy(() -> initialTurns.save(user, "failed", "question",
+                    new PreparedLegalAnswer(new GptAnswerResponse("answer", "info"), List.of())))
+                    .isInstanceOf(MolelawException.class);
+            assertThat(rooms.count()).isEqualTo(roomCount);
+            assertThat(snapshots.count()).isEqualTo(snapshotCount);
+            assertThat(messages.count()).isEqualTo(messageCount);
+        } finally {
+            new TransactionTemplate(transactions).executeWithoutResult(status ->
+                    entityManager.remove(entityManager.find(User.class, user.getId())));
+        }
+    }
+
+    @Test
+    void initialPersistenceSavesSnapshotAndThreeEncryptedMessages() {
+        ChatRoom seed = room();
+        ChatRoom created = initialTurns.save(seed.getUser(), "new room", "first question",
+                new PreparedLegalAnswer(new GptAnswerResponse("cited answer", "source info"), evidence()));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(service.load(seed.getUser().getId(), created.getId())).isEqualTo(evidence());
+        var storedMessages = messages.findByChatRoomIdOrderByTimestampAsc(created.getId());
+        assertThat(storedMessages).hasSize(3);
+        assertThat(storedMessages).extracting(message -> EncryptUtil.decrypt(message.getContent()))
+                .containsExactly("first question", "cited answer", "source info");
+        assertThat(storedMessages).extracting(com.MoleLaw_backend.chat.entity.Message::getContent)
+                .doesNotContain("first question", "cited answer", "source info");
+    }
+
+    private ChatRoom room() {
+        User owner = User.builder().email("owner@example.test").provider("local").build();
+        entityManager.persist(owner);
+        return rooms.saveAndFlush(ChatRoom.builder().user(owner).title("consultation").build());
+    }
+
+    private List<EvidenceItem> evidence() {
+        return List.of(new EvidenceItem("00000000-0000-0000-0000-000000000001", "LAW_CHUNK",
+                "law-1:article-1", "Civil law article", "https://www.law.go.kr/law/1",
+                "original statute body ".repeat(10000)));
+    }
+
+    @TestConfiguration
+    static class JsonConfiguration {
+        @Bean ObjectMapper evidenceObjectMapper() { return new ObjectMapper(); }
+    }
+}

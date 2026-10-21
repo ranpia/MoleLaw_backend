@@ -1,5 +1,7 @@
 # MySQL 스키마·마이그레이션 계획
 
+2026-10-21 구현: V2 `chat_evidence_snapshot`을 추가했다. 방당 최초 근거 JSON·해시·저장 시각을 고정하고 방 삭제 시 함께 삭제한다. 실제 MySQL 마이그레이션/JPA와 H2의 저장·복원·롤백·삭제를 검증했다. 아래 추가 ETL/근거 정규화 테이블은 후속 계획이며 현재 계약은 [상담방 근거](../room-evidence.md)를 따른다.
+
 > 최신 상태(2026-10-14): Access는 모든 프로필에서 5분 stateless JWT이며 Redis 등록·조회·폐기를 제거했다. issuer/audience·버전 3을 검증하고 Refresh 회전은 유지한다. 이전 단계의 Redis Access·local 15시간·미구현 표기는 이력으로 읽는다. 현재 계약은 [Access stateless 구현](../stateless-access.md)을 따른다.
 
 기준: `dev`, `ec9d87b` (2026-10-13). 코드 검토에 기반한 계획이며 실제 DB 스키마·데이터는 이번에 조회하거나 변경하지 않았다. 다음 구현도 `dev`에서 진행한다.

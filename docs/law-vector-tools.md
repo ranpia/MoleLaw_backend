@@ -1,0 +1,78 @@
+# 법령 벡터화와 Top 15 검색 도구
+
+## 범위와 호출 순서
+
+두 도구는 서버 내부 서비스입니다. HTTP 엔드포인트나 LLM의 `@Tool` 자동 등록을 추가하지 않으며 기존 상담·임베딩 검색 경로를 대체하지 않습니다.
+
+1. 서버가 사용자 인증·상담방 소유권을 검증하고 `LegalToolContext`를 생성합니다.
+2. `LegalApiToolService`로 법령을 검색하고 상세 원문을 수집합니다.
+3. `LawVectorizationToolService.vectorizeLaw(context, sourceReferenceId)`에 같은 실행에서 수집한 `LegalSource` 참조를 전달합니다.
+4. `LawRagSearchToolService.searchTop15(context, question)`으로 적재된 공개 법령을 검색합니다.
+
+`FIRST_QUESTION`, `PRECOLLECTION` 실행만 허용합니다. `FOLLOW_UP`은 거부하며 실행 목적·예산·참조 ID를 모델이 임의로 지정하게 연결하면 안 됩니다. HTTP 호출마다 기존 실행 예산과 마감 시간을 적용합니다.
+
+## 임베딩과 저장
+
+원문 조문을 분리하고 겹침을 둔 청크를 만들며, 기존 Python 서버의 `/api/tags`, `/api/embed` 계약을 사용합니다. 실험 브랜치 서버는 FastAPI가 아닌 Python 표준 HTTP 서버입니다. 서버는 이 작업에서 새로 배포하지 않습니다.
+
+모델 태그·고정 revision·벡터 차원을 확인하고 문서와 질문에 같은 모델을 사용합니다. 임베딩 배열 크기와 유한한 숫자를 검증하며 잘못된 응답은 적재하지 않습니다. 반환 벡터를 Qdrant에 직접 기록하므로 `VectorStore.add()`를 통한 재임베딩은 하지 않습니다.
+
+서비스 전용 컬렉션을 사용합니다. 실험용 컬렉션을 재사용하거나 기존 컬렉션의 차원·거리·모델 계약을 자동 변경하지 않습니다. 결정적 포인트 ID로 같은 원문을 재시도할 때 중복을 줄입니다. 전체 법령의 임베딩을 먼저 검증하고 배치별 upsert를 수행하며 별도의 완료 버전 공개 장치는 없습니다. 저장 실패·응답 유실 시 일부 조문이 검색될 가능성이 있으므로 동일 입력으로 재시도하세요. 완료 버전의 원자적 공개와 정리 작업은 후속 과제입니다.
+
+기본 청크 크기는 Unicode 코드 포인트 300개, 겹침 64개입니다. 원문은 최대 2 MiB, 생성 청크는 최대 8,192개로 제한합니다. 큰 법령은 임베딩·저장 호출 수와 CPU 처리 시간이 증가하므로 서버가 생성하는 실행 예산을 충분히 설정해야 합니다. 제한을 임의로 높이기 전에 실제 모델 처리량을 확인하세요.
+
+## 검색 결과
+
+현재 구버전 포인트를 자동 삭제하거나 최신 시행 버전만 선택하지 않습니다. 같은 MST의 원문이 달라지면 이전 청크가 남아 검색될 수 있습니다. 운영 연결 전 완료 버전 공개·비활성화 정책이 필요합니다.
+
+청크를 조문 단위로 그룹화해 서로 다른 조문을 최대 15개 반환합니다. 각 조문의 가장 높은 청크 점수로 정렬하며 임계값은 적용하지 않습니다. 데이터가 적으면 결과도 15개보다 적습니다. 컬렉션이 없으면 생성·임베딩 없이 빈 결과를 반환합니다. 점수는 정확도 확률이 아닙니다. 결과에는 출처와 조문을 확인할 수 있는 메타데이터를 포함합니다. 검색 도구 자체는 추가 법령 수집이나 답변 생성을 수행하지 않습니다.
+
+## 운영 전 확인
+
+`app.law-vector.enabled`를 명시적으로 켜고 임베딩 서버와 Qdrant REST 접속 설정을 준비하세요. 모델 revision 또는 입력·청크 형식 변경 시 새 컬렉션을 사용해 다시 적재하세요. 외부 서비스 응답 본문이나 인증 키를 도구 오류에 노출하지 않습니다.
+
+로컬 설정 예시는 다음과 같습니다. 비밀 키는 환경변수로 주입하세요.
+
+```yaml
+app:
+  law-vector:
+    enabled: true
+    embedding-base-url: http://localhost:11436
+    qdrant-base-url: http://localhost:6333
+    collection-name: molelaw_service_law_kure_v1
+    api-key: ${QDRANT_API_KEY:}
+```
+
+## 검증
+
+### 실제 KURE 서버 검증 (2026-10-21)
+
+기존 `molelaw-kure-lab-kure-1` 컨테이너를 시작해 `http://127.0.0.1:11436`에서 실제 KURE 고정 revision·CPU float32 런타임을 확인했습니다. `embeddingLiveTest`가 실제 임베딩 서버와 독립 Qdrant 1.19.1 컨테이너에서 두 Tool을 호출했습니다. 검증용 20개 조문 → 40개 청크 → 1024차원 벡터 저장 → 서로 다른 조문 15개 반환과 점수 정렬·출처 보존을 확인했습니다. 테스트 본문 실행은 컨테이너 시작 포함 약 7초였으며 모델 성능 벤치마크 수치는 아닙니다.
+
+첫 실호출에서 Python 서버가 `Content-Length` 없는 요청을 HTTP 400으로 거절하는 문제가 발견돼 JSON을 UTF-8 바이트로 직렬화하고 길이를 명시하도록 수정했습니다. HTTP 대역 테스트도 길이 누락을 거절하도록 보완했고 실제 서버의 후속 임베딩 요청은 모두 200이었습니다.
+
+```powershell
+docker start molelaw-kure-lab-kure-1
+.\gradlew.bat embeddingLiveTest
+```
+
+서버 주소를 바꾸려면 `LAW_EMBEDDING_LIVE_URL`을 지정합니다. 이 테스트는 일반 `test`에서 제외되며 실행 중인 실제 모델 서버와 Docker가 필요합니다. 원문 저장소만 테스트 대역으로 대체하고 임베딩·Qdrant는 실제 호출합니다. 입력은 실제 법령이 아닌 통제된 검증 자료이며 실제 법령 수집·MySQL 저장·검색 정확도 평가를 완료한 것은 아닙니다. 기존 서비스·실험 컬렉션은 변경하지 않습니다.
+
+### 일반·격리 테스트
+
+`.\gradlew.bat test`로 일반 테스트를 실행합니다. `.\gradlew.bat qdrantIntegrationTest`는 기존 데이터와 분리한 Qdrant 1.19.1 컨테이너에서 컬렉션 메타데이터, 저장 완료, 법령만 대상으로 한 상위 15개 조문 그룹과 정렬을 검증합니다. Docker가 필요하며 실제 임베딩 모델은 호출하지 않습니다. REST 계약은 [Qdrant 공식 API](https://api.qdrant.tech/api-reference/search/query-points-groups)를 참고했습니다.
+
+`LawVectorClientTest`는 실제 loopback HTTP 요청으로 모델 고정, 잘못된 벡터, 컬렉션 계약, 적재 완료 응답, 검색 요청과 실패 처리를 검증합니다. `LawVectorPostmanSimulationTest`는 별도 로컬 Postman 임베딩 대역을 사용하는 선택 실행입니다. 대역은 계약 검증용 2차원 상수 벡터이며 실제 검색에 사용하면 안 됩니다.
+
+```powershell
+# 터미널 1: 로그인·클라우드 게시 없이 로컬 실행
+postman simulation run postman/simulations/law-embedding.sim.yaml --port 14036 --no-history --output ndjson
+# 터미널 2
+$env:LAW_VECTOR_SIMULATION_URL='http://127.0.0.1:14036'
+.\gradlew.bat test --tests '*LawVectorPostmanSimulationTest' --rerun-tasks
+Remove-Item Env:LAW_VECTOR_SIMULATION_URL
+```
+
+검증 후 터미널 1의 서버를 Ctrl+C로 종료하세요. 해당 환경변수가 없으면 이 테스트는 건너뜁니다. 실제 클라이언트의 `/api/tags`, `/api/embed` 요청과 두 HTTP 200 응답을 Postman 요청 로그에서 확인했습니다.
+
+전체 ETL 작업 큐·재시도 스케줄러·상담방 근거 고정·LLM 도구 연결은 포함하지 않습니다. 로컬 HTTP 대역 테스트는 실제 모델 품질과 실제 Qdrant 검색 품질 검증을 대신하지 않습니다.

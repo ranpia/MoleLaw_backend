@@ -114,10 +114,6 @@ public class MinistryCodeMapper {
         return ministryCodeMap.getOrDefault(ministryName, null);
     }
 
-    public static boolean contains(String ministryName) {
-        return ministryCodeMap.containsKey(ministryName);
-    }
-
 }
 
 

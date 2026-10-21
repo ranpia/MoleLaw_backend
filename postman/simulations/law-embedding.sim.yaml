@@ -1,0 +1,13 @@
+# Simulation scaffold. Add fault-injection scenarios under each mock, e.g.:
+#   scenarios:
+#     - overrides:
+#         conditions:
+#           latency: { delay_ms: 500 }
+# Then serve it with: postman simulation run <this file>
+
+simulation: Law embedding client
+routing: path
+mocks:
+  - name: Law embedding contract
+    routeKey: api
+    path: ../mocks/law-embedding/config.yaml

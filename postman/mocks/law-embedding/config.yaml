@@ -1,0 +1,11 @@
+version: 1
+id: 820d23d9-9816-498e-9cc8-cdf59b7a388a
+name: Law embedding contract
+slug: law-embedding-contract
+protocol: http
+interceptRequests: true
+port: 14036
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

@@ -2,7 +2,7 @@
 
 > 최신 상태(2026-10-14): Access는 모든 프로필에서 5분 stateless JWT이며 Redis 등록·조회·폐기를 제거했다. issuer/audience·버전 3을 검증하고 Refresh 회전은 유지한다. 이전 단계의 Redis Access·local 15시간·미구현 표기는 이력으로 읽는다. 현재 계약은 [Access stateless 구현](stateless-access.md)을 따른다.
 
-최신화: 2026-10-13. 이 문서는 결정 사항과 작업 순서를 안내한다. 세부 설계는 아래 주제별 계획을 따른다. **계획은 구현 완료를 의미하지 않는다.**
+최신화: 2026-10-21. 완료 여부는 [개발 완료 현황](development-status.md)을 기준으로 확인한다. dev 구현과 별도 실험 브랜치 결과를 구분하며 아래 로드맵의 모든 단계가 완료된 것은 아니다.
 
 ## 문서 안내
 
@@ -21,7 +21,7 @@
 ## 확정한 방향
 
 - **MySQL + Qdrant + Redis:** 업무·원문·대화·근거는 MySQL, 벡터는 Qdrant, Refresh 해시·family·회전·폐기는 Redis가 담당한다. Access는 5분 stateless JWT다.
-- **Spring AI ETL부터 개발:** Reader → Transformer → Qdrant writer. MySQL 원문에서 재색인할 수 있게 만든다.
+- **Spring AI ETL:** 구현된 법령 검색/상세 Tool → MySQL 원문 저장 → Reader → Transformer → Qdrant writer로 연결한다. 저장된 원문은 API 재호출 없이 재색인한다. Tool·원문 저장은 완료했고 ETL 연결은 후속 작업이다.
 - **법령·판례 API는 Tool로 구성:** 기존 API 클라이언트·수집 서비스 위에 목록/상세 Tool 어댑터를 둔다. 초기에는 모델의 구조화된 검색 제안을 서버가 검증·실행하며 후속 상담에는 Tool을 제공하지 않는다. [Tool 계약](plans/rag-etl.md#법령판례-api-tool-구성-확정)을 따른다.
 - **최초 질문은 필요한 수집 허용:** 기존 검색 후 부족하면 다음 페이지·다른 법령을 수집하고 같은 요청의 ETL·재검색에 반영한다. 고정 2라운드 제한 대신 진행 여부와 시간·호출·토큰 예산으로 종료한다.
 - **후속 질문은 추가 검색 없음:** 최초 근거 스냅샷과 MySQL 기록을 MessageChatMemoryAdvisor로 전달한다. 새로운 쟁점은 한계를 알리고 새 상담을 안내한다.
@@ -46,6 +46,8 @@ Access stateless 전환을 구현했다. 모든 프로필에서 JWT와 쿠키는
 이후 같은 날짜에 JWT Refresh를 난수 기반으로 교체하고 Redis 해시·절대 7일·원자 회전·재사용/로그아웃 경합·사용자 전체 폐기와 JSON 제거를 구현했다. 현재 계약과 일반/실제 저장소 검증은 [Refresh 회전 구현](refresh-rotation.md)을 따른다. Access stateless 전환도 완료했으며 [현재 계약](stateless-access.md)을 따른다.
 
 ## 실행 순서
+
+현재 개발 우선순위는 **ETL·임베딩·재검색을 유지한 상태에서 LLM Builder 기반 역할 분리 계획 수립**이다. 합의한 클래스와 미구현 범위는 [다음 작업](development-status.md#4-현재-합의한-다음-작업--계획만)을 따른다. 아래는 전체 로드맵이며 구현 순서를 강제하는 진행 상태 표가 아니다.
 
 1. API·권한 기준선과 긴급 인증 보안 개선, 환경·명시적 스키마 준비.
 2. 다중 페이지 수집과 ETL 구현, Ollama 임베딩 비교·선정.

@@ -1,6 +1,6 @@
 # 빈 MySQL DB 초기화와 검증
 
-기존 데이터 이관 없이 시작한다. 기본/mysql·local에서 Flyway가 V1 스키마를 적용한 뒤 Hibernate가 `validate`한다. 수동 SQL이나 `ddl-auto=update/create`는 사용하지 않는다.
+기존 데이터 이관 없이 시작한다. 기본/mysql·local에서 Flyway가 V1 기본 스키마와 V2 상담방 근거 스냅샷을 순서대로 적용한 뒤 Hibernate가 `validate`한다. V1 적용 DB에는 V2만 추가한다. 수동 SQL이나 `ddl-auto=update/create`는 사용하지 않는다.
 
 ## 실행
 
@@ -12,7 +12,7 @@
 .\gradlew.bat bootRun --args="--spring.profiles.active=local"
 ```
 
-`flyway_schema_history`에 버전 1 성공 이력이 남고 서버가 기동되면 초기화 완료다. 재기동 시 V1을 다시 적용하지 않는다. 초기 테이블은 `user`, `chat_room`, `message`, `law`, `law_chunk`, `law_embedding`, `legal_source`다. User 숫자 PK는 IDENTITY로 생성한다.
+`flyway_schema_history`에 버전 1·2 성공 이력이 남고 서버가 기동되면 초기화 완료다. 재기동 시 적용한 버전을 다시 실행하지 않는다. 테이블은 `user`, `chat_room`, `message`, `law`, `law_chunk`, `law_embedding`, `legal_source`, `chat_evidence_snapshot`이다. User 숫자 PK는 IDENTITY로 생성한다. V2는 이전 방의 근거를 자동 생성하지 않으며 스냅샷 없는 방의 후속 상담은 실패한다.
 
 이전 `001-legal-source.sql`은 참고용이며 실행하지 않는다. 수집 작업·상담 근거 테이블은 후속 migration으로 추가한다. 로그인 세션·Refresh는 Redis에 구현하며 MySQL 인증 테이블은 추가하지 않는다. 현재 벡터 서비스가 사용하는 `law_embedding`은 Qdrant 전환까지 유지한다.
 

@@ -6,10 +6,14 @@
 
 | 목적 | 문서 |
 | --- | --- |
+| 완료된 구현·실험 결과·미완료·다음 LLM 계획 | [개발 완료 현황](development-status.md) |
 | 패키지 소유권·클래스 배치·구조 변경 | [도메인 구조 스킬](../.agents/skills/domain-structure/SKILL.md) |
 | 전체 방향·구현 순서·미결정 사항 | [백엔드 재구축 계획](backend-rebuild-plan.md) |
 | 구현된 법령 Tool·스키마·후속 작업 | [개발 인수인계](development-handoff.md) |
 | 법령·판례 Tool 입력·반환·오류 계약 | [법령 API Tool](legal-api-tools.md) |
+| 법령 원문 벡터화·Qdrant 상위 15개 조문 검색 | [법령 벡터 Tool](law-vector-tools.md) |
+| 근거 수집·답변 생성 Client별 Builder 설정 | [역할별 ChatClient](role-chat-clients.md) |
+| 상담방 최초 근거 고정·후속 인용 허용 범위 | [상담방 근거 스냅샷](room-evidence.md) |
 | 기존 채팅 API·법령 수집 회귀 기준 | [동작 기준선](backend-baseline.md) |
 | 현재 인증 구현·CSRF·Access 5분 stateless/Redis Refresh 목표 | [인증·보안 계획](plans/auth-security.md) |
 | 구현된 Refresh 회전·쿠키/JSON·재사용·폐기·Redis 통합 검증 | [Refresh 회전 구현](refresh-rotation.md) |

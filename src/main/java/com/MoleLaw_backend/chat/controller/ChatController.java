@@ -48,7 +48,7 @@ public class ChatController {
     }
 
     @PostMapping("/{roomId}/messages")
-    @Operation(summary = "기존 채팅방에 질문 추가", description = "본인 소유 채팅방에 사용자 메시지를 저장하고 AI 답변 한 건을 반환합니다. JSON content와 CSRF 토큰 헤더를 전달합니다.")
+    @Operation(summary = "기존 채팅방에 질문 추가", description = "본인 소유 채팅방의 대화를 Advisor로 복원하고 최초 근거 스냅샷과 함께 전달합니다. 답변의 [[UUID]] 인용을 해당 방 근거 ID와 검증한 후 질문·답변을 함께 저장합니다. 스냅샷 누락·잘못된 인용은 GPT_API_FAILURE로 실패하며 기록을 저장하지 않습니다. 후속 법령 수집은 실행하지 않습니다. JSON content와 CSRF 토큰 헤더를 전달합니다.")
     @ApiResponses({@ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageResponse.class), examples = @ExampleObject(value = "{\"sender\":\"BOT\",\"content\":\"계약서와 지급 내역을 확인해 주세요.\",\"timestamp\":\"2026-10-13T10:00:00\"}"))),
             @ApiResponse(responseCode = "403", description = "본인의 채팅방이 아닙니다.", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":403,\"code\":\"UNAUTHORIZED_CHATROOM_ACCESS\",\"message\":\"본인의 채팅방이 아닙니다.\"}}"))),
             @ApiResponse(responseCode = "404", description = "채팅방을 찾을 수 없습니다.", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":404,\"code\":\"CHATROOM_NOT_FOUND\",\"message\":\"채팅방을 찾을 수 없습니다.\"}}"))),
@@ -61,7 +61,7 @@ public class ChatController {
     }
 
     @PostMapping("/first-message")
-    @Operation(summary = "채팅방 생성 및 첫 질문", description = "공백이 아닌 content로 채팅방을 생성하고 USER 질문, BOT 답변, INFO 법령 및 판례 마크다운을 반환합니다. CSRF 토큰 헤더가 필요합니다.")
+    @Operation(summary = "채팅방 생성 및 첫 질문", description = "공백이 아닌 content로 최초 답변을 생성하고 [[UUID]] 인용을 검증합니다. 성공 시 방·최초 근거 스냅샷·USER/BOT/INFO를 함께 저장합니다. INFO는 서버가 생성한 근거 ID·출처 안내입니다. 검증 실패 시 방과 메시지를 저장하지 않습니다. CSRF 토큰 헤더가 필요합니다.")
     @ApiResponses({@ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = FirstMessageResponse.class), examples = @ExampleObject(value = "{\"id\":42,\"messages\":[{\"sender\":\"USER\",\"content\":\"보증금을 돌려받지 못했습니다.\",\"timestamp\":\"2026-10-13T10:00:00\"},{\"sender\":\"BOT\",\"content\":\"계약서와 지급 내역을 확인해 주세요.\",\"timestamp\":\"2026-10-13T10:00:00\"},{\"sender\":\"INFO\",\"content\":\"## 관련 법령\\n주택임대차보호법\",\"timestamp\":\"2026-10-13T10:00:00\"}]}"))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청입니다. - 입력 내용 없음", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다. - 입력 내용 없음\"}}"))),
             @ApiResponse(responseCode = "500", description = "키워드 추출 실패, AI 응답 실패 또는 일반 서버 오류", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = {

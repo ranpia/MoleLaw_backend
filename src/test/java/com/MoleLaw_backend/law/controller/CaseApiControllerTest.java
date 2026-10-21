@@ -3,7 +3,7 @@ package com.MoleLaw_backend.law.controller;
 import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
 import com.MoleLaw_backend.law.service.CaseSearchServiceImpl;
 import com.MoleLaw_backend.law.service.ExtractKeyword;
-import com.MoleLaw_backend.law.service.FinalAnswer;
+import com.MoleLaw_backend.chat.service.answer.InitialAnswerService;
 import com.MoleLaw_backend.law.service.LawEmbeddingService;
 import com.MoleLaw_backend.law.service.LawSearchService;
 import com.MoleLaw_backend.law.service.tool.OpenLawCaseClient;
@@ -36,7 +36,7 @@ class CaseApiControllerTest {
         return Mono.just(responses.removeFirst());
     }), mapper, "test-key");
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new TestController(mock(LawSearchService.class),
-                    mock(ExtractKeyword.class), mock(FinalAnswer.class), new CaseSearchServiceImpl(client, mapper),
+                    mock(ExtractKeyword.class), mock(InitialAnswerService.class), new CaseSearchServiceImpl(client, mapper),
                     mock(LawEmbeddingService.class)))
             .setControllerAdvice(new GlobalExceptionHandler()).build();
 

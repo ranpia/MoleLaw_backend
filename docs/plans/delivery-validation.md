@@ -2,7 +2,7 @@
 
 > 최신 상태(2026-10-14): Access는 모든 프로필에서 5분 stateless JWT이며 Redis 등록·조회·폐기를 제거했다. issuer/audience·버전 3을 검증하고 Refresh 회전은 유지한다. 이전 단계의 Redis Access·local 15시간·미구현 표기는 이력으로 읽는다. 현재 계약은 [Access stateless 구현](../stateless-access.md)을 따른다.
 
-상위 문서: [재구축 요약](../backend-rebuild-plan.md). 상태 기준: 2026-10-13.
+상위 문서: [재구축 요약](../backend-rebuild-plan.md). 상태 기준: 2026-10-21. 현재 완료 범위와 브랜치별 차이는 [개발 완료 현황](../development-status.md)을 따른다. 다음 우선 작업은 LLM Builder 역할 분리 계획이며 ETL·임베딩·재검색 로직은 유지한다.
 
 ## 현재 구현과 목표의 구분
 
@@ -48,7 +48,7 @@ MySQL 초기 기반: 기존 데이터 이관 없이 Flyway V1으로 빈 DB를 �
 
 ## 배포·기존 코드 정리
 
-`FinalAnswer`의 검색/프롬프트/모델/출처 책임과 중복 호출을 분리한다. 목록 N+1·정렬·지연 로딩·암호화 키 관리도 점검한다. 긴 외부 호출을 DB 트랜잭션 밖에서 실행한다.
+`FinalAnswer`는 제거하고 `LegalEvidenceCollector`·`InitialAnswerService`·`FollowUpAnswerService`·`EvidencePromptBuilder`·`EvidenceRenderer`로 책임을 분리했다. 목록 N+1·정렬·지연 로딩·암호화 키 관리는 후속 점검 대상이다. 긴 외부 호출은 DB 트랜잭션 밖에서 실행한다.
 
 기존 LawEmbedding 경로는 새 경로 검증 후 제거한다. 스키마 전환은 백업·검증·복구 방법을 포함하고 대량 삭제/초기화는 별도 작업으로 취급한다. 운영 배포는 현재 Compose 검증과 별개이며 배포 설정·비밀값·TLS·헬스체크·롤백을 준비한 뒤 진행한다.
 
