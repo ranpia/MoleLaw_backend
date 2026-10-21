@@ -1,3 +1,0 @@
-﻿"model","dimensions","split","positiveQueries","negativeQueries","top1HitRate","recallAt5","recallAt10","mrr","noAnswerFalseAcceptanceRate","inCorpusAcceptanceRate","threshold","meanQueryEmbeddingMs"
-"qwen3-embedding-0.6b:official","1024","development","30","5","0.433333333333333","0.626666666666667","0.693333333333333","0.578784278475715","0","0.966666666666667","0.595580409860416","353.59335"
-"qwen3-embedding-0.6b:official","1024","held_out","70","5","0.542857142857143","0.749047619047619","0.846190476190476","0.687076378576379","0.6","0.928571428571429","0.595580409860416","335.136818571428"

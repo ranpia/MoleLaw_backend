@@ -1,0 +1,38 @@
+{
+    "freezeSha256":  "87bbbc318e4bc973d5db6d3feb9fa22880d2928ef7328f759f15d2fae67e5de5",
+    "manifest":  {
+                     "id":  "recall50-models-v1",
+                     "model":  "bge-m3",
+                     "modelDigest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                     "dimensions":  1024,
+                     "inputMode":  "bge-m3-title-text-v1",
+                     "documentFormat":  "{title}\n{text}",
+                     "queryFormat":  "{text}",
+                     "questionsSha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB",
+                     "transformsSha256":  "47E88701CE6F47F4C6C052BB9B60F66A91743ABB6756117540179729AA367031",
+                     "chunkManifestSha256":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+                     "sources":  [
+                                     {
+                                         "size":  300,
+                                         "hash":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659"
+                                     },
+                                     {
+                                         "size":  500,
+                                         "hash":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E"
+                                     },
+                                     {
+                                         "size":  700,
+                                         "hash":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0"
+                                     }
+                                 ],
+                     "positiveQuestions":  36,
+                     "modes":  [
+                                   "original",
+                                   "rewritten",
+                                   "legal_transformed"
+                               ],
+                     "maxRank":  50,
+                     "thresholdPolicy":  "none; no score gating or tuning",
+                     "serviceReady":  false
+                 }
+}

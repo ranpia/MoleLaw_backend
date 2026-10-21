@@ -1,12 +1,12 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([string]$DatasetDirectory)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 if ($DatasetDirectory) { $DataRoot = [IO.Path]::GetFullPath($DatasetDirectory) }
-$data = Get-Content -Raw -Encoding UTF8 (Join-Path $DataRoot 'questions.json') | ConvertFrom-Json
-$corpusPath = Join-Path $DataRoot $data.corpus.path
+$data = Get-Content -Raw -Encoding UTF8 (Get-DataPath 'questions.json') | ConvertFrom-Json
+$corpusPath = Get-DataPath $data.corpus.path
 if ((Get-FileHash $corpusPath).Hash -ne $data.corpus.sha256) { throw 'Corpus SHA256 mismatch.' }
-$manifest = Get-Content -Raw -Encoding UTF8 (Join-Path $DataRoot 'corpus-manifest.json') | ConvertFrom-Json
+$manifest = Get-Content -Raw -Encoding UTF8 (Get-DataPath 'corpus-manifest.json') | ConvertFrom-Json
 if ($manifest.corpusSha256 -ne $data.corpus.sha256) { throw 'Manifest mismatch.' }
 $chunks = @{}
 foreach ($line in [IO.File]::ReadLines($corpusPath)) {

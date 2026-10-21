@@ -1,0 +1,12 @@
+{
+    "status":  "reset",
+    "activeTunedThreshold":  null,
+    "thresholdTuningEnabled":  false,
+    "appliedToService":  false,
+    "historicalOutputs":  "Retained as inactive post-hoc analysis; not used by recall50-models-v1",
+    "baselineThresholds":  {
+                               "rewritten":  0.59829341466087427,
+                               "original":  0.59257074600968018
+                           },
+    "nextExperimentThresholdPolicy":  "none; evaluate unconditional top50 retrieval"
+}

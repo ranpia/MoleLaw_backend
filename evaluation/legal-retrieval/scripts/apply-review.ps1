@@ -1,15 +1,15 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
-$questionsPath = Join-Path $DataRoot 'questions.json'
+$questionsPath = Get-DataPath 'questions.json'
 $dataset = Get-Content -Raw -Encoding UTF8 $questionsPath | ConvertFrom-Json
 if ($dataset.evaluationReady -and $dataset.schemaVersion -ge 3) {
     throw 'Refusing to downgrade a ready dataset. Create a new dataset version for statute re-review.'
 }
-$mapPath = Join-Path $ReviewRoot 'article-review-map.json'
+$mapPath = Get-ReviewPath 'article-review-map.json'
 $map = Get-Content -Raw -Encoding UTF8 $mapPath | ConvertFrom-Json
-$decisions = Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'review-decisions.json') | ConvertFrom-Json
+$decisions = Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'review-decisions.json') | ConvertFrom-Json
 $snapshots = Get-Content -Raw -Encoding UTF8 (Join-Path $ArtifactsRoot 'snapshots/manifest.json') | ConvertFrom-Json
 function Set-Field($Object, [string]$Name, $Value) {
     $Object | Add-Member -NotePropertyName $Name -NotePropertyValue $Value -Force
@@ -113,7 +113,7 @@ Set-Field $dataset 'readinessRequirements' @('Freeze chunking and map article la
     'Add reviewed no-answer questions after the corpus is frozen.')
 $map.status = 'official_articles_checked'
 Write-Json $mapPath $map
-Write-Json (Join-Path $ReviewRoot 'verified-evidence.json') ([ordered]@{ schemaVersion = 1
+Write-Json (Get-ReviewPath 'verified-evidence.json') ([ordered]@{ schemaVersion = 1
     source = 'National Law Information Center'; hashTarget = 'saved_utf8_html'
     evidence = @($evidence.Values | Sort-Object { $_.id }) })
 Write-Json $questionsPath $dataset

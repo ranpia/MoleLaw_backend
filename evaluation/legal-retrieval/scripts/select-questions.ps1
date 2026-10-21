@@ -1,16 +1,16 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([uint32]$Seed = 20261015)
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
-$existingPath = Join-Path $DataRoot 'questions.json'
+$existingPath = Get-DataPath 'questions.json'
 if (Test-Path -LiteralPath $existingPath) {
     $existing = Get-Content -Raw -Encoding UTF8 -LiteralPath $existingPath | ConvertFrom-Json
     if ($existing.status -ne 'pending_corpus_and_label_review') {
         throw 'Refusing to overwrite reviewed questions. Create a new dataset version instead.'
     }
 }
-$bankPath = Join-Path $ReviewRoot 'question-bank.json'
+$bankPath = Get-ReviewPath 'question-bank.json'
 $bank = Get-Content -LiteralPath $bankPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $script:randomState = [uint64]$Seed
 function Get-Shuffled($Items) {
@@ -57,6 +57,6 @@ $dataset = [ordered]@{
         'Add reviewed no-answer questions after the corpus is frozen.')
     laws = $laws; questions = $questions
 }
-$outputPath = Join-Path $DataRoot 'questions.json'
+$outputPath = Get-DataPath 'questions.json'
 [IO.File]::WriteAllText($outputPath, ($dataset | ConvertTo-Json -Depth 12) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 Write-Host "Saved $($questions.Count) questions / $($laws.Count) laws: $outputPath"

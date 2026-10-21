@@ -1,17 +1,17 @@
 ﻿$ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
-$target=Join-Path $EvaluationRoot 'data/final-validation-v1'
+$target=Get-DataPath 'final-validation-v1'
 if(Test-Path -LiteralPath (Join-Path $target 'manifest.json')){throw 'Final validation already frozen. Use a new version.'}
 $null=New-Item -ItemType Directory -Force $target
-$review=Join-Path $ReviewRoot 'final-validation-v1'
+$review=Get-ReviewPath 'final-validation-v1'
 $snapshots=Join-Path $ArtifactsRoot 'snapshots/final-validation-v1'
-$base=Get-Content -Raw -Encoding UTF8 (Join-Path $DataRoot 'variants/char300-overlap64-article-v1/questions.json') | ConvertFrom-Json
+$base=Get-Content -Raw -Encoding UTF8 (Get-DataPath 'variants/char300-overlap64-article-v1/questions.json') | ConvertFrom-Json
 $sources=Get-Content -Raw -Encoding UTF8 (Join-Path $snapshots 'manifest.json') | ConvertFrom-Json
 $draft=@(Import-Csv (Join-Path $review 'questions.psv') -Delimiter '|')
 if($sources.Count -ne 10 -or $draft.Count -ne 120){throw 'Expected 10 new statutes and 120 new positive questions'}
 $chunks=[Collections.Generic.List[object]]::new()
-foreach($line in [IO.File]::ReadLines((Join-Path $DataRoot 'variants/char300-overlap64-article-v1/corpus.jsonl'))){$chunks.Add(($line|ConvertFrom-Json))}
+foreach($line in [IO.File]::ReadLines((Get-DataPath 'variants/char300-overlap64-article-v1/corpus.jsonl'))){$chunks.Add(($line|ConvertFrom-Json))}
 $oldUnits=@{};foreach($c in $chunks){$oldUnits[$c.unitId]=$true}
 $sourceMap=@{};$unitMap=@{}
 foreach($s in $sources){
@@ -35,7 +35,7 @@ foreach($s in $sources){
 }
 $chunkMap=@{};foreach($c in $chunks){$chunkMap[$c.unitId]=@($chunkMap[$c.unitId]|Where-Object{$null -ne $_})+@($c.id)}
 $questions=[Collections.Generic.List[object]]::new();$rewrites=[Collections.Generic.List[object]]::new()
-$oldRewrites=Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'query-rewrites-v1.json')|ConvertFrom-Json
+$oldRewrites=Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'query-rewrites-v1.json')|ConvertFrom-Json
 foreach($q in $base.questions){
     $q|Add-Member -NotePropertyName cohort -NotePropertyValue ('legacy_'+$q.split)
     $questions.Add($q)
@@ -111,9 +111,9 @@ try{foreach($c in $chunks){$writer.WriteLine(($c|ConvertTo-Json -Depth 5 -Compre
 $corpusHash=(Get-FileHash (Join-Path $target 'corpus.jsonl')).Hash
 $doc=[ordered]@{id='final-validation-v1';referenceDate='2026-10-19';evaluationReady=$true;questionAuthor='conversation-assistant';blindEvaluation=$false;newPositiveCount=120;newNegativeCount=40;legacyQuestionCount=110;laws=@($base.laws)+@($sources|Select-Object id,name,lawId,mst,effectiveDate,sourceUrl,sha256);corpus=@{path='corpus.jsonl';sha256=$corpusHash;maxChars=300;overlapChars=64;chunkingVersion='char300-overlap64-article-v1';unitCount=$oldUnits.Count+$unitMap.Count;chunkCount=$chunks.Count};questions=@($questions)}
 [IO.File]::WriteAllText((Join-Path $target 'questions.json'),($doc|ConvertTo-Json -Depth 24)+"`n",$enc)
-$rawThreshold=@((Get-Content -Raw -Encoding UTF8 (Join-Path $ReportsRoot 'kure-v1/char300-overlap64-article-v1/summary.json')|ConvertFrom-Json).summary|Where-Object split -eq 'development')[0].threshold
-$rewriteThreshold=@((Get-Content -Raw -Encoding UTF8 (Join-Path $ReportsRoot 'query-rewrite-v1/char300/kure-v1/report.json')|ConvertFrom-Json).summary|Where-Object split -eq 'development')[0].threshold
-$manifest=[ordered]@{version=1;frozenAtUtc=[datetime]::UtcNow.ToString('o');datasetSha256=(Get-FileHash (Join-Path $target 'questions.json')).Hash;corpusSha256=$corpusHash;draftSha256=(Get-FileHash (Join-Path $review 'questions.psv')).Hash;model=(Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json')|ConvertFrom-Json).'kure-v1';newSourceCount=10;sourceUnitCount=$doc.corpus.unitCount;chunkCount=$chunks.Count;questionCount=270;newPositiveCount=120;newNegativeCount=40;thresholds=@{original=$rawThreshold;rewritten=$rewriteThreshold};thresholdPolicy='Frozen original development thresholds; no recalibration on expanded corpus';criteria=@{newRewrittenRecallAt5Minimum=0.75;newRewrittenCompleteAt5Minimum=0.60;legacyHeldOutRecallAt5Minimum=(0.805238095238095-0.05);noRewriteRegressionOnNewRecall=$true};limitations=@('Assistant saw official source/gold when authoring; exploratory, not independent blind human review','100 single-article plus 20 multi-article positives; overlapping gold within a law','Foreign-jurisdiction and unavailable-case-fact negatives; not an exhaustive abstention benchmark','Existing 110 questions are regression controls, not independent new evidence','New laws intentionally selected, not a random sample of all law')}
+$rawThreshold=@((Get-Content -Raw -Encoding UTF8 (Get-ReportPath 'kure-v1/char300-overlap64-article-v1/summary.json')|ConvertFrom-Json).summary|Where-Object split -eq 'development')[0].threshold
+$rewriteThreshold=@((Get-Content -Raw -Encoding UTF8 (Get-ReportPath 'query-rewrite-v1/char300/kure-v1/report.json')|ConvertFrom-Json).summary|Where-Object split -eq 'development')[0].threshold
+$manifest=[ordered]@{version=1;frozenAtUtc=[datetime]::UtcNow.ToString('o');datasetSha256=(Get-FileHash (Join-Path $target 'questions.json')).Hash;corpusSha256=$corpusHash;draftSha256=(Get-FileHash (Join-Path $review 'questions.psv')).Hash;model=(Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'models.json')|ConvertFrom-Json).'kure-v1';newSourceCount=10;sourceUnitCount=$doc.corpus.unitCount;chunkCount=$chunks.Count;questionCount=270;newPositiveCount=120;newNegativeCount=40;thresholds=@{original=$rawThreshold;rewritten=$rewriteThreshold};thresholdPolicy='Frozen original development thresholds; no recalibration on expanded corpus';criteria=@{newRewrittenRecallAt5Minimum=0.75;newRewrittenCompleteAt5Minimum=0.60;legacyHeldOutRecallAt5Minimum=(0.805238095238095-0.05);noRewriteRegressionOnNewRecall=$true};limitations=@('Assistant saw official source/gold when authoring; exploratory, not independent blind human review','100 single-article plus 20 multi-article positives; overlapping gold within a law','Foreign-jurisdiction and unavailable-case-fact negatives; not an exhaustive abstention benchmark','Existing 110 questions are regression controls, not independent new evidence','New laws intentionally selected, not a random sample of all law')}
 [IO.File]::WriteAllText((Join-Path $target 'rewrites.json'),(@{version=1;complete=$true;questions=@($rewrites)}|ConvertTo-Json -Depth 8)+"`n",$enc)
 $manifest.rewritesSha256=(Get-FileHash (Join-Path $target 'rewrites.json')).Hash
 [IO.File]::WriteAllText((Join-Path $target 'manifest.json'),($manifest|ConvertTo-Json -Depth 12)+"`n",$enc)

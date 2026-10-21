@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([Parameter(Mandatory=$true)][string]$Model,[int]$QdrantPort=6333,[ValidateSet(300,500,700)][int[]]$Sizes)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
@@ -6,15 +6,15 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/ComparisonIdentity.ps1')
 Initialize-QdrantLab $QdrantPort
 if(!$Sizes){
-    $profile=(Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json).$Model
+    $profile=(Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'models.json') | ConvertFrom-Json).$Model
     $Sizes=$(if($profile.experimentSizes){@($profile.experimentSizes)}else{@(300,500,700)})
 }
 $anchor=$(if($Model -eq 'qwen3-0.6b' -and 500 -in $Sizes){500}elseif(700 -in $Sizes){700}else{$Sizes[0]})
 $context=Get-QdrantLabContext $Model $anchor
-$rewritePath=Join-Path $ReviewRoot 'query-rewrites-v1.json'
+$rewritePath=Get-ReviewPath 'query-rewrites-v1.json'
 $rewriteHash=(Get-FileHash $rewritePath).Hash
 $datasetHash=(Get-FileHash (Join-Path $context.directory 'questions.json')).Hash
-$rewriteSourceHash=(Get-FileHash (Join-Path $DataRoot 'variants/char700-overlap64-article-v1/questions.json')).Hash
+$rewriteSourceHash=(Get-FileHash (Get-DataPath 'variants/char700-overlap64-article-v1/questions.json')).Hash
 $rewrites=Read-QueryRewrites $rewritePath $context.data $datasetHash (Get-ComparisonIdentity $context.directory) $rewriteSourceHash
 $name='molelaw_eval_queries_'+$Model.Replace('-','_').Replace('.','_')+'_'+$context.baseline.model.modelDigest.Substring(0,8)+'_'+$rewriteHash.Substring(0,8).ToLowerInvariant()
 $metadata=@{owner=$script:LabOwner;kind='evaluation-queries-v1';model=$Model;model_digest=$context.baseline.model.modelDigest;rewrite_sha256=$rewriteHash;dataset_sha256=$datasetHash;input_mode=$context.profile.inputMode}
@@ -38,7 +38,7 @@ $cache=[LegalDenseIndex]::new([int]$context.profile.dimensions)
 foreach($file in Get-ChildItem -LiteralPath $cacheDirectory -Filter '*.bin'){$cache.ReadBatch($file.FullName)}
 $results=@{}
 foreach($size in $Sizes) {
-    $dir=$(if($size -eq 700){Join-Path $ReportsRoot "qdrant-lab/benchmark/$Model"}else{Join-Path $ReportsRoot "qdrant-lab/benchmark/char$size/$Model"})
+    $dir=$(if($size -eq 700){Get-ReportPath "qdrant-lab/benchmark/$Model"}else{Get-ReportPath "qdrant-lab/benchmark/char$size/$Model"})
     $report=Get-Content -Raw -Encoding UTF8 (Join-Path $dir 'report.json') | ConvertFrom-Json
     $c=Get-QdrantLabContext $Model $size
     if($report.questionDatasetSha256 -ne (Get-FileHash (Join-Path $c.directory 'questions.json')).Hash -or $report.queryRewritesSha256 -ne $rewriteHash -or $report.metadata.model_digest -ne $metadata.model_digest){throw 'Result provenance mismatch'}
@@ -56,7 +56,7 @@ foreach($size in $Sizes) {
     }
     $results[$size].fullIndex=@{}
     foreach($mode in @('original','rewritten')){
-        $fullDirectory=$(if($mode -eq 'original'){Join-Path $ReportsRoot "$Model/char$size-overlap64-article-v1"}elseif($size -eq 700){Join-Path $ReportsRoot "query-rewrite-v1/$Model"}else{Join-Path $ReportsRoot "query-rewrite-v1/char$size/$Model"})
+        $fullDirectory=$(if($mode -eq 'original'){Get-ReportPath "$Model/char$size-overlap64-article-v1"}elseif($size -eq 700){Get-ReportPath "query-rewrite-v1/$Model"}else{Get-ReportPath "query-rewrite-v1/char$size/$Model"})
         $filename=$(if($mode -eq 'original'){'summary.json'}else{'report.json'})
         $fullReport=Get-Content -Raw -Encoding UTF8 (Join-Path $fullDirectory $filename) | ConvertFrom-Json
         if($fullReport.datasetSha256 -ne $report.questionDatasetSha256 -or $fullReport.model.modelDigest -ne $metadata.model_digest){throw 'Full-ranking provenance mismatch'}

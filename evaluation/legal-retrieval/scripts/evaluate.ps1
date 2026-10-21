@@ -9,19 +9,19 @@ if ($DatasetDirectory) { $DataRoot = [IO.Path]::GetFullPath($DatasetDirectory) }
 . (Join-Path $PSScriptRoot 'lib/ComparisonIdentity.ps1')
 $comparisonIdentity = Get-ComparisonIdentity $DataRoot
 Add-Type -Path (Join-Path $PSScriptRoot 'lib/DenseIndex.cs')
-$dataPath = Join-Path $DataRoot 'questions.json'
+$dataPath = Get-DataPath 'questions.json'
 $data = Get-Content -Raw -Encoding UTF8 $dataPath | ConvertFrom-Json
 $queryRewrites = $null; $queryMode = 'original'; $runSuffix = ''
 if ($QueryRewritesPath) {
     . (Join-Path $PSScriptRoot 'lib/QueryRewrites.ps1')
-    $sourceHash=(Get-FileHash (Join-Path $EvaluationRoot 'data/variants/char700-overlap64-article-v1/questions.json')).Hash
+    $sourceHash=(Get-FileHash (Join-Path $DefaultDataRoot 'variants/char700-overlap64-article-v1/questions.json')).Hash
     $queryRewrites = Read-QueryRewrites $QueryRewritesPath $data (Get-FileHash $dataPath).Hash $comparisonIdentity $sourceHash
     $queryMode = 'llm-rewrite-v1'; $runSuffix = '-llm-rewrite-v1'
 }
-$chunks = @(foreach ($line in [IO.File]::ReadLines((Join-Path $DataRoot $data.corpus.path))) { $line | ConvertFrom-Json })
+$chunks = @(foreach ($line in [IO.File]::ReadLines((Get-DataPath $data.corpus.path))) { $line | ConvertFrom-Json })
 $byId = @{}; foreach ($chunk in $chunks) { $byId[$chunk.id] = $chunk }
 $baseUri = "http://127.0.0.1:$Port"
-$profiles = Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json
+$profiles = Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'models.json') | ConvertFrom-Json
 $profile = $profiles.$ModelChoice
 $model = $profile.tag
 $dimensions = [int]$profile.dimensions
@@ -68,7 +68,7 @@ if (Test-Path -LiteralPath $cacheMetadataPath) {
 [IO.File]::WriteAllText($cacheMetadataPath,($metadata | ConvertTo-Json),[Text.UTF8Encoding]::new($false))
 # Reuse the original Gemma vectors with exactly the same document input.
 if ($ModelChoice -eq 'embeddinggemma') {
-    $baselineDirectory = Join-Path $EvaluationRoot 'data'
+    $baselineDirectory = $DefaultDataRoot
     $baseline = Get-Content -Raw -Encoding UTF8 (Join-Path $baselineDirectory 'questions.json') | ConvertFrom-Json
     $legacyKey = $baseline.corpus.sha256.Substring(0,16) + '-' + $digest.Substring(0,16) + '-gemma-retrieval-v1'
     $legacyDir = Join-Path $ResultsRoot ('cache/' + $legacyKey)

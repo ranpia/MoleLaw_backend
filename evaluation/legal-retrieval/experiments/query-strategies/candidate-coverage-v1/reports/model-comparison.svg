@@ -1,0 +1,26 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='520' viewBox='0 0 900 520'><rect width='100%' height='100%' fill='white'/><g font-family='Arial,sans-serif' font-size='13'><text x='20' y='25' font-size='18'>Legal transformed: Hit@5 / Complete@5 / Recall@50</text><text x='20' y='48'>Blue: Hit@5   Orange: Complete@5   Green: Recall@50 (percent, 0-100)</text>
+<text x='20' y='92'>bge-m3 / 300</text>
+<rect x='190' y='80' width='236.111111111111' height='13' fill='#2563eb'/><text x='434' y='91'>47.22%</text>
+<rect x='190' y='98' width='41.6666666666667' height='13' fill='#ea580c'/><text x='240' y='109'>8.33%</text>
+<rect x='190' y='116' width='275.925925925926' height='13' fill='#15803d'/><text x='474' y='127'>55.19%</text>
+<text x='20' y='162'>kure-v1 / 300</text>
+<rect x='190' y='150' width='250' height='13' fill='#2563eb'/><text x='448' y='161'>50.00%</text>
+<rect x='190' y='168' width='41.6666666666667' height='13' fill='#ea580c'/><text x='240' y='179'>8.33%</text>
+<rect x='190' y='186' width='277.083333333333' height='13' fill='#15803d'/><text x='475' y='197'>55.42%</text>
+<text x='20' y='232'>bge-m3 / 500</text>
+<rect x='190' y='220' width='236.111111111111' height='13' fill='#2563eb'/><text x='434' y='231'>47.22%</text>
+<rect x='190' y='238' width='27.7777777777778' height='13' fill='#ea580c'/><text x='226' y='249'>5.56%</text>
+<rect x='190' y='256' width='274.768518518519' height='13' fill='#15803d'/><text x='473' y='267'>54.95%</text>
+<text x='20' y='302'>kure-v1 / 500</text>
+<rect x='190' y='290' width='277.777777777778' height='13' fill='#2563eb'/><text x='476' y='301'>55.56%</text>
+<rect x='190' y='308' width='55.5555555555556' height='13' fill='#ea580c'/><text x='254' y='319'>11.11%</text>
+<rect x='190' y='326' width='282.87037037037' height='13' fill='#15803d'/><text x='481' y='337'>56.57%</text>
+<text x='20' y='372'>bge-m3 / 700</text>
+<rect x='190' y='360' width='250' height='13' fill='#2563eb'/><text x='448' y='371'>50.00%</text>
+<rect x='190' y='378' width='13.8888888888889' height='13' fill='#ea580c'/><text x='212' y='389'>2.78%</text>
+<rect x='190' y='396' width='274.768518518519' height='13' fill='#15803d'/><text x='473' y='407'>54.95%</text>
+<text x='20' y='442'>kure-v1 / 700</text>
+<rect x='190' y='430' width='277.777777777778' height='13' fill='#2563eb'/><text x='476' y='441'>55.56%</text>
+<rect x='190' y='448' width='41.6666666666667' height='13' fill='#ea580c'/><text x='240' y='459'>8.33%</text>
+<rect x='190' y='466' width='286.342592592593' height='13' fill='#15803d'/><text x='484' y='477'>57.27%</text>
+</g></svg>

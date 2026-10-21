@@ -1,6 +1,6 @@
 # 임베딩 벡터 실험 검토
 
-> 이 문서는 2026-10-15 당시의 검토 기록입니다. 현재 완료 결과는 [네 모델 통합 비교](../evaluation/legal-retrieval/reports/chunk-experiments/comparison.md)를 따릅니다.
+> 이 문서는 2026-10-15 당시의 검토 기록입니다. 현재 완료 결과는 [네 모델 통합 비교](../evaluation/legal-retrieval/experiments/model-comparison/reports/chunk-experiments/comparison.md)를 따릅니다.
 
 기준: 2026-10-15, `experiment/legal-embedding-evaluation`, `674a98d`. 최초 검토 시작 시 작업 트리는 깨끗했다. 범위는 `evaluation/legal-retrieval`의 실행기·검증기·C# 벡터 색인·결과와 `docker/ollama`다. 애플리케이션 전체 보안 감사나 법률 정답의 재심사는 아니다. 실험 코드는 변경하지 않았다.
 

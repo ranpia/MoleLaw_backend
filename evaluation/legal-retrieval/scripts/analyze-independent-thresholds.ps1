@@ -1,7 +1,7 @@
 ﻿$ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
-$source=Join-Path $ReportsRoot 'independent-validation-v1/kure-v1/queries.csv'
-$target=Join-Path $ReportsRoot 'threshold-sweep-v1';$null=New-Item -ItemType Directory -Force $target
+$source=Get-ReportPath 'independent-validation-v1/kure-v1/queries.csv'
+$target=Get-ReportPath 'threshold-sweep-v1';$null=New-Item -ItemType Directory -Force $target
 $rows=@(Import-Csv $source);if($rows.Count -ne 200){throw 'Expected 200 frozen query results'}
 function Get-Point($Mode,$Selected,[double]$Threshold,$Kind){
  $pos=@($Selected|Where-Object cohort -eq 'in_corpus');$neg=@($Selected|Where-Object cohort -ne 'in_corpus')
@@ -53,6 +53,9 @@ try{
 $lines=@('# KURE 임계값 사후 튜닝 진단','','![임계값별 수용률](threshold-tradeoff.png)','','새 추론 없이 독립 질문 100개 × 원본/정제의 저장된 최고 유사도를 재사용했다. 기준값 이상이면 질문을 수용하는 방식이다. 임계값을 낮추면 많은 질문을 받아들이지만 필요한 정답을 새로 찾지는 않는다. 검색 순위와 기존 Recall@5는 변하지 않는다.','','| 방식 | 후보 목적 | 임계값 | 코퍼스 내 수용 | 그 외 수용 | 수용 중 1위가 고정 정답인 비율 | 정답@5 확보+수용 |','| --- | --- | ---: | ---: | ---: | ---: | ---: |')
 $labels=@{existing='기존';scope_balanced_diagnostic='범위 구분 균형(사후)';coverage_at_least_70pct='범위 내 70% 이상 수용';other_acceptance_at_most_10pct='그 외 수용 10% 이하'}
 foreach($r in $choices){$precision=$(if($null -eq $r.acceptedTop1GoldPrecision){'-'}else{'{0:F2}%' -f (100*$r.acceptedTop1GoldPrecision)});$lines+=('| {0} | {1} | {2:F8} | {3}/36 | {4}/64 | {5} | {6}/36 |' -f $r.queryMode,$labels[$r.candidate],$r.threshold,$r.inCorpusAccepted,$r.otherAccepted,$precision,$r.acceptedHitAt5Count)}
-$lines+=@('','existing은 원래 기준값, scope_balanced_diagnostic은 현재 표본에서 범위 구분 balanced accuracy가 가장 높은 지점, coverage_at_least_70pct는 코퍼스 내 70% 이상 수용 조건에서 그 외 수용을 줄인 지점, other_acceptance_at_most_10pct는 그 외 수용 10% 이하 조건에서 코퍼스 내 수용을 높인 지점이다. 추천 확정값이 아닌 상충관계를 보는 사후 후보이며 운영에는 적용하지 않았다.','','코퍼스 내 36개를 양성, 추가 자료 필요 44개·지원 범위 밖 15개·사실 부족 5개를 나머지 64개로 묶은 것은 범위 구분의 대리 지표다. 실제 답변 정답/오답 라벨이 아니며 사실 부족 질문도 일반 법적 설명은 가능할 수 있다. 1위가 고정 정답인 비율 역시 정답 집합 외 대체 근거 누락의 영향을 받는다.','','이 질문셋을 보고 임계값을 선택하므로 앞으로 이 자료는 튜닝용으로 취급한다. 기존 독립 실행과 고정 입력은 그대로 보존하되, 여기서 고른 기준값의 독립 검증 성능이라고 주장하지 않는다. 별도 새 질문으로 확인하기 전까지 서비스 준비 상태는 false다.','','[원래 독립 검증](../independent-validation-v1/kure-v1/interpretation.md) · [모든 임계값 CSV](sweep.csv) · [후보 CSV](candidates.csv)')
+$lines+=@('','existing은 원래 기준값, scope_balanced_diagnostic은 현재 표본에서 범위 구분 balanced accuracy가 가장 높은 지점, coverage_at_least_70pct는 코퍼스 내 70% 이상 수용 조건에서 그 외 수용을 줄인 지점, other_acceptance_at_most_10pct는 그 외 수용 10% 이하 조건에서 코퍼스 내 수용을 높인 지점이다. 추천 확정값이 아닌 상충관계를 보는 사후 후보이며 운영에는 적용하지 않았다.','','코퍼스 내 36개를 양성, 추가 자료 필요 44개·지원 범위 밖 15개·사실 부족 5개를 나머지 64개로 묶은 것은 범위 구분의 대리 지표다. 실제 답변 정답/오답 라벨이 아니며 사실 부족 질문도 일반 법적 설명은 가능할 수 있다. 1위가 고정 정답인 비율 역시 정답 집합 외 대체 근거 누락의 영향을 받는다.','','이 질문셋을 보고 임계값을 선택하므로 앞으로 이 자료는 튜닝용으로 취급한다. 기존 독립 실행과 고정 입력은 그대로 보존하되, 여기서 고른 기준값의 독립 검증 성능이라고 주장하지 않는다. 별도 새 질문으로 확인하기 전까지 서비스 준비 상태는 false다.','','[원래 독립 검증](../../../retrieval-validation/independent-v1/reports/kure-v1/interpretation.md) · [모든 임계값 CSV](sweep.csv) · [후보 CSV](candidates.csv)')
+if (Test-Path -LiteralPath (Join-Path $target 'reset-status.json')) {
+    $lines=@('# KURE 임계값 탐색 이력 — 초기화 완료·현재 미사용','','탐색 후보는 초기화(비활성)했다. 아래 자료를 다시 생성해도 후보가 활성화되지 않는다. 서비스와 고정 평가 기준값은 변경하지 않았다. 현재 Recall@50은 임계값 필터 없이 계산한다. 표·그래프는 과거 분석 이력이다. [상태 기록](reset-status.json)은 문서용이며 런타임 설정 파일이 아니다.','') + @($lines | Select-Object -Skip 1)
+}
 [IO.File]::WriteAllText((Join-Path $target 'README.md'),($lines -join "`n")+"`n",[Text.UTF8Encoding]::new($false))
 $choices|Format-Table queryMode,candidate,threshold,inCorpusAccepted,otherAccepted,acceptedTop1GoldCount,acceptedHitAt5Count

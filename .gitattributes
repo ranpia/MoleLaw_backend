@@ -1,12 +1,5 @@
 /gradlew text eol=lf
 *.bat text eol=crlf
 *.jar binary
-# Preserve the frozen corpus bytes used by its SHA256 manifest.
-/evaluation/legal-retrieval/data/**/corpus.jsonl -text whitespace=cr-at-eol
-/evaluation/legal-retrieval/data/final-validation-v1/** -text whitespace=cr-at-eol
-/evaluation/legal-retrieval/review/final-validation-v1/questions.psv -text whitespace=cr-at-eol
-/evaluation/legal-retrieval/data/independent-validation-v1/** -text whitespace=cr-at-eol
-/evaluation/legal-retrieval/review/independent-validation-v1/*.json -text whitespace=cr-at-eol
-/evaluation/legal-retrieval/data/legal-query-transform-v1/** -text whitespace=cr-at-eol
-/evaluation/legal-retrieval/review/legal-query-transform-v1/*.json -text whitespace=cr-at-eol
-/evaluation/legal-retrieval/data/legal-query-chunks-v1/** -text whitespace=cr-at-eol
+# Preserve frozen experiment bytes across moves and checkouts.
+/evaluation/legal-retrieval/experiments/** -text whitespace=cr-at-eol

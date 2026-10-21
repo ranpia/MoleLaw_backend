@@ -13,7 +13,7 @@ foreach ($file in Get-ChildItem -LiteralPath $ReportsRoot -Recurse -Filter summa
     $r = Get-Content -Raw -Encoding UTF8 $file.FullName | ConvertFrom-Json
     if (!$r.chunkingVersion) { continue }
     if ($r.chunkingVersion -notmatch '^char(300|500|700)-overlap64-article-v1$') { throw 'Unsupported report chunk version.' }
-    $directory = $(if ($r.chunkingVersion -eq 'char500-overlap64-article-v1') { $DataRoot } else { Join-Path $DataRoot "variants/$($r.chunkingVersion)" })
+    $directory = $(if ($r.chunkingVersion -eq 'char500-overlap64-article-v1') { $DataRoot } else { Get-DataPath "variants/$($r.chunkingVersion)" })
     $data = Get-Content -Raw -Encoding UTF8 (Join-Path $directory 'questions.json') | ConvertFrom-Json
     if ($r.datasetSha256 -ne (Get-FileHash (Join-Path $directory 'questions.json')).Hash -or $r.corpusSha256 -ne $data.corpus.sha256) { throw 'Report input hashes mismatch.' }
     if (!$identities.ContainsKey($directory)) {
@@ -80,16 +80,16 @@ foreach ($file in Get-ChildItem -LiteralPath $ReportsRoot -Recurse -Filter summa
         rawFloat32VectorMiB = $data.corpus.chunkCount * $r.model.dimensions * 4.0 / 1MB }
 }
 $records = @($records | Sort-Object model,maxChars)
-$records | Export-Csv (Join-Path $ReportsRoot 'comparison.csv') -NoTypeInformation -Encoding UTF8
-$rankingRows | Export-Csv (Join-Path $ReportsRoot 'ranking-queries.csv') -NoTypeInformation -Encoding UTF8
+$records | Export-Csv (Get-ReportPath 'comparison.csv') -NoTypeInformation -Encoding UTF8
+$rankingRows | Export-Csv (Get-ReportPath 'ranking-queries.csv') -NoTypeInformation -Encoding UTF8
 $extra = @(foreach ($group in ($rankingRows | Group-Object model,chunkingVersion,split)) {
     $row = $group.Group[0]
     $aggregate = [ordered]@{model=$row.model; chunkingVersion=$row.chunkingVersion; split=$row.split; positiveQueries=$group.Count}
     foreach ($metric in @('hitAt5','completeAt5','precisionAt5','ndcgAt5','ndcgAt10')) { $aggregate[$metric] = ($group.Group | Measure-Object -Property $metric -Average).Average }
     [pscustomobject]$aggregate
 })
-$extra | Export-Csv (Join-Path $ReportsRoot 'ranking-comparison.csv') -NoTypeInformation -Encoding UTF8
-$similarityRows | Export-Csv (Join-Path $ReportsRoot 'similarity-examples.csv') -NoTypeInformation -Encoding UTF8
+$extra | Export-Csv (Get-ReportPath 'ranking-comparison.csv') -NoTypeInformation -Encoding UTF8
+$similarityRows | Export-Csv (Get-ReportPath 'similarity-examples.csv') -NoTypeInformation -Encoding UTF8
 $statusSentence='완료된 모델 '+@($records.model | Select-Object -Unique).Count+'개, 총 '+$records.Count+'개 구성이다. 300·500·700문자, 중복 64문자이며 동일 원문 5,486개 단위·질문 110개·정답·분할을 사용했다. 차원 축소는 아직 평가하지 않았다.'
 $bestValue=($records | Measure-Object devRecallAt5 -Maximum).Maximum
 $bestLabels=@($records | Where-Object { [math]::Abs($_.devRecallAt5-$bestValue) -lt 1e-8 } | ForEach-Object { $_.model+' '+$_.maxChars+'문자' }) -join ', '
@@ -126,7 +126,7 @@ $lines += @('', '지표를 읽는 방법: [설명 문서](similarity-and-metrics
     '질문 임베딩 시간은 모델이 준비된 상태에서 질문마다 한 번 측정했다. 반복 부하 시험이 아니며, 청크 길이도 토큰 수가 아닌 문자 수다.', '',
     '벡터 용량은 청크 수 × 차원 × 4바이트로 계산한 숫자 자체의 크기다. 문서 정보와 검색 색인 등은 제외하므로 실제 저장 공간은 더 필요하다. 캐시를 재사용한 색인 시간은 처음부터 전체 자료를 처리하는 속도로 비교하지 않는다.', '',
     'KURE와 Qwen3는 Sentence Transformers/PyTorch float32, Gemma와 BGE는 Ollama BF16/F16으로 실행했다. 실행 도구와 숫자 정밀도가 달라 시간 차이를 모델 자체의 속도 차이로 단정하지 않는다. 원본 보고서는 보존했고 기록되지 않은 정밀도는 CSV에 명시했다.')
-[IO.File]::WriteAllText((Join-Path $ReportsRoot 'comparison.md'),($lines -join [Environment]::NewLine)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Get-ReportPath 'comparison.md'),($lines -join [Environment]::NewLine)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
 $extraLines = @('# 순위 지표 상세 집계', '', '전체 지표의 통합 비교는 [모델 비교표](comparison.md), 쉬운 설명은 [지표 안내](similarity-and-metrics.md)를 참고한다. 이 파일은 CSV에 대응하는 상세 집계다.', '', 'Positive questions only; macro averages over frozen gold source units. Binary relevance, log2(rank+1) discount; IDCG uses min(k, total gold units), including gold outside retrieved top ten.', '',
     '| Model | Chunk | Split | N | Hit@5 | Complete@5 | Precision@5 | nDCG@5 | nDCG@10 |',
     '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |')
@@ -134,5 +134,5 @@ foreach ($row in $extra) {
     $extraLines += '| '+$row.model+' | '+$row.chunkingVersion+' | '+$row.split+' | '+$row.positiveQueries+' | '+([math]::Round($row.hitAt5,4))+' | '+([math]::Round($row.completeAt5,4))+' | '+([math]::Round($row.precisionAt5,4))+' | '+([math]::Round($row.ndcgAt5,4))+' | '+([math]::Round($row.ndcgAt10,4))+' |'
 }
 $extraLines += @('', '모델 선택은 개발용 Recall@5를 중심으로 다른 지표를 함께 본다. 정답 목록 밖의 조문은 계산상 정답이 아닌 것으로 처리하며, 모두 무관하다고 검증한 것은 아니다.', '', '지표 정의와 예시: [안내](similarity-and-metrics.md).')
-[IO.File]::WriteAllText((Join-Path $ReportsRoot 'ranking-comparison.md'),($extraLines -join [Environment]::NewLine)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Get-ReportPath 'ranking-comparison.md'),($extraLines -join [Environment]::NewLine)+[Environment]::NewLine,[Text.UTF8Encoding]::new($false))
 $records | Format-Table model,maxChars,devRecallAt5,heldOutRecallAt5,heldOutMrr -AutoSize

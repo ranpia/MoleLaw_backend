@@ -6,8 +6,8 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
 Initialize-QdrantLab 6333
 $rows=@();$timing=@();$agreement=@();$commonIdentity=$null;$identities=@{}
-$rewriteHash=(Get-FileHash (Join-Path $ReviewRoot 'query-rewrites-v1.json')).Hash
-$profiles=Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json
+$rewriteHash=(Get-FileHash (Get-ReviewPath 'query-rewrites-v1.json')).Hash
+$profiles=Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'models.json') | ConvertFrom-Json
 $modelSizes=@{}
 foreach ($model in $Models) {
     $sizes=$(if($profiles.$model.experimentSizes){@($profiles.$model.experimentSizes)}else{@(300,500,700)})
@@ -26,19 +26,19 @@ foreach ($model in $Models) {
     }
     foreach ($size in $sizes) {
         $version="char$size-overlap64-article-v1"
-        $dataDirectory=$(if ($size -eq 500) { $DataRoot } else { Join-Path $DataRoot "variants/$version" })
+        $dataDirectory=$(if ($size -eq 500) { $DataRoot } else { Get-DataPath "variants/$version" })
         if (!$identities.ContainsKey($size)) { $identities[$size]=Get-ComparisonIdentity $dataDirectory }
         $identity=$identities[$size]
         if ($commonIdentity -and $identity -ne $commonIdentity) { throw 'Cross-chunk source/question/gold/split identity differs.' }
         $commonIdentity=$identity
         $dataHash=(Get-FileHash (Join-Path $dataDirectory 'questions.json')).Hash
-        $benchmarkDirectory=$(if ($size -eq 700) { Join-Path $ReportsRoot "qdrant-lab/benchmark/$model" } else { Join-Path $ReportsRoot "qdrant-lab/benchmark/char$size/$model" })
+        $benchmarkDirectory=$(if ($size -eq 700) { Get-ReportPath "qdrant-lab/benchmark/$model" } else { Get-ReportPath "qdrant-lab/benchmark/char$size/$model" })
         $benchmark=Get-Content -Raw -Encoding UTF8 (Join-Path $benchmarkDirectory 'report.json') | ConvertFrom-Json
         $qrows=@(Import-Csv (Join-Path $benchmarkDirectory 'queries.csv'))
         $samples=@(Import-Csv (Join-Path $benchmarkDirectory 'latency.csv'))
         if ($benchmark.questionDatasetSha256 -ne $dataHash -or $benchmark.queryRewritesSha256 -ne $rewriteHash -or $benchmark.metadata.chunking_version -ne $version -or $qrows.Count -ne 660 -or $samples.Count -ne 440*$benchmark.repeats) { throw 'Invalid benchmark input or count.' }
         foreach ($mode in @('original','rewritten')) {
-            $directory=$(if ($mode -eq 'original') { Join-Path $ReportsRoot "$model/$version" } elseif ($size -eq 700) { Join-Path $ReportsRoot "query-rewrite-v1/$model" } else { Join-Path $ReportsRoot "query-rewrite-v1/char$size/$model" })
+            $directory=$(if ($mode -eq 'original') { Get-ReportPath "$model/$version" } elseif ($size -eq 700) { Get-ReportPath "query-rewrite-v1/$model" } else { Get-ReportPath "query-rewrite-v1/char$size/$model" })
             $filename=$(if ($mode -eq 'original') {'summary.json'} else {'report.json'})
             $report=Get-Content -Raw -Encoding UTF8 (Join-Path $directory $filename) | ConvertFrom-Json
             if ($report.datasetSha256 -ne $dataHash -or $report.corpusSha256 -ne $benchmark.metadata.corpus_sha256 -or $report.model.modelDigest -ne $benchmark.metadata.model_digest -or $report.chunkingVersion -ne $version) { throw 'Wrong full-ranking report.' }
@@ -86,7 +86,7 @@ foreach ($model in $Models) {
         }
     }
 }
-$target=Join-Path $ReportsRoot 'chunk-experiments'
+$target=Get-ReportPath 'chunk-experiments'
 $null=New-Item -ItemType Directory -Force $target
 $rows | Export-Csv (Join-Path $target 'comparison.csv') -NoTypeInformation -Encoding UTF8
 $timing | Export-Csv (Join-Path $target 'latency.csv') -NoTypeInformation -Encoding UTF8

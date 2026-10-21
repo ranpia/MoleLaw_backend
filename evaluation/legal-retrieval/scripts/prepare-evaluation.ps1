@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
@@ -181,7 +181,7 @@ Set-Field $data.verification 'limitations' @('Retrieval readiness is not an answ
     'Labels identify reviewed relevant units within this frozen corpus, not every legally relevant source.',
     'No-answer labels are relative to the explicitly frozen corpus scope.')
 Set-Field $data.verification 'duplicateScopeCandidates' @()
-$corpusPath = Join-Path $DataRoot 'corpus.jsonl'
+$corpusPath = Get-DataPath 'corpus.jsonl'
 $writer = [IO.StreamWriter]::new($corpusPath, $false, [Text.UTF8Encoding]::new($false))
 try { foreach ($chunk in $chunks) { $writer.WriteLine(($chunk | ConvertTo-Json -Depth 5 -Compress)) } } finally { $writer.Dispose() }
 $corpusHash = (Get-FileHash $corpusPath).Hash

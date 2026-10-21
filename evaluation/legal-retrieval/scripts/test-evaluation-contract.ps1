@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
@@ -6,10 +6,10 @@ $ErrorActionPreference = 'Stop'
 $temporary = Join-Path ([IO.Path]::GetTempPath()) ('molelaw-eval-contract-' + [guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory $temporary
 try {
-    foreach ($name in @('questions.json','corpus.jsonl','corpus-manifest.json')) { Copy-Item -LiteralPath (Join-Path $DataRoot $name) -Destination $temporary }
+    foreach ($name in @('questions.json','corpus.jsonl','corpus-manifest.json')) { Copy-Item -LiteralPath (Get-DataPath $name) -Destination $temporary }
     $identity = Get-ComparisonIdentity $DataRoot
     foreach ($size in @(300,700)) {
-        $variant = Join-Path $DataRoot "variants/char$size-overlap64-article-v1"
+        $variant = Get-DataPath "variants/char$size-overlap64-article-v1"
         & (Join-Path $PSScriptRoot 'validate-evaluation.ps1') -DatasetDirectory $variant
         if ((Get-ComparisonIdentity $variant) -ne $identity) { throw 'Variant canonical identity differs.' }
     }
@@ -21,7 +21,7 @@ try {
         split_leakage = { param($d) $d.questions[1].relevantUnitIds = $d.questions[0].relevantUnitIds; $d.questions[1].relevantChunkGroups = $d.questions[0].relevantChunkGroups; $d.questions[1].relevantChunkIds = $d.questions[0].relevantChunkIds; $d.questions[1].split = $(if ($d.questions[0].split -eq 'development') { 'held_out' } else { 'development' }) }
     }
     foreach ($name in $mutations.Keys) {
-        $data = Get-Content -Raw -Encoding UTF8 (Join-Path $DataRoot 'questions.json') | ConvertFrom-Json
+        $data = Get-Content -Raw -Encoding UTF8 (Get-DataPath 'questions.json') | ConvertFrom-Json
         & $mutations[$name] $data
         [IO.File]::WriteAllText((Join-Path $temporary 'questions.json'),($data | ConvertTo-Json -Depth 30),[Text.UTF8Encoding]::new($false))
         $rejected = $false
@@ -29,12 +29,12 @@ try {
         if (!$rejected) { throw "Mutation accepted: $name" }
         Write-Host "PASS: rejected $name"
     }
-    $data = Get-Content -Raw -Encoding UTF8 (Join-Path $DataRoot 'questions.json') | ConvertFrom-Json
+    $data = Get-Content -Raw -Encoding UTF8 (Get-DataPath 'questions.json') | ConvertFrom-Json
     $data.questions[0].text += ' changed'
     [IO.File]::WriteAllText((Join-Path $temporary 'questions.json'),($data | ConvertTo-Json -Depth 30),[Text.UTF8Encoding]::new($false))
     if ((Get-ComparisonIdentity $temporary) -eq $identity) { throw 'Changed question did not change identity.' }
     Write-Host 'PASS: changed question changes canonical identity.'
-    $reportSource = Join-Path $ReportsRoot 'bge-m3/char500-overlap64-article-v1'
+    $reportSource = Get-ReportPath 'bge-m3/char500-overlap64-article-v1'
     $reportTarget = Join-Path $temporary 'reports/bge-m3/char500-overlap64-article-v1'
     $null = New-Item -ItemType Directory -Force $reportTarget
     Copy-Item -Path (Join-Path $reportSource '*') -Destination $reportTarget

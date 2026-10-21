@@ -35,10 +35,10 @@ function Invoke-QdrantLab([string]$Method,[string]$Path,$Body=$null) {
 
 function Get-QdrantLabContext([string]$Model,[ValidateSet(300,500,700)][int]$Size=700) {
     $version="char$Size-overlap64-article-v1"
-    $directory=$(if ($Size -eq 500) { $DataRoot } else { Join-Path $DataRoot "variants/$version" })
+    $directory=$(if ($Size -eq 500) { $DataRoot } else { Get-DataPath "variants/$version" })
     $data=Get-Content -Raw -Encoding UTF8 (Join-Path $directory 'questions.json') | ConvertFrom-Json
-    $baseline=Get-Content -Raw -Encoding UTF8 (Join-Path $ReportsRoot "$Model/$version/summary.json") | ConvertFrom-Json
-    $profile=(Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json).$Model
+    $baseline=Get-Content -Raw -Encoding UTF8 (Get-ReportPath "$Model/$version/summary.json") | ConvertFrom-Json
+    $profile=(Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'models.json') | ConvertFrom-Json).$Model
     if ($baseline.datasetSha256 -ne (Get-FileHash (Join-Path $directory 'questions.json')).Hash -or $baseline.corpusSha256 -ne (Get-FileHash (Join-Path $directory $data.corpus.path)).Hash) { throw 'Frozen dataset mismatch.' }
     foreach ($field in @('dimensions','inputMode','documentFormat','queryFormat')) { if ($profile.$field -ne $baseline.model.$field) { throw "Model profile mismatch: $field" } }
     $collection='molelaw_exp_'+$Model.Replace('-','_')+"_c$($Size)_"+$baseline.corpusSha256.Substring(0,8).ToLowerInvariant()+'_'+$baseline.model.modelDigest.Substring(0,8)

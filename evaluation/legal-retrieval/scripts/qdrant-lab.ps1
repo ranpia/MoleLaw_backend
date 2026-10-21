@@ -7,11 +7,7 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
 Initialize-QdrantLab $QdrantPort
 if ($Action -eq 'List') {
-    $collections=(Invoke-QdrantLab GET 'collections').result.collections
-    foreach ($entry in @($collections | Where-Object { $_.name -match '^molelaw_(exp_|eval_queries_|eval_catalog_)' })) {
-        $info=(Invoke-QdrantLab GET "collections/$($entry.name)").result
-        [pscustomobject]@{collection=$entry.name;kind=$(if($info.config.metadata.kind){$info.config.metadata.kind}else{'document_chunks'});owner=$info.config.metadata.owner;points=$info.points_count;indexedVectors=$info.indexed_vectors_count;dimensions=$info.config.params.vectors.size;status=$info.status}
-    }
+    & (Join-Path $PSScriptRoot 'manage-qdrant-lab.ps1') -Action List -QdrantPort $QdrantPort
     return
 }
 $context=Get-QdrantLabContext $Model $Size
@@ -104,7 +100,7 @@ if ($Action -eq 'Verify') {
             @{unitId=$group.id;title=$group.hits[0].payload.title;similarity=$group.hits[0].score}
         })}
     }
-    $directory=Join-Path $ReportsRoot 'qdrant-lab'
+    $directory=Get-ReportPath 'qdrant-lab'
     $null=New-Item -ItemType Directory -Force $directory
     $verificationName=$(if ($Size -eq 700) { "$Model-verification.json" } else { "$Model-char$Size-verification.json" })
     [IO.File]::WriteAllText((Join-Path $directory $verificationName),($report | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))

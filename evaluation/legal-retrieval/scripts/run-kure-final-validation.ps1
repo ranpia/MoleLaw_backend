@@ -3,9 +3,9 @@
 . (Join-Path $PSScriptRoot 'lib/RankingMetrics.ps1')
 $repo=Split-Path (Split-Path $EvaluationRoot -Parent) -Parent
 Set-Location $repo
-$dir=Join-Path $DataRoot 'final-validation-v1'
+$dir=Get-DataPath 'final-validation-v1'
 $work=Join-Path $ArtifactsRoot 'final-validation-v1'
-$target=Join-Path $ReportsRoot 'final-validation-v1/kure-v1'
+$target=Get-ReportPath 'final-validation-v1/kure-v1'
 $logs=Join-Path $ArtifactsRoot 'logs'
 foreach($path in @($work,$target,$logs)){$null=New-Item -ItemType Directory -Force $path}
 $stop=Join-Path $ArtifactsRoot 'control/stop-kure-final-validation-v1.flag'
@@ -132,7 +132,7 @@ try {
     $lines=@('# KURE-v1 확대 최종 검증','','모델·1024차원·300자·중복 64자·기존 수용 기준값을 고정했다. 기존 110문항은 회귀 확인, 새 160문항은 신규 영역 확인으로 구분한다. 30개 주 법령과 기존 보충 근거를 포함한다.','','| 질문 | 범위 | 양성 | 음성 | Recall@5 | Complete@5 | MRR@10 | 음성 오수용률 |','| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |')
     foreach($r in $summary){$lines+=('| {0} | {1} | {2} | {3} | {4:F2}% | {5:F2}% | {6:F4} | {7:F2}% |' -f $r.queryMode,$r.cohort,$r.positiveCount,$r.negativeCount,(100*$r.recallAt5),(100*$r.completeAt5),$r.mrrAt10,(100*$r.noAnswerFalseAcceptanceRate))}
     $checkText="사전 고정 검색 기준 통과: **$passed**. 각 항목: "+($checks|ConvertTo-Json -Compress)
-    $lines+=@('',$checkText,'','신규 양성은 단일 근거 100개와 다중 근거 20개다. 음성은 외국 관할 20개, 제공되지 않은 개인 사건 사실 20개다. 세부 분포는 strata.csv를 참고한다. MRR@10은 기존 전체 순위 MRR과 직접 비교하지 않는다. 질문과 정제본은 공식 원문을 본 어시스턴트가 작성해 독립 블라인드 검증은 아니다. 법령별 표본은 무작위가 아니며 신규 영역 점수와 기존 점수의 차이를 모델 변경 효과로 해석하지 않는다.','', '음성 오수용률은 검색 점수의 기준값 통과율이다. 실제 답변의 안전성이나 거절 성능을 검증한 것은 아니다. serviceReady=false를 유지한다. 결과가 미달해도 이 데이터로 질문·정답·청크·기준값을 다시 조정하지 않는다.','', '[선정 근거](../../../review/model-selection.md) · [고정 입력](../../../data/final-validation-v1/manifest.json)')
+    $lines+=@('',$checkText,'','신규 양성은 단일 근거 100개와 다중 근거 20개다. 음성은 외국 관할 20개, 제공되지 않은 개인 사건 사실 20개다. 세부 분포는 strata.csv를 참고한다. MRR@10은 기존 전체 순위 MRR과 직접 비교하지 않는다. 질문과 정제본은 공식 원문을 본 어시스턴트가 작성해 독립 블라인드 검증은 아니다. 법령별 표본은 무작위가 아니며 신규 영역 점수와 기존 점수의 차이를 모델 변경 효과로 해석하지 않는다.','', '음성 오수용률은 검색 점수의 기준값 통과율이다. 실제 답변의 안전성이나 거절 성능을 검증한 것은 아니다. serviceReady=false를 유지한다. 결과가 미달해도 이 데이터로 질문·정답·청크·기준값을 다시 조정하지 않는다.','', '[선정 근거](../../../../model-comparison/review/model-selection.md) · [고정 입력](../../data/manifest.json)')
     [IO.File]::WriteAllText((Join-Path $target 'README.md'),($lines -join "`n")+"`n",[Text.UTF8Encoding]::new($false))
     $summary|Format-Table queryMode,cohort,recallAt5,completeAt5,mrrAt10,noAnswerFalseAcceptanceRate
     Write-Host "FINAL VALIDATION COMPLETE. Retrieval criteria passed: $passed. See reports/final-validation-v1/kure-v1/README.md" -ForegroundColor Green
