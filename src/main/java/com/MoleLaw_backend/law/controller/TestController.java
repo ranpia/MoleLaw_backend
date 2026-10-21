@@ -11,7 +11,7 @@ import com.MoleLaw_backend.law.dto.response.LawDto;
 import com.MoleLaw_backend.law.dto.response.PrecedentDetailResponse;
 import com.MoleLaw_backend.law.service.CaseSearchService;
 import com.MoleLaw_backend.law.service.ExtractKeyword;
-import com.MoleLaw_backend.law.service.FinalAnswer;
+import com.MoleLaw_backend.chat.service.answer.InitialAnswerService;
 import com.MoleLaw_backend.law.service.LawEmbeddingService;
 import com.MoleLaw_backend.law.service.LawSearchService;
 import com.MoleLaw_backend.auth.security.CustomUserDetails;
@@ -38,7 +38,7 @@ public class TestController {
 
     private final LawSearchService lawSearchService;
     private final ExtractKeyword extractKeyword;
-    private final FinalAnswer finalAnswer;
+    private final InitialAnswerService initialAnswers;
     private final CaseSearchService caseSearchService;
     private final LawEmbeddingService lawEmbeddingService;
 
@@ -119,12 +119,11 @@ public class TestController {
     }
 
     @PostMapping("/answer")
-    @Operation(summary = "법률 AI 답변 생성 테스트", description = "query에서 키워드를 추출하고 법령과 판례를 검색하여 답변과 근거 마크다운을 생성합니다. CSRF 헤더가 필요합니다.")
+    @Operation(summary = "법률 AI 답변 생성 테스트", description = "query로 법령과 판례 목록을 검색하고 최초 답변 전용 Client로 답변을 생성한 뒤 근거 ID 인용을 검증합니다. 서버가 생성한 출처 마크다운을 함께 반환하며 상담방·메시지는 저장하지 않습니다. CSRF 헤더가 필요합니다.")
     @ApiResponses({@ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = GptAnswerResponse.class), examples = @ExampleObject(value = "{\"answer\":\"계약서와 지급 내역을 확인해 주세요.\",\"info\":\"## 관련 법령\\n주택임대차보호법\"}"))),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))})
     public ResponseEntity<GptAnswerResponse> getAnswer(@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "분석할 법률 질문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = QueryRequest.class), examples = @ExampleObject(value = "{\"query\":\"보증금을 돌려받지 못했습니다.\"}"))) @RequestBody QueryRequest request) {
-        KeywordAndTitleResponse response = extractKeyword.extractKeywords(request.getQuery());
-        return ResponseEntity.ok(finalAnswer.getAnswer(request.getQuery(), response));
+        return ResponseEntity.ok(initialAnswers.getAnswer(request.getQuery()));
     }
 
     @PostMapping("/import")

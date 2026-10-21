@@ -2,9 +2,11 @@
 
 > 최신 상태(2026-10-14): Access는 모든 프로필에서 5분 stateless JWT이며 Redis 등록·조회·폐기를 제거했다. issuer/audience·버전 3을 검증하고 Refresh 회전은 유지한다. 이전 단계의 Redis Access·local 15시간·미구현 표기는 이력으로 읽는다. 현재 계약은 [Access stateless 구현](stateless-access.md)을 따른다.
 
-기준일: 2026-10-13. 구현된 내부 Tool과 앞으로 연결할 상담 기능을 구분한다. 전체 방향은 [재구축 요약](backend-rebuild-plan.md)을 따른다.
+기준일: 2026-10-21. 완료한 dev 구현·별도 실험·미완료 항목은 [개발 완료 현황](development-status.md)을 따른다. 아래 API 검증 수치는 당시 이력이며 이번 정리에서 재실행하지 않았다.
 
 ## 현재 개발 기준
+
+2026-10-21: 답변은 `InitialAnswerService`·`FollowUpAnswerService`로 분리했고 근거 수집·프롬프트·출처 표시를 별도 클래스로 관리한다. 최초 Client는 메모리가 없고 후속 Client만 `MessageChatMemoryAdvisor`로 DB 대화를 복원한다. 키워드 추출과 미연결 근거 수집 Client에도 메모리를 붙이지 않는다. [역할별 Client·저장·권한 계약](role-chat-clients.md)을 따른다.
 
 패키지는 `auth`, `user`, `chat`, `law`, `common`으로 구성하며 [도메인 구조 스킬](../.agents/skills/domain-structure/SKILL.md)을 따른다. 법령 Tool 구현은 `law.service.tool`, 인증 구현은 `auth.security`와 `auth.oauth`에 있다.
 
@@ -14,6 +16,7 @@
 
 ## 구현된 법령 Tool 범위
 
+- `LawVectorizationToolService`·`LawRagSearchToolService`: 원문 벡터화와 상위 15개 조문 검색을 분리한 기본 비활성 내부 Tool. [사용·설정·검증](law-vector-tools.md)을 따른다. 기존 상담 연결과 색인 버전 관리는 미완료다.
 - `LegalApiToolService`: 법령·판례 목록/상세 네 내부 Tool. 공개 HTTP API·MCP·자동 tool-calling은 추가하지 않았다.
 - `SearchRequest`·`LawSearchFilters`: 제목/본문·부처·페이지·법령ID·종류·상태·정확명·정렬·시행일/공포일 범위. 기존 생성자와 법령 fallback 유지.
 - `LegalToolContext`: 실행별 호출/시간 예산, 중복 페이지·후보 소진, 상세 ID 허용 목록, 후속 Tool 실행 거부. 서버가 인증·소유권 확인 후 생성해야 한다.
@@ -25,7 +28,7 @@
 ## 실행과 스키마 적용
 
 1. Java 17과 Gradle Wrapper를 사용하고 `OC_KEY`는 환경변수 또는 Git 제외 `.env`로 제공한다.
-2. 기존 데이터 이관 없이 빈 MySQL DB로 시작한다. Flyway V1 자동 적용 후 JPA validate로 검사한다. 이전 수동 SQL은 실행하지 않는다. 이력 없는 비어 있지 않은 DB는 자동 전환하지 않는다.
+2. 기존 데이터 이관 없이 빈 MySQL DB로 시작한다. Flyway V1·V2 자동 적용 후 JPA validate로 검사한다. V2는 상담방 최초 근거 스냅샷이며 기존 방의 근거를 자동 생성하지 않는다. 이전 수동 SQL은 실행하지 않는다. 이력 없는 비어 있지 않은 DB는 자동 전환하지 않는다.
 3. `LegalApiToolService`를 서버 내부에서 주입해 사용한다. 사용자/모델이 실행 목적·예산·소유권 문맥을 만들게 하지 않는다.
 
 ```powershell

@@ -20,6 +20,9 @@ public class ChatRoom {
 
     private String title;
 
+    @OneToOne(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ChatEvidenceSnapshot evidenceSnapshot;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;

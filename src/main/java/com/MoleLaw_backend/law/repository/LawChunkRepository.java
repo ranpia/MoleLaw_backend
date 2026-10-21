@@ -9,11 +9,7 @@ import java.util.Optional;
 
 public interface LawChunkRepository extends JpaRepository<LawChunk, Long> {
 
-    List<LawChunk> findByLaw(Law law);
-
     List<LawChunk> findByLawId(Long lawId);
-
-    List<LawChunk> findByLawIdOrderByArticleNumberAscClauseNumberAscChunkIndexAsc(Long lawId);
 
     Optional<LawChunk> findByLawAndArticleNumberAndClauseNumber(Law law, String articleNo, String clauseNo);
 }

@@ -72,7 +72,28 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration', 'redis-integration' }
+	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration', 'redis-integration', 'qdrant-integration', 'postman-simulation', 'embedding-live' }
+}
+
+tasks.register('embeddingLiveTest', Test) {
+    description = 'Runs both law vector tools against the real local KURE server and an isolated Qdrant.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'embedding-live' }
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
+    testLogging { showStandardStreams = true }
+}
+
+tasks.register('qdrantIntegrationTest', Test) {
+    description = 'Validates isolated Qdrant collection metadata, vector upserts and distinct-article top-15 retrieval.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'qdrant-integration' }
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
 }
 
 tasks.register('redisIntegrationTest', Test) {
