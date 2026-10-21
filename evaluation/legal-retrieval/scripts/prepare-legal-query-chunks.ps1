@@ -3,15 +3,15 @@ param([switch]$ValidateOnly)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 if(!('LegalDenseIndex' -as [type])){Add-Type -Path (Join-Path $PSScriptRoot 'lib/DenseIndex.cs')}
-$outputDir=Join-Path $DataRoot 'legal-query-chunks-v1'
+$outputDir=Get-DataPath 'legal-query-chunks-v1'
 $manifestPath=Join-Path $outputDir 'manifest.json'
 if(!$ValidateOnly -and (Test-Path -LiteralPath $manifestPath)){throw 'Frozen manifest already exists; use -ValidateOnly. No input was overwritten.'}
-$sourcePath=Join-Path $DataRoot 'final-validation-v1/corpus.jsonl'
-$sourceManifestPath=Join-Path $DataRoot 'final-validation-v1/manifest.json'
-$transformManifestPath=Join-Path $DataRoot 'legal-query-transform-v1/manifest.json'
-$questionPath=Join-Path $DataRoot 'independent-validation-v1/questions.json'
-$transformPath=Join-Path $ReviewRoot 'legal-query-transform-v1/transforms.json'
-$baselineDir=Join-Path $ReportsRoot 'legal-query-transform-v1/kure-v1'
+$sourcePath=Get-DataPath 'final-validation-v1/corpus.jsonl'
+$sourceManifestPath=Get-DataPath 'final-validation-v1/manifest.json'
+$transformManifestPath=Get-DataPath 'legal-query-transform-v1/manifest.json'
+$questionPath=Get-DataPath 'independent-validation-v1/questions.json'
+$transformPath=Get-ReviewPath 'legal-query-transform-v1/transforms.json'
+$baselineDir=Get-ReportPath 'legal-query-transform-v1/kure-v1'
 $sourceManifest=Get-Content -LiteralPath $sourceManifestPath -Raw -Encoding UTF8|ConvertFrom-Json
 $transformManifest=Get-Content -LiteralPath $transformManifestPath -Raw -Encoding UTF8|ConvertFrom-Json
 $frozenPaths=[ordered]@{

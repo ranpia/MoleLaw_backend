@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([int]$QdrantPort=6333)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
@@ -8,7 +8,7 @@ $name='molelaw_eval_catalog_v1'
 $owner=@{owner=$script:LabOwner;kind='evaluation-catalog-v1'}
 $entries=@()
 foreach($size in @(300,500,700)){
-    $dir=$(if($size -eq 500){$DataRoot}else{Join-Path $DataRoot "variants/char$size-overlap64-article-v1"})
+    $dir=$(if($size -eq 500){$DataRoot}else{Get-DataPath "variants/char$size-overlap64-article-v1"})
     $path=Join-Path $dir 'questions.json'
     $data=Get-Content -Raw -Encoding UTF8 $path | ConvertFrom-Json
     $identity=Get-ComparisonIdentity $dir
@@ -16,10 +16,10 @@ foreach($size in @(300,500,700)){
     $hash=(Get-FileHash $path).Hash
     $entries+=@{id=(Get-QdrantLabPointId "catalog/dataset/$hash");vector=@{};payload=@{kind='dataset';max_chars=$size;sha256=$hash;comparison_identity_sha256=$identity;source_bytes_base64=[Convert]::ToBase64String([IO.File]::ReadAllBytes($path));data=$data}}
 }
-$path=Join-Path $ReviewRoot 'query-rewrites-v1.json'
+$path=Get-ReviewPath 'query-rewrites-v1.json'
 $hash=(Get-FileHash $path).Hash
 $entries+=@{id=(Get-QdrantLabPointId "catalog/rewrites/$hash");vector=@{};payload=@{kind='query_rewrites';sha256=$hash;source_bytes_base64=[Convert]::ToBase64String([IO.File]::ReadAllBytes($path));data=(Get-Content -Raw -Encoding UTF8 $path | ConvertFrom-Json)}}
-$models=Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json
+$models=Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'models.json') | ConvertFrom-Json
 foreach($property in $models.PSObject.Properties){
     $entries+=@{id=(Get-QdrantLabPointId "catalog/model/$($property.Name)/$($property.Value.inputMode)");vector=@{};payload=@{kind='model_profile';model=$property.Name;data=$property.Value}}
 }

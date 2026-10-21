@@ -1,0 +1,3 @@
+﻿"model","dimensions","split","positiveQueries","negativeQueries","top1HitRate","recallAt5","recallAt10","mrr","noAnswerFalseAcceptanceRate","inCorpusAcceptanceRate","threshold","meanQueryEmbeddingMs"
+"bge-m3:latest","1024","development","30","5","0.366666666666667","0.573888888888889","0.708333333333333","0.519594491927825","0.2","0.9","0.582256234731702","62.08339"
+"bge-m3:latest","1024","held_out","70","5","0.528571428571429","0.727857142857143","0.848571428571429","0.676196165877374","0.8","0.9","0.582256234731702","62.6147971428571"

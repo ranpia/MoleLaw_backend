@@ -1,5 +1,9 @@
 # Repository Guidelines
 
+## 실험 관리 스킬
+
+Qdrant 실험 컬렉션·별칭·벡터 데이터 정리에는 프로젝트 스킬 [qdrant-experiment-management](.agents/skills/qdrant-experiment-management/SKILL.md)를 읽고 적용하세요. 실험 파일·보고서·입력 자료 재배치에는 [experiment-file-organization](.agents/skills/experiment-file-organization/SKILL.md)를 읽고 적용하세요. 두 작업이 함께 있으면 두 스킬을 모두 사용하며, 기존 고정 데이터와 실험 결과를 보존하세요.
+
 ## 프로젝트 구조와 모듈 구성
 MoleLaw는 법률 검색과 AI 채팅을 제공하는 Java 17 / Spring Boot 3.5 백엔드입니다. 소스는 `src/main/java/com/MoleLaw_backend/`에 있습니다.
 

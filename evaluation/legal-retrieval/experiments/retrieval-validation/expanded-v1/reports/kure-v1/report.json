@@ -1,0 +1,228 @@
+{
+    "checks":  {
+                   "legacyRecallRetention":  true,
+                   "rewriteNoRegression":  true,
+                   "newRecallAt5":  true,
+                   "newCompleteAt5":  true
+               },
+    "summary":  [
+                    {
+                        "queryMode":  "original",
+                        "cohort":  "legacy_development",
+                        "positiveCount":  30,
+                        "negativeCount":  5,
+                        "noAnswerFalseAcceptanceRate":  0.2,
+                        "inCorpusAcceptanceRate":  0.8666666666666667,
+                        "recallAt5":  0.57111111111111112,
+                        "recallAt10":  0.72222222222222221,
+                        "hitAt5":  0.66666666666666663,
+                        "completeAt5":  0.43333333333333335,
+                        "precisionAt5":  0.18666666666666668,
+                        "ndcgAt5":  0.527230067268339,
+                        "ndcgAt10":  0.58127242048450822,
+                        "mrrAt10":  0.60503968253968254
+                    },
+                    {
+                        "queryMode":  "original",
+                        "cohort":  "legacy_held_out",
+                        "positiveCount":  70,
+                        "negativeCount":  5,
+                        "noAnswerFalseAcceptanceRate":  0.4,
+                        "inCorpusAcceptanceRate":  0.72857142857142854,
+                        "recallAt5":  0.71714285714285719,
+                        "recallAt10":  0.82666666666666666,
+                        "hitAt5":  0.84285714285714286,
+                        "completeAt5":  0.5714285714285714,
+                        "precisionAt5":  0.20857142857142841,
+                        "ndcgAt5":  0.61278130819438525,
+                        "ndcgAt10":  0.65705529278769259,
+                        "mrrAt10":  0.65316893424036293
+                    },
+                    {
+                        "queryMode":  "original",
+                        "cohort":  "expanded_held_out",
+                        "positiveCount":  120,
+                        "negativeCount":  40,
+                        "noAnswerFalseAcceptanceRate":  0.275,
+                        "inCorpusAcceptanceRate":  0.9916666666666667,
+                        "recallAt5":  0.9625,
+                        "recallAt10":  0.9916666666666667,
+                        "hitAt5":  0.96666666666666667,
+                        "completeAt5":  0.95833333333333337,
+                        "precisionAt5":  0.22499999999999948,
+                        "ndcgAt5":  0.88841736767419055,
+                        "ndcgAt10":  0.89880309007269,
+                        "mrrAt10":  0.87840277777777775
+                    },
+                    {
+                        "queryMode":  "rewritten",
+                        "cohort":  "legacy_development",
+                        "positiveCount":  30,
+                        "negativeCount":  5,
+                        "noAnswerFalseAcceptanceRate":  0,
+                        "inCorpusAcceptanceRate":  1,
+                        "recallAt5":  0.75166666666666671,
+                        "recallAt10":  0.80833333333333335,
+                        "hitAt5":  0.8666666666666667,
+                        "completeAt5":  0.56666666666666665,
+                        "precisionAt5":  0.26666666666666672,
+                        "ndcgAt5":  0.64788056634884061,
+                        "ndcgAt10":  0.669539901548269,
+                        "mrrAt10":  0.70309523809523822
+                    },
+                    {
+                        "queryMode":  "rewritten",
+                        "cohort":  "legacy_held_out",
+                        "positiveCount":  70,
+                        "negativeCount":  5,
+                        "noAnswerFalseAcceptanceRate":  0.4,
+                        "inCorpusAcceptanceRate":  0.94285714285714284,
+                        "recallAt5":  0.8052380952380952,
+                        "recallAt10":  0.83547619047619048,
+                        "hitAt5":  0.9285714285714286,
+                        "completeAt5":  0.65714285714285714,
+                        "precisionAt5":  0.23714285714285696,
+                        "ndcgAt5":  0.70743825077146916,
+                        "ndcgAt10":  0.7208749331833787,
+                        "mrrAt10":  0.73063492063492053
+                    },
+                    {
+                        "queryMode":  "rewritten",
+                        "cohort":  "expanded_held_out",
+                        "positiveCount":  120,
+                        "negativeCount":  40,
+                        "noAnswerFalseAcceptanceRate":  0.275,
+                        "inCorpusAcceptanceRate":  1,
+                        "recallAt5":  0.9916666666666667,
+                        "recallAt10":  0.99583333333333335,
+                        "hitAt5":  1,
+                        "completeAt5":  0.98333333333333328,
+                        "precisionAt5":  0.22999999999999945,
+                        "ndcgAt5":  0.9497653932928003,
+                        "ndcgAt10":  0.95146857993937106,
+                        "mrrAt10":  0.9472222222222223
+                    }
+                ],
+    "manifest":  {
+                     "version":  1,
+                     "frozenAtUtc":  "2026-10-19T08:25:37.9965985Z",
+                     "datasetSha256":  "70AFB82B8E26651AE50FB7026E2C9F604A27B78166A8DA8D6927FBDD7CEAB727",
+                     "corpusSha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                     "draftSha256":  "58426CD3561CD228970E00E4F5BE8C0633E06306A545D26161C032FC823B7445",
+                     "model":  {
+                                   "tag":  "kure-v1:official",
+                                   "dimensions":  1024,
+                                   "inputMode":  "kure-st-cls-normalized-v1",
+                                   "documentFormat":  "{title}\n{text}",
+                                   "queryFormat":  "{text}",
+                                   "runtime":  "sentence-transformers",
+                                   "sourceUrl":  "https://huggingface.co/nlpai-lab/KURE-v1",
+                                   "revision":  "8b418a58414668e75532ed045c22d9ca018ae2b2"
+                               },
+                     "newSourceCount":  10,
+                     "sourceUnitCount":  6527,
+                     "chunkCount":  10999,
+                     "questionCount":  270,
+                     "newPositiveCount":  120,
+                     "newNegativeCount":  40,
+                     "thresholds":  {
+                                        "rewritten":  0.59829341466087427,
+                                        "original":  0.59257074600968018
+                                    },
+                     "thresholdPolicy":  "Frozen original development thresholds; no recalibration on expanded corpus",
+                     "criteria":  {
+                                      "newRewrittenRecallAt5Minimum":  0.75,
+                                      "legacyHeldOutRecallAt5Minimum":  0.75523809523809493,
+                                      "newRewrittenCompleteAt5Minimum":  0.6,
+                                      "noRewriteRegressionOnNewRecall":  true
+                                  },
+                     "limitations":  [
+                                         "Assistant saw official source/gold when authoring; exploratory, not independent blind human review",
+                                         "100 single-article plus 20 multi-article positives; overlapping gold within a law",
+                                         "Foreign-jurisdiction and unavailable-case-fact negatives; not an exhaustive abstention benchmark",
+                                         "Existing 110 questions are regression controls, not independent new evidence",
+                                         "New laws intentionally selected, not a random sample of all law"
+                                     ],
+                     "rewritesSha256":  "5469ABB6CBCC090BD9F6D56DD2DBD40A60B7408CC6E129CBF49BE25B33E8F747"
+                 },
+    "retrievalCriteriaPassed":  true,
+    "completedAtUtc":  "2026-10-19T08:51:57.9229550Z",
+    "queryCollection":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58_queries",
+    "serviceReady":  false,
+    "scope":  "Expanded retrieval validation only; no answer-generation evaluation; thresholds frozen; MRR@10 only",
+    "documentCollection":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58",
+    "freezeSha256":  "B0DE18307C64248E8B57C79FA57FDEC832324C826DF7CCEAE786DD42F5CEB9E0",
+    "runtime":  {
+                    "version":  "sentence-transformers/6.1.0;torch/2.14.1+cpu;transformers/5.20.0",
+                    "runtime":  "sentence-transformers",
+                    "revision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                    "dtype":  "float32",
+                    "device":  "cpu"
+                },
+    "strata":  [
+                   {
+                       "queryMode":  "original",
+                       "style":  "scenario",
+                       "count":  100,
+                       "recallAt5":  0.96,
+                       "completeAt5":  0.96,
+                       "falseAcceptanceRate":  null
+                   },
+                   {
+                       "queryMode":  "original",
+                       "style":  "multi_evidence",
+                       "count":  20,
+                       "recallAt5":  0.975,
+                       "completeAt5":  0.95,
+                       "falseAcceptanceRate":  null
+                   },
+                   {
+                       "queryMode":  "original",
+                       "style":  "foreign_jurisdiction",
+                       "count":  20,
+                       "recallAt5":  null,
+                       "completeAt5":  null,
+                       "falseAcceptanceRate":  0.55
+                   },
+                   {
+                       "queryMode":  "original",
+                       "style":  "unavailable_case_facts",
+                       "count":  20,
+                       "recallAt5":  null,
+                       "completeAt5":  null,
+                       "falseAcceptanceRate":  0
+                   },
+                   {
+                       "queryMode":  "rewritten",
+                       "style":  "scenario",
+                       "count":  100,
+                       "recallAt5":  1,
+                       "completeAt5":  1,
+                       "falseAcceptanceRate":  null
+                   },
+                   {
+                       "queryMode":  "rewritten",
+                       "style":  "multi_evidence",
+                       "count":  20,
+                       "recallAt5":  0.95,
+                       "completeAt5":  0.9,
+                       "falseAcceptanceRate":  null
+                   },
+                   {
+                       "queryMode":  "rewritten",
+                       "style":  "foreign_jurisdiction",
+                       "count":  20,
+                       "recallAt5":  null,
+                       "completeAt5":  null,
+                       "falseAcceptanceRate":  0.55
+                   },
+                   {
+                       "queryMode":  "rewritten",
+                       "style":  "unavailable_case_facts",
+                       "count":  20,
+                       "recallAt5":  null,
+                       "completeAt5":  null,
+                       "falseAcceptanceRate":  0
+                   }
+               ]
+}

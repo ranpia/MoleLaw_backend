@@ -3,18 +3,18 @@ param([Parameter(Mandatory=$true)][ValidateSet('embeddinggemma','bge-m3','kure-v
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
 if(!$Sizes){
-    $profile=(Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json).$Model
+    $profile=(Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'models.json') | ConvertFrom-Json).$Model
     $Sizes=$(if($profile.experimentSizes){@($profile.experimentSizes)}else{@(500,300)})
 }
 foreach ($size in $Sizes) {
     $version="char$size-overlap64-article-v1"
     $context=Get-QdrantLabContext $Model $size
-    $path=$(if ($size -eq 700) {Join-Path $ReportsRoot "query-rewrite-v1/$Model/report.json"} else {Join-Path $ReportsRoot "query-rewrite-v1/char$size/$Model/report.json"})
+    $path=$(if ($size -eq 700) {Get-ReportPath "query-rewrite-v1/$Model/report.json"} else {Get-ReportPath "query-rewrite-v1/char$size/$Model/report.json"})
     $complete=$false
     if (Test-Path -LiteralPath $path) {
         $r=Get-Content -Raw -Encoding UTF8 $path | ConvertFrom-Json
         $directory=Split-Path $path -Parent
-        $complete=$r.queryMode -eq 'llm-rewrite-v1' -and $r.queryRewritesSha256 -eq (Get-FileHash (Join-Path $ReviewRoot 'query-rewrites-v1.json')).Hash -and $r.datasetSha256 -eq (Get-FileHash (Join-Path $context.directory 'questions.json')).Hash -and $r.model.modelDigest -eq $context.baseline.model.modelDigest -and $r.newVectors -eq 0 -and @(Import-Csv (Join-Path $directory 'queries.csv')).Count -eq 110 -and @(Import-Csv (Join-Path $directory 'top10.csv')).Count -eq 1100
+        $complete=$r.queryMode -eq 'llm-rewrite-v1' -and $r.queryRewritesSha256 -eq (Get-FileHash (Get-ReviewPath 'query-rewrites-v1.json')).Hash -and $r.datasetSha256 -eq (Get-FileHash (Join-Path $context.directory 'questions.json')).Hash -and $r.model.modelDigest -eq $context.baseline.model.modelDigest -and $r.newVectors -eq 0 -and @(Import-Csv (Join-Path $directory 'queries.csv')).Count -eq 110 -and @(Import-Csv (Join-Path $directory 'top10.csv')).Count -eq 1100
     }
     if (!$complete) {
         & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'run-query-rewrite.ps1') -Model $Model -Size $size

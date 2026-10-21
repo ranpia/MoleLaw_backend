@@ -4,10 +4,10 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/RankingMetrics.ps1')
 $repo=Split-Path (Split-Path $EvaluationRoot -Parent) -Parent
 Set-Location $repo
-$dir=Join-Path $DataRoot 'independent-validation-v1'
-$baseDir=Join-Path $DataRoot 'final-validation-v1'
+$dir=Get-DataPath 'independent-validation-v1'
+$baseDir=Get-DataPath 'final-validation-v1'
 $work=Join-Path $ArtifactsRoot 'independent-validation-v1'
-$target=Join-Path $ReportsRoot 'independent-validation-v1/kure-v1'
+$target=Get-ReportPath 'independent-validation-v1/kure-v1'
 $logs=Join-Path $ArtifactsRoot 'logs'
 foreach($path in @($work,$target,$logs)){$null=New-Item -ItemType Directory -Force $path}
 $stop=Join-Path $ArtifactsRoot 'control/stop-kure-independent-validation-v1.flag'
@@ -16,7 +16,7 @@ Start-Transcript -Path (Join-Path $logs ('kure-independent-validation-v1-'+(Get-
 function Check-Stop {if(Test-Path -LiteralPath $stop){throw 'User stop flag found; caches retained'}}
 function Save-Json($Path,$Value){[IO.File]::WriteAllText($Path,($Value|ConvertTo-Json -Depth 32)+"`n",[Text.UTF8Encoding]::new($false))}
 function Assert-ReviewHashes($Manifest){
-    $reviewDir=Join-Path $ReviewRoot 'independent-validation-v1'
+    $reviewDir=Get-ReviewPath 'independent-validation-v1'
     if($null -eq $Manifest.reviewHashes -or @($Manifest.reviewHashes.PSObject.Properties).Count -eq 0){throw 'Review hashes required'}
     foreach($entry in $Manifest.reviewHashes.PSObject.Properties){
         if($entry.Name -ne [IO.Path]::GetFileName($entry.Name) -or $entry.Name -match '[\\/]'){throw 'Review filename must be local'}
@@ -151,7 +151,7 @@ try {
         if($r.cohort -eq 'in_corpus'){$recall=('{0:F2}%' -f (100*$r.recallAt5));$complete=('{0:F2}%' -f (100*$r.completeAt5));$mrr=('{0:F4}' -f $r.mrrAt10)}
         $lines+=('| {0} | {1} | {2} | {3} | {4} | {5} | {6:F2}% |' -f $r.queryMode,$r.cohort,$r.count,$recall,$complete,$mrr,(100*$r.scoreAcceptanceRate))
     }
-    $lines+=@('','Recall은 정답 근거 중 찾은 비율, Complete는 근거를 모두 찾은 문항 비율이다. MRR@10은 첫 정답 순위의 역수이며 10위 밖은 0이다. in_corpus 이외에는 정답 순위 지표를 계산하지 않는다.','','점수 수용률은 기존 개발 데이터의 고정 임계값을 상위 검색 점수가 넘은 비율이다. 누락 법령·지원 범위 밖·사실관계 부족을 판단하는 서비스 LLM 정확도가 아니다. 자동 추가 수집과 답변 생성도 평가하지 않았다. 에이전트 역할 분리는 사람 또는 실제 사용자 평가와 같은 독립성을 보장하지 않는다.','','[고정 입력](../../../data/independent-validation-v1/manifest.json) · [선정 근거](../../../review/model-selection.md)')
+    $lines+=@('','Recall은 정답 근거 중 찾은 비율, Complete는 근거를 모두 찾은 문항 비율이다. MRR@10은 첫 정답 순위의 역수이며 10위 밖은 0이다. in_corpus 이외에는 정답 순위 지표를 계산하지 않는다.','','점수 수용률은 기존 개발 데이터의 고정 임계값을 상위 검색 점수가 넘은 비율이다. 누락 법령·지원 범위 밖·사실관계 부족을 판단하는 서비스 LLM 정확도가 아니다. 자동 추가 수집과 답변 생성도 평가하지 않았다. 에이전트 역할 분리는 사람 또는 실제 사용자 평가와 같은 독립성을 보장하지 않는다.','','[고정 입력](../../data/manifest.json) · [선정 근거](../../../../model-comparison/review/model-selection.md)')
     [IO.File]::WriteAllText((Join-Path $target 'README.md'),($lines -join "`n")+"`n",[Text.UTF8Encoding]::new($false))
     $summary|Format-Table queryMode,cohort,count,recallAt5,completeAt5,mrrAt10,scoreAcceptanceRate
     Write-Host 'INDEPENDENT VALIDATION COMPLETE. See reports/independent-validation-v1/kure-v1/README.md' -ForegroundColor Green

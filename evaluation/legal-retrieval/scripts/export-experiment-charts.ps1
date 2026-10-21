@@ -4,11 +4,11 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 Add-Type -AssemblyName System.Windows.Forms.DataVisualization
 Add-Type -AssemblyName System.Drawing
-$directory=Join-Path $ReportsRoot 'chunk-experiments'
+$directory=Get-ReportPath 'chunk-experiments'
 $rows=@(Import-Csv (Join-Path $directory 'comparison.csv') | Where-Object queryMode -eq 'rewritten')
 $models=[ordered]@{embeddinggemma='Gemma';'bge-m3'='BGE-M3';'kure-v1'='KURE-v1';'qwen3-0.6b'='Qwen3 0.6B'}
 $available=@($models.Keys | Where-Object { $_ -in $rows.model })
-$profiles=Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'models.json') | ConvertFrom-Json
+$profiles=Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'models.json') | ConvertFrom-Json
 $colors=@{300='#3B82F6';500='#0D9488';700='#8B5CF6'}
 $chart=[System.Windows.Forms.DataVisualization.Charting.Chart]::new()
 try {

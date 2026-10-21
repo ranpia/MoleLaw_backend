@@ -1,0 +1,18 @@
+{
+    "schemaVersion":  1,
+    "defaults":  {
+                     "reports":  "experiments/model-comparison/reports",
+                     "data":  "experiments/model-comparison/data",
+                     "review":  "experiments/model-comparison/review"
+                 },
+    "experiments":  {
+                        "final-validation-v1":  "retrieval-validation/expanded-v1",
+                        "independent-validation-v1":  "retrieval-validation/independent-v1",
+                        "legal-query-transform-v1":  "query-strategies/sentence-transform-v1",
+                        "legal-query-chunks-v1":  "query-strategies/chunk-sizes-v1",
+                        "recall50-v1":  "query-strategies/candidate-coverage-v1",
+                        "threshold-sweep-v1":  "query-strategies/threshold-sweep-v1",
+                        "retrieval-ablation-v1":  "hybrid-search/ablation-v1",
+                        "qdrant-lab":  "infrastructure/qdrant"
+                    }
+}

@@ -6,16 +6,16 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/QueryRewrites.ps1')
 . (Join-Path $PSScriptRoot 'lib/RankingMetrics.ps1')
 $version = 'char700-overlap64-article-v1'
-$dataset = Join-Path $DataRoot "variants/$version"
+$dataset = Get-DataPath "variants/$version"
 $dataPath = Join-Path $dataset 'questions.json'
 $data = Get-Content -Raw -Encoding UTF8 $dataPath | ConvertFrom-Json
 $identity = Get-ComparisonIdentity $dataset
-$rewritesPath = Join-Path $ReviewRoot 'query-rewrites-v1.json'
+$rewritesPath = Get-ReviewPath 'query-rewrites-v1.json'
 $rewrites = Read-QueryRewrites $rewritesPath $data (Get-FileHash $dataPath).Hash $identity
-$target = Join-Path $ReportsRoot 'query-rewrite-v1'
+$target = Get-ReportPath 'query-rewrite-v1'
 $summaryRows = @(); $pairedRows = @()
 foreach ($model in @('embeddinggemma','bge-m3','kure-v1')) {
-    $baselineDirectory = Join-Path $ReportsRoot "$model/$version"
+    $baselineDirectory = Get-ReportPath "$model/$version"
     $baseline = Get-Content -Raw -Encoding UTF8 (Join-Path $baselineDirectory 'summary.json') | ConvertFrom-Json
     $maps = @{}
     foreach ($mode in @('original','rewritten')) {

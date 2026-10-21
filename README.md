@@ -68,9 +68,9 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 ## 법령 임베딩 비교 현황
 
-긴 표 대신 [그래프와 정렬된 요약](evaluation/legal-retrieval/reports/chunk-experiments/overview.md)으로 모델·청크별 차이를 확인할 수 있습니다.
+긴 표 대신 [그래프와 정렬된 요약](evaluation/legal-retrieval/experiments/model-comparison/reports/chunk-experiments/overview.md)으로 모델·청크별 차이를 확인할 수 있습니다.
 
-2026-10-19 기준 EmbeddingGemma·BGE-M3·KURE-v1·Qwen3-Embedding-0.6B의 300·500·700자, 총 12개 구성에서 원본·정제 질문 평가를 완료했습니다. 완료된 모델·청크 조건은 위 그래프와 통합 비교표에서 확인할 수 있습니다. 검색 품질 기준 모델은 **KURE-v1 1024차원·300자 청크·중복 64자·질문 정제 사용**으로 선정했습니다. [선정 근거](evaluation/legal-retrieval/review/model-selection.md)를 참고하세요. 애플리케이션 설정과 서비스 색인은 아직 전환하지 않았습니다.
+2026-10-19 기준 EmbeddingGemma·BGE-M3·KURE-v1·Qwen3-Embedding-0.6B의 300·500·700자, 총 12개 구성에서 원본·정제 질문 평가를 완료했습니다. 완료된 모델·청크 조건은 위 그래프와 통합 비교표에서 확인할 수 있습니다. 검색 품질 기준 모델은 **KURE-v1 1024차원·300자 청크·중복 64자·질문 정제 사용**으로 선정했습니다. [선정 근거](evaluation/legal-retrieval/experiments/model-comparison/review/model-selection.md)를 참고하세요. 애플리케이션 설정과 서비스 색인은 아직 전환하지 않았습니다.
 
 | 비교군 | 기본 벡터 차원 | 역할 |
 | --- | --- | --- |
@@ -83,15 +83,15 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 모델 선택은 개발용 Recall@5를 우선으로 하고 MRR·nDCG·근거 전체 회수율을 함께 봅니다. 원본 질문과 정제 질문은 별도 조건입니다. 구성별 최신 우선 후보와 수치는 통합 비교표를 기준으로 읽어 주세요. 작은 표본의 탐색 결과이며, 유사도는 정답 확률이 아닙니다.
 
-[실행 안내](evaluation/legal-retrieval/README.md), [모델·청크 비교표](evaluation/legal-retrieval/reports/comparison.md), [유사도·지표 설명](evaluation/legal-retrieval/reports/similarity-and-metrics.md)에서 전체 결과를 확인할 수 있습니다. 주요 통합 비교 지표는 Qdrant 전수 코사인 검색 기준이며 생성 답변은 검증하지 않았습니다. 전체 순위 MRR은 기존 로컬 전수 평가값을 함께 보존합니다. 차원 축소와 토큰 기반 청킹은 후속 실험입니다.
+[실행 안내](evaluation/legal-retrieval/README.md), [모델·청크 비교표](evaluation/legal-retrieval/experiments/model-comparison/reports/comparison.md), [유사도·지표 설명](evaluation/legal-retrieval/experiments/model-comparison/reports/similarity-and-metrics.md)에서 전체 결과를 확인할 수 있습니다. 주요 통합 비교 지표는 Qdrant 전수 코사인 검색 기준이며 생성 답변은 검증하지 않았습니다. 전체 순위 MRR은 기존 로컬 전수 평가값을 함께 보존합니다. 차원 축소와 토큰 기반 청킹은 후속 실험입니다.
 
-법령 벡터는 완료된 모델·청크별 Qdrant 실험 컬렉션에 적재합니다. 300·500·700자 코퍼스의 청크 수는 각각 8,497·6,634·6,031개입니다. [Qdrant 실험 안내](evaluation/legal-retrieval/reports/qdrant-lab/README.md)에서 조회·검색·검증 방법을 확인할 수 있습니다.
+법령 벡터는 완료된 모델·청크별 Qdrant 실험 컬렉션에 적재합니다. 300·500·700자 코퍼스의 청크 수는 각각 8,497·6,634·6,031개입니다. [Qdrant 실험 안내](evaluation/legal-retrieval/experiments/infrastructure/qdrant/reports/README.md)에서 조회·검색·검증 방법을 확인할 수 있습니다.
 
-[모델·청크·질문 정제 통합 비교](evaluation/legal-retrieval/reports/chunk-experiments/comparison.md)는 완료된 구성에 동일한 원본·정제 질문 110개를 적용합니다. 주요 검색 지표는 Qdrant 전수 검색 결과이며, 전체 순위 MRR은 기존 전체 순위 평가 원자료를 Qdrant에 저장해 집계합니다. 검색 시간은 임베딩·정제·답변 생성을 제외한 과거 상세 측정 기록으로 구분합니다.
+[모델·청크·질문 정제 통합 비교](evaluation/legal-retrieval/experiments/model-comparison/reports/chunk-experiments/comparison.md)는 완료된 구성에 동일한 원본·정제 질문 110개를 적용합니다. 주요 검색 지표는 Qdrant 전수 검색 결과이며, 전체 순위 MRR은 기존 전체 순위 평가 원자료를 Qdrant에 저장해 집계합니다. 검색 시간은 임베딩·정제·답변 생성을 제외한 과거 상세 측정 기록으로 구분합니다.
 
-2026-10-20 후속 독립 질문 검증에서는 고정 정답 기준 정제 Recall@5가 16.44%여서 서비스 적용 확정은 보류했습니다. [독립 결과와 정답지 한계](evaluation/legal-retrieval/reports/independent-validation-v1/kure-v1/interpretation.md)를 먼저 참고하세요.
+2026-10-20 후속 독립 질문 검증에서는 고정 정답 기준 정제 Recall@5가 16.44%여서 서비스 적용 확정은 보류했습니다. [독립 결과와 정답지 한계](evaluation/legal-retrieval/experiments/retrieval-validation/independent-v1/reports/kure-v1/interpretation.md)를 먼저 참고하세요.
 
-아래 기존 비교에서 정제 입력의 개발용 Recall@5는 KURE 300문자(75.17%)가 가장 높았습니다. Gemma는 세 크기 모두 72.00%, BGE-M3는 500문자(72.67%)가 해당 모델 안에서 가장 높았습니다. 원본 입력과 유리한 청크가 달라 모델·질문 입력 방식·청크를 함께 비교해야 합니다. 대화형 LLM이 작성한 고정 정제본을 재사용한 탐색 실험이며 자동 정제 API의 시간·비용이나 독립 블라인드 검증을 뜻하지 않습니다. 검증용 결과와 전체 MRR·nDCG·근거 전체 회수율은 통합 표에서 함께 확인할 수 있습니다. 기존 [700문자 상세 비교](evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md)도 보존했습니다.
+아래 기존 비교에서 정제 입력의 개발용 Recall@5는 KURE 300문자(75.17%)가 가장 높았습니다. Gemma는 세 크기 모두 72.00%, BGE-M3는 500문자(72.67%)가 해당 모델 안에서 가장 높았습니다. 원본 입력과 유리한 청크가 달라 모델·질문 입력 방식·청크를 함께 비교해야 합니다. 대화형 LLM이 작성한 고정 정제본을 재사용한 탐색 실험이며 자동 정제 API의 시간·비용이나 독립 블라인드 검증을 뜻하지 않습니다. 검증용 결과와 전체 MRR·nDCG·근거 전체 회수율은 통합 표에서 함께 확인할 수 있습니다. 기존 [700문자 상세 비교](evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/comparison.md)도 보존했습니다.
 
 실험 자료는 Qdrant에서 관리합니다. 법령 컬렉션과 별도로 모델별 질문 컬렉션에 원본·정제 질문 벡터, 정답 조문 ID, 300·500·700문자 검색 상위 10개와 유사도·평가지표를 저장합니다. 로컬·Qdrant 정확도 비교는 주요 표에서 제외하고 상세 기록으로 보존합니다. [Qwen3 실행 조건](docker/qwen3/README.md)을 참고하세요.
 
@@ -261,20 +261,22 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 
 ### KURE 최종 확대 검증 완료 (2026-10-19)
 
-주 법령 30개·질문 270개·10,999개 청크의 사전 고정 검색 기준을 모두 통과해 KURE-v1 1024차원·300자·중복 64자와 질문 정제 구성을 유지한다. 신규 정제 Recall@5 99.17%, Complete@5 98.33%, 기존 검증용 정제 Recall@5 80.52%다. 신규 질문은 원문을 보고 작성한 표적 평가이며, 음성 오수용률 27.5%는 유사도 기준값 통과율이다. 실제 LLM 판단·답변과 운영 준비는 별도 검증 대상이다. [최종 정리와 한계](evaluation/legal-retrieval/reports/final-summary.md)를 참고한다.
+주 법령 30개·질문 270개·10,999개 청크의 사전 고정 검색 기준을 모두 통과해 KURE-v1 1024차원·300자·중복 64자와 질문 정제 구성을 유지한다. 신규 정제 Recall@5 99.17%, Complete@5 98.33%, 기존 검증용 정제 Recall@5 80.52%다. 신규 질문은 원문을 보고 작성한 표적 평가이며, 음성 오수용률 27.5%는 유사도 기준값 통과율이다. 실제 LLM 판단·답변과 운영 준비는 별도 검증 대상이다. [최종 정리와 한계](evaluation/legal-retrieval/experiments/summary.md)를 참고한다.
 
 ### 독립 질문 검증 완료 (2026-10-20)
 
-기존 평가 자료를 읽지 않은 역할이 작성한 100문항을 별도 정답 검수 후 평가했습니다. 코퍼스 내 36문항의 고정 정답 기준 정제 Recall@5는 16.44%, 근거 전체 확보율은 8.33%(3/36)입니다. 정답 목록 외 관련 조문이 검색되는 사례도 있어 실제 답변 실패율과 같지는 않습니다. KURE를 기존 비교의 기준 모델로 보존하되 서비스 적용 확정은 보류합니다. 앞선 원문 기반 확대 검증 99.17%를 서비스 일반 성능으로 해석하지 않습니다. [결과와 한계](evaluation/legal-retrieval/reports/independent-validation-v1/kure-v1/interpretation.md)를 참고하세요.
+기존 평가 자료를 읽지 않은 역할이 작성한 100문항을 별도 정답 검수 후 평가했습니다. 코퍼스 내 36문항의 고정 정답 기준 정제 Recall@5는 16.44%, 근거 전체 확보율은 8.33%(3/36)입니다. 정답 목록 외 관련 조문이 검색되는 사례도 있어 실제 답변 실패율과 같지는 않습니다. KURE를 기존 비교의 기준 모델로 보존하되 서비스 적용 확정은 보류합니다. 앞선 원문 기반 확대 검증 99.17%를 서비스 일반 성능으로 해석하지 않습니다. [결과와 한계](evaluation/legal-retrieval/experiments/retrieval-validation/independent-v1/reports/kure-v1/interpretation.md)를 참고하세요.
 
 ## 법률 쟁점 중심 단일 질의 변환 비교 (2026-10-20)
 
-원본만 읽은 작성 역할과 독립 의미 검수를 거친 새 변환 100개를 평가했다. 코퍼스 내 36문항에서 Recall@5는 원본 14.12%·기존 정제 16.44%·법률 쟁점 변환 28.70%, MRR@10은 각각 0.1755·0.1463·0.3540이다. 새 변환은 정답을 하나 이상 찾은 질문을 11개에서 18개로 늘렸으나 전부 찾은 질문은 3개로 그대로다. 추가 자료 필요 질문의 점수 수용도 3/44에서 11/44로 증가해 근거 충분성 판단과 분리한다. 전략의 효과를 보는 탐색 비교이며 서비스 적용 확정이나 sparse 대체 검증은 아니다. [그래프·결과·한계](evaluation/legal-retrieval/reports/legal-query-transform-v1/kure-v1/interpretation.md)를 참고한다.
+원본만 읽은 작성 역할과 독립 의미 검수를 거친 새 변환 100개를 평가했다. 코퍼스 내 36문항에서 Recall@5는 원본 14.12%·기존 정제 16.44%·법률 쟁점 변환 28.70%, MRR@10은 각각 0.1755·0.1463·0.3540이다. 새 변환은 정답을 하나 이상 찾은 질문을 11개에서 18개로 늘렸으나 전부 찾은 질문은 3개로 그대로다. 추가 자료 필요 질문의 점수 수용도 3/44에서 11/44로 증가해 근거 충분성 판단과 분리한다. 전략의 효과를 보는 탐색 비교이며 서비스 적용 확정이나 sparse 대체 검증은 아니다. [그래프·결과·한계](evaluation/legal-retrieval/experiments/query-strategies/sentence-transform-v1/reports/kure-v1/interpretation.md)를 참고한다.
 
 ## 500·700자 추가 비교 완료 (2026-10-20)
 
-같은 질문·법률 쟁점 중심 변환의 Recall@5는 300자 28.70%·500자 31.39%·700자 30.56%이고, 필요한 근거 전체 확보는 3/36·4/36·3/36이다. 첫 정답 순위 MRR@10은 700자 0.3782가 가장 높다. 이번 탐색에서는 500자의 근거 회수와 700자의 첫 정답 순위가 각각 강점이지만 차이가 작고 새 독립 검증이 아니므로 서비스 청크를 변경하지 않았다. 기존 300자 선정은 당시 비교 기준선 기록으로 보존한다. [전체 그래프·결과·한계](evaluation/legal-retrieval/reports/legal-query-chunks-v1/kure-v1/interpretation.md)를 참고한다.
+같은 질문·법률 쟁점 중심 변환의 Recall@5는 300자 28.70%·500자 31.39%·700자 30.56%이고, 필요한 근거 전체 확보는 3/36·4/36·3/36이다. 첫 정답 순위 MRR@10은 700자 0.3782가 가장 높다. 이번 탐색에서는 500자의 근거 회수와 700자의 첫 정답 순위가 각각 강점이지만 차이가 작고 새 독립 검증이 아니므로 서비스 청크를 변경하지 않았다. 기존 300자 선정은 당시 비교 기준선 기록으로 보존한다. [전체 그래프·결과·한계](evaluation/legal-retrieval/experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/interpretation.md)를 참고한다.
 
 ## 우선 지표와 Recall@50 (2026-10-20)
 
-후속 평가는 Hit@5·Complete@5를 공동 우선으로 보고 Recall·MRR은 보조로 사용합니다. 법률 쟁점 변환의 Recall@50은 300자 55.42%·500자 56.57%·700자 57.27%입니다. 상위 50개를 조회해 후보 포함을 진단한 결과이며 최종 상위 5개의 지표는 그대로입니다. [결과와 후보 한계](evaluation/legal-retrieval/reports/recall50-v1/kure-v1/README.md)를 참고하세요.
+후속 평가는 Hit@5·Complete@5를 공동 우선으로 보고 Recall·MRR은 보조로 사용합니다. 법률 쟁점 변환의 Recall@50은 300자 55.42%·500자 56.57%·700자 57.27%입니다. 상위 50개를 조회해 후보 포함을 진단한 결과이며 최종 상위 5개의 지표는 그대로입니다. [결과와 후보 한계](evaluation/legal-retrieval/experiments/query-strategies/candidate-coverage-v1/reports/kure-v1/README.md)를 참고하세요.
+
+임계값 탐색 후보는 초기화(비활성)했으며, 서비스나 고정 평가 기준값에 적용한 적은 없습니다. 현재 Recall@50 모델 비교는 임계값 필터 없이 계산합니다. [현재 적용 상태와 과거 분석 이력](evaluation/legal-retrieval/experiments/query-strategies/threshold-sweep-v1/reports/README.md)을 참고하세요.

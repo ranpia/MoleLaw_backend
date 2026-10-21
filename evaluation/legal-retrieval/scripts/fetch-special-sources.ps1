@@ -1,8 +1,8 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
-$spec = Get-Content -Raw -Encoding UTF8 (Join-Path $ReviewRoot 'special-sources.json') | ConvertFrom-Json
+$spec = Get-Content -Raw -Encoding UTF8 (Get-ReviewPath 'special-sources.json') | ConvertFrom-Json
 $directory = Join-Path $ArtifactsRoot 'snapshots/supplemental'
 $null = New-Item -ItemType Directory -Force $directory
 $entries = @()
@@ -40,5 +40,5 @@ foreach ($annex in $spec.annexes) {
         sourceSha256 = (Get-FileHash $pdf -Algorithm SHA256).Hash; fileId = $annex.fileId
         extractionVersion = 'pdfbox-3.0.5-plain-text-v1'; questionIds = $annex.questionIds }
 }
-[IO.File]::WriteAllText((Join-Path $ReviewRoot 'special-evidence.json'), (@{ evidence = $entries } | ConvertTo-Json -Depth 10) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Get-ReviewPath 'special-evidence.json'), (@{ evidence = $entries } | ConvertTo-Json -Depth 10) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 Write-Host "Saved $($entries.Count) official notice/annex evidence entries."

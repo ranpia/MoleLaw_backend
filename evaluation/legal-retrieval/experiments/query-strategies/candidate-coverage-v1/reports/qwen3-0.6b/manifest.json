@@ -1,0 +1,38 @@
+{
+    "freezeSha256":  "8d2fb150b6de26b1a29d7b4bbc9822116945fefca9c05264ce2fd0ff244f6375",
+    "manifest":  {
+                     "id":  "recall50-models-v1",
+                     "model":  "qwen3-0.6b",
+                     "modelDigest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                     "dimensions":  1024,
+                     "inputMode":  "qwen3-st-lasttoken-normalized-v1",
+                     "documentFormat":  "{title}\n{text}",
+                     "queryFormat":  "Instruct: Given a legal question in Korean, retrieve relevant Korean legal provisions that answer the question.\nQuery:{text}",
+                     "questionsSha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB",
+                     "transformsSha256":  "47E88701CE6F47F4C6C052BB9B60F66A91743ABB6756117540179729AA367031",
+                     "chunkManifestSha256":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+                     "sources":  [
+                                     {
+                                         "size":  300,
+                                         "hash":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659"
+                                     },
+                                     {
+                                         "size":  500,
+                                         "hash":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E"
+                                     },
+                                     {
+                                         "size":  700,
+                                         "hash":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0"
+                                     }
+                                 ],
+                     "positiveQuestions":  36,
+                     "modes":  [
+                                   "original",
+                                   "rewritten",
+                                   "legal_transformed"
+                               ],
+                     "maxRank":  50,
+                     "thresholdPolicy":  "none; no score gating or tuning",
+                     "serviceReady":  false
+                 }
+}

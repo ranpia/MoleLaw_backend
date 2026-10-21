@@ -2,7 +2,7 @@
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
 Add-Type -AssemblyName System.Windows.Forms.DataVisualization
 Add-Type -AssemblyName System.Drawing
-$dir=Join-Path $ReportsRoot 'legal-query-chunks-v1/kure-v1'
+$dir=Get-ReportPath 'legal-query-chunks-v1/kure-v1'
 $rows=@(Import-Csv (Join-Path $dir 'comparison.csv')|Where-Object cohort -eq 'in_corpus')
 if($rows.Count -ne 9){throw 'Expected nine positive summaries'}
 $chart=[System.Windows.Forms.DataVisualization.Charting.Chart]::new()

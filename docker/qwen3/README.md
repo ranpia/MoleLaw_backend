@@ -1,6 +1,6 @@
 # Qwen3-Embedding CPU 실험
 
-공식 `Qwen/Qwen3-Embedding-0.6B` revision `97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3`을 사용한다. Apache-2.0 라이선스의 다국어 모델이며 한국어 전용 파인튜닝 모델은 아니다. 원래 1024차원, 32768 토큰 문맥, 마지막 토큰 풀링과 L2 정규화를 사용한다. 이번 실험은 차원을 줄이지 않는다. 청크별 완료 상태는 [Qwen3 결과 안내](../../evaluation/legal-retrieval/reports/qwen3-0.6b/README.md)와 통합 비교표를 기준으로 확인한다.
+공식 `Qwen/Qwen3-Embedding-0.6B` revision `97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3`을 사용한다. Apache-2.0 라이선스의 다국어 모델이며 한국어 전용 파인튜닝 모델은 아니다. 원래 1024차원, 32768 토큰 문맥, 마지막 토큰 풀링과 L2 정규화를 사용한다. 이번 실험은 차원을 줄이지 않는다. 청크별 완료 상태는 [Qwen3 결과 안내](../../evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/README.md)와 통합 비교표를 기준으로 확인한다.
 
 질문 입력은 고정 영문 지시문 `Instruct: Given a legal question in Korean, retrieve relevant Korean legal provisions that answer the question.\nQuery:{text}`이며 문서는 `{title}\n{text}`다. 정제 여부와 무관하게 같은 지시문을 쓴다. 공식 권장 형식에 맞춘 것으로, 다른 모델과 입력 문자열이 같다는 뜻은 아니다.
 

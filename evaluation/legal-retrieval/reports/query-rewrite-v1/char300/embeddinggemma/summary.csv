@@ -1,3 +1,0 @@
-﻿"model","dimensions","split","positiveQueries","negativeQueries","top1HitRate","recallAt5","recallAt10","mrr","noAnswerFalseAcceptanceRate","inCorpusAcceptanceRate","threshold","meanQueryEmbeddingMs"
-"embeddinggemma:latest","768","development","30","5","0.466666666666667","0.72","0.823888888888889","0.653525429735956","0","0.933333333333333","0.507768977645497","44.9508"
-"embeddinggemma:latest","768","held_out","70","5","0.685714285714286","0.779047619047619","0.854285714285714","0.781950359091005","0.4","0.942857142857143","0.507768977645497","42.6027714285714"

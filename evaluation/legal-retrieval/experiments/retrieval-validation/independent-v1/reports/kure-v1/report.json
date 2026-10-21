@@ -1,0 +1,176 @@
+{
+    "summary":  [
+                    {
+                        "queryMode":  "original",
+                        "cohort":  "in_corpus",
+                        "count":  36,
+                        "scoreAcceptanceRate":  0.19444444444444445,
+                        "recallAt5":  0.14120370370370372,
+                        "recallAt10":  0.21527777777777779,
+                        "hitAt5":  0.25,
+                        "completeAt5":  0.083333333333333329,
+                        "precisionAt5":  0.06666666666666668,
+                        "ndcgAt5":  0.12317169491312718,
+                        "ndcgAt10":  0.15570881805633963,
+                        "mrrAt10":  0.17554012345679013
+                    },
+                    {
+                        "queryMode":  "original",
+                        "cohort":  "missing_corpus",
+                        "count":  44,
+                        "scoreAcceptanceRate":  0.090909090909090912,
+                        "recallAt5":  null,
+                        "recallAt10":  null,
+                        "hitAt5":  null,
+                        "completeAt5":  null,
+                        "precisionAt5":  null,
+                        "ndcgAt5":  null,
+                        "ndcgAt10":  null,
+                        "mrrAt10":  null
+                    },
+                    {
+                        "queryMode":  "original",
+                        "cohort":  "unsupported",
+                        "count":  15,
+                        "scoreAcceptanceRate":  0.2,
+                        "recallAt5":  null,
+                        "recallAt10":  null,
+                        "hitAt5":  null,
+                        "completeAt5":  null,
+                        "precisionAt5":  null,
+                        "ndcgAt5":  null,
+                        "ndcgAt10":  null,
+                        "mrrAt10":  null
+                    },
+                    {
+                        "queryMode":  "original",
+                        "cohort":  "needs_clarification",
+                        "count":  5,
+                        "scoreAcceptanceRate":  0.2,
+                        "recallAt5":  null,
+                        "recallAt10":  null,
+                        "hitAt5":  null,
+                        "completeAt5":  null,
+                        "precisionAt5":  null,
+                        "ndcgAt5":  null,
+                        "ndcgAt10":  null,
+                        "mrrAt10":  null
+                    },
+                    {
+                        "queryMode":  "rewritten",
+                        "cohort":  "in_corpus",
+                        "count":  36,
+                        "scoreAcceptanceRate":  0.27777777777777779,
+                        "recallAt5":  0.16435185185185186,
+                        "recallAt10":  0.2384259259259259,
+                        "hitAt5":  0.30555555555555558,
+                        "completeAt5":  0.083333333333333329,
+                        "precisionAt5":  0.077777777777777793,
+                        "ndcgAt5":  0.12006267044162747,
+                        "ndcgAt10":  0.15254700897783116,
+                        "mrrAt10":  0.14625220458553789
+                    },
+                    {
+                        "queryMode":  "rewritten",
+                        "cohort":  "missing_corpus",
+                        "count":  44,
+                        "scoreAcceptanceRate":  0.068181818181818177,
+                        "recallAt5":  null,
+                        "recallAt10":  null,
+                        "hitAt5":  null,
+                        "completeAt5":  null,
+                        "precisionAt5":  null,
+                        "ndcgAt5":  null,
+                        "ndcgAt10":  null,
+                        "mrrAt10":  null
+                    },
+                    {
+                        "queryMode":  "rewritten",
+                        "cohort":  "unsupported",
+                        "count":  15,
+                        "scoreAcceptanceRate":  0.13333333333333333,
+                        "recallAt5":  null,
+                        "recallAt10":  null,
+                        "hitAt5":  null,
+                        "completeAt5":  null,
+                        "precisionAt5":  null,
+                        "ndcgAt5":  null,
+                        "ndcgAt10":  null,
+                        "mrrAt10":  null
+                    },
+                    {
+                        "queryMode":  "rewritten",
+                        "cohort":  "needs_clarification",
+                        "count":  5,
+                        "scoreAcceptanceRate":  0.6,
+                        "recallAt5":  null,
+                        "recallAt10":  null,
+                        "hitAt5":  null,
+                        "completeAt5":  null,
+                        "precisionAt5":  null,
+                        "ndcgAt5":  null,
+                        "ndcgAt10":  null,
+                        "mrrAt10":  null
+                    }
+                ],
+    "manifest":  {
+                     "id":  "independent-validation-v1",
+                     "frozenAtUtc":  "2026-10-20T00:23:27.8078661Z",
+                     "questionsSha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB",
+                     "corpusSha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                     "modelRevision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                     "collection":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58",
+                     "thresholds":  {
+                                        "rewritten":  0.59829341466087427,
+                                        "original":  0.59257074600968018
+                                    },
+                     "questionCount":  100,
+                     "reviewHashes":  {
+                                          "authored-questions.json":  "6FA0336B5126F35C200AB841499525B0F02EE66E8460591F57B67C9F6A4891E0",
+                                          "rewrites.json":  "7B09200422B5852A9B693102A3485C95D6A66ADE481C29B311F319E7D835DC27",
+                                          "gold-review.json":  "8DFB13FA1E87DC60F4262B7E8DB5768BE3A6F32C08707391C947D3A772BFDF58",
+                                          "audit.json":  "566BEA3C85BD5FE3F45146920510684AD49A3786F2F312C406B8CED119183B88",
+                                          "author-freeze.json":  "5239F4887B6448570A4A2D3C3B56B32B4DB656B68EE7E3D9FBB710D6DD51BEC6"
+                                      },
+                     "cohorts":  [
+                                     {
+                                         "cohort":  "in_corpus",
+                                         "count":  36
+                                     },
+                                     {
+                                         "cohort":  "missing_corpus",
+                                         "count":  44
+                                     },
+                                     {
+                                         "cohort":  "unsupported",
+                                         "count":  15
+                                     },
+                                     {
+                                         "cohort":  "needs_clarification",
+                                         "count":  5
+                                     }
+                                 ],
+                     "selectionPolicy":  "Diagnostic independent-role evaluation; no post-hoc pass criterion or retuning",
+                     "serviceReady":  false,
+                     "metadataCorrections":  [
+                                                 {
+                                                     "recordedAtUtc":  "2026-10-20T00:24:08.6983024Z",
+                                                     "previousManifestSha256":  "44CA7F206A6EFABD9BA9E27F36217463E9CA440080DCAA3E6D17A35CF6E5F107",
+                                                     "reason":  "Pre-run correction of PowerShell ordered-dictionary grouping; questions, rewrites, reviewed gold and thresholds unchanged; no model inference performed"
+                                                 }
+                                             ]
+                 },
+    "completedAtUtc":  "2026-10-20T00:25:55.3840906Z",
+    "queryCollection":  "molelaw_independent_kure_v1_b2b30df8",
+    "serviceReady":  false,
+    "scope":  "Independent retrieval only. No service LLM routing, answer generation or automatic acquisition evaluated. MRR@10 and frozen development thresholds.",
+    "documentCollection":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58",
+    "freezeSha256":  "266C332B0331CFBA0950B116BAA2D131E6840A0B4B6ED049B152DE97E26BB356",
+    "runtime":  {
+                    "version":  "sentence-transformers/6.1.0;torch/2.14.1+cpu;transformers/5.20.0",
+                    "runtime":  "sentence-transformers",
+                    "revision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                    "dtype":  "float32",
+                    "device":  "cpu"
+                }
+}

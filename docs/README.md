@@ -18,20 +18,20 @@
 | 개선 전 인증 위험과 설계 근거 | [JWT 보안 검토](jwt-security-review.md) |
 | 수집·청킹·벡터 검색·근거·Advisor | [RAG·ETL 계획](plans/rag-etl.md) |
 | 주 법령 20개·보충 근거·질문 110개의 임베딩 검색 평가 | [검색 평가 실행 안내](../evaluation/legal-retrieval/README.md) |
-| Multi-Query·BM25 단독·RRF 하이브리드의 순차 비교 | [다음 검색 실험 계획](../evaluation/legal-retrieval/review/retrieval-ablation-v1/README.md) |
-| 재정렬 전 상위 50개 후보의 정답 포함 범위 | [Recall@50](../evaluation/legal-retrieval/reports/recall50-v1/kure-v1/README.md) |
-| 동일한 새 질문·세 입력의 300·500·700자 효과 | [질의·청크 추가 비교](../evaluation/legal-retrieval/reports/legal-query-chunks-v1/kure-v1/interpretation.md) |
-| 원본·문장 정제·법률 쟁점 변환의 검색 효과 | [단일 질의 변환 비교](../evaluation/legal-retrieval/reports/legal-query-transform-v1/kure-v1/interpretation.md) |
-| 독립 작성 100문항 결과·정답지 한계·서비스 적용 보류 | [독립 질문 검증](../evaluation/legal-retrieval/reports/independent-validation-v1/kure-v1/interpretation.md) |
-| 실험 최종 결론·확대 검증·한계 | [임베딩 실험 최종 정리](../evaluation/legal-retrieval/reports/final-summary.md) |
-| 임베딩 모델·차원·청크 선정 근거 | [KURE-v1 선정](../evaluation/legal-retrieval/review/model-selection.md) |
-| Qwen3의 세 청크·원본/정제 질문 결과 | [Qwen3 결과](../evaluation/legal-retrieval/reports/qwen3-0.6b/README.md) |
-| 완료된 모델·청크의 원본 질문 평가지표와 해석 | [모델·청크 비교](../evaluation/legal-retrieval/reports/comparison.md) |
-| 모델별 유사도 예시·지표 정의·평가 한계 | [유사도와 평가지표](../evaluation/legal-retrieval/reports/similarity-and-metrics.md) |
-| 기존 세 모델·700자의 질문 정제 초기 기록 | [질문 정제 전후 비교](../evaluation/legal-retrieval/reports/query-rewrite-v1/comparison.md) |
-| Qdrant 실험 컬렉션 적재·조회·검색·재색인·삭제 | [Qdrant 실험 환경](../evaluation/legal-retrieval/reports/qdrant-lab/README.md) |
-| 전체 질문의 Qdrant 전수·근사 검색 품질과 반복 지연시간 | [Qdrant 벤치마크](../evaluation/legal-retrieval/reports/qdrant-lab/benchmark/comparison.md) |
-| 네 모델 × 세 청크의 원본·정제 통합 비교 | [청크·질문 정제 종합 결과](../evaluation/legal-retrieval/reports/chunk-experiments/comparison.md) |
+| Multi-Query·BM25 단독·RRF 하이브리드의 순차 비교 | [다음 검색 실험 계획](../evaluation/legal-retrieval/experiments/hybrid-search/ablation-v1/review/README.md) |
+| 재정렬 전 상위 50개 후보의 정답 포함 범위 | [Recall@50](../evaluation/legal-retrieval/experiments/query-strategies/candidate-coverage-v1/reports/kure-v1/README.md) |
+| 동일한 새 질문·세 입력의 300·500·700자 효과 | [질의·청크 추가 비교](../evaluation/legal-retrieval/experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/interpretation.md) |
+| 원본·문장 정제·법률 쟁점 변환의 검색 효과 | [단일 질의 변환 비교](../evaluation/legal-retrieval/experiments/query-strategies/sentence-transform-v1/reports/kure-v1/interpretation.md) |
+| 독립 작성 100문항 결과·정답지 한계·서비스 적용 보류 | [독립 질문 검증](../evaluation/legal-retrieval/experiments/retrieval-validation/independent-v1/reports/kure-v1/interpretation.md) |
+| 실험 최종 결론·확대 검증·한계 | [임베딩 실험 최종 정리](../evaluation/legal-retrieval/experiments/summary.md) |
+| 임베딩 모델·차원·청크 선정 근거 | [KURE-v1 선정](../evaluation/legal-retrieval/experiments/model-comparison/review/model-selection.md) |
+| Qwen3의 세 청크·원본/정제 질문 결과 | [Qwen3 결과](../evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/README.md) |
+| 완료된 모델·청크의 원본 질문 평가지표와 해석 | [모델·청크 비교](../evaluation/legal-retrieval/experiments/model-comparison/reports/comparison.md) |
+| 모델별 유사도 예시·지표 정의·평가 한계 | [유사도와 평가지표](../evaluation/legal-retrieval/experiments/model-comparison/reports/similarity-and-metrics.md) |
+| 기존 세 모델·700자의 질문 정제 초기 기록 | [질문 정제 전후 비교](../evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/comparison.md) |
+| Qdrant 실험 컬렉션 적재·조회·검색·재색인·삭제 | [Qdrant 실험 환경](../evaluation/legal-retrieval/experiments/infrastructure/qdrant/reports/README.md) |
+| 전체 질문의 Qdrant 전수·근사 검색 품질과 반복 지연시간 | [Qdrant 벤치마크](../evaluation/legal-retrieval/experiments/infrastructure/qdrant/reports/benchmark/comparison.md) |
+| 네 모델 × 세 청크의 원본·정제 통합 비교 | [청크·질문 정제 종합 결과](../evaluation/legal-retrieval/experiments/model-comparison/reports/chunk-experiments/comparison.md) |
 | 임베딩 실험 캐시·정답 검증·보안 검토 | [2026-10-15 실험 검토](embedding-experiment-review-2026-10-15.md) |
 | 역할별 에이전트와 모델 평가 | [오케스트레이션·모델 계획](plans/orchestration-models.md) |
 | 단계별 완료 조건·평가·복구 | [구현·검증 계획](plans/delivery-validation.md) |

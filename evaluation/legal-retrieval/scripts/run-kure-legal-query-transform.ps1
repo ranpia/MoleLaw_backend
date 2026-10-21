@@ -4,13 +4,13 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/RankingMetrics.ps1')
 $repo=Split-Path (Split-Path $EvaluationRoot -Parent) -Parent
 Set-Location $repo
-$dir=Join-Path $DataRoot 'legal-query-transform-v1'
-$review=Join-Path $ReviewRoot 'legal-query-transform-v1'
-$baselineDir=Join-Path $DataRoot 'independent-validation-v1'
-$baselineReports=Join-Path $ReportsRoot 'independent-validation-v1/kure-v1'
-$baseDir=Join-Path $DataRoot 'final-validation-v1'
+$dir=Get-DataPath 'legal-query-transform-v1'
+$review=Get-ReviewPath 'legal-query-transform-v1'
+$baselineDir=Get-DataPath 'independent-validation-v1'
+$baselineReports=Get-ReportPath 'independent-validation-v1/kure-v1'
+$baseDir=Get-DataPath 'final-validation-v1'
 $work=Join-Path $ArtifactsRoot 'legal-query-transform-v1'
-$target=Join-Path $ReportsRoot 'legal-query-transform-v1/kure-v1'
+$target=Get-ReportPath 'legal-query-transform-v1/kure-v1'
 $logs=Join-Path $ArtifactsRoot 'logs'
 $stop=Join-Path $ArtifactsRoot 'control/stop-kure-legal-query-transform-v1.flag'
 $started=$false
@@ -57,7 +57,7 @@ $files=@{
     originalQuestionsSha256=(Join-Path $baselineDir 'questions.json');baselineManifestSha256=(Join-Path $baselineDir 'manifest.json')
     baselineQueriesSha256=(Join-Path $baselineReports 'queries.csv');baselineTop10Sha256=(Join-Path $baselineReports 'top10.csv')
     corpusSha256=(Join-Path $baseDir 'corpus.jsonl')
-    authoredQuestionsSha256=(Join-Path $ReviewRoot 'independent-validation-v1/authored-questions.json')
+    authoredQuestionsSha256=(Get-ReviewPath 'independent-validation-v1/authored-questions.json')
 }
 Assert-Frozen
 $data=Get-Content -LiteralPath $files.originalQuestionsSha256 -Raw -Encoding UTF8|ConvertFrom-Json
@@ -196,7 +196,7 @@ try {
         if($r.cohort -eq 'in_corpus'){$recall=('{0:F2}%' -f (100*$r.recallAt5));$complete=('{0:F2}%' -f (100*$r.completeAt5));$mrr=('{0:F4}' -f $r.mrrAt10)}
         $lines+=('| {0} | {1} | {2} | {3} | {4} | {5} | {6:F2}% |' -f $r.queryMode,$r.cohort,$r.count,$recall,$complete,$mrr,(100*$r.scoreAcceptanceRate))
     }
-    $lines+=@('','Recall은 정답 근거 중 찾은 비율, Complete는 근거를 모두 찾은 문항 비율이다. MRR@10은 첫 정답 순위의 역수이며 10위 밖은 0이다. in_corpus 외 세 분류에는 정답 순위 지표를 계산하지 않는다.','','점수 수용률은 상위 점수가 고정 임계값을 넘은 비율이다. 원본과 기존 정제는 기존 임계값을 유지하고 legal_transformed는 기존 정제 임계값 0.598293414660874를 진단용으로 사용한다. 임계값 최적화는 수행하지 않았다. 서비스 LLM의 근거 충분성 판단, 답변 생성, 자동 수집 정확도가 아니다.','','기존 결과를 알고 설계한 탐색·튜닝 평가이며 새 질문을 사용하지 않았다. 에이전트 질의 작성·검수 역할을 나누었지만 독립 검증셋이 아니며 서비스 성능 확정 근거가 아니다. 실제 서비스 LLM 프롬프트의 품질도 평가하지 않았다.','','[고정 입력](../../../data/legal-query-transform-v1/manifest.json) · [기존 독립 검증](../../independent-validation-v1/kure-v1/README.md) · [선정 근거](../../../review/model-selection.md)')
+    $lines+=@('','Recall은 정답 근거 중 찾은 비율, Complete는 근거를 모두 찾은 문항 비율이다. MRR@10은 첫 정답 순위의 역수이며 10위 밖은 0이다. in_corpus 외 세 분류에는 정답 순위 지표를 계산하지 않는다.','','점수 수용률은 상위 점수가 고정 임계값을 넘은 비율이다. 원본과 기존 정제는 기존 임계값을 유지하고 legal_transformed는 기존 정제 임계값 0.598293414660874를 진단용으로 사용한다. 임계값 최적화는 수행하지 않았다. 서비스 LLM의 근거 충분성 판단, 답변 생성, 자동 수집 정확도가 아니다.','','기존 결과를 알고 설계한 탐색·튜닝 평가이며 새 질문을 사용하지 않았다. 에이전트 질의 작성·검수 역할을 나누었지만 독립 검증셋이 아니며 서비스 성능 확정 근거가 아니다. 실제 서비스 LLM 프롬프트의 품질도 평가하지 않았다.','','[고정 입력](../../data/manifest.json) · [기존 독립 검증](../../../../retrieval-validation/independent-v1/reports/kure-v1/README.md) · [선정 근거](../../../../model-comparison/review/model-selection.md)')
     [IO.File]::WriteAllText((Join-Path $target 'README.md'),($lines -join "`n")+"`n",[Text.UTF8Encoding]::new($false))
     $summary|Format-Table queryMode,cohort,count,recallAt5,completeAt5,mrrAt10,scoreAcceptanceRate
     Write-Host 'LEGAL QUERY TRANSFORM COMPLETE. See reports/legal-query-transform-v1/kure-v1/README.md' -ForegroundColor Green

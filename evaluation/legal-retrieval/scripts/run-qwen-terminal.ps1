@@ -22,7 +22,7 @@ try {
     }
     & (Join-Path $PSScriptRoot 'run-model.ps1') -Model qwen3-0.6b -Sizes @($Size) -Port 11437
     & (Join-Path $PSScriptRoot 'run-chunk-experiments.ps1') -Model qwen3-0.6b -Sizes @($Size)
-    $profilePath=Join-Path $ReviewRoot 'models.json'
+    $profilePath=Get-ReviewPath 'models.json'
     $profiles=Get-Content -Raw -Encoding UTF8 $profilePath | ConvertFrom-Json
     $sizes=@(@($profiles.'qwen3-0.6b'.experimentSizes)+@($Size) | Sort-Object -Unique)
     $profiles.'qwen3-0.6b'.experimentSizes=$sizes
@@ -32,7 +32,7 @@ try {
     & (Join-Path $PSScriptRoot 'compare-results.ps1')
     & (Join-Path $PSScriptRoot 'compare-qdrant-benchmark.ps1') -Size $Size
     & (Join-Path $PSScriptRoot 'compare-chunk-experiments.ps1')
-    $rows=@(Import-Csv (Join-Path $ReportsRoot 'chunk-experiments/comparison.csv') | Where-Object { $_.model -eq 'qwen3-0.6b' -and [int]$_.maxChars -eq $Size -and $_.queryMode -eq 'rewritten' })
+    $rows=@(Import-Csv (Get-ReportPath 'chunk-experiments/comparison.csv') | Where-Object { $_.model -eq 'qwen3-0.6b' -and [int]$_.maxChars -eq $Size -and $_.queryMode -eq 'rewritten' })
     if($rows.Count -ne 2){throw 'Incomplete final summaries'}
     Write-Host "Qwen3 char$Size complete. Other sizes were not executed." -ForegroundColor Green
     $rows | Select-Object maxChars,split,recallAt5,mrr | Format-Table

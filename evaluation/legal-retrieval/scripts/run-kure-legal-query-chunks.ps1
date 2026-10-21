@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
 . (Join-Path $PSScriptRoot 'lib/RankingMetrics.ps1')
 $repo=Split-Path (Split-Path $EvaluationRoot -Parent) -Parent;Set-Location $repo
-$dir=Join-Path $DataRoot 'legal-query-chunks-v1';$target=Join-Path $ReportsRoot 'legal-query-chunks-v1/kure-v1'
+$dir=Get-DataPath 'legal-query-chunks-v1';$target=Get-ReportPath 'legal-query-chunks-v1/kure-v1'
 $stop=Join-Path $ArtifactsRoot 'control/stop-kure-legal-query-chunks-v1.flag'
 function Check-Stop {if(Test-Path -LiteralPath $stop){throw 'User stop requested; caches and completed size reports retained'}}
 function Save-Json($Path,$Value){[IO.File]::WriteAllText($Path,($Value|ConvertTo-Json -Depth 32)+"`n",[Text.UTF8Encoding]::new($false))}
@@ -33,16 +33,16 @@ function Read-Queries($Name,$Metadata,$Modes){
 & (Join-Path $PSScriptRoot 'prepare-legal-query-chunks.ps1') -ValidateOnly
 if(!$?){throw 'Chunk dataset validation failed'}
 $m=Get-Content -Raw -Encoding UTF8 (Join-Path $dir 'manifest.json')|ConvertFrom-Json;$freeze=(Get-FileHash (Join-Path $dir 'manifest.json')).Hash
-$base=Get-Content -Raw -Encoding UTF8 (Join-Path $DataRoot 'final-validation-v1/manifest.json')|ConvertFrom-Json
-$transformManifestPath=Join-Path $DataRoot 'legal-query-transform-v1/manifest.json';$tm=Get-Content -Raw -Encoding UTF8 $transformManifestPath|ConvertFrom-Json
-$questionPath=Join-Path $DataRoot 'independent-validation-v1/questions.json';$data=Get-Content -Raw -Encoding UTF8 $questionPath|ConvertFrom-Json
-$baselineDir=Join-Path $ReportsRoot 'legal-query-transform-v1/kure-v1';$br=Get-Content -Raw -Encoding UTF8 (Join-Path $baselineDir 'report.json')|ConvertFrom-Json
+$base=Get-Content -Raw -Encoding UTF8 (Get-DataPath 'final-validation-v1/manifest.json')|ConvertFrom-Json
+$transformManifestPath=Get-DataPath 'legal-query-transform-v1/manifest.json';$tm=Get-Content -Raw -Encoding UTF8 $transformManifestPath|ConvertFrom-Json
+$questionPath=Get-DataPath 'independent-validation-v1/questions.json';$data=Get-Content -Raw -Encoding UTF8 $questionPath|ConvertFrom-Json
+$baselineDir=Get-ReportPath 'legal-query-transform-v1/kure-v1';$br=Get-Content -Raw -Encoding UTF8 (Join-Path $baselineDir 'report.json')|ConvertFrom-Json
 $context=Get-QdrantLabContext 'kure-v1' 300
 foreach($field in @('tag','dimensions','inputMode','documentFormat','queryFormat','revision')){if($context.profile.$field -ne $base.model.$field){throw "Pinned model profile mismatch: $field"}}
-$indManifestPath=Join-Path $DataRoot 'independent-validation-v1/manifest.json'
+$indManifestPath=Get-DataPath 'independent-validation-v1/manifest.json'
 if((Get-FileHash $indManifestPath).Hash -ne $tm.baselineManifestSha256){throw 'Original query manifest changed'}
 if($m.modelRevision -ne $context.profile.revision -or $m.dimensions -ne 1024 -or $m.overlapChars -ne 64 -or $m.questionCount -ne 100 -or (@($m.sizes.maxChars|Sort-Object) -join ',') -ne '500,700'){throw 'Experiment model/sizes mismatch'}
-$frozenFiles=@{};foreach($p in @((Join-Path $dir 'manifest.json'),$transformManifestPath,$questionPath,(Join-Path $ReviewRoot 'legal-query-transform-v1/transforms.json'),(Join-Path $ReviewRoot 'legal-query-transform-v1/audit.json'),(Join-Path $baselineDir 'report.json'),(Join-Path $baselineDir 'queries.csv'),(Join-Path $baselineDir 'top10.csv'))){$frozenFiles[$p]=(Get-FileHash $p).Hash}
+$frozenFiles=@{};foreach($p in @((Join-Path $dir 'manifest.json'),$transformManifestPath,$questionPath,(Get-ReviewPath 'legal-query-transform-v1/transforms.json'),(Get-ReviewPath 'legal-query-transform-v1/audit.json'),(Join-Path $baselineDir 'report.json'),(Join-Path $baselineDir 'queries.csv'),(Join-Path $baselineDir 'top10.csv'))){$frozenFiles[$p]=(Get-FileHash $p).Hash}
 foreach($s in $m.sizes){$p=Join-Path $dir "char$($s.maxChars)/corpus.jsonl";if((Get-FileHash $p).Hash -ne $s.corpusSha256){throw 'Size corpus hash mismatch'};$frozenFiles[$p]=$s.corpusSha256}
 $questionMap=@{};foreach($q in $data.questions){$questionMap[$q.id]=$q}
 $baselineRows=@(Import-Csv (Join-Path $baselineDir 'queries.csv')|ForEach-Object {Convert-Row $_ 300})
@@ -59,8 +59,8 @@ try{
  Check-Stop;Initialize-QdrantLab 6333
  $queryVectors=[LegalDenseIndex]::new(1024)
  $frozenFiles[$indManifestPath]=$tm.baselineManifestSha256
- $frozenFiles[(Join-Path $DataRoot 'final-validation-v1/corpus.jsonl')]=$m.sourceCorpusSha256
- $ir=Get-Content -Raw -Encoding UTF8 (Join-Path $ReportsRoot 'independent-validation-v1/kure-v1/report.json')|ConvertFrom-Json
+ $frozenFiles[(Get-DataPath 'final-validation-v1/corpus.jsonl')]=$m.sourceCorpusSha256
+ $ir=Get-Content -Raw -Encoding UTF8 (Get-ReportPath 'independent-validation-v1/kure-v1/report.json')|ConvertFrom-Json
  if($ir.freezeSha256 -ne $tm.baselineManifestSha256 -or $ir.manifest.questionsSha256 -ne $m.questionsSha256 -or $ir.documentCollection -ne $br.documentCollection){throw 'Original query report provenance mismatch'}
  Read-Queries $ir.queryCollection @{owner=$script:LabOwner;kind='independent-validation-v1';model_digest=$m.modelRevision;questions_sha256=$m.questionsSha256;corpus_sha256=$m.sourceCorpusSha256;freeze_sha256=$ir.freezeSha256} @('original','rewritten')
  Read-Queries $br.queryCollection @{owner=$script:LabOwner;kind='legal-query-transform-v1';model_digest=$m.modelRevision;transforms_sha256=$m.transformsSha256;corpus_sha256=$m.sourceCorpusSha256;freeze_sha256=$br.freezeSha256} @('legal_transformed')
@@ -112,7 +112,7 @@ try{
  Save-Json (Join-Path $target 'report.json') @{completedAtUtc=[datetime]::UtcNow.ToString('o');freezeSha256=$freeze;manifest=$m;completedSizes=$completed;runtime=$runtime;summary=$summary;serviceReady=$false;policy='Exploratory chunk-size comparison; same questions, gold, query vectors, source units and per-mode diagnostic thresholds; no service LLM or answer evaluation'}
  $lines=@('# KURE 300·500·700자와 질문 변환 비교','','같은 원문 6,527개 단위·질문 100개·세 가지 입력·질문 벡터를 고정했다. 기존 300자 결과는 재사용하고 500·700자를 순차 실행했다. 중복은 64자이며 기존/추가 원문 각각의 기존 분할 규칙을 유지했다.','','| 문자 | 질의 | Recall@5 | Hit@5 | Complete@5 | MRR@10 |','| ---: | --- | ---: | ---: | ---: | ---: |')
  foreach($r in $summary|Where-Object cohort -eq 'in_corpus'|Sort-Object maxChars,queryMode){$lines+=('| {0} | {1} | {2:F2}% | {3:F2}% | {4:F2}% | {5:F4} |' -f $r.maxChars,$r.queryMode,(100*$r.recallAt5),(100*$r.hitAt5),(100*$r.completeAt5),$r.mrrAt10)}
- $lines+=@('','코퍼스 내 36문항 기준이다. 그 외 64문항은 별도 점수 수용률로 comparison.csv에 기록했다. 기존 고정 정답 외 대체 근거가 있을 수 있다. 기존 결과를 참고한 탐색 평가이며 새 독립 검증·실제 답변 정확도·LLM 충분성 판단·서비스 적용 확정을 뜻하지 않는다. 임계값을 재조정하지 않았다.','','[고정 입력](../../../data/legal-query-chunks-v1/manifest.json) · [300자 비교](../../legal-query-transform-v1/kure-v1/interpretation.md)')
+ $lines+=@('','코퍼스 내 36문항 기준이다. 그 외 64문항은 별도 점수 수용률로 comparison.csv에 기록했다. 기존 고정 정답 외 대체 근거가 있을 수 있다. 기존 결과를 참고한 탐색 평가이며 새 독립 검증·실제 답변 정확도·LLM 충분성 판단·서비스 적용 확정을 뜻하지 않는다. 임계값을 재조정하지 않았다.','','[고정 입력](../../data/manifest.json) · [300자 비교](../../../sentence-transform-v1/reports/kure-v1/interpretation.md)')
  [IO.File]::WriteAllText((Join-Path $target 'README.md'),($lines -join "`n")+"`n",[Text.UTF8Encoding]::new($false))
  $summary|Where-Object cohort -eq 'in_corpus'|Format-Table maxChars,queryMode,recallAt5,completeAt5,mrrAt10
  Write-Host 'LEGAL QUERY CHUNKS 500/700 COMPLETE. Reports and Qdrant saved.' -ForegroundColor Green

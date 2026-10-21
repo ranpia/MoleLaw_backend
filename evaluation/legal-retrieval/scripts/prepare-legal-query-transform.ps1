@@ -1,11 +1,11 @@
 ﻿$ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
-$review=Join-Path $ReviewRoot 'legal-query-transform-v1';$target=Join-Path $DataRoot 'legal-query-transform-v1'
+$review=Get-ReviewPath 'legal-query-transform-v1';$target=Get-DataPath 'legal-query-transform-v1'
 $manifestPath=Join-Path $target 'manifest.json'
 if(Test-Path -LiteralPath $manifestPath){throw 'Already frozen; use a new version'}
-$authoredPath=Join-Path $ReviewRoot 'independent-validation-v1/authored-questions.json'
+$authoredPath=Get-ReviewPath 'independent-validation-v1/authored-questions.json'
 $transformsPath=Join-Path $review 'transforms.json';$auditPath=Join-Path $review 'audit.json'
-$baselineDir=Join-Path $DataRoot 'independent-validation-v1';$resultDir=Join-Path $ReportsRoot 'independent-validation-v1/kure-v1'
+$baselineDir=Get-DataPath 'independent-validation-v1';$resultDir=Get-ReportPath 'independent-validation-v1/kure-v1'
 $questionPath=Join-Path $baselineDir 'questions.json';$baseManifestPath=Join-Path $baselineDir 'manifest.json'
 $base=Get-Content -Raw -Encoding UTF8 $baseManifestPath|ConvertFrom-Json
 $data=Get-Content -Raw -Encoding UTF8 $questionPath|ConvertFrom-Json
@@ -23,7 +23,7 @@ if($queries.Count -ne 200 -or $tops.Count -ne 2000){throw 'Incomplete baseline r
 foreach($mode in @('original','rewritten')){foreach($q in $data.questions){$rows=@($queries|Where-Object {$_.queryMode -eq $mode -and $_.queryId -eq $q.id});if($rows.Count -ne 1 -or $rows[0].originalText -cne $q.text -or $rows[0].cohort -ne $q.cohort){throw 'Baseline row identity mismatch'}}}
 $report=Get-Content -Raw -Encoding UTF8 (Join-Path $resultDir 'report.json')|ConvertFrom-Json
 if($report.freezeSha256 -ne (Get-FileHash $baseManifestPath).Hash -or $report.manifest.questionsSha256 -ne $base.questionsSha256){throw 'Baseline report identity mismatch'}
-$finalPath=Join-Path $DataRoot 'final-validation-v1/corpus.jsonl'
+$finalPath=Get-DataPath 'final-validation-v1/corpus.jsonl'
 if((Get-FileHash $finalPath).Hash -ne $base.corpusSha256){throw 'Corpus changed'}
 $manifest=[ordered]@{id='legal-query-transform-v1';frozenAtUtc=[datetime]::UtcNow.ToString('o');transformsSha256=(Get-FileHash $transformsPath).Hash;auditSha256=(Get-FileHash $auditPath).Hash;authoredQuestionsSha256=(Get-FileHash $authoredPath).Hash;originalQuestionsSha256=$base.questionsSha256;baselineManifestSha256=(Get-FileHash $baseManifestPath).Hash;baselineQueriesSha256=(Get-FileHash $queriesPath).Hash;baselineTop10Sha256=(Get-FileHash $top10Path).Hash;corpusSha256=$base.corpusSha256;modelRevision=$base.modelRevision;collection=$base.collection;threshold=[double]$base.thresholds.rewritten;questionCount=100;newQueryMode='legal_transformed';queryModes=@('original','rewritten','legal_transformed');singleVectorPerQuestion=$true;serviceReady=$false;evaluationPolicy='Exploratory strategy comparison on a previously examined and threshold-tuned dataset; not new independent held-out evidence';authorIsolation='Original questions only; no corpus, gold, previous rewrites or search results';actualServiceLlmEvaluated=$false}
 $null=New-Item -ItemType Directory -Force $target

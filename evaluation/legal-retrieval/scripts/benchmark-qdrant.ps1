@@ -14,9 +14,9 @@ Assert-QdrantLabCollection $context $info
 $count=(Invoke-QdrantLab POST "collections/$($context.collection)/points/count" @{exact=$true}).result.count
 if ($count -ne $context.data.corpus.chunkCount -or $info.status -ne 'green' -or $info.optimizer_status -ne 'ok' -or $info.indexed_vectors_count -lt 1) { throw 'Collection must be complete, optimized and green.' }
 $datasetPath=Join-Path $context.directory 'questions.json'
-$rewritePath=Join-Path $ReviewRoot 'query-rewrites-v1.json'
+$rewritePath=Get-ReviewPath 'query-rewrites-v1.json'
 $rewriteHash=(Get-FileHash $rewritePath).Hash
-$sourceHash=(Get-FileHash (Join-Path $DataRoot 'variants/char700-overlap64-article-v1/questions.json')).Hash
+$sourceHash=(Get-FileHash (Get-DataPath 'variants/char700-overlap64-article-v1/questions.json')).Hash
 $rewrites=Read-QueryRewrites $rewritePath $context.data (Get-FileHash $datasetPath).Hash (Get-ComparisonIdentity $context.directory) $sourceHash
 $version=Invoke-RestMethod "http://127.0.0.1:$OllamaPort/api/version" -TimeoutSec 10
 Assert-QdrantLabRuntime $context $version
@@ -119,8 +119,8 @@ if ((Get-FileHash $rewritePath).Hash -ne $rewriteHash) { throw 'Rewrites changed
 $after=(Invoke-QdrantLab GET "collections/$($context.collection)").result
 Assert-QdrantLabCollection $context $after
 if ((Invoke-QdrantLab POST "collections/$($context.collection)/points/count" @{exact=$true}).result.count -ne $count) { throw 'Point count changed.' }
-$directory=Join-Path $ReportsRoot "qdrant-lab/benchmark/$Model"
-if ($Size -ne 700) { $directory=Join-Path $ReportsRoot "qdrant-lab/benchmark/char$Size/$Model" }
+$directory=Get-ReportPath "qdrant-lab/benchmark/$Model"
+if ($Size -ne 700) { $directory=Get-ReportPath "qdrant-lab/benchmark/char$Size/$Model" }
 $null=New-Item -ItemType Directory -Force $directory
 $samples | Export-Csv (Join-Path $directory 'latency.csv') -NoTypeInformation -Encoding UTF8
 $queryRows | Export-Csv (Join-Path $directory 'queries.csv') -NoTypeInformation -Encoding UTF8

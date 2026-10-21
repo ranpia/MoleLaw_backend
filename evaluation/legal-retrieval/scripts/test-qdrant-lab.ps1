@@ -1,10 +1,10 @@
-$ErrorActionPreference='Stop'
+﻿$ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'lib/QdrantLab.ps1')
 $context=Get-QdrantLabContext 'embeddinggemma'
 $variantContexts=@(foreach ($size in @(300,500,700)) {
     $variant=Get-QdrantLabContext 'embeddinggemma' $size
     $version="char$size-overlap64-article-v1"
-    $expectedDirectory=$(if ($size -eq 500) { $DataRoot } else { Join-Path $DataRoot "variants/$version" })
+    $expectedDirectory=$(if ($size -eq 500) { $DataRoot } else { Get-DataPath "variants/$version" })
     $expectedCount=@{300=8497;500=6634;700=6031}[$size]
     if ($variant.directory -ne $expectedDirectory -or $variant.data.corpus.chunkCount -ne $expectedCount -or $variant.metadata.chunk_count -ne $expectedCount -or $variant.metadata.chunking_version -ne $version -or $variant.collection -notmatch "_c$($size)_") { throw "Invalid size context: $size" }
     $variantInfo=[pscustomobject]@{config=[pscustomobject]@{metadata=$variant.metadata;params=[pscustomobject]@{vectors=[pscustomobject]@{size=768;distance='Cosine'}}}}

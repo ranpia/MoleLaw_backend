@@ -1,3 +1,0 @@
-﻿"model","dimensions","split","positiveQueries","negativeQueries","top1HitRate","recallAt5","recallAt10","mrr","noAnswerFalseAcceptanceRate","inCorpusAcceptanceRate","threshold","meanQueryEmbeddingMs"
-"kure-v1:official","1024","development","30","5","0.5","0.583888888888889","0.733333333333334","0.615257874495786","0","0.933333333333333","0.579725121518298","170.1855"
-"kure-v1:official","1024","held_out","70","5","0.485714285714286","0.764761904761905","0.81","0.65262314366306","0.2","0.814285714285714","0.579725121518298","158.368468571429"

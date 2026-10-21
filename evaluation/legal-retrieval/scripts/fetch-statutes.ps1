@@ -1,8 +1,8 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([switch]$Refresh, [string]$DatasetPath, [string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Paths.ps1')
-if (!$DatasetPath) { $DatasetPath = Join-Path $DataRoot 'questions.json' }
+if (!$DatasetPath) { $DatasetPath = Get-DataPath 'questions.json' }
 if (!$OutputDirectory) { $OutputDirectory = Join-Path $ArtifactsRoot 'snapshots' }
 $dataset = Get-Content -Raw -Encoding UTF8 $DatasetPath | ConvertFrom-Json
 $directory = $OutputDirectory
