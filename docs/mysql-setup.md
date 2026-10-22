@@ -12,6 +12,10 @@
 .\gradlew.bat bootRun --args="--spring.profiles.active=local"
 ```
 
+루트 `.env`에 `SPRING_PROFILES_ACTIVE=local`이 있으면 인자 없이 `.\gradlew.bat bootRun`으로 실행할 수 있다. YAML이 이 값을 `spring.profiles.active`로 명시적으로 연결하며 CLI 프로필이 우선한다.
+
+Flyway가 `Communications link failure`와 `Connection refused`로 실패하면 SQL 적용 전 DB 연결 실패다. 먼저 MySQL 컨테이너 상태와 `.env`의 호스트·포트를 확인한다. 이 경우 이력을 repair하거나 DB를 초기화하지 않는다. 2026-10-22 로컬 재현에서는 중지된 기존 MySQL·Redis·Qdrant를 시작한 뒤 `.env`만 사용한 실행에서 V1~V4 검증·현재 버전 4·JPA validate·서버 기동을 확인했다. 기존 스키마나 migration 이력은 변경하지 않았다.
+
 `flyway_schema_history`에 버전 1·2·3·4 성공 이력이 남고 서버가 기동되면 초기화 완료다. 재기동 시 적용한 버전을 다시 실행하지 않는다. 테이블은 `user`, `chat_room`, `message`, `legal_source`, `legal_source_index`, `chat_evidence_snapshot`이다. User 숫자 PK는 IDENTITY로 생성한다. V2는 이전 방의 근거를 자동 생성하지 않으며 스냅샷 없는 방의 후속 상담은 실패한다. V3는 사용자 필수값·로컬/OAuth 자격증명 조합·provider별 subject 유일성을 적용하고 비밀번호 컬럼을 `password_hash`로 명시한다. 기존 데이터가 제약을 만족하지 않으면 실패하며 자동 삭제하지 않는다.
 
 이전 `001-legal-source.sql`은 참고용이며 실행하지 않는다. 수집 작업·상담 근거 테이블은 후속 migration으로 추가한다. 로그인 세션·Refresh는 Redis에 구현하며 MySQL 인증 테이블은 추가하지 않는다. V4는 legal_source_index와 상담 제약·LONGTEXT·삭제 cascade·근거 schema_version을 추가하고 law_embedding/law_chunk/law를 제거한다.

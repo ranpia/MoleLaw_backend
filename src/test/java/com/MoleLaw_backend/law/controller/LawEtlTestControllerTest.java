@@ -97,6 +97,7 @@ class LawEtlTestControllerTest {
         for (String suffix : List.of("index", "reindex", "search")) {
             var operation = spec.path("paths").path("/api/local/law-etl/" + suffix).path("post");
             assertThat(operation.path("summary").asText()).isNotBlank();
+            assertThat(operation.path("tags").toString()).contains("법령 ETL 테스트");
             assertThat(operation.path("security").isEmpty()).isFalse();
             var body = operation.path("requestBody").path("content").path("application/json");
             assertThat(body.has("examples") || body.has("example")).isTrue();
@@ -105,5 +106,12 @@ class LawEtlTestControllerTest {
                 assertThat(operation.path("responses").has(status)).isTrue();
             }
         }
+        var indexExamples = spec.path("paths").path("/api/local/law-etl/index").path("post")
+                .path("requestBody").path("content").path("application/json").path("examples");
+        assertThat(indexExamples.has("검색 조건 지정")).isTrue();
+        var searchExamples = spec.path("paths").path("/api/local/law-etl/search").path("post")
+                .path("responses").path("200").path("content").path("application/json").path("examples");
+        assertThat(searchExamples.has("검색 성공")).isTrue();
+        assertThat(searchExamples.has("검색 결과 없음")).isTrue();
     }
 }

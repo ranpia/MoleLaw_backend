@@ -16,7 +16,7 @@
 
 루트 `.env`에 기존 MySQL·OAuth·암호화·법령 API 설정과 `SPRING_PROFILES_ACTIVE=local`, `APP_LAW_VECTOR_ENABLED=true`를 설정한다. 임베딩 서버·MySQL·Qdrant를 실행한 뒤 `.\gradlew.bat bootRun`으로 서버를 켠다.
 
-API는 `local & !test`와 벡터 기능 활성화 조건에서만 등록된다. 운영에서는 `local`을 사용하지 않는다. 모든 요청은 인증 쿠키 또는 Bearer와 CSRF 쿠키/헤더가 필요하다. `GET /api/auth/csrf`의 JSON 토큰을 `X-XSRF-TOKEN`으로 전송한다. Swagger UI는 `/swagger-ui.html`의 **Local law ETL** 태그에서 확인한다.
+API는 `local & !test`와 벡터 기능 활성화 조건에서만 등록된다. 운영에서는 `local`을 사용하지 않는다. 모든 요청은 인증 쿠키 또는 Bearer와 CSRF 쿠키/헤더가 필요하다. `GET /api/auth/csrf`의 JSON 토큰을 `X-XSRF-TOKEN`으로 전송한다. Swagger UI는 `/swagger-ui.html`의 **법령 ETL 테스트** 태그에서 확인한다. 태그가 없으면 루트 `.env`의 `SPRING_PROFILES_ACTIVE=local`과 `APP_LAW_VECTOR_ENABLED=true`를 확인하고 서버를 재시작한다. 벡터 기능을 끄면 컨트롤러와 문서가 함께 제외된다.
 
 | POST 경로 | JSON 예시 | 결과 |
 | --- | --- | --- |
@@ -41,3 +41,5 @@ Postman 모의 계약은 저장소의 기존 Ollama 호환 임베딩 계약을 �
 2026-10-22 검증 결과: 일반 테스트 298개 중 실패 0·선택 HTTP 테스트 2개 건너뜀, bootJar 성공. 별도 Postman 검증 2개와 실제 KURE/격리 Qdrant 검증 1개를 통과했다. simulation 로그에서 실제 GET /api/tags와 POST /api/embed의 HTTP 200을 확인했다. 실제 KURE는 1,024차원으로 가상 조문 20개→청크 40개→서로 다른 조문 15개 검색을 확인했다. 테스트용 컨트롤러는 입력·재색인·검색 응답, 인증·CSRF, OpenAPI와 local 등록 조건을 검증했다. 이 과정의 원문 저장소는 모킹했고 실제 법령 API·유료 LLM은 호출하지 않았다. 테스트용 simulation 서버와 격리 컨테이너는 종료했다.
 
 영속 페이지/배치 재개·서버 중단 WRITING 회수·분산 실행 중복 방지·실패/구세대 점의 물리 정리는 후속 운영 범위다. 재색인은 배치 중간 재개가 아니다. 실제 법령 API부터 MySQL·모델·Qdrant·최종 답변까지 한 번에 연결한 법률 품질 평가는 별도로 수행한다.
+
+2026-10-22 Swagger 노출 검증: 루트 .env에서 local 프로필과 벡터 기능을 켜고 빌드한 JAR을 실행해 /v3/api-docs에 index·reindex·search 세 POST 경로가 포함되는 것을 확인했다. Swagger UI HTML은 HTTP 200으로 응답했다. 브라우저 화면 조작이나 실제 ETL 요청은 이번 문서 검증에서 실행하지 않았다. 한글 태그와 검색 조건·성공/빈 응답 예시를 문서 회귀 테스트로 확인했다.

@@ -8,6 +8,7 @@ spring:
     import: optional:file:.env[.properties]
 
   profiles:
+    active: ${SPRING_PROFILES_ACTIVE:mysql}
     default: mysql
     group:
       local:
