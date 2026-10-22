@@ -1,12 +1,11 @@
 package com.MoleLaw_backend.chat.entity;
+
 import com.MoleLaw_backend.user.entity.User;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -18,23 +17,28 @@ public class ChatRoom {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 255)
     private String title;
 
-    @OneToOne(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
-    private ChatEvidenceSnapshot evidenceSnapshot;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     private User user;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        validate();
+        this.createdAt = LocalDateTime.now(java.time.Clock.systemUTC());
     }
 
-    // ✅ Message 연관관계 추가
-    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Message> messages = new ArrayList<>();
+    @PreUpdate
+    public void validate() {
+        if (user == null || title == null || title.isBlank() || title.codePointCount(0, title.length()) > 255) {
+            throw new IllegalArgumentException("Chat room requires an owner and a title of 1–255 characters");
+        }
+    }
+
 }

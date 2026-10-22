@@ -16,11 +16,16 @@ import com.MoleLaw_backend.auth.security.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class UserService {
 
@@ -31,26 +36,34 @@ public class UserService {
     private final RefreshTokenService refreshTokens;
 
     @Transactional
-    public AuthResponse signup(SignupRequest request, HttpServletResponse response) {
-        if (userRepository.existsByEmailAndProvider(request.getEmail(), "local")) {
+    public AuthResponse signup(@NotNull @Valid SignupRequest request, HttpServletResponse response) {
+        String email = User.normalizeEmail(request.getEmail());
+        if (userRepository.existsByEmailAndProvider(email, "local")) {
             throw new MolelawException(ErrorCode.DUPLICATED_EMAIL);
         }
 
         User user = User.builder()
-                .email(request.getEmail())
+                .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
                 .provider("local")
                 .build();
 
-        user = userRepository.save(user);
+        try {
+            user = userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException exception) {
+            if (isDuplicateAccount(exception)) {
+                throw new MolelawException(ErrorCode.DUPLICATED_EMAIL);
+            }
+            throw exception;
+        }
 
         return authTokens.issue(user.getId(), response);
     }
 
     @Transactional
-    public AuthResponse login(LoginRequest request, HttpServletResponse response) {
-        User user = userRepository.findByCredentialsForUpdate(request.getEmail(), "local")
+    public AuthResponse login(@NotNull @Valid LoginRequest request, HttpServletResponse response) {
+        User user = userRepository.findByCredentialsForUpdate(User.normalizeEmail(request.getEmail()), "local")
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND,"해당 이메일이 존재하지 않습니다."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -70,7 +83,6 @@ public class UserService {
         return authTokens.rotate(refreshToken, response);
     }
 
-
     public UserResponse getUserById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
@@ -86,7 +98,7 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(Long userId, ChangePasswordRequest request) {
+    public void changePassword(Long userId, @NotNull @Valid ChangePasswordRequest request) {
         User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
 
@@ -98,15 +110,26 @@ public class UserService {
         user.changePassword(passwordEncoder.encode(request.getNewPassword()));
     }
 
-
     @Transactional
-    public void changeNickname(Long userId, ChangeNicknameRequest request) {
+    public void changeNickname(Long userId, @NotNull @Valid ChangeNicknameRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new MolelawException(ErrorCode.USER_NOT_FOUND));
 
         user.changeNickname(request.getNewNickname());
     }
 
+    private boolean isDuplicateAccount(DataIntegrityViolationException exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException violation) {
+                String constraint = violation.getConstraintName();
+                if (constraint != null && constraint.toLowerCase(java.util.Locale.ROOT)
+                        .contains("uk_user_email_provider")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
 }
 

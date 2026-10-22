@@ -88,7 +88,7 @@
 - CORS는 `security.allowed-origins` (`CORS_ALLOWED_ORIGINS`, 쉼표로 구분한 명시적 Origin)만 허용한다. 생략하면 단일 `FRONTENDURI`를 사용한다. OAuth 리다이렉트용 `FRONTENDURI`에는 목록을 넣지 않는다.
 - 프론트는 먼저 `GET /api/auth/csrf`를 `credentials: "include"`로 호출한다. 응답 `{token, headerName}`의 토큰을 메모리에 두고 모든 POST/PUT/PATCH/DELETE 요청에 해당 헤더(기본 `X-XSRF-TOKEN`)와 credentials를 보낸다. 로그인·가입·재발급·로그아웃에도 필요하다. 토큰을 담은 `XSRF-TOKEN` 쿠키는 local/test에서만 JavaScript로 읽을 수 있고 운영에서는 HttpOnly다. Access/Refresh 인증 쿠키는 HttpOnly를 유지한다.
 - 상태 변경 요청의 Origin은 같은 서버 주소이거나 외부 Origin 허용 목록과 일치해야 한다. Origin이 없는 클라이언트도 CSRF 토큰을 제출해야 한다. 누락·잘못된 CSRF 또는 허용되지 않은 Origin은 403이다. Bearer 호출도 동일한 CSRF 계약을 따른다.
-- Access는 Authorization Bearer를 우선하고 없을 때 accessToken 쿠키를 사용한다. Refresh로 일반 API를 인증하거나 Access로 재발급할 수 없다. `/api/auth/reissue`는 Access 인증 없이 Refresh 자체와 사용자 존재를 검증한다.
+- Access는 Authorization Bearer를 우선하고 없을 때 accessToken 쿠키를 사용한다. Refresh로 일반 API를 인증하거나 Access로 재발급할 수 없다. `/api/auth/refresh`는 Access 인증 없이 Refresh 자체와 사용자 존재를 검증한다.
 - 일반 로그인·가입·OAuth·재발급·탈퇴·로그아웃은 공통 쿠키 설정을 사용한다. 운영 기본은 Secure=true, SameSite=None, HttpOnly=true이며 `COOKIE_SAME_SITE=Lax/Strict`로 같은 사이트 정책을 선택할 수 있다. Secure=false는 local/test만 허용하고 None과 함께 사용할 수 없다. local/test는 Lax다.
 - Access Path=/, Refresh Path=/api/auth로 통일했다. Refresh 발급·삭제 시 이전 Path=/ 쿠키도 삭제한다. 쿠키 수명은 현재 JWT와 같은 Access 15시간, Refresh 7일이다. 목표 Access 5분 변경은 stateless/Redis Refresh 전환 단계에서 적용한다.
 - Refresh JSON 응답 제거, 서버 저장소·회전·폐기와 issuer/audience 검증은 후속 단계다. 현재 로그아웃은 쿠키만 제거하므로 복사한 JWT의 서버 폐기를 제공하지 않는다.

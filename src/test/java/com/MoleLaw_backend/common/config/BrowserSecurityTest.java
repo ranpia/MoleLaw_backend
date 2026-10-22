@@ -47,18 +47,18 @@ class BrowserSecurityTest {
                         .content("{\"email\":\"redis-logout@example.com\",\"password\":\"Example-password-123!\"}"))
                 .andExpect(status().isOk()).andReturn().getResponse();
         Cookie secondAccess = login.getCookie("accessToken");
-        mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isOk());
-        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + secondAccess.getValue()))
+        mvc.perform(get("/api/users/me").cookie(firstAccess)).andExpect(status().isOk());
+        mvc.perform(get("/api/users/me").header("Authorization", "Bearer " + secondAccess.getValue()))
                 .andExpect(status().isOk());
         mvc.perform(post("/api/auth/logout").cookie(csrfCookie, firstAccess, refresh)
                         .header("X-XSRF-TOKEN", csrf).header("Authorization", "Bearer " + secondAccess.getValue()))
                 .andExpect(status().isOk()).andExpect(jsonPath("success").value(true));
-        mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isOk());
-        mvc.perform(get("/api/auth/me").cookie(secondAccess)).andExpect(status().isOk());
-        mvc.perform(post("/api/auth/reissue").cookie(csrfCookie, refresh, firstAccess)
+        mvc.perform(get("/api/users/me").cookie(firstAccess)).andExpect(status().isOk());
+        mvc.perform(get("/api/users/me").cookie(secondAccess)).andExpect(status().isOk());
+        mvc.perform(post("/api/auth/refresh").cookie(csrfCookie, refresh, firstAccess)
                         .header("X-XSRF-TOKEN", csrf))
                 .andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/auth/me").cookie(firstAccess)).andExpect(status().isOk());
+        mvc.perform(get("/api/users/me").cookie(firstAccess)).andExpect(status().isOk());
     }
 
     @Test
@@ -99,7 +99,7 @@ class BrowserSecurityTest {
                 .andReturn().getResponse();
         Cookie access = signup.getCookie("accessToken");
         assertNotNull(access);
-        mvc.perform(get("/api/auth/me").cookie(access))
+        mvc.perform(get("/api/users/me").cookie(access))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("data.email").value("signup-regression@example.com"));
     }

@@ -72,7 +72,23 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration', 'redis-integration', 'qdrant-integration', 'postman-simulation', 'embedding-live' }
+	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration', 'redis-integration', 'qdrant-integration', 'postman-simulation', 'embedding-live', 'evidence-decision-live' }
+}
+
+// Synthetic test key only. Runtime deployments must supply their own random 256-bit key.
+tasks.withType(Test).configureEach {
+    environment 'CHAT_ENCRYPTION_KEY', 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8='
+    environment 'CHAT_ENCRYPTION_KEY_VERSION', 'test-v1'
+}
+
+tasks.register('evidenceDecisionLiveTest', Test) {
+    description = 'Checks four evidence decisions with the configured real OpenAI model; incurs API usage.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'evidence-decision-live' }
+    outputs.upToDateWhen { false }
+    testLogging { showStandardStreams = true }
 }
 
 tasks.register('embeddingLiveTest', Test) {

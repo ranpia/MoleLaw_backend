@@ -11,7 +11,7 @@
 
 ## 배포 전환
 
-이전 버전 2 Access와 기존 15시간 Access는 새 검증에서 거절한다. 기존 정상 r1 Refresh는 유지하므로 /api/auth/reissue로 버전 3 Access를 받을 수 있다. 구형 JWT Refresh 또는 유실된 Refresh만 있으면 재로그인한다. 이전 버전 서버는 버전 3 Access를 거절하므로 혼합 버전 배포를 피하고 동일 릴리스로 전환한다.
+이전 버전 2 Access와 기존 15시간 Access는 새 검증에서 거절한다. 기존 정상 r1 Refresh는 유지하므로 /api/auth/refresh로 버전 3 Access를 받을 수 있다. 구형 JWT Refresh 또는 유실된 Refresh만 있으면 재로그인한다. 이전 버전 서버는 버전 3 Access를 거절하므로 혼합 버전 배포를 피하고 동일 릴리스로 전환한다.
 
 기존 molelaw:auth:access:* 키는 더 이상 읽거나 쓰지 않는다. 이미 설정된 TTL까지 자연 만료하도록 두며 이 변경에서 Redis 데이터 삭제는 수행하지 않는다.
 

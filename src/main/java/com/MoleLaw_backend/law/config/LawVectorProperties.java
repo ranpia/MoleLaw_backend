@@ -20,4 +20,7 @@ public class LawVectorProperties {
     private String apiKey = "";
     private int chunkSize = 300;
     private int chunkOverlap = 64;
+    private int embeddingConcurrency = 1;
+    private int embeddingQueueCapacity = 4;
+    private long embeddingWaitMillis = 5000;
 }

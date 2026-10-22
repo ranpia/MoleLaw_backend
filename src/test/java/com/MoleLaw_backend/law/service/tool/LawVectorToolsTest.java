@@ -1,16 +1,18 @@
 package com.MoleLaw_backend.law.service.tool;
+import com.MoleLaw_backend.law.dto.tool.LegalToolContracts;
+import com.MoleLaw_backend.law.service.source.LegalSourceIndexService;
+import com.MoleLaw_backend.law.service.source.LegalSourceService;
+import com.MoleLaw_backend.law.client.vector.LawVectorClient;
+import com.MoleLaw_backend.law.exception.LegalToolException;
 
 import com.MoleLaw_backend.law.config.LawVectorProperties;
 import com.MoleLaw_backend.law.entity.LegalSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
 import java.time.Clock;
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-
+import java.util.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -20,67 +22,127 @@ class LawVectorToolsTest {
     private final LawVectorClient client = mock(LawVectorClient.class);
     private final LegalSourceService sources = mock(LegalSourceService.class);
     private final LawVectorProperties properties = new LawVectorProperties();
-    private final LawVectorizationToolService writer = new LawVectorizationToolService(client, properties, mapper, sources);
-    private final LawRagSearchToolService reader = new LawRagSearchToolService(client);
+    private final LegalSourceIndexService indexes = InMemoryIndexes.create(sources);
+    private final LawVectorizationToolService writer = new LawVectorizationToolService(client, properties, mapper, sources, indexes);
+    private final LawRagSearchToolService reader = new LawRagSearchToolService(client, indexes);
 
-    @Test
-    void unknownSourceAndFollowUpNeverReachStorageOrProviders() {
-        assertThatThrownBy(() -> writer.vectorizeLaw(context(false), "unknown"))
-                .isInstanceOf(LegalToolException.class).hasMessage("UNKNOWN_ID");
-        assertThatThrownBy(() -> writer.vectorizeLaw(context(true), "unknown")).hasMessage("FORBIDDEN");
-        assertThatThrownBy(() -> reader.searchTop15(context(true), "민법")).hasMessage("FORBIDDEN");
-        verifyNoInteractions(client, sources);
-    }
-
-    @Test
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    void sameSnapshotUsesStablePointIdsAndEmbeddingFailureNeverWrites() {
-        var source = new LegalSource("LAW", "123", "1", "20260101", "https://www.law.go.kr/법령", "hash",
-                "{\"조문\":{\"조문단위\":{\"조문번호\":\"1\",\"조문내용\":\"권리는 성실하게 행사한다.\"}}}");
-        var context = context(false);
-        context.details.put("LAW:123", new LegalToolContracts.DetailResult(source.getId(), "123", "1", "20260101",
-                "민법", 1, true, Instant.now(), source.getSourceUrl(), List.of("1")));
-        when(sources.restore(source.getId())).thenReturn(source);
-        when(client.embed(anyList(), any(), any())).thenReturn(List.of(List.of(1.0)));
-        assertThat(writer.vectorizeLaw(context, source.getId()).articleCount()).isEqualTo(1);
-        writer.vectorizeLaw(context, source.getId());
-        ArgumentCaptor<List<Map<String, Object>>> points = ArgumentCaptor.forClass((Class) List.class);
-        verify(client, times(2)).upsert(points.capture(), any(), any());
-        assertThat(points.getAllValues().get(0)).isEqualTo(points.getAllValues().get(1));
-        assertThat(((Map<String, Object>) points.getValue().get(0).get("payload")))
-                .containsEntry("reference_id", source.getId()).containsEntry("source_type", "LAW");
-        clearInvocations(client);
-        when(client.embed(anyList(), any(), any())).thenThrow(new LegalToolException(LegalToolException.Reason.API_FAILURE, true));
-        assertThatThrownBy(() -> writer.vectorizeLaw(context, source.getId())).hasMessage("API_FAILURE");
-        verify(client, never()).upsert(any(), any(), any());
-    }
-
-    @Test
-    void retrievalReturnsImmutableRankedEvidenceAndRejectsDuplicateArticles() throws Exception {
+    @BeforeEach
+    void configure() {
+        when(client.identity()).thenReturn(Map.of("model", "model", "revision", "revision", "dimensions", 1));
+        when(client.fingerprint()).thenReturn("f".repeat(64));
+        when(client.collectionName()).thenReturn(properties.getCollectionName());
         when(client.collectionAvailable(any(), any())).thenReturn(true);
         when(client.embed(anyList(), any(), any())).thenReturn(List.of(List.of(1.0)));
-        var payload = Map.of("unit_id", "123:1", "source_type", "LAW", "reference_id", "ref",
-                "external_id", "123", "title", "민법 제1조", "text", "본문", "article_text", "전체 본문",
-                "source_url", "https://www.law.go.kr/법령");
-        var group = Map.of("id", "123:1", "hits", List.of(Map.of("score", 0.8, "payload", payload)));
-        when(client.query(anyList(), any(), any())).thenReturn(mapper.valueToTree(List.of(group)));
-        var result = reader.searchTop15(context(false), "신의 성실");
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).score()).isEqualTo(0.8);
-        assertThatThrownBy(() -> result.clear()).isInstanceOf(UnsupportedOperationException.class);
-        when(client.query(anyList(), any(), any())).thenReturn(mapper.valueToTree(List.of(group, group)));
-        assertThatThrownBy(() -> reader.searchTop15(context(false), "신의 성실")).hasMessage("INVALID_RESPONSE");
     }
 
     @Test
-    void missingCollectionReturnsEmptyWithoutEmbeddingOrCreatingStorage() {
+    void unknownSourceAndFollowUpNeverReachProviders() {
+        assertThatThrownBy(() -> writer.vectorizeLaw(context(false), "unknown")).hasMessage("UNKNOWN_ID");
+        assertThatThrownBy(() -> writer.vectorizeLaw(context(true), "unknown")).hasMessage("FORBIDDEN");
+        assertThatThrownBy(() -> reader.searchTop15(context(true), "민법")).hasMessage("FORBIDDEN");
+        verify(client, never()).embed(anyList(), any(), any());
+        verifyNoInteractions(sources);
+    }
+
+    @Test
+    void unchangedSourceReusesCompletedGenerationWithoutReembedding() {
+        var context = context(false);
+        var source = source(context);
+        assertThat(writer.vectorizeLaw(context, source.getId()).articleCount()).isEqualTo(1);
+        String first = indexes.searchable(client.fingerprint()).keySet().iterator().next();
+        writer.vectorizeLaw(context, source.getId());
+        String second = indexes.searchable(client.fingerprint()).keySet().iterator().next();
+        assertThat(first).isEqualTo(second);
+        verify(client, times(1)).embed(anyList(), any(), any());
+        assertThat(indexes.searchable("different-configuration")).isEmpty();
+    }
+
+    @Test
+    void partialQdrantFailureCannotPublishAndPreviousGenerationRemainsSearchable() {
+        var context = context(false);
+        var source = source(context);
+        writer.vectorizeLaw(context, source.getId());
+        var before = indexes.searchable(client.fingerprint());
+        var changed = changedSource(context);
+        properties.setBatchSize(1);
+        var writes = new java.util.concurrent.atomic.AtomicInteger();
+        doAnswer(call -> {
+            if (writes.incrementAndGet() == 2) throw new LegalToolException(LegalToolException.Reason.API_FAILURE, true);
+            return null;
+        }).when(client).upsert(anyList(), any(), any());
+        assertThatThrownBy(() -> writer.vectorizeLaw(context, changed.getId())).hasMessage("API_FAILURE");
+        assertThat(writes.get()).isEqualTo(2);
+        assertThat(indexes.searchable(client.fingerprint())).isEqualTo(before);
+    }
+
+    @Test
+    void embeddingFailureNeverWritesOrPublishes() {
+        var context = context(false);
+        var source = source(context);
+        when(client.embed(anyList(), any(), any())).thenThrow(new LegalToolException(LegalToolException.Reason.API_FAILURE, true));
+        assertThatThrownBy(() -> writer.vectorizeLaw(context, source.getId())).hasMessage("API_FAILURE");
+        verify(client, never()).upsert(anyList(), any(), any());
+        assertThat(indexes.searchable(client.fingerprint())).isEmpty();
+    }
+
+    @Test
+    void retrievalChecksCommittedGenerationAndReturnsImmutableArticles() {
+        var context = context(false);
+        var source = source(context);
+        writer.vectorizeLaw(context, source.getId());
+        var index = indexes.searchable(client.fingerprint()).values().iterator().next();
+        when(client.collectionAvailable(any(), any())).thenReturn(true);
+        var payload = new HashMap<String, Object>();
+        payload.putAll(Map.of("unit_id", "123:1", "source_type", "LAW", "reference_id", source.getId(),
+                "external_id", "123", "title", "민법 제1조", "text", "본문", "article_text", "전체 본문",
+                "source_url", source.getSourceUrl()));
+        payload.put("law_id", source.getLawId());
+        payload.put("effective_date", source.getEffectiveDate());
+        payload.putAll(Map.of("generation", index.getGeneration(), "config_fingerprint", index.getConfigFingerprint(),
+                "model_revision", index.getModelRevision(), "content_hash", source.getContentHash()));
+        var group = Map.of("id", "123:1", "hits", List.of(Map.of("score", 0.8, "payload", payload)));
+        when(client.query(anyList(), anyList(), any(), any())).thenReturn(mapper.valueToTree(List.of(group)));
+        var result = reader.searchTop15(context, "권리의 행사");
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).generation()).isEqualTo(index.getGeneration());
+        assertThatThrownBy(result::clear).isInstanceOf(UnsupportedOperationException.class);
+        verify(client).query(anyList(), eq(List.of(index.getGeneration())), any(), any());
+        payload.put("generation", UUID.randomUUID().toString());
+        when(client.query(anyList(), anyList(), any(), any())).thenReturn(mapper.valueToTree(List.of(group)));
+        assertThatThrownBy(() -> reader.searchTop15(context, "권리의 행사")).hasMessage("INVALID_RESPONSE");
+    }
+
+    @Test
+    void missingCollectionOrNoPublishedGenerationReturnsEmptyWithoutEmbedding() {
+        when(client.collectionAvailable(any(), any())).thenReturn(false);
+        assertThat(reader.searchTop15(context(false), "민법")).isEmpty();
+        when(client.collectionAvailable(any(), any())).thenReturn(true);
         assertThat(reader.searchTop15(context(false), "민법")).isEmpty();
         verify(client, never()).ensureCollection(any(), any());
         verify(client, never()).embed(anyList(), any(), any());
     }
 
+    private LegalSource source(LegalToolContext context) {
+        var source = new LegalSource("LAW", "123", "1", "20260101", "https://www.law.go.kr/법령", "a".repeat(64),
+                "{\"조문\":{\"조문단위\":{\"조문번호\":\"1\",\"조문내용\":\"권리는 신의에 따라 행사한다.\"}}}");
+        context.details.put("LAW:123", new LegalToolContracts.DetailResult(source.getId(), "123", "1", "20260101", "민법", 1, true,
+                Instant.now(), source.getSourceUrl(), List.of("1")));
+        when(sources.restore(source.getId())).thenReturn(source);
+        return source;
+    }
+
     private LegalToolContext context(boolean followUp) {
         return new LegalToolContext(followUp ? LegalToolContext.Purpose.FOLLOW_UP : LegalToolContext.Purpose.FIRST_QUESTION,
                 "execution", Instant.now().plusSeconds(300), 100, Clock.systemUTC());
+    }
+
+    private LegalSource changedSource(LegalToolContext context) {
+        var source = new LegalSource("LAW", "123", "1", "20260101", "https://www.law.go.kr/법령", "b".repeat(64),
+                "{\"조문\":{\"조문단위\":[{\"조문번호\":\"1\",\"조문내용\":\"변경된 조문입니다.\"},"
+                        + "{\"조문번호\":\"2\",\"조문내용\":\"추가된 두 번째 조문입니다.\"}]}}");
+        context.details.put("LAW:123", new LegalToolContracts.DetailResult(source.getId(), "123", "1", "20260101", "민법", 1, true,
+                Instant.now(), source.getSourceUrl(), List.of("1")));
+        when(sources.restore(source.getId())).thenReturn(source);
+        return source;
     }
 }

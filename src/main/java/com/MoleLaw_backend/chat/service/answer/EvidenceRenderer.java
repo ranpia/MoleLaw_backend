@@ -1,6 +1,6 @@
 package com.MoleLaw_backend.chat.service.answer;
 
-import com.MoleLaw_backend.chat.service.evidence.EvidenceItem;
+import com.MoleLaw_backend.law.dto.evidence.EvidenceItem;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;

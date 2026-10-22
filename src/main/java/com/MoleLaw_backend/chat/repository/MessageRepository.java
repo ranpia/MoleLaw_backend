@@ -7,11 +7,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
-    List<Message> findByChatRoomIdOrderByTimestampAsc(Long chatRoomId);
+    List<Message> findByChatRoomIdOrderByTimestampAscIdAsc(Long chatRoomId);
 
-    Optional<Message> findFirstByChatRoomIdOrderByTimestampAsc(Long chatRoomId);
+    Optional<Message> findFirstByChatRoomIdOrderByTimestampAscIdAsc(Long chatRoomId);
 
     long countByChatRoomId(Long chatRoomId);
-
 
 }

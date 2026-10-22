@@ -1,4 +1,5 @@
 package com.MoleLaw_backend.law.service.tool;
+import com.MoleLaw_backend.law.client.vector.LawVectorClient;
 
 import com.MoleLaw_backend.law.config.LawVectorProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;

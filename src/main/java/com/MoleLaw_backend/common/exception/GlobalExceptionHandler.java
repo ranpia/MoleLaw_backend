@@ -3,12 +3,23 @@ package com.MoleLaw_backend.common.exception;
 import com.MoleLaw_backend.common.dto.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class,
+            HttpMessageNotReadableException.class})
+    public ResponseEntity<ApiResponse<?>> handleInvalidRequest(Exception ex) {
+        // Do not expose rejected values or exception messages containing credentials.
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error(new ErrorResponse(ErrorCode.INVALID_REQUEST)));
+    }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleMissingResource(NoResourceFoundException ex) {

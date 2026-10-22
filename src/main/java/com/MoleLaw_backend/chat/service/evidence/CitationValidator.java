@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.chat.service.evidence;
 
+import com.MoleLaw_backend.law.dto.evidence.EvidenceItem;
+
 import com.MoleLaw_backend.common.ai.exception.GptApiException;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import org.springframework.stereotype.Component;

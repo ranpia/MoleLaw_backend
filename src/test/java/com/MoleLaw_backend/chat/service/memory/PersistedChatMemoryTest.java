@@ -66,7 +66,7 @@ class PersistedChatMemoryTest {
     @Test
     void decryptsRolesAndExcludesInfoWithoutDuplicatingPinnedHistory() {
         ownRoom();
-        when(messages.findByChatRoomIdOrderByTimestampAsc(2L)).thenReturn(List.of(
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of(
                 message(Message.Sender.USER, "question"), message(Message.Sender.BOT, "answer"),
                 message(Message.Sender.INFO, "private metadata")));
         var history = memory.get("1:2");
@@ -84,7 +84,7 @@ class PersistedChatMemoryTest {
         for (int i = 0; i < 10; i++) {
             history.add(message(i % 2 == 0 ? Message.Sender.USER : Message.Sender.BOT, "message " + i));
         }
-        when(messages.findByChatRoomIdOrderByTimestampAsc(2L)).thenReturn(history);
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(history);
         assertThat(memory.get("1:2")).extracting(org.springframework.ai.chat.messages.Message::getText)
                 .containsExactly("message 0", "message 1", "message 8", "message 9");
     }

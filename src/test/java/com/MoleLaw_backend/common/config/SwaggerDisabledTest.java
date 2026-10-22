@@ -38,13 +38,10 @@ class SwaggerDisabledTest {
         assertEquals("false", defaults.getProperty("springdoc.swagger-ui.enabled"));
         assertEquals("false", defaults.getProperty("springdoc.swagger-ui.csrf.enabled"));
         assertEquals("true", defaults.getProperty("cookie.csrf-http-only"));
-        // application.properties takes precedence over YAML and must not re-enable docs.
-        var properties = new java.util.Properties();
-        try (var stream = new ClassPathResource("application.properties").getInputStream()) {
-            properties.load(stream);
-        }
-        assertNotEquals("true", properties.getProperty("springdoc.api-docs.enabled"));
-        assertNotEquals("true", properties.getProperty("springdoc.swagger-ui.enabled"));
+        // Former properties settings now live alongside the production defaults in YAML.
+        assertEquals("MoleLaw_backend", defaults.getProperty("spring.application.name"));
+        assertEquals("/swagger-ui.html", defaults.getProperty("springdoc.swagger-ui.path"));
+        assertEquals("false", defaults.getProperty("springdoc.override-with-generic-response"));
         for (String path : new String[]{"/v3/api-docs", "/swagger-ui.html", "/swagger-ui/index.html"}) {
             mvc.perform(get(path)).andExpect(status().isUnauthorized());
             mvc.perform(get(path).with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("test-user")))

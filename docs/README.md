@@ -6,6 +6,10 @@
 
 | 목적 | 문서 |
 | --- | --- |
+| 최상위·소스·테스트·설정·과거 자료의 폴더 기준 | [폴더 구조 검토](folder-structure.md) |
+| 패키지·DTO 소유권·엔드포인트 변경 대응표 | [구조·API 정리](package-api-organization.md) |
+| 사용자·상담·법령 개편 적용 결과와 남은 작업 | [스키마 개편 현황](schema-rebuild-status.md) |
+| 상담 저장 한도·AES-GCM·INFO 재구성·정렬 | [상담 저장 계약](chat-storage.md) |
 | 완료된 구현·실험 결과·미완료·다음 LLM 계획 | [개발 완료 현황](development-status.md) |
 | 패키지 소유권·클래스 배치·구조 변경 | [도메인 구조 스킬](../.agents/skills/domain-structure/SKILL.md) |
 | 전체 방향·구현 순서·미결정 사항 | [백엔드 재구축 계획](backend-rebuild-plan.md) |
@@ -14,10 +18,13 @@
 | 법령 원문 벡터화·Qdrant 상위 15개 조문 검색 | [법령 벡터 Tool](law-vector-tools.md) |
 | 근거 수집·답변 생성 Client별 Builder 설정 | [역할별 ChatClient](role-chat-clients.md) |
 | 상담방 최초 근거 고정·후속 인용 허용 범위 | [상담방 근거 스냅샷](room-evidence.md) |
+| 수집 LLM의 판단 상태·누락 쟁점·검색 조건 | [근거 판단 계약](evidence-decision.md) |
 | 기존 채팅 API·법령 수집 회귀 기준 | [동작 기준선](backend-baseline.md) |
 | 현재 인증 구현·CSRF·Access 5분 stateless/Redis Refresh 목표 | [인증·보안 계획](plans/auth-security.md) |
 | 구현된 Refresh 회전·쿠키/JSON·재사용·폐기·Redis 통합 검증 | [Refresh 회전 구현](refresh-rotation.md) |
 | MySQL 마이그레이션·업무/ETL 스키마 | [MySQL 계획](plans/mysql-schema.md) |
+| 사용자·방·메시지·법령의 기존 컬럼 유지/변경/삭제 검토 | [속성 재검토](schema-attribute-review.md) |
+| 사용자 DTO·서비스 이중 검증·로컬/OAuth 계정 모델·초기 DB 정책 | [사용자 계정·입력 검증](user-account-validation.md) |
 | 빈 MySQL 초기화·통합 테스트 | [MySQL 실행 가이드](mysql-setup.md) |
 | 개선 전 인증 위험과 설계 근거 | [JWT 보안 검토](jwt-security-review.md) |
 | 수집·청킹·벡터 검색·근거·Advisor | [RAG·ETL 계획](plans/rag-etl.md) |

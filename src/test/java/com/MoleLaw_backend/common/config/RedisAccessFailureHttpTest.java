@@ -44,7 +44,7 @@ class RedisAccessFailureHttpTest {
         when(refreshStore.rotate(anyLong(), anyString(), anyString(), anyString())).thenThrow(unavailable());
         doThrow(unavailable()).when(refreshStore).revoke(anyLong(), anyString(), anyString());
         String token = jwt.generateAccessToken(user.getId());
-        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+        mvc.perform(get("/api/users/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk()).andExpect(jsonPath("data.email").value(user.getEmail()));
         mvc.perform(get("/api/auth/csrf")).andExpect(status().isOk());
         verifyNoInteractions(refreshStore);
@@ -52,11 +52,11 @@ class RedisAccessFailureHttpTest {
                         .content("{\"email\":\"stateless-outage@example.com\",\"password\":\"Example-password-123!\"}"))
                 .andExpect(status().isServiceUnavailable()).andExpect(header().doesNotExist("Set-Cookie"));
         String refresh = "r1." + user.getId() + ".00000000-0000-0000-0000-000000000001." + "a".repeat(43);
-        mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(new Cookie("refreshToken", refresh)))
+        mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(new Cookie("refreshToken", refresh)))
                 .andExpect(status().isServiceUnavailable()).andExpect(header().doesNotExist("Set-Cookie"));
         mvc.perform(post("/api/auth/logout").with(csrf()).cookie(new Cookie("refreshToken", refresh)))
                 .andExpect(status().isServiceUnavailable()).andExpect(header().doesNotExist("Set-Cookie"));
-        mvc.perform(get("/api/auth/me").cookie(new Cookie("accessToken", token))).andExpect(status().isOk());
+        mvc.perform(get("/api/users/me").cookie(new Cookie("accessToken", token))).andExpect(status().isOk());
     }
 
     @Test

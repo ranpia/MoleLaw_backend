@@ -1,7 +1,7 @@
 package com.MoleLaw_backend.chat.service;
 
-import com.MoleLaw_backend.chat.dto.request.MessageRequest;
-import com.MoleLaw_backend.chat.dto.response.GptAnswerResponse;
+import com.MoleLaw_backend.chat.dto.request.CreateMessageRequest;
+import com.MoleLaw_backend.chat.dto.response.LegalAnswerResponse;
 import com.MoleLaw_backend.chat.entity.ChatRoom;
 import com.MoleLaw_backend.chat.entity.Message;
 import com.MoleLaw_backend.chat.repository.ChatRoomRepository;
@@ -9,7 +9,7 @@ import com.MoleLaw_backend.chat.repository.MessageRepository;
 import com.MoleLaw_backend.chat.util.EncryptUtil;
 import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.common.exception.ErrorCode;
-import com.MoleLaw_backend.law.service.ExtractKeyword;
+import com.MoleLaw_backend.law.service.analysis.KeywordExtractionService;
 import com.MoleLaw_backend.chat.service.answer.LegalAnswerService;
 import com.MoleLaw_backend.user.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +26,8 @@ class ChatServiceAdvisorTest {
     private final LegalAnswerService gpt = mock(LegalAnswerService.class);
     private final ChatTurnService turns = mock(ChatTurnService.class);
     private final ChatService service = new ChatService(rooms, messages, gpt, turns,
-            mock(ExtractKeyword.class));
+            mock(KeywordExtractionService.class), mock(com.MoleLaw_backend.chat.service.evidence.ChatEvidenceService.class),
+            new com.MoleLaw_backend.chat.service.answer.EvidenceRenderer());
     private final User user = User.builder().id(1L).build();
     private final ChatRoom room = ChatRoom.builder().id(2L).user(user).build();
 
@@ -79,7 +80,7 @@ class ChatServiceAdvisorTest {
     @Test
     void successfulAnswerPersistsOnePairAfterGeneration() throws Exception {
         when(rooms.findById(2L)).thenReturn(Optional.of(room));
-        when(gpt.answerFollowUp(1L, 2L, "후속 질문")).thenReturn(new GptAnswerResponse("답변", ""));
+        when(gpt.answerFollowUp(1L, 2L, "후속 질문")).thenReturn(new LegalAnswerResponse("답변", ""));
         when(turns.saveFollowUpTurn(room, "후속 질문", "답변")).thenReturn(Message.builder()
                 .id(4L).chatRoom(room).sender(Message.Sender.BOT).content(EncryptUtil.encrypt("답변")).build());
         service.askQuestion(user, 2L, request());
@@ -89,7 +90,7 @@ class ChatServiceAdvisorTest {
         verifyNoInteractions(messages);
     }
 
-    private MessageRequest request() throws Exception {
-        return new ObjectMapper().readValue("{\"content\":\"후속 질문\"}", MessageRequest.class);
+    private CreateMessageRequest request() throws Exception {
+        return new ObjectMapper().readValue("{\"content\":\"후속 질문\"}", CreateMessageRequest.class);
     }
 }

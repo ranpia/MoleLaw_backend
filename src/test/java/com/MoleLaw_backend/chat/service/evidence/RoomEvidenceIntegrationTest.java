@@ -1,13 +1,14 @@
 package com.MoleLaw_backend.chat.service.evidence;
+import com.MoleLaw_backend.law.dto.evidence.EvidenceItem;
 
 import com.MoleLaw_backend.chat.entity.ChatRoom;
 import com.MoleLaw_backend.chat.repository.ChatEvidenceSnapshotRepository;
 import com.MoleLaw_backend.chat.repository.ChatRoomRepository;
 import com.MoleLaw_backend.chat.repository.MessageRepository;
 import com.MoleLaw_backend.chat.service.ChatTurnService;
-import com.MoleLaw_backend.chat.dto.response.GptAnswerResponse;
+import com.MoleLaw_backend.chat.dto.response.LegalAnswerResponse;
 import com.MoleLaw_backend.chat.util.EncryptUtil;
-import com.MoleLaw_backend.chat.service.answer.PreparedLegalAnswer;
+import com.MoleLaw_backend.chat.dto.answer.PreparedLegalAnswer;
 import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.user.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,7 +124,8 @@ class RoomEvidenceIntegrationTest {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void initialPersistenceRejectsInvalidEvidenceAndRollsBackNewRoom() {
         User user = new TransactionTemplate(transactions).execute(status -> {
-            User owner = User.builder().email("rollback@example.test").provider("local").build();
+            User owner = User.builder().email("rollback@example.test").provider("local")
+                    .nickname("rollback").password("test-password-hash").build();
             entityManager.persist(owner);
             return owner;
         });
@@ -132,7 +134,7 @@ class RoomEvidenceIntegrationTest {
         long messageCount = messages.count();
         try {
             assertThatThrownBy(() -> initialTurns.saveInitialTurn(user, "failed", "question",
-                    new PreparedLegalAnswer(new GptAnswerResponse("answer", "info"), List.of())))
+                    new PreparedLegalAnswer(new LegalAnswerResponse("answer", "info"), List.of())))
                     .isInstanceOf(MolelawException.class);
             assertThat(rooms.count()).isEqualTo(roomCount);
             assertThat(snapshots.count()).isEqualTo(snapshotCount);
@@ -144,18 +146,18 @@ class RoomEvidenceIntegrationTest {
     }
 
     @Test
-    void initialPersistenceSavesSnapshotAndThreeEncryptedMessages() {
+    void initialPersistenceSavesSnapshotAndOnlyTwoEncryptedMessages() {
         ChatRoom seed = room();
         ChatRoom created = initialTurns.saveInitialTurn(seed.getUser(), "new room", "first question",
-                new PreparedLegalAnswer(new GptAnswerResponse("cited answer", "source info"), evidence()));
+                new PreparedLegalAnswer(new LegalAnswerResponse("cited answer", "source info"), evidence()));
         entityManager.flush();
         entityManager.clear();
 
         assertThat(service.load(seed.getUser().getId(), created.getId())).isEqualTo(evidence());
-        var storedMessages = messages.findByChatRoomIdOrderByTimestampAsc(created.getId());
-        assertThat(storedMessages).hasSize(3);
+        var storedMessages = messages.findByChatRoomIdOrderByTimestampAscIdAsc(created.getId());
+        assertThat(storedMessages).hasSize(2);
         assertThat(storedMessages).extracting(message -> EncryptUtil.decrypt(message.getContent()))
-                .containsExactly("first question", "cited answer", "source info");
+                .containsExactly("first question", "cited answer");
         assertThat(storedMessages).extracting(com.MoleLaw_backend.chat.entity.Message::getContent)
                 .doesNotContain("first question", "cited answer", "source info");
     }
@@ -166,10 +168,10 @@ class RoomEvidenceIntegrationTest {
         ChatRoom room = new TransactionTemplate(transactions).execute(status -> room());
         long messageCount = messages.count();
         try {
-            // The question insert succeeds before encryption of the invalid answer fails.
+            // Validation rejects the pair before either message is inserted.
             assertThatThrownBy(() -> initialTurns.saveFollowUpTurn(room, "new question", null))
                     .isInstanceOf(RuntimeException.class);
-            assertThat(messages.findByChatRoomIdOrderByTimestampAsc(room.getId())).isEmpty();
+            assertThat(messages.findByChatRoomIdOrderByTimestampAscIdAsc(room.getId())).isEmpty();
             assertThat(messages.count()).isEqualTo(messageCount);
         } finally {
             new TransactionTemplate(transactions).executeWithoutResult(status -> {
@@ -186,7 +188,7 @@ class RoomEvidenceIntegrationTest {
         initialTurns.saveFollowUpTurn(room, "new question", "new answer");
         entityManager.flush();
         entityManager.clear();
-        var stored = messages.findByChatRoomIdOrderByTimestampAsc(room.getId());
+        var stored = messages.findByChatRoomIdOrderByTimestampAscIdAsc(room.getId());
         assertThat(stored).hasSize(2);
         assertThat(stored).extracting(message -> EncryptUtil.decrypt(message.getContent()))
                 .containsExactly("new question", "new answer");
@@ -195,8 +197,62 @@ class RoomEvidenceIntegrationTest {
                         com.MoleLaw_backend.chat.entity.Message.Sender.BOT);
     }
 
+    @Test
+    void deletingOwnerCascadesRoomsMessagesAndEvidenceWithoutInverseSnapshotMapping() {
+        ChatRoom room = room();
+        Long roomId = room.getId();
+        Long ownerId = room.getUser().getId();
+        service.freeze(room, evidence());
+        initialTurns.saveFollowUpTurn(room, "질문", "답변");
+        entityManager.flush();
+        entityManager.clear();
+        entityManager.remove(entityManager.find(User.class, ownerId));
+        entityManager.flush();
+        entityManager.clear();
+        assertThat(rooms.findById(roomId)).isEmpty();
+        assertThat(snapshots.findById(roomId)).isEmpty();
+        assertThat(messages.countByChatRoomId(roomId)).isZero();
+    }
+
+    @Test
+    void encryptedLongtextOverOldTextLimitSurvivesRoundtrip() {
+        ChatRoom room = room();
+        String answer = "한글 답변😀".repeat(20000);
+        initialTurns.saveFollowUpTurn(room, "질문", answer);
+        entityManager.flush();
+        entityManager.clear();
+        var stored = messages.findByChatRoomIdOrderByTimestampAscIdAsc(room.getId());
+        assertThat(stored.get(1).getContent().length()).isGreaterThan(65535);
+        assertThat(EncryptUtil.decrypt(stored.get(1).getContent())).isEqualTo(answer);
+    }
+
+    @Test
+    void timestampTiesUseMessageIdAndRoomIdAsStableOrderingKeys() {
+        ChatRoom first = room();
+        ChatRoom second = rooms.saveAndFlush(ChatRoom.builder().user(first.getUser()).title("second").build());
+        initialTurns.saveFollowUpTurn(first, "first question", "first answer");
+        entityManager.flush();
+        entityManager.createNativeQuery("update message set timestamp = '2026-10-21 00:00:00' where chat_room_id = :room")
+                .setParameter("room", first.getId()).executeUpdate();
+        entityManager.createNativeQuery("update chat_room set created_at = '2026-10-21 00:00:00' where user_id = :owner")
+                .setParameter("owner", first.getUser().getId()).executeUpdate();
+        entityManager.clear();
+
+        var history = messages.findByChatRoomIdOrderByTimestampAscIdAsc(first.getId());
+        assertThat(history).extracting(value -> value.getId()).isSorted();
+        assertThat(messages.findFirstByChatRoomIdOrderByTimestampAscIdAsc(first.getId()).orElseThrow().getId())
+                .isEqualTo(history.get(0).getId());
+        assertThat(rooms.findByUserOrderByCreatedAtDescIdDesc(first.getUser(),
+                org.springframework.data.domain.PageRequest.of(0, 1))).extracting(value -> value.getId())
+                .containsExactly(second.getId());
+        assertThat(rooms.findByUserOrderByCreatedAtDescIdDesc(first.getUser(),
+                org.springframework.data.domain.PageRequest.of(1, 1))).extracting(value -> value.getId())
+                .containsExactly(first.getId());
+    }
+
     private ChatRoom room() {
-        User owner = User.builder().email("owner@example.test").provider("local").build();
+        User owner = User.builder().email("owner@example.test").provider("local")
+                .nickname("owner").password("test-password-hash").build();
         entityManager.persist(owner);
         return rooms.saveAndFlush(ChatRoom.builder().user(owner).title("consultation").build());
     }

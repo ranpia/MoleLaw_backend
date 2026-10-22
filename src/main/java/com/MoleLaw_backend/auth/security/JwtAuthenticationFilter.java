@@ -47,7 +47,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-
         // ✅ 3. 토큰 검증 및 사용자 인증 설정
         if (token != null && jwtUtil.validateAccessToken(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -81,7 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/api/auth/login")
                 || path.equals("/api/auth/signup")
                 || path.equals("/api/auth/csrf")
-                || path.equals("/api/auth/reissue")
-                || path.equals("/api/auth/logout");  // ✅ "/api/auth/me" 절대 금지!
+                || path.equals("/api/auth/refresh")
+                || path.equals("/api/auth/logout");  // ✅ "/api/users/me" 절대 금지!
     }
 }

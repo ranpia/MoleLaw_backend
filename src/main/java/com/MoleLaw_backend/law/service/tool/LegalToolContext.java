@@ -1,5 +1,8 @@
 package com.MoleLaw_backend.law.service.tool;
 
+import com.MoleLaw_backend.law.dto.tool.LegalToolContracts;
+import com.MoleLaw_backend.law.exception.LegalToolException;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HashMap;
@@ -7,7 +10,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static com.MoleLaw_backend.law.service.tool.LegalToolException.Reason.*;
+import static com.MoleLaw_backend.law.exception.LegalToolException.Reason.*;
 
 /** One context per authorized server execution, never deserialized from model/user input.
  * The caller must check authentication and room ownership before constructing it.

@@ -1,5 +1,8 @@
 package com.MoleLaw_backend.chat.service.evidence;
 
+import com.MoleLaw_backend.law.dto.evidence.EvidenceProvenance;
+import com.MoleLaw_backend.law.dto.evidence.EvidenceItem;
+
 import com.MoleLaw_backend.chat.entity.ChatEvidenceSnapshot;
 import com.MoleLaw_backend.chat.entity.ChatRoom;
 import com.MoleLaw_backend.chat.repository.ChatEvidenceSnapshotRepository;
@@ -26,7 +29,7 @@ import java.util.UUID;
 public class ChatEvidenceService {
     private static final int MAX_ITEMS = 100;
     private static final int MAX_JSON_BYTES = 2 * 1024 * 1024;
-    private static final Set<String> KINDS = Set.of("LAW_CHUNK", "CASE_METADATA");
+    private static final Set<String> KINDS = Set.of("LAW_CHUNK", "CASE_METADATA", "LAW_QDRANT");
     private final ChatRoomRepository rooms;
     private final ChatEvidenceSnapshotRepository snapshots;
     private final ObjectMapper mapper;
@@ -64,6 +67,10 @@ public class ChatEvidenceService {
             throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
         }
         ChatEvidenceSnapshot snapshot = snapshots.findById(roomId).orElseThrow(ChatEvidenceService::failure);
+        if (snapshot.getSchemaVersion() < 1
+                || snapshot.getSchemaVersion() > ChatEvidenceSnapshot.CURRENT_SCHEMA_VERSION) {
+            throw failure();
+        }
         String json = snapshot.getEvidenceJson();
         checkSize(json);
         if (!hash(json).equals(snapshot.getContentHash())) {
@@ -96,6 +103,40 @@ public class ChatEvidenceService {
             } catch (IllegalArgumentException ex) {
                 throw failure();
             }
+            validateProvenance(item);
+        }
+    }
+
+    private static void validateProvenance(EvidenceItem item) {
+        EvidenceProvenance p = item.provenance();
+        if (p == null) {
+            if ("LAW_QDRANT".equals(item.kind())) throw failure();
+            return;
+        }
+        if (p.sourceUuid() != null) {
+            try {
+                if (!UUID.fromString(p.sourceUuid()).toString().equals(p.sourceUuid())) throw failure();
+            } catch (IllegalArgumentException ex) {
+                throw failure();
+            }
+        }
+        if ((p.mst() != null && !p.mst().matches("[0-9]{1,20}"))
+                || (p.lawId() != null && !p.lawId().matches("[0-9]{1,20}"))) throw failure();
+        if (p.effectiveDate() != null) {
+            try {
+                java.time.LocalDate.parse(p.effectiveDate(), java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+            } catch (java.time.format.DateTimeParseException ex) {
+                throw failure();
+            }
+        }
+        for (String value : new String[]{p.articlePath(), p.modelRevision(), p.configFingerprint(), p.generation()}) {
+            if (value != null && (value.isBlank() || value.length() > 2048)) throw failure();
+        }
+        if ("LAW_QDRANT".equals(item.kind()) && (blank(p.sourceUuid()) || blank(p.mst()) || blank(p.articlePath()))) {
+            throw failure();
+        }
+        if ("LAW_QDRANT".equals(item.kind()) && !item.sourceId().equals(p.mst() + ":" + p.articlePath())) {
+            throw failure();
         }
     }
 
