@@ -36,6 +36,24 @@ class LawVectorToolsTest {
     }
 
     @Test
+    void failedSavedSourceCanBeRetriedWithoutApiAndCompletedRetryIsReused() {
+        var source = new LegalSource("LAW", "123", "1", "20260101", "https://www.law.go.kr/법령", "c".repeat(64),
+                "{\"기본정보\":{\"법령명_한글\":\"민법\"},\"조문\":{\"조문단위\":{\"조문번호\":\"1\",\"조문내용\":\"신의성실\"}}}");
+        when(sources.restore(source.getId())).thenReturn(source);
+        doThrow(new LegalToolException(LegalToolException.Reason.API_FAILURE, true))
+                .doNothing().when(client).upsert(anyList(), any(), any());
+        assertThatThrownBy(() -> writer.reindexStoredLaw(context(false), source.getId())).hasMessage("API_FAILURE");
+        assertThat(indexes.searchable(client.fingerprint())).isEmpty();
+        writer.reindexStoredLaw(context(false), source.getId());
+        var completed = indexes.searchable(client.fingerprint());
+        assertThat(completed).hasSize(1);
+        writer.reindexStoredLaw(context(false), source.getId());
+        assertThat(indexes.searchable(client.fingerprint())).isEqualTo(completed);
+        verify(client, times(2)).embed(anyList(), any(), any());
+        assertThatThrownBy(() -> writer.reindexStoredLaw(context(true), source.getId())).hasMessage("FORBIDDEN");
+    }
+
+    @Test
     void unknownSourceAndFollowUpNeverReachProviders() {
         assertThatThrownBy(() -> writer.vectorizeLaw(context(false), "unknown")).hasMessage("UNKNOWN_ID");
         assertThatThrownBy(() -> writer.vectorizeLaw(context(true), "unknown")).hasMessage("FORBIDDEN");

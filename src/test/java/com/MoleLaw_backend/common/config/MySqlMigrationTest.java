@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.common.config;
 
+import com.MoleLaw_backend.chat.util.TestEncryption;
+
 import com.MoleLaw_backend.chat.entity.ChatRoom;
 import com.MoleLaw_backend.chat.entity.Message;
 import com.MoleLaw_backend.chat.entity.ChatEvidenceSnapshot;
@@ -62,7 +64,7 @@ class MySqlMigrationTest {
                     var room = ChatRoom.builder().title("통합 검증😀").user(user).build();
                     em.persist(room);
                     String plaintext = "한글 긴 암호문😀".repeat(6000);
-                    String encrypted = EncryptUtil.encrypt(plaintext);
+                    String encrypted = TestEncryption.create().encrypt(plaintext);
                     assertThat(encrypted.getBytes(java.nio.charset.StandardCharsets.UTF_8).length).isGreaterThan(65535);
                     var message = Message.builder().chatRoom(room).sender(Message.Sender.USER).content(encrypted).build();
                     em.persist(message);
@@ -76,7 +78,7 @@ class MySqlMigrationTest {
                     em.persist(index);
                     em.getTransaction().commit();
                     em.clear();
-                    assertThat(EncryptUtil.decrypt(em.find(Message.class, message.getId()).getContent())).isEqualTo(plaintext);
+                    assertThat(TestEncryption.create().decrypt(em.find(Message.class, message.getId()).getContent())).isEqualTo(plaintext);
                     assertThat(em.find(LegalSource.class, source.getId()).getRawJson()).isEqualTo(source.getRawJson());
                     assertThat(em.find(ChatEvidenceSnapshot.class, room.getId()).getSchemaVersion()).isEqualTo(2);
                 }

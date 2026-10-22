@@ -105,6 +105,10 @@ jwt:
   access-ttl: 5m
 
 app:
+  chat:
+    encryption:
+      key: ${CHAT_ENCRYPTION_KEY:}
+      key-version: ${CHAT_ENCRYPTION_KEY_VERSION:v1}
   law-vector:
     enabled: ${APP_LAW_VECTOR_ENABLED:false}
     embedding-base-url: ${APP_LAW_VECTOR_EMBEDDING_BASE_URL:http://localhost:11436}

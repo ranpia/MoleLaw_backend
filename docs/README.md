@@ -16,6 +16,7 @@
 | 구현된 법령 Tool·스키마·후속 작업 | [개발 인수인계](development-handoff.md) |
 | 법령·판례 Tool 입력·반환·오류 계약 | [법령 API Tool](legal-api-tools.md) |
 | 법령 원문 벡터화·Qdrant 상위 15개 조문 검색 | [법령 벡터 Tool](law-vector-tools.md) |
+| Spring AI ETL 단계·수동 재색인·local 테스트 API | [법령 ETL 로컬 검증](law-etl-local.md) |
 | 근거 수집·답변 생성 Client별 Builder 설정 | [역할별 ChatClient](role-chat-clients.md) |
 | 상담방 최초 근거 고정·후속 인용 허용 범위 | [상담방 근거 스냅샷](room-evidence.md) |
 | 수집 LLM의 판단 상태·누락 쟁점·검색 조건 | [근거 판단 계약](evidence-decision.md) |

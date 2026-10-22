@@ -9,7 +9,7 @@
 | 사용자 | HTTP `@Valid`와 서비스 `@Validated`, BCrypt 72바이트 제한, 정규화 이메일, OAuth subject 식별, V3 자격증명 제약 |
 | 상담방 | 사용자·제목·UTC 생성 시각 필수, 제목 255 코드포인트, 최신 생성 시각·ID 내림차순 페이지 조회 |
 | 메시지 | USER/BOT만 저장, LONGTEXT, 질문 2,000 코드포인트·32KiB, 답변 1MiB, 시각·ID 오름차순 |
-| 암호화 | 프로세스 환경의 32바이트 키, AES-256-GCM, 메시지별 nonce, 인증 태그와 키 버전 envelope |
+| 암호화 | Spring이 .env/환경변수에서 주입하는 32바이트 키, AES-256-GCM, 메시지별 nonce, 인증 태그와 키 버전 envelope |
 | 근거 | schema_version=2, 원문 UUID·MST·LID·시행일·조문 경로·모델 revision·설정 fingerprint·generation 고정 |
 | INFO | DB 중복 저장 제거, 최초 BOT 다음에 고정 스냅샷에서 재구성하여 기존 응답 유지 |
 | 삭제 | 방의 역방향 큰 객체 관계 제거, 사용자→방→메시지·스냅샷 FK cascade |

@@ -1,12 +1,12 @@
 # RAG·ETL·대화 메모리 실행 계획
 
-최신화: 2026-10-12. **구현 계획**이며 체크하지 않은 항목은 미구현이다. 전체 순서는 [재구축 요약](../backend-rebuild-plan.md)을 따른다.
+최신화: 2026-10-22. 구현과 운영 후속 계획을 구분한다. 동기 ETL 연결·완료 세대 공개·수동 재색인은 구현했다. 영속 작업 큐·자동 재개·물리 정리는 후속이다. [현재 실행 계약](../law-etl-local.md)을 우선하며 아래 과거 체크리스트는 전체 완료를 뜻하지 않는다.
 
 ## 확정한 경계
 
 2026-10-21 Advisor·근거 연결: 후속 상담에 답변 전용 `MessageChatMemoryAdvisor`를 연결하고 방별 최초 근거 사본·ID를 별도로 전달한다. 최초·후속 인용 형식·ID 소속을 검증하고 성공 기록만 저장한다. [근거 계약](../room-evidence.md)과 [Client 경계](../role-chat-clients.md)를 따른다. 의미상 인용 충실성·법령 시행 버전·동시 요청 제어·수집 판단 반복은 미완료다.
 
-2026-10-21 구현: 기존 법령 원문 참조를 받는 독립 벡터화 Tool과 Qdrant 상위 15개 조문 검색 Tool을 추가했다. [설정·사용·제한](../law-vector-tools.md)을 따른다. Spring AI ETL 인터페이스·상담 흐름 연결·완료 버전 공개는 후속 작업이다.
+2026-10-22 구현: 기존 벡터화 Tool을 Spring AI DocumentReader·DocumentTransformer·DocumentWriter로 분리했다. 최초 상담도 같은 경로를 사용한다. 완료 세대만 공개하고 실패 후 저장 원문 수동 재처리와 완료 세대 재사용을 지원한다. [설정·사용·제한](../law-vector-tools.md)을 따른다.
 
 - MySQL은 업무 데이터·법령 원문·수집/색인 상태·대화·근거 스냅샷의 원본이다. Qdrant 색인은 재생성 가능한 검색 데이터다.
 - 최초 질문은 기존 색인 검색 → 필요한 페이지/후보 수집 → ETL → 재검색 → 판례 검토 → 근거 확정 → 답변 순서다. 고정 2라운드 제한 대신 진행 여부와 실행 예산으로 종료한다.
@@ -60,13 +60,13 @@
 
 수집 진입점은 구현된 법령 API Tool을 재사용한다. `searchLaws → getLawDetail → legal_source 원문 저장 → Reader → Transformer → Qdrant writer`로 연결하며, 별도의 법령 API 클라이언트나 수집 경로를 중복 구현하지 않는다. 서버가 페이지·후보·호출 예산을 관리하고 상세 Tool이 반환한 원문 참조 ID를 ETL에 전달한다. Reader는 해당 MySQL 원문을 읽으므로 저장된 자료의 재색인은 API 재호출 없이 수행한다.
 
-**구현 상태:** 법령 Tool과 원문 저장은 완료했고, 이 원문 참조를 Spring AI Document로 변환해 청킹·색인하는 연결은 아직 미구현이다. Tool이 존재하는 것과 전체 ETL 완료를 구분한다.
+**구현 상태:** 원문 참조 → Spring AI Document → 조문 청킹 → 로컬 임베딩 → Qdrant 적재를 연결했다. 실패 세대 비공개·완료 원문 재사용·저장 원문 재색인과 local 검증 API를 제공한다. 영속 실행/자동 복구는 미구현이다.
 
 | 단계 | 구현 계약 |
 | --- | --- |
 | Reader | MySQL에 저장한 원문/수집 결과를 읽는다. 외부 API 없이 같은 Document를 재구성할 수 있어야 한다. |
-| Transformer | 조문 경계를 우선 보존한다. 긴 조문만 항·호·토큰 단위로 나누고 상위 제목·맥락을 포함한다. 검색 본문과 표시 원문은 구분한다. |
-| Writer | `QdrantVectorStore.add`가 임베딩을 생성한다. 기존 서비스에서 미리 생성해 이중 임베딩하지 않는다. 배치·실패·재시도를 MySQL 작업 상태에 기록한다. |
+| Transformer | 조문 경계를 보존하고 항·호·목 본문을 포함한다. 긴 조문은 Unicode 코드 포인트와 겹침 기준으로 분할한다. 법령명·조문 제목을 임베딩 입력에 포함하고 청크 본문과 전체 조문을 구분한다. |
+| Writer | 기존 Python/Ollama 호환 HTTP 서버에서 임베딩을 한 번 생성하고 Qdrant REST로 적재한다. `QdrantVectorStore.add`는 호출하지 않는다. MySQL 세대 상태로 공개 여부를 관리하며 재시도는 새 세대의 전체 재처리다. |
 
 - [ ] 메타데이터: `sourceType`, `lawId`, `mst`, `lawName`, `articleNumber`, `clauseNumber`, `itemPath`, `sourceUrl`, `collectedAt`, `contentHash`, `indexVersion`. 확보한 시행일·개정 정보와 누락 여부도 저장한다.
 - [ ] 법령 버전·조문 경로·분할 순번·색인 버전으로 결정적 UUID를 만든다. MySQL에 ID 목록·본문 해시·모델·차원·작업 상태를 보관하고 변경 없는 문서의 임베딩을 생략한다.

@@ -36,6 +36,12 @@ jwt:
   secret: test-only-jwt-secret-at-least-32-bytes-long
 
 # Documentation integration tests only; never use the test profile for deployment.
+app:
+  chat:
+    encryption:
+      key: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
+      key-version: test-v1
+
 springdoc:
   api-docs:
     enabled: true

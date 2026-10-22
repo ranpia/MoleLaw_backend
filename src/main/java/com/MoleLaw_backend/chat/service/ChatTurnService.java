@@ -19,6 +19,7 @@ public class ChatTurnService {
     private final ChatRoomRepository rooms;
     private final MessageRepository messages;
     private final ChatEvidenceService evidence;
+    private final EncryptUtil encryptor;
 
     @Transactional
     public ChatRoom saveInitialTurn(User user, String title, String question, PreparedLegalAnswer prepared) {
@@ -41,6 +42,6 @@ public class ChatTurnService {
     }
 
     private Message add(ChatRoom room, Message.Sender sender, String text) {
-        return messages.save(Message.builder().chatRoom(room).sender(sender).content(EncryptUtil.encrypt(text)).build());
+        return messages.save(Message.builder().chatRoom(room).sender(sender).content(encryptor.encrypt(text)).build());
     }
 }

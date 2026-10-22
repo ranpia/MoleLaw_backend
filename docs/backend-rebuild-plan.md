@@ -21,7 +21,7 @@
 ## 확정한 방향
 
 - **MySQL + Qdrant + Redis:** 업무·원문·대화·근거는 MySQL, 벡터는 Qdrant, Refresh 해시·family·회전·폐기는 Redis가 담당한다. Access는 5분 stateless JWT다.
-- **Spring AI ETL:** 구현된 법령 검색/상세 Tool → MySQL 원문 저장 → Reader → Transformer → Qdrant writer로 연결한다. 저장된 원문은 API 재호출 없이 재색인한다. Tool·원문 저장은 완료했고 ETL 연결은 후속 작업이다.
+- **Spring AI ETL:** 법령 검색/상세 Tool → MySQL 원문 → DocumentReader → DocumentTransformer → DocumentWriter 연결을 구현했다. 기존 로컬 HTTP 임베딩을 한 번 생성하고 Qdrant에 적재한다. 저장 원문 수동 재색인과 완료 세대 재사용은 가능하며 영속 작업 재개·물리 정리는 후속이다. [로컬 검증 API](law-etl-local.md)를 따른다.
 - **법령·판례 API는 Tool로 구성:** 기존 API 클라이언트·수집 서비스 위에 목록/상세 Tool 어댑터를 둔다. 초기에는 모델의 구조화된 검색 제안을 서버가 검증·실행하며 후속 상담에는 Tool을 제공하지 않는다. [Tool 계약](plans/rag-etl.md#법령판례-api-tool-구성-확정)을 따른다.
 - **최초 질문은 필요한 수집 허용:** 기존 검색 후 부족하면 다음 페이지·다른 법령을 수집하고 같은 요청의 ETL·재검색에 반영한다. 고정 2라운드 제한 대신 진행 여부와 시간·호출·토큰 예산으로 종료한다.
 - **후속 질문은 추가 검색 없음:** 최초 근거 스냅샷과 MySQL 기록을 MessageChatMemoryAdvisor로 전달한다. 새로운 쟁점은 한계를 알리고 새 상담을 안내한다.

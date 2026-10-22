@@ -1,6 +1,7 @@
 package com.MoleLaw_backend.chat.util;
 
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -16,9 +17,19 @@ public final class EncryptUtil {
     private static final String FORMAT = "gcm1";
     private static final int NONCE_BYTES = 12;
 
-    public EncryptUtil() { key(); keyVersion(); }
+    private final SecretKeySpec key;
+    private final String keyVersion;
 
-    public static String encrypt(String plainText) {
+    public EncryptUtil(@Value("${app.chat.encryption.key}") String encodedKey,
+                       @Value("${app.chat.encryption.key-version:v1}") String keyVersion) {
+        this.key = decodeKey(encodedKey);
+        if (keyVersion == null || !keyVersion.matches("[A-Za-z0-9_-]{1,32}")) {
+            throw new IllegalStateException("Invalid CHAT_ENCRYPTION_KEY_VERSION");
+        }
+        this.keyVersion = keyVersion;
+    }
+
+    public String encrypt(String plainText) {
         if (plainText == null || plainText.isBlank()) {
             throw new IllegalArgumentException("Message plaintext must not be blank");
         }
@@ -26,7 +37,7 @@ public final class EncryptUtil {
         if (plaintext.length > MAX_PLAINTEXT_BYTES) {
             throw new IllegalArgumentException("Message plaintext exceeds 1 MiB");
         }
-        String version = keyVersion();
+        String version = keyVersion;
         byte[] nonce = new byte[NONCE_BYTES];
         RANDOM.nextBytes(nonce);
         try {
@@ -38,12 +49,12 @@ public final class EncryptUtil {
         }
     }
 
-    public static String decrypt(String encryptedText) {
+    public String decrypt(String encryptedText) {
         if (encryptedText == null || encryptedText.length() > 4 * ((MAX_PLAINTEXT_BYTES + 18) / 3) + 128) {
             throw new IllegalArgumentException("Invalid message envelope");
         }
         String[] parts = encryptedText.split("\\.", -1);
-        if (parts.length != 4 || !FORMAT.equals(parts[0]) || !keyVersion().equals(parts[1])) {
+        if (parts.length != 4 || !FORMAT.equals(parts[0]) || !keyVersion.equals(parts[1])) {
             throw new IllegalArgumentException("Unsupported message encryption format or key version");
         }
         try {
@@ -59,15 +70,14 @@ public final class EncryptUtil {
         }
     }
 
-    private static Cipher cipher(int mode, String version, byte[] nonce) throws java.security.GeneralSecurityException {
+    private Cipher cipher(int mode, String version, byte[] nonce) throws java.security.GeneralSecurityException {
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        cipher.init(mode, key(), new GCMParameterSpec(128, nonce));
+        cipher.init(mode, key, new GCMParameterSpec(128, nonce));
         cipher.updateAAD((FORMAT + "." + version).getBytes(StandardCharsets.UTF_8));
         return cipher;
     }
 
-    private static SecretKeySpec key() {
-        String encoded = System.getenv("CHAT_ENCRYPTION_KEY");
+    private static SecretKeySpec decodeKey(String encoded) {
         try {
             byte[] decoded = encoded == null ? new byte[0] : Base64.getDecoder().decode(encoded);
             if (decoded.length != 32) throw new IllegalArgumentException();
@@ -77,12 +87,4 @@ public final class EncryptUtil {
         }
     }
 
-    private static String keyVersion() {
-        String value = System.getenv("CHAT_ENCRYPTION_KEY_VERSION");
-        String version = value == null ? "v1" : value;
-        if (!version.matches("[A-Za-z0-9_-]{1,32}")) {
-            throw new IllegalStateException("Invalid CHAT_ENCRYPTION_KEY_VERSION");
-        }
-        return version;
-    }
 }
