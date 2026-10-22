@@ -35,8 +35,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest(properties = "spring.datasource.url=jdbc:h2:mem:room-evidence-test;MODE=MySQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-@Import({ChatEvidenceService.class, ChatTurnService.class, RoomEvidenceIntegrationTest.JsonConfiguration.class})
+@Import({EncryptUtil.class, ChatEvidenceService.class, ChatTurnService.class, RoomEvidenceIntegrationTest.JsonConfiguration.class})
 class RoomEvidenceIntegrationTest {
+    @Autowired private EncryptUtil encryptor;
     @Autowired private ChatEvidenceService service;
     @Autowired private ChatEvidenceSnapshotRepository snapshots;
     @Autowired private ChatRoomRepository rooms;
@@ -156,7 +157,7 @@ class RoomEvidenceIntegrationTest {
         assertThat(service.load(seed.getUser().getId(), created.getId())).isEqualTo(evidence());
         var storedMessages = messages.findByChatRoomIdOrderByTimestampAscIdAsc(created.getId());
         assertThat(storedMessages).hasSize(2);
-        assertThat(storedMessages).extracting(message -> EncryptUtil.decrypt(message.getContent()))
+        assertThat(storedMessages).extracting(message -> encryptor.decrypt(message.getContent()))
                 .containsExactly("first question", "cited answer");
         assertThat(storedMessages).extracting(com.MoleLaw_backend.chat.entity.Message::getContent)
                 .doesNotContain("first question", "cited answer", "source info");
@@ -190,7 +191,7 @@ class RoomEvidenceIntegrationTest {
         entityManager.clear();
         var stored = messages.findByChatRoomIdOrderByTimestampAscIdAsc(room.getId());
         assertThat(stored).hasSize(2);
-        assertThat(stored).extracting(message -> EncryptUtil.decrypt(message.getContent()))
+        assertThat(stored).extracting(message -> encryptor.decrypt(message.getContent()))
                 .containsExactly("new question", "new answer");
         assertThat(stored).extracting(com.MoleLaw_backend.chat.entity.Message::getSender)
                 .containsExactly(com.MoleLaw_backend.chat.entity.Message.Sender.USER,
@@ -223,7 +224,7 @@ class RoomEvidenceIntegrationTest {
         entityManager.clear();
         var stored = messages.findByChatRoomIdOrderByTimestampAscIdAsc(room.getId());
         assertThat(stored.get(1).getContent().length()).isGreaterThan(65535);
-        assertThat(EncryptUtil.decrypt(stored.get(1).getContent())).isEqualTo(answer);
+        assertThat(encryptor.decrypt(stored.get(1).getContent())).isEqualTo(answer);
     }
 
     @Test

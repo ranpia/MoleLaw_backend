@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.chat.service.memory;
 
+import com.MoleLaw_backend.chat.util.TestEncryption;
+
 import com.MoleLaw_backend.chat.entity.ChatRoom;
 import com.MoleLaw_backend.chat.entity.Message;
 import com.MoleLaw_backend.chat.repository.ChatRoomRepository;
@@ -33,7 +35,7 @@ class PersistedChatMemoryTest {
     void setUp() {
         messages = mock(MessageRepository.class);
         rooms = mock(ChatRoomRepository.class);
-        memory = new PersistedChatMemory(messages, rooms, 4);
+        memory = new PersistedChatMemory(messages, rooms, 4, TestEncryption.create());
     }
 
     @Test
@@ -98,9 +100,9 @@ class PersistedChatMemoryTest {
 
     @Test
     void rejectsUnboundedConfiguration() {
-        assertThatThrownBy(() -> new PersistedChatMemory(messages, rooms, 3))
+        assertThatThrownBy(() -> new PersistedChatMemory(messages, rooms, 3, TestEncryption.create()))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new PersistedChatMemory(messages, rooms, 101))
+        assertThatThrownBy(() -> new PersistedChatMemory(messages, rooms, 101, TestEncryption.create()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -110,6 +112,6 @@ class PersistedChatMemoryTest {
     }
 
     private static Message message(Message.Sender sender, String content) {
-        return Message.builder().sender(sender).content(EncryptUtil.encrypt(content)).build();
+        return Message.builder().sender(sender).content(TestEncryption.create().encrypt(content)).build();
     }
 }

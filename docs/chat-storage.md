@@ -8,11 +8,20 @@
 
 ## AES-GCM과 실행 환경
 
-프로세스 환경변수 `CHAT_ENCRYPTION_KEY`에 **무작위 32byte 키의 Base64**를 제공해야 합니다. 코드·이미지·커밋에 키를 넣지 마세요. `CHAT_ENCRYPTION_KEY_VERSION`은 기본 `v1`, 허용값은 영숫자·`_`·`-` 1–32자입니다. Spring 시작 시 키 누락·잘못된 길이를 거절합니다. 이 암호화 유틸리티는 실제 **프로세스 환경변수**를 읽으므로 저장소 `.env` 파일이나 Spring 속성만 작성해서는 충분하지 않습니다. IDE 실행 환경, 배포 Secret 또는 컨테이너 환경으로 전달하세요.
+저장소 루트 `.env`의 `CHAT_ENCRYPTION_KEY`에 **무작위 32byte 키의 Base64**를 제공해야 합니다. 코드·이미지·커밋에 키를 넣지 마세요. `CHAT_ENCRYPTION_KEY_VERSION`은 기본 `v1`, 허용값은 영숫자·`_`·`-` 1–32자입니다. Spring 시작 시 키 누락·잘못된 길이를 거절합니다. application.yml이 `.env`를 가져오고 app.chat.encryption.key/key-version에 매핑합니다. EncryptUtil은 `@Value` 생성자 주입으로 키를 한 번 검증하여 인스턴스에 보관합니다. 정적 메서드·System.getenv 직접 조회는 사용하지 않습니다. 프로세스 환경변수로도 같은 이름을 설정할 수 있으며 Spring의 표준 우선순위에 따라 파일보다 우선합니다.
 
 저장 형식은 `gcm1.<keyVersion>.<Base64 nonce>.<Base64 ciphertext+tag>`입니다. AES-256-GCM, 메시지별 난수 12byte nonce, 128bit 인증 태그를 사용하고 형식·키 버전을 AAD로 인증합니다. 변조·다른 키·알 수 없는 버전은 복호화 실패입니다. 고정 키 AES 암호문의 호환 복호화는 제공하지 않습니다. 데이터 없이 새로 시작하는 배포 기준이며 기존 암호문이 있는 환경에 새 키를 즉시 적용해서는 안 됩니다.
 
-현재는 활성 키 한 개만 지원합니다. 버전은 복호화 가능 여부를 식별하며 자동 키 교체 기능이 아닙니다. 저장된 메시지를 보존하려면 해당 키·버전도 보존해야 합니다. Gradle 테스트는 격리된 합성 테스트 키를 주입하며 운영 키를 사용하지 않습니다.
+현재는 활성 키 한 개만 지원합니다. 버전은 복호화 가능 여부를 식별하며 자동 키 교체 기능이 아닙니다. 저장된 메시지를 보존하려면 해당 키·버전도 보존해야 합니다. test 프로필과 단위 테스트 fixture는 격리된 합성 키를 사용하며 로컬 .env의 실제 키를 암호화 테스트에 사용하지 않습니다.
+
+설정 예시(키는 실제 생성한 값으로 대체):
+
+```dotenv
+CHAT_ENCRYPTION_KEY=<32바이트 난수의 Base64>
+CHAT_ENCRYPTION_KEY_VERSION=v1
+```
+
+서비스와 Advisor 메모리는 주입받은 EncryptUtil로 암복호화하고 DTO는 이미 복호화된 본문만 받습니다. EncryptionConfigurationTest는 실제 application.yml과 임시 .env를 사용해 프로세스 환경변수 없이 설정이 주입되는지 확인합니다.
 
 ## INFO와 삭제
 
@@ -25,3 +34,5 @@ DB 메시지는 `USER/BOT`만 저장합니다. API의 기존 `INFO` 응답은 �
 메시지·미리보기는 `(timestamp ASC, id ASC)`를 사용합니다. 방 목록 `GET /api/chat-rooms?page=0&size=20`은 `(created_at DESC, id DESC)`이며 `page >= 0`, `1 <= size <= 100`입니다. 응답 JSON은 기존 방 배열을 유지합니다. `LocalDateTime` 응답의 시간대 의미는 UTC이며 오프셋을 추가하지 않습니다.
 
 `EncryptUtilTest`, `ChatContentLimitsTest`, `ChatStorageServiceTest`, `RoomEvidenceIntegrationTest`는 변조·난수 nonce·큰 한글 암호문·경계·INFO 재구성·페이지 전달·H2 삭제 cascade를 검증합니다. 실제 MySQL 타입·FK·한도 검증은 `mysqlIntegrationTest`에서 별도로 수행합니다.
+
+설정 주입 전환 검증(2026-10-22): 일반 테스트 287 개(실패 0, 선택 실행 1 개 건너뜀)와 bootJar 통과. 임시 .env만으로 실제 YAML·@Value 주입, 빈 키 기동 실패, 서로 다른 인스턴스 키 격리, 기존 암호문 envelope·변조 검사·큰 본문 복원을 확인했다. 로컬 .env는 Git 제외 상태다.

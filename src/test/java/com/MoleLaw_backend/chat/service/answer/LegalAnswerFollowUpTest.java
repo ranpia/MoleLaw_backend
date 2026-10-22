@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.chat.service.answer;
 
+import com.MoleLaw_backend.chat.util.TestEncryption;
+
 import com.MoleLaw_backend.chat.config.AnswerChatClientConfig;
 import com.MoleLaw_backend.chat.entity.ChatRoom;
 import com.MoleLaw_backend.chat.entity.Message;
@@ -47,7 +49,7 @@ class LegalAnswerFollowUpTest {
 
     @BeforeEach
     void setUp() {
-        var memory = new PersistedChatMemory(messages, rooms, 20);
+        var memory = new PersistedChatMemory(messages, rooms, 20, TestEncryption.create());
         var builder = new AiConfig().baseAiChatClientBuilder(model);
         var config = new AnswerChatClientConfig();
         service = new LegalAnswerService(collector, mock(ChatClient.class),
@@ -143,7 +145,7 @@ class LegalAnswerFollowUpTest {
     }
 
     private Message message(long id, Message.Sender sender, String content) {
-        return Message.builder().id(id).sender(sender).content(EncryptUtil.encrypt(content))
+        return Message.builder().id(id).sender(sender).content(TestEncryption.create().encrypt(content))
                 .timestamp(LocalDateTime.of(2026, 10, 21, 12, 0)).build();
     }
 }

@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.chat.service;
 
+import com.MoleLaw_backend.chat.util.TestEncryption;
+
 import com.MoleLaw_backend.chat.dto.request.CreateChatRoomRequest;
 import com.MoleLaw_backend.chat.entity.ChatRoom;
 import com.MoleLaw_backend.chat.entity.Message;
@@ -30,7 +32,7 @@ class ChatStorageServiceTest {
     private final LegalAnswerService answers = mock(LegalAnswerService.class);
     private final KeywordExtractionService extractor = mock(KeywordExtractionService.class);
     private final ChatService service = new ChatService(rooms, messages, answers, mock(ChatTurnService.class),
-            extractor, evidence, new EvidenceRenderer());
+            extractor, evidence, new EvidenceRenderer(), TestEncryption.create());
     private final User user = User.builder().id(1L).build();
     private final ChatRoom room = ChatRoom.builder().id(2L).user(user).title("상담").build();
 
@@ -76,7 +78,7 @@ class ChatStorageServiceTest {
     }
 
     private Message message(Long id, Message.Sender sender, String content, LocalDateTime timestamp) {
-        return Message.builder().id(id).chatRoom(room).sender(sender).content(EncryptUtil.encrypt(content))
+        return Message.builder().id(id).chatRoom(room).sender(sender).content(TestEncryption.create().encrypt(content))
                 .timestamp(timestamp).build();
     }
 }

@@ -45,6 +45,8 @@ HTTP 입력·출력은 각 도메인의 dto/request·response에 둔다. LawDto/
 과거 기준선·보안 감사 문서의 옛 경로는 해당 시점 기록이다. 현재 클라이언트 계약은 이 문서와 local OpenAPI를 우선한다.
 ## 검증
 
+2026-10-22 추가: `LawEtlTestController`는 `local & !test` 및 벡터 활성화 조건에서만 `POST /api/local/law-etl/index`, `/reindex`, `/search`를 제공한다. 공통 20개 API 계약은 유지하며 로컬 검증 경로의 인증·CSRF·요청/응답·OpenAPI는 별도 테스트로 확인한다. [ETL 사용법](law-etl-local.md)을 따른다.
+
 일반 테스트 283개(실패 0, 선택 Postman 실행 1개 건너뜀)와 bootJar를 통과했다. OpenApiDocumentationTest는 새 경로·HTTP 메서드 20개, 인증/CSRF 요구·응답 예시·schema를 확인한다. 법령 AI 검색은 옛 content 본문을 거절하고 query 본문을 처리하는 HTTP 회귀를 추가했다. 사용자 ID·방 소유권·Refresh 회전과 실제 CSRF 쿠키 부트스트랩 회귀도 포함된다. 패키지 이동 후 HTTP 임베딩 클라이언트는 별도 로컬 Postman simulation에서 검증한다. 실제 OpenLaw/OAuth/유료 LLM은 호출하지 않았다.
 
 최종 추가 검증: Swagger 문구 갱신 후 OpenAPI 테스트와 선택 Postman 테스트 총 5 개를 통과했다. simulation 로그에서 실제 클라이언트의 GET /api/tags·POST /api/embed 및 HTTP 200을 확인했고 테스트 서버를 종료했다.

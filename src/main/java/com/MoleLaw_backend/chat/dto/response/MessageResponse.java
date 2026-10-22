@@ -3,7 +3,6 @@ package com.MoleLaw_backend.chat.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.MoleLaw_backend.chat.entity.Message;
-import com.MoleLaw_backend.chat.util.EncryptUtil;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,10 +18,10 @@ public class MessageResponse {
     @Schema(description = "UTC 메시지 생성 시각. 가상 INFO는 최초 BOT의 시각을 사용합니다.", example = "2026-01-15T10:30:00")
     private LocalDateTime timestamp;
 
-    public static MessageResponse from(Message message) {
+    public static MessageResponse from(Message message, String content) {
         return MessageResponse.builder()
                 .sender(message.getSender().name())
-                .content(EncryptUtil.decrypt(message.getContent()))
+                .content(content)
                 .timestamp(message.getTimestamp())
                 .build();
     }

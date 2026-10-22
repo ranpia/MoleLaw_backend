@@ -1,5 +1,7 @@
 # 개발 완료 현황과 다음 작업
 
+2026-10-22 ETL 최신 상태: Spring AI Reader→Transformer→Writer와 최초 수집기 연결, 완료 세대 공개, 저장 원문 수동 재색인 및 local 검증 API를 구현했다. 아래 2026-10-21 기록보다 [현재 ETL 계약](law-etl-local.md)을 우선한다. 영속 작업 큐·자동 재개·물리 정리는 후속이다.
+
 > 2026-10-22 갱신: 사용자·상담·법령 개편을 구현했다. 아래 기존 검토·계획의 미완료 표기보다 [현재 적용 현황](schema-rebuild-status.md)을 우선한다. 실제 DB 적용·검증 결과는 MySQL 실행 가이드에 별도로 기록한다.
 
 정리일: 2026-10-21. 서비스 기준은 `dev`의 `859def2`, 검색 실험 기준은 `experiment/legal-embedding-evaluation`의 `2178f06`이다. 현재 코드·Git 이력·기존 검증 기록을 대조한 문서이며 이번에 테스트·모델 평가·DB 상태 조회를 재실행하지 않았다.
@@ -46,7 +48,7 @@ git show 2178f06:evaluation/legal-retrieval/experiments/infrastructure/qdrant/or
 
 `LawVectorizationToolService`는 기존 법령 조회 Tool이 같은 실행에서 저장한 원문을 조문별로 분할하고 Python 임베딩 API를 호출해 서비스 전용 Qdrant 컬렉션에 적재한다. `LawRagSearchToolService`는 같은 모델로 질문을 임베딩하고 서로 다른 조문을 최대 15개 반환한다. 기본 비활성화이며 설정·계약은 [법령 벡터 Tool](law-vector-tools.md)을 따른다.
 
-기존 상담 흐름·검색 서비스 연결, Spring AI ETL 인터페이스 적용, 작업 상태와 완료 버전 공개는 아직 구현하지 않았다. 부분 적재 실패 시 이미 적재한 조문은 검색될 수 있다. 모델 품질 평가는 별도다.
+현재는 기존 상담 흐름과 Spring AI ETL 인터페이스를 연결하고 작업 상태와 완료 세대 공개를 구현했다. 부분 적재·실패 세대는 검색에서 제외한다. 영속 작업 재개·물리 정리·모델 품질 평가는 별도다.
 
 ## 4. 아직 완료하지 않은 항목
 

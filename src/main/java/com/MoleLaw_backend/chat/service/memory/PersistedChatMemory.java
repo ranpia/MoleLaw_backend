@@ -25,15 +25,17 @@ public class PersistedChatMemory implements ChatMemory {
     private final MessageRepository messages;
     private final ChatRoomRepository rooms;
     private final int maxMessages;
+    private final EncryptUtil encryptor;
 
     public PersistedChatMemory(MessageRepository messages, ChatRoomRepository rooms,
-                               @Value("${app.ai.memory.max-messages:20}") int maxMessages) {
+                               @Value("${app.ai.memory.max-messages:20}") int maxMessages, EncryptUtil encryptor) {
         if (maxMessages < 4 || maxMessages > 100) {
             throw new IllegalArgumentException("app.ai.memory.max-messages must be between 4 and 100");
         }
         this.messages = messages;
         this.rooms = rooms;
         this.maxMessages = maxMessages;
+        this.encryptor = encryptor;
     }
 
     @Override
@@ -60,7 +62,7 @@ public class PersistedChatMemory implements ChatMemory {
         List<org.springframework.ai.chat.messages.Message> result = new ArrayList<>();
         for (int position : positions) {
             Message message = history.get(position);
-            String content = EncryptUtil.decrypt(message.getContent());
+            String content = encryptor.decrypt(message.getContent());
             result.add(message.getSender() == Message.Sender.USER
                     ? new UserMessage(content) : new AssistantMessage(content));
         }

@@ -38,6 +38,7 @@ public class ChatService {
     private final KeywordExtractionService extractKeyword;
     private final ChatEvidenceService evidence;
     private final EvidenceRenderer renderer;
+    private final EncryptUtil encryptor;
 
     public List<ChatRoomResponse> getMyChatRooms(User user) {
         return getMyChatRooms(user, 0, 20);
@@ -52,7 +53,7 @@ public class ChatService {
                 .map(room -> {
                     String preview = messageRepository
                             .findFirstByChatRoomIdOrderByTimestampAscIdAsc(room.getId())
-                            .map(m -> EncryptUtil.decrypt(m.getContent()))
+                            .map(m -> encryptor.decrypt(m.getContent()))
                             .orElse("(메시지 없음)");
                     return ChatRoomResponse.from(room, preview);
                 })
@@ -62,7 +63,7 @@ public class ChatService {
     public List<MessageResponse> getMessages(User user, Long chatRoomId) {
         requireOwnedRoom(user, chatRoomId);
         List<MessageResponse> result = messageRepository.findByChatRoomIdOrderByTimestampAscIdAsc(chatRoomId).stream()
-                .map(MessageResponse::from)
+                .map(message -> MessageResponse.from(message, encryptor.decrypt(message.getContent())))
                 .collect(Collectors.toList());
         // Preserve USER/BOT/INFO response order without storing a duplicate evidence body.
         int firstBot = -1;
@@ -84,7 +85,7 @@ public class ChatService {
         try {
             LegalAnswerResponse answer = answers.answerFollowUp(user.getId(), chatRoomId, request.getContent());
             Message botMessage = turns.saveFollowUpTurn(room, request.getContent(), answer.getAnswer());
-            return MessageResponse.from(botMessage);
+            return MessageResponse.from(botMessage, encryptor.decrypt(botMessage.getContent()));
         } catch (Exception e) {
             if (e instanceof MolelawException failure) throw failure;
             throw new MolelawException(ErrorCode.GPT_API_FAILURE, "GPT 응답 생성 중 오류 발생", e);

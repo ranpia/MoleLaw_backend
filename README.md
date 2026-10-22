@@ -66,7 +66,7 @@ Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구�
 
 판례는 쟁점 기반 검색 후 상세 내용과 관련성을 검증한 자료만 채택할 계획입니다. 이전 assistant 답변이나 판례 제목만을 법률 원문 근거로 취급하지 않습니다. 최종 답변의 근거 ID·출처를 서버에서 검증한 후 성공한 대화 턴을 확정합니다.
 
-실행 전에 프로세스 환경변수 `CHAT_ENCRYPTION_KEY`에 무작위 32바이트 키의 Base64를 제공해야 합니다. `.env` 파일만으로 암호화 키가 전달되지는 않습니다. 최초 상담에는 `APP_LAW_VECTOR_ENABLED=true`와 로컬 임베딩·Qdrant가 필요합니다. [상담 저장 실행 계약](docs/chat-storage.md)을 참고하세요.
+실행 전에 루트 `.env`의 `CHAT_ENCRYPTION_KEY`에 무작위 32바이트 키의 Base64를 설정하세요. application.yml의 .env import와 `@Value` 생성자 주입으로 읽습니다. `CHAT_ENCRYPTION_KEY_VERSION`은 기본 v1입니다. 최초 상담에는 `APP_LAW_VECTOR_ENABLED=true`와 로컬 임베딩·Qdrant가 필요합니다. [상담 저장 실행 계약](docs/chat-storage.md)을 참고하세요.
 
 ## Ollama 임베딩 비교 계획
 

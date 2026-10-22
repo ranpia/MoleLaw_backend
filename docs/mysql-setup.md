@@ -6,7 +6,7 @@
 
 1. [Docker 가이드](../docker/README.md)로 MySQL·Redis·Qdrant를 준비한다. 최초 실행은 빈 DB를 사용하고, 이미 Flyway가 관리하는 DB는 미적용 migration만 추가한다. 이력 없는 기존 DB나 볼륨은 자동 초기화하지 않는다.
 2. `.env`의 DB 주소·계정을 맞추고 기존 `JPA_DDL_AUTO` 설정은 `validate`로 맞춘다. 최초 migration 계정에는 테이블/인덱스/FK 생성 권한이 필요하다.
-3. OAuth·AI 등 기존 필수 설정과 프로세스 환경변수 CHAT_ENCRYPTION_KEY(무작위 32바이트의 Base64)를 제공하고 실행한다. 키는 .env 파일만 작성해서는 전달되지 않는다. [상담 저장 계약](chat-storage.md)을 따른다.
+3. OAuth·AI 등 기존 필수 설정과 루트 .env의 CHAT_ENCRYPTION_KEY(무작위 32바이트의 Base64)를 설정하고 실행한다. Spring 설정이 .env를 읽어 암호화 빈에 주입한다. [상담 저장 계약](chat-storage.md)을 따른다.
 
 ```powershell
 .\gradlew.bat bootRun --args="--spring.profiles.active=local"

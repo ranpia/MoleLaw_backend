@@ -51,7 +51,7 @@
 2026-10-14 Access subject와 principal·조회·권한을 기존 `User.id` IDENTITY PK로 통일했다. 이어서 JWT Refresh를 난수 Refresh로 대체하고 Redis 회전·재사용·family 폐기와 JSON 제거를 구현했다. 구형 JWT Refresh는 재로그인한다. 일반 테스트 148개·실제 Redis 11개·MySQL 2개·JAR를 검증했으며 기존 개발 DB/Redis를 초기화하지 않았다. [인증 계획](plans/auth-security.md)과 [회전 구현](refresh-rotation.md)을 따른다.
 
 1. 구현된 stateless Access·Redis Refresh의 동시 배포 전환, 운영 Refresh 영속화·복구·호출 제한을 준비한다. MySQL 인증 세션/Refresh migration은 추가하지 않는다.
-2. MySQL 원문 Reader → 구조 보존 Transformer → Qdrant writer, Ollama 임베딩 비교/선정.
+2. MySQL 원문 Reader → 구조 보존 Transformer → Qdrant writer는 2026-10-22 연결했다. 저장 원문 수동 재색인과 local 검증 API는 [ETL 실행 계약](law-etl-local.md)을 따른다. 임베딩 품질 평가·선정과 영속 복구는 후속이다.
 3. 실행 중단·페이지 재개 이력 영속화, 전역 동시성·남은 deadline에 맞춘 HTTP 제한.
 4. 인증/방 소유권·최초 질문 오케스트레이터 연결, 상담방 근거 스냅샷과 Advisor 성공 턴 저장.
 5. 근거 관련성·시행일/사건 기준일·후속 검색 금지 평가. SerpApi는 [검토안](plans/search-fallback.md)이며 미도입.

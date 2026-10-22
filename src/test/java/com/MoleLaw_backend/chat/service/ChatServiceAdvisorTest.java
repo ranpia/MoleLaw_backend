@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.chat.service;
 
+import com.MoleLaw_backend.chat.util.TestEncryption;
+
 import com.MoleLaw_backend.chat.dto.request.CreateMessageRequest;
 import com.MoleLaw_backend.chat.dto.response.LegalAnswerResponse;
 import com.MoleLaw_backend.chat.entity.ChatRoom;
@@ -27,7 +29,7 @@ class ChatServiceAdvisorTest {
     private final ChatTurnService turns = mock(ChatTurnService.class);
     private final ChatService service = new ChatService(rooms, messages, gpt, turns,
             mock(KeywordExtractionService.class), mock(com.MoleLaw_backend.chat.service.evidence.ChatEvidenceService.class),
-            new com.MoleLaw_backend.chat.service.answer.EvidenceRenderer());
+            new com.MoleLaw_backend.chat.service.answer.EvidenceRenderer(), TestEncryption.create());
     private final User user = User.builder().id(1L).build();
     private final ChatRoom room = ChatRoom.builder().id(2L).user(user).build();
 
@@ -82,7 +84,7 @@ class ChatServiceAdvisorTest {
         when(rooms.findById(2L)).thenReturn(Optional.of(room));
         when(gpt.answerFollowUp(1L, 2L, "후속 질문")).thenReturn(new LegalAnswerResponse("답변", ""));
         when(turns.saveFollowUpTurn(room, "후속 질문", "답변")).thenReturn(Message.builder()
-                .id(4L).chatRoom(room).sender(Message.Sender.BOT).content(EncryptUtil.encrypt("답변")).build());
+                .id(4L).chatRoom(room).sender(Message.Sender.BOT).content(TestEncryption.create().encrypt("답변")).build());
         service.askQuestion(user, 2L, request());
         var order = inOrder(gpt, turns);
         order.verify(gpt).answerFollowUp(1L, 2L, "후속 질문");
