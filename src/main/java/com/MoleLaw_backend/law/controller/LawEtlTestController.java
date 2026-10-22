@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-@Tag(name = "Local law ETL", description = "local 전용 ETL 검증. 실제 MySQL·임베딩·Qdrant를 사용합니다.")
+@Tag(name = "법령 ETL 테스트", description = "local 프로필과 APP_LAW_VECTOR_ENABLED=true에서만 노출됩니다. 법령 수집·재색인·상위 15개 검색을 검증합니다. 실제 MySQL·임베딩·Qdrant를 사용합니다.")
 @RestController
 @Profile("local & !test")
 @ConditionalOnProperty(prefix = "app.law-vector", name = "enabled", havingValue = "true")
@@ -61,7 +61,10 @@ public class LawEtlTestController {
     public LawEtlTestResponse index(
         @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = LawEtlTestRequest.class),
-            examples = @ExampleObject(value = "{\"query\":\"민법\",\"startPage\":1,\"maxPages\":3}")))
+            examples = {
+                @ExampleObject(name = "정확한 법령명", summary = "민법 완전 일치 검색", value = "{\"query\":\"민법\",\"startPage\":1,\"maxPages\":3}"),
+                @ExampleObject(name = "검색 조건 지정", summary = "ID·완전 일치·시행일 정렬 조건", value = "{\"query\":\"민법\",\"startPage\":1,\"maxPages\":3,\"filters\":{\"lawId\":\"001706\",\"exactName\":true,\"sort\":\"efdes\"}}")
+            }))
         @Valid @RequestBody LawEtlTestRequest request) {
         return service.collect(request);
     }
@@ -70,7 +73,10 @@ public class LawEtlTestController {
     @Operation(summary = "완료 색인에서 상위 15개 조문 검색", description = "질문을 임베딩하고 공개 완료 세대에서 서로 다른 조문 최대 15개를 반환합니다. 법령 수집과 답변 생성은 하지 않습니다. 인증 쿠키 또는 Bearer와 CSRF가 필요합니다. /api/auth/csrf의 토큰을 X-XSRF-TOKEN 헤더로 전달하세요.")
     @ApiResponse(responseCode = "200", description = "검색 결과. 완료 색인이 없으면 빈 배열",
         content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = LawRagTestResponse.class)),
-            examples = @ExampleObject(value = "[]")))
+            examples = {
+                @ExampleObject(name = "검색 성공", value = "[{\"unitId\":\"123:2\",\"referenceId\":\"11111111-1111-1111-1111-111111111111\",\"externalId\":\"123\",\"lawId\":\"001706\",\"effectiveDate\":\"20260101\",\"title\":\"민법 제2조(신의성실)\",\"text\":\"권리의 행사와 의무의 이행은 신의에 좇아 성실히 하여야 한다.\",\"articleText\":\"권리의 행사와 의무의 이행은 신의에 좇아 성실히 하여야 한다. 권리는 남용하지 못한다.\",\"sourceUrl\":\"https://www.law.go.kr/법령?lsId=001706&lsiSeq=123\",\"score\":0.82,\"modelRevision\":\"example-revision\",\"configFingerprint\":\"example-fingerprint\",\"generation\":\"22222222-2222-2222-2222-222222222222\"}]"),
+                @ExampleObject(name = "검색 결과 없음", value = "[]")
+            }))
     public List<LawRagTestResponse> search(
         @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = LawQuestionRequest.class),
