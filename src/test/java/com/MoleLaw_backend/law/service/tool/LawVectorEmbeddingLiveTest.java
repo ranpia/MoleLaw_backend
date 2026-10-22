@@ -1,4 +1,8 @@
 package com.MoleLaw_backend.law.service.tool;
+import com.MoleLaw_backend.law.dto.vector.LawSearchEvidence;
+import com.MoleLaw_backend.law.dto.tool.LegalToolContracts;
+import com.MoleLaw_backend.law.service.source.LegalSourceService;
+import com.MoleLaw_backend.law.client.vector.LawVectorClient;
 
 import com.MoleLaw_backend.law.config.LawVectorProperties;
 import com.MoleLaw_backend.law.entity.LegalSource;
@@ -52,14 +56,15 @@ class LawVectorEmbeddingLiveTest {
             context.details.put("LAW:999999", new LegalToolContracts.DetailResult(source.getId(), "999999", "999999",
                     "20261021", "검증용 법령 자료", 20, true, source.getCollectedAt(), source.getSourceUrl(), List.of()));
             var client = new LawVectorClient(properties, mapper);
-            var writer = new LawVectorizationToolService(client, properties, mapper, sources);
-            var reader = new LawRagSearchToolService(client);
+            var indexes = InMemoryIndexes.create(sources);
+            var writer = new LawVectorizationToolService(client, properties, mapper, sources, indexes);
+            var reader = new LawRagSearchToolService(client, indexes);
             var indexed = writer.vectorizeLaw(context, source.getId());
             assertThat(indexed.articleCount()).isEqualTo(20);
             assertThat(indexed.chunkCount()).isGreaterThan(20);
             var hits = reader.searchTop15(context, "계약을 이행하지 않은 경우 손해배상 책임과 당사자의 의무");
             assertThat(hits).hasSize(15);
-            assertThat(hits).extracting(LawRagSearchToolService.Evidence::unitId).doesNotHaveDuplicates();
+            assertThat(hits).extracting(LawSearchEvidence::unitId).doesNotHaveDuplicates();
             assertThat(hits).allSatisfy(hit -> {
                 assertThat(hit.referenceId()).isEqualTo(source.getId());
                 assertThat(hit.sourceUrl()).isEqualTo(source.getSourceUrl());

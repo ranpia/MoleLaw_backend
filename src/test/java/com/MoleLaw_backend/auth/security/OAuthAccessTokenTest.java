@@ -25,11 +25,32 @@ import static org.mockito.Mockito.*;
 
 class OAuthAccessTokenTest {
     @Test
-    void newOAuthAccountUsesTheGeneratedPrimaryKey() throws Exception {
+    void missingOrMismatchedStableIdentityNeverIssuesTokens() throws Exception {
+        Fixture missing = new Fixture();
+        when(missing.authentication.getPrincipal()).thenReturn(new DefaultOAuth2User(
+                List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                Map.of("email", "oauth@example.com", "provider", "google"), "email"));
+        missing.handler.onAuthenticationSuccess(new MockHttpServletRequest(), missing.response, missing.authentication);
+        assertThat(missing.response.getStatus()).isEqualTo(401);
+        verifyNoInteractions(missing.cookies, missing.store);
+        verify(missing.users, never()).save(any());
+
+        Fixture mismatch = new Fixture();
+        when(mismatch.users.findByIdForUpdate(1L)).thenReturn(Optional.of(User.builder().id(1L)
+                .provider("google").providerSubject("different").build()));
+        mismatch.handler.onAuthenticationSuccess(new MockHttpServletRequest(), mismatch.response, mismatch.authentication);
+        assertThat(mismatch.response.getStatus()).isEqualTo(401);
+        verifyNoInteractions(mismatch.cookies, mismatch.store);
+    }
+
+    @Test
+    void oauthAccountUsesTheVerifiedPrimaryKey() throws Exception {
         Fixture fixture = new Fixture();
-        when(fixture.users.findByCredentialsForUpdate("oauth@example.com", "google")).thenReturn(Optional.empty());
-        when(fixture.users.save(any(User.class))).thenReturn(User.builder().id(42L)
-                .email("oauth@example.com").provider("google").build());
+        when(fixture.users.findByIdForUpdate(42L)).thenReturn(Optional.of(User.builder().id(42L)
+                .email("oauth@example.com").provider("google").providerSubject("google-sub").build()));
+        when(fixture.authentication.getPrincipal()).thenReturn(new DefaultOAuth2User(
+                List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                Map.of("userId", 42L, "provider", "google", "providerSubject", "google-sub"), "userId"));
         fixture.handler.onAuthenticationSuccess(new MockHttpServletRequest(), fixture.response, fixture.authentication);
         var access = ArgumentCaptor.forClass(String.class);
         var refresh = ArgumentCaptor.forClass(String.class);
@@ -78,9 +99,9 @@ class OAuthAccessTokenTest {
             ReflectionTestUtils.setField(handler, "frontenduri", "http://localhost:3000");
             when(authentication.getPrincipal()).thenReturn(new DefaultOAuth2User(
                     List.of(new SimpleGrantedAuthority("ROLE_USER")),
-                    Map.of("email", "oauth@example.com", "provider", "google"), "email"));
-            when(users.findByCredentialsForUpdate("oauth@example.com", "google"))
-                    .thenReturn(Optional.of(User.builder().id(1L).email("oauth@example.com").provider("google").build()));
+                    Map.of("userId", 1L, "provider", "google", "providerSubject", "google-sub"), "userId"));
+            when(users.findByIdForUpdate(1L))
+                    .thenReturn(Optional.of(User.builder().id(1L).email("oauth@example.com").provider("google").providerSubject("google-sub").build()));
         }
     }
 }

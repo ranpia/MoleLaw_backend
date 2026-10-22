@@ -1,4 +1,5 @@
 package com.MoleLaw_backend.common.ai.exception;
+
 import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 

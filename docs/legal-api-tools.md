@@ -58,7 +58,7 @@ if (!page.candidates().isEmpty()) {
 
 ## 스키마·검증·남은 작업
 
-빈 MySQL DB의 `legal_source`는 Flyway V1이 다른 업무 테이블과 함께 자동 생성한다. [이전 수동 SQL](sql/001-legal-source.sql)은 참고용이며 별도로 실행하지 않는다. 기본/mysql·local은 JPA validate를 사용한다. H2/모킹 검증은 `.\gradlew.bat test`로 실행한다.
+빈 MySQL DB의 `legal_source`는 Flyway V1이 다른 업무 테이블과 함께 자동 생성한다. [이전 수동 SQL](archive/sql/001-legal-source.sql)은 참고용이며 별도로 실행하지 않는다. 기본/mysql·local은 JPA validate를 사용한다. H2/모킹 검증은 `.\gradlew.bat test`로 실행한다.
 
 Flyway/JPA 원문 저장의 실제 MySQL 검증은 `mysqlIntegrationTest`로 수행한다. 실제 API→MySQL 전체 경로, 시행일별 상세 조회 정책, 영속적인 페이지/실패 재개 기록, 전체 동시성 제한, ETL·Qdrant·상담 오케스트레이터 연결은 남아 있다. 법령 상세는 기존 `target=law&MST=...` 계약을 재사용하며 목록 시행일/법령ID와 다르면 거부한다.
 
@@ -70,14 +70,14 @@ Flyway/JPA 원문 저장의 실제 MySQL 검증은 `mysqlIntegrationTest`로 수
 
 `OC_KEY` 환경변수 또는 루트 `.env`의 키를 사용한다. 일반 `test`에서는 이 네트워크 테스트를 제외한다. 민법의 부처·종류·현행·정확명 검색, 응답 법령ID 재조회, 법령 상세와 판례 목록/상세를 5회 호출하고 TestController의 법령 목록·판례 목록·판례 상세 경로를 추가 3회 호출한다. 실제 Tool 계약과 원문 참조 복원, 컨트롤러 JSON 필드를 검증한다. 컨트롤러는 standalone MockMvc로 실행하므로 인증 필터·Swagger 브라우저 동작 검증은 포함하지 않는다. 원문은 테스트 메모리에만 보존하며 DB·OpenAI를 호출하지 않는다. 키·인증 URL·본문은 출력하지 않는다.
 
-2026-10-14: `/api/test/lawsearch`의 파서가 실제 `LawSearch.law` 대신 `LawList.row`를 읽어 정상 결과도 빈 배열로 변환하던 문제를 수정했다. 법령명은 `법령명한글`, 종류는 `법령구분명`에서 매핑하며 단일 객체/배열을 지원한다. 정상 0건은 `[]`, 잘못된 응답은 `OPENLAW_INVALID_RESPONSE`(400)로 구분한다.
+2026-10-14: `/api/laws`의 파서가 실제 `LawSearch.law` 대신 `LawList.row`를 읽어 정상 결과도 빈 배열로 변환하던 문제를 수정했다. 법령명은 `법령명한글`, 종류는 `법령구분명`에서 매핑하며 단일 객체/배열을 지원한다. 정상 0건은 `[]`, 잘못된 응답은 `OPENLAW_INVALID_RESPONSE`(400)로 구분한다.
 
 ## Swagger에서 판례 조회
 
 local 서버에서 로그인한 뒤 다음 순서로 호출한다. GET API는 Access 쿠키 인증이 필요하며 CSRF 헤더는 필요하지 않다.
 
-1. `GET /api/test/cases?query=손해배상&search=1&page=1&display=5&referenceLaw=민법&courtType=400201&courtName=대법원`
-2. 목록의 `판례일련번호`를 복사하여 `GET /api/test/cases/{id}` 호출
+1. `GET /api/precedents?query=손해배상&search=1&page=1&display=5&referenceLaw=민법&courtType=400201&courtName=대법원`
+2. 목록의 `판례일련번호`를 복사하여 `GET /api/precedents/{id}` 호출
 
 기존 `query`의 잘못된 `JO` 매핑을 고쳤다. `query`는 판례명/본문 검색어, `referenceLaw`만 참조법령 필터다. 기본 목록 응답은 기존 한글 필드명의 JSON 배열이며 페이지 메타데이터를 추가한 래퍼로 바꾸지 않는다. `search=2`는 본문 검색, `courtType=400201`은 대법원, `400202`는 하위법원이다. 상세는 같은 클라이언트로 판시사항·판결요지·참조조문·참조판례·판례내용을 반환하고 HTML 줄바꿈을 그대로 보존한다. 외부 상세의 `판례정보일련번호`는 응답에서 목록과 동일한 `판례일련번호`로 매핑한다.
 

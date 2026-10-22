@@ -1,6 +1,6 @@
 package com.MoleLaw_backend.law.util;
 
-import com.MoleLaw_backend.law.dto.response.LawDto;
+import com.MoleLaw_backend.law.dto.response.LawDetailResponse;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.law.exception.OpenLawApiException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,10 +10,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LawParseUtil {
+public final class LawParseUtil {
+    private LawParseUtil() { }
 
-    public static List<LawDto> parseJsonToLawList(String json) {
-        List<LawDto> laws = new ArrayList<>();
+    public static List<LawDetailResponse> parseJsonToLawList(String json) {
+        List<LawDetailResponse> laws = new ArrayList<>();
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(json);
@@ -33,7 +34,7 @@ public class LawParseUtil {
             Iterable<JsonNode> entries = rows.isObject() ? List.of(rows) : rows;
             for (JsonNode row : entries) {
                 if (!row.isObject() || row.path("법령명한글").asText().isBlank()) throw invalidResponse();
-                LawDto law = LawDto.builder()
+                LawDetailResponse law = LawDetailResponse.builder()
                         .lawName(row.path("법령명한글").asText())
                         .ministry(row.path("소관부처명").asText())
                         .lawType(row.path("법령구분명").asText())

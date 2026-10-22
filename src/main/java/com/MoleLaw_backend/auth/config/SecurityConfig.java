@@ -73,7 +73,7 @@ public class SecurityConfig {
                                         || environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class, false))))
                         .requestMatchers(
                                 "/api/auth/signup", "/api/auth/login", "/api/auth/logout",
-                                "/api/auth/csrf", "/api/auth/reissue",
+                                "/api/auth/csrf", "/api/auth/refresh",
                                 "/login/**", "/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()

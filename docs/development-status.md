@@ -1,5 +1,7 @@
 # 개발 완료 현황과 다음 작업
 
+> 2026-10-22 갱신: 사용자·상담·법령 개편을 구현했다. 아래 기존 검토·계획의 미완료 표기보다 [현재 적용 현황](schema-rebuild-status.md)을 우선한다. 실제 DB 적용·검증 결과는 MySQL 실행 가이드에 별도로 기록한다.
+
 정리일: 2026-10-21. 서비스 기준은 `dev`의 `859def2`, 검색 실험 기준은 `experiment/legal-embedding-evaluation`의 `2178f06`이다. 현재 코드·Git 이력·기존 검증 기록을 대조한 문서이며 이번에 테스트·모델 평가·DB 상태 조회를 재실행하지 않았다.
 
 ## 1. dev에 구현된 기능
@@ -52,12 +54,16 @@ git show 2178f06:evaluation/legal-retrieval/experiments/infrastructure/qdrant/or
 - 법령 버전·수집/색인 작업 상태·중단 재개, 근거 충분성 판단에 따른 동적 수집/재검색 조정.
 - Qdrant 서비스 검색 전환. 현재 `LawSimilarityService`는 MySQL 임베딩 전체 조회·직접 코사인 계산을 사용한다.
 - 요청 중복/동시성 제어·법령 버전/시행일 보강·인용 내용의 의미 검증. 최초 근거 고정·ID 인용 검증·성공 턴 저장은 구현했다.
-- 근거 수집 판단 계약과 수집·재검색 반복. 최초·후속 답변 서비스 분리와 전용 Client 연결, ID 형식/소속 검증은 구현했다.
+- 근거 수집 Client의 실제 판단 호출과 수집·재검색 반복. 판단 결과 계약·최초/후속 답변 서비스와 전용 Client 연결, ID 형식/소속 검증은 구현했다.
 - 대화·근거의 토큰 예산과 DB 페이지 조회 최적화. 후속 상담의 Advisor 기록 복원과 최초 근거 전달은 구현했다.
 - 단일 LLM 답변 품질 평가, 멀티 에이전트 오케스트레이터와 역할별 모델/추론 선정.
 - SerpApi fallback은 검토 중이다. 운영 Redis 복구·호출 제한·브라우저/운영 전환 검증도 별도 작업이다.
 
 ## 5. 후속 LLM 작업 계획
+
+판단 계약 구현: `EvidenceDecision`에 ANSWER_READY/SEARCH_AGAIN/COLLECT_LAW/INSUFFICIENT, 누락 쟁점·제공 근거 ID·재검색 질의·법령 검색 조건과 상태별 검증을 추가했다. 엄격한 JSON 파싱으로 추가 권한/예산 필드와 허위 근거 ID를 거절한다. 실제 수집 Client 호출·반복 실행·토큰 정산·로컬 임베딩 부하 제어는 아직 미구현이며 SSE 상태 알림은 후속 추가사항이다. [계약과 실행 경계](evidence-decision.md)를 따른다.
+
+실호출 검증: 전용 판단 프롬프트와 실제 수집 Client로 GPT-4의 네 상태를 확인했다. 최초 재검색 응답 1회는 계약 위반으로 거절됐고 같은 시나리오 재호출은 통과했다. 성공 4건의 확인된 usage는 5,626토큰이며 거절 1건의 당시 사용량은 미기록이다. 테스트는 이후 파싱 전에 usage를 출력한다. [실험 조건·한계](evidence-decision.md)를 따른다. 운영 호출·반복·예산 통제 연결은 미구현이다.
 
 구성 기반 구현: 공통 prototype Builder와 `EvidenceChatClientConfig`·`AnswerChatClientConfig`를 추가했다. 같은 ChatModel을 공유하되 역할별 Client·프롬프트·옵션을 분리했다. 기존 `AiChatService`는 Primary 호환 Client를 유지한다. [설정·미연결 범위](role-chat-clients.md)를 따른다.
 
@@ -88,3 +94,11 @@ Advisor 연결: 후속 Client만 MessageChatMemoryAdvisor를 사용한다. 기�
 2026-10-21 최종 검증: `test qdrantIntegrationTest` 통과. 일반 테스트 169개 중 168개 통과·선택 Postman 테스트 1개 건너뜀, 격리 Qdrant 통합 1개 통과. 선택 Postman 테스트는 별도 실행에서 1개 통과하고 실제 tags/embed 요청을 확인했다. 실제 모델 추론 품질은 검증하지 않았다.
 
 추가 실서버 검증: `embeddingLiveTest`에서 실제 KURE 1024차원 임베딩과 격리 Qdrant를 사용해 검증용 20조문·40청크의 적재 및 중복 없는 상위 15개 검색을 통과했다. Python 서버의 Content-Length 필수 계약에 맞춰 클라이언트를 수정했다. 원문 저장소는 테스트 대역이며 실제 법령 검색 정확도는 평가하지 않았다. [검증 조건](law-vector-tools.md)을 따른다.
+
+## 사용자 검증·계정 스키마 후속 (2026-10-21)
+
+회원가입·로그인·프로필 변경에 HTTP와 서비스 Bean Validation을 적용했다. BCrypt 72바이트 제한, OAuth subject 기반 식별 및 계정 생성 단일화, Flyway V3 사용자 제약을 추가했다. [사용자 계약](user-account-validation.md)과 [MySQL 실행 가이드](mysql-setup.md)를 참고한다. 문서 앞부분의 커밋 기준 현황과 구분되는 후속 작업이다.
+
+## 패키지·API 정리 (2026-10-22)
+
+서비스·DTO·HTTP 클라이언트 책임을 분리하고 인증/사용자/상담방/법령/판례/키워드/무저장 답변 컨트롤러로 나눴다. 새 경로만 제공하며 프론트 호출 변경이 필요하다. 상세 소유권·이전/현재 경로·입력 변경은 [구조·API 정리](package-api-organization.md)를 따른다. 이번 작업에서 DB 구조나 검색 정책은 변경하지 않았다.

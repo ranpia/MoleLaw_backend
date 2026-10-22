@@ -4,14 +4,14 @@
 
 현재 Java 17·Spring Boot 3.5·Spring AI 기반으로 백엔드를 재구축하고 있습니다. 법령 수집부터 벡터 검색, 대화 맥락 유지, 토큰 인증까지 역할을 분리하고 검증 가능한 구조로 바꾸는 것이 목표입니다.
 
-> 이 README는 2026-10-14 기준입니다. 아래의 현재 구현과 재구축 계획을 구분해 읽어 주세요. Qdrant·Redis 컨테이너 구동이 애플리케이션 검색·인증 전환 완료를 의미하지는 않습니다.
+> 2026-10-22 기준입니다. 사용자·상담 저장 모델과 Qdrant 검색 전환을 반영했습니다. 상세 변경·현재 상한·남은 작업은 [스키마 개편 현황](docs/schema-rebuild-status.md)을 참고하세요. 실제 법률 답변 정확도와 전체 외부 연동 품질 검증은 별도입니다.
 
 ## 주요 기능
 
 - 이메일·비밀번호 회원가입과 로그인, Google OAuth 로그인
 - 사용자별 상담방 생성·목록 조회·메시지 조회·삭제
-- 최초 질문의 법령 유사도 검색·판례 목록 조회와 AI 답변 생성
-- USER·BOT·INFO 구분과 메시지 암호화 저장
+- 최초 질문의 Qdrant 상위 15개 조문 검색·충분성 판단·추가 법령 수집과 AI 답변 생성
+- USER·BOT 메시지 AES-256-GCM 저장, 고정 근거에서 INFO 응답 재구성
 - JWT 인증과 상담방 소유권 검사
 - local 프로필의 Swagger UI를 통한 API 확인 (운영 비활성화)
 
@@ -22,10 +22,10 @@ Kakao OAuth 설정은 별도 `kakao` 프로필로 분리되어 있습니다. 기
 | 영역 | 현재 구현 | 재구축 방향 |
 | --- | --- | --- |
 | AI 호출 | Spring AI 1.0.9 ChatClient·EmbeddingModel 통합 | 상담·보조 호출 분리, Advisor와 구조화 답변·출처 검증 |
-| 법령 수집 | 기존 상담 경로는 첫 페이지/fallback, 별도 내부 Tool은 페이지·정확명·ID·날짜·정렬 지원 | 최초 질문에서 다음 페이지·다른 법령 후보 수집, 이력·실패 재개 |
-| 임베딩 | OpenAI 모델, MySQL 임베딩 테이블 저장 | Ollama 모델 비교 후 Spring AI ETL·Qdrant 색인으로 전환 |
-| 검색 | 전체 임베딩 조회 후 코사인 유사도 직접 계산 | Qdrant 벡터 검색·필터·중복 제거·조문 맥락 확장 |
-| 후속 상담 | 최초 assistant 답변과 현재 질문 전달 | MessageChatMemoryAdvisor로 채팅방 기록과 최초 원문 근거 전달 |
+| 법령 수집 | 최초 질문 판단 계약에 따른 다음 페이지·다른 법령 수집, 정확명·ID·날짜·정렬 지원 | 장기 작업 큐·실패 재개 |
+| 임베딩 | 로컬 Python 임베딩 API·KURE 고정 revision, 배치 동시성·대기 제한 | 추가 모델 품질 비교·분산 제어 |
+| 검색 | Qdrant 상위 15개 조문, MySQL 완료 generation·설정 필터, 실패 세대 제외 | 검색 품질·기준일 평가와 비활성 점 정리 |
+| 후속 상담 | MessageChatMemoryAdvisor가 방 기록 전달, 최초 원문 스냅샷·인용 ID 검증 | 실제 다중 턴 품질 평가 |
 | Access | 5분 stateless JWT, HS256·issuer/audience·용도·버전·필수 claim·수명 검증 | 구현 완료, Redis 등록·조회·폐기 없음 |
 | Refresh | Redis 해시·family·원자 회전·재사용 탐지·폐기·절대 7일 TTL, HttpOnly 쿠키 전용 | 운영 복구·호출 제한·세션 관리 확장 |
 
@@ -33,7 +33,7 @@ MySQL·Qdrant 프로필과 H2 테스트 구성, 공통 AI 호출, 기본 법령 
 
 ## 목표 아키텍처
 
-다음 그림은 재구축 후 목표 구조입니다.
+다음은 현재 연결된 주요 흐름과 향후 ETL 인터페이스 분리 방향입니다. Reader/Transformer/Writer 인터페이스 자체의 전환은 별도 단계입니다.
 
 ```mermaid
 flowchart LR
@@ -60,11 +60,13 @@ MySQL 원문은 기준 데이터이며 Qdrant 색인은 재생성 가능한 검�
 
 Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구조로 법령 자료를 읽고, 조문 구조를 보존해 나눈 뒤 임베딩·색인합니다. 법령 ID/MST, 조·항·호·목 경로, 원문 링크, 수집 시각과 내용 해시를 보존합니다. 안정적인 청크 ID와 색인 버전으로 중복·변경·삭제·재실행을 관리합니다.
 
-**최초 질문**에서는 기존 색인을 검색하고, 근거가 부족하면 같은 검색 조건의 다음 페이지나 다른 법령 후보를 수집합니다. 새 자료를 ETL·색인한 뒤 재검색해 같은 질문의 답변에 반영합니다. 고정 2라운드 제한을 두지 않고 근거 확보, 탐색 소진, 설정한 시간·호출·임베딩 예산으로 종료합니다.
+**최초 질문**에서는 기존 색인을 검색하고, 근거가 부족하면 같은 검색 조건의 다음 페이지나 다른 법령 후보를 수집합니다. 새 자료를 ETL·색인한 뒤 재검색해 같은 질문의 답변에 반영합니다. 현재는 서버 작업 최대 4회와 최종 판단 1회, 3분·도구 HTTP 128회·조건별 3페이지·상세 6건으로 제한합니다. 근거가 늘지 않거나 탐색이 소진되면 답변 대신 422를 반환합니다. 실제 LLM usage 기반 예산 정산은 후속입니다.
 
 **후속 질문**에서는 Advisor가 채팅방 기록을 전달하고 최초에 저장한 근거 스냅샷으로 답변합니다. 추가 수집·색인·법령/판례 검색은 하지 않습니다. 기존 근거 밖의 새로운 쟁점은 한계를 설명하고 새 상담방에서 다루도록 안내합니다.
 
 판례는 쟁점 기반 검색 후 상세 내용과 관련성을 검증한 자료만 채택할 계획입니다. 이전 assistant 답변이나 판례 제목만을 법률 원문 근거로 취급하지 않습니다. 최종 답변의 근거 ID·출처를 서버에서 검증한 후 성공한 대화 턴을 확정합니다.
+
+실행 전에 프로세스 환경변수 `CHAT_ENCRYPTION_KEY`에 무작위 32바이트 키의 Base64를 제공해야 합니다. `.env` 파일만으로 암호화 키가 전달되지는 않습니다. 최초 상담에는 `APP_LAW_VECTOR_ENABLED=true`와 로컬 임베딩·Qdrant가 필요합니다. [상담 저장 실행 계약](docs/chat-storage.md)을 참고하세요.
 
 ## Ollama 임베딩 비교 계획
 
@@ -98,7 +100,7 @@ Access는 **`sub=User.id`(사용자 고유키 문자열)**와 `tokenVersion=3`�
 
 토큰·payload 로그 제거, 공통 쿠키 정책, 명시적 CORS 허용 목록과 CSRF 보호를 적용했습니다. Refresh는 HttpOnly 쿠키로만 전달하며 로그인·재발급 JSON에는 Access만 포함됩니다. 매 재발급마다 Refresh를 회전하고 사용한 토큰 재사용은 해당 family를 폐기합니다. 로그아웃은 전달된 Refresh family를 폐기하고 인증 쿠키를 삭제합니다. 발급된 Access는 만료까지 유효합니다. 비밀번호 변경·탈퇴는 모든 Refresh family를 폐기합니다. 다른 로그인 family는 유지하며 상담 기록은 보존합니다.
 
-Access 수명은 모든 프로필에서 **5분(300초)**입니다. 300초를 초과하는 설정은 거절합니다. `jwt.access-ttl`을 JWT와 Access 쿠키가 함께 사용합니다. Refresh family는 최초 로그인부터 **절대 7일**이며 회전·쿠키 갱신으로 연장하지 않습니다. 운영에 local/test 프로필을 사용하지 않습니다. `POST /api/auth/reissue`는 **Access 인증 없이** Refresh 쿠키와 CSRF 토큰으로 호출해 새 Access·Refresh를 발급합니다. Refresh 누락·만료·폐기·재사용은 401, Redis 오류는 503입니다. 다중 탭 재발급을 합치고 응답 유실 후 이전 Refresh를 자동 재시도하지 않아야 합니다. 후속 설계는 [인증·보안 실행 계획](docs/plans/auth-security.md)을 참고하세요.
+Access 수명은 모든 프로필에서 **5분(300초)**입니다. 300초를 초과하는 설정은 거절합니다. `jwt.access-ttl`을 JWT와 Access 쿠키가 함께 사용합니다. Refresh family는 최초 로그인부터 **절대 7일**이며 회전·쿠키 갱신으로 연장하지 않습니다. 운영에 local/test 프로필을 사용하지 않습니다. `POST /api/auth/refresh`는 **Access 인증 없이** Refresh 쿠키와 CSRF 토큰으로 호출해 새 Access·Refresh를 발급합니다. Refresh 누락·만료·폐기·재사용은 401, Redis 오류는 503입니다. 다중 탭 재발급을 합치고 응답 유실 후 이전 Refresh를 자동 재시도하지 않아야 합니다. 후속 설계는 [인증·보안 실행 계획](docs/plans/auth-security.md)을 참고하세요.
 
 ## 기술 구성과 디렉터리
 
@@ -182,21 +184,30 @@ Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 
 
 ## 주요 API
 
-| 메서드·경로 | 설명 |
+| 메서드·경로 | 기능 |
 | --- | --- |
-| GET /api/auth/csrf | CSRF 쿠키 발급 및 JSON 토큰 조회 (Access 인증 불필요) |
-| POST /api/auth/signup | 회원가입: 200 성공 JSON과 JWT 쿠키 |
+| GET /api/auth/csrf | CSRF 쿠키·토큰 조회 |
+| POST /api/auth/signup | 회원가입 |
 | POST /api/auth/login | 로그인 |
-| GET /api/auth/me | 내 정보 조회 |
-| POST /api/auth/reissue | Access 없이 Refresh 쿠키 + CSRF 토큰으로 Access/Refresh 회전 |
+| POST /api/auth/refresh | Refresh 쿠키·CSRF로 토큰 회전 |
 | POST /api/auth/logout | 로그아웃 |
+| GET /api/users/me | 내 정보 조회 |
+| DELETE /api/users/me | 탈퇴 |
+| PATCH /api/users/me/password | 비밀번호 변경 |
+| PATCH /api/users/me/nickname | 닉네임 변경 |
 | GET /api/chat-rooms | 내 상담방 목록 |
-| GET /api/chat-rooms/{roomId} | 상담방 메시지 조회 |
-| POST /api/chat-rooms/first-message | 상담방 생성과 최초 질문 |
+| POST /api/chat-rooms | 상담방 생성·최초 질문 |
+| GET /api/chat-rooms/{roomId}/messages | 메시지 조회 |
 | POST /api/chat-rooms/{roomId}/messages | 후속 질문 |
-| DELETE /api/chat-rooms/{roomId} | 상담방·메시지 삭제 |
+| DELETE /api/chat-rooms/{roomId} | 상담방 삭제 |
+| GET /api/laws | 법령 검색(keyword·orgCode) |
+| POST /api/laws/search | 질문 분석 후 법령 검색 |
+| GET /api/precedents | 판례 목록 검색 |
+| GET /api/precedents/{id} | 판례 상세 |
+| POST /api/law-keywords | 질문의 키워드·요약·부처 추출 |
+| POST /api/legal-answers | 방을 저장하지 않는 법률 답변 |
 
-질문 입력은 `{"content":"상담 질문"}`이며 최초 응답은 상담방 ID와 메시지 목록, 후속 응답은 BOT 메시지입니다. 현재 요청·응답 계약은 local Swagger에서 확인할 수 있습니다. [재구축 기준선](docs/backend-baseline.md)은 변경 전 동작 기록입니다. 장시간 최초 질문 응답 방식은 후속 구현 범위입니다. Refresh 회전·JSON 제거·오류 전환은 [현재 인증 계약](docs/refresh-rotation.md#프론트-api-계약)을 따릅니다.
+상담방 생성·후속 질문은 `{"content":"상담 질문"}`, 법령 AI 검색·키워드·무저장 답변은 `{"query":"법률 질문"}`을 사용합니다. 인증·사용자·상담·법령별 컨트롤러와 DTO를 분리했습니다. 이전 경로 별칭은 제공하지 않으므로 프론트 호출도 함께 바꿔야 합니다. [패키지·DTO 구조와 경로 대응표](docs/package-api-organization.md), [전체 폴더 구조 검토](docs/folder-structure.md)를 참고하세요.
 
 ### 회원가입과 CSRF 전달 계약
 

@@ -1,8 +1,13 @@
 package com.MoleLaw_backend.law.service.tool;
+import com.MoleLaw_backend.law.dto.tool.LegalToolContracts;
+import com.MoleLaw_backend.law.service.source.LegalSourceService;
+import com.MoleLaw_backend.law.exception.LegalToolException;
+import com.MoleLaw_backend.law.exception.OpenLawRequestException;
+import com.MoleLaw_backend.law.client.openlaw.OpenLawCaseClient;
 
 import com.MoleLaw_backend.law.entity.LegalSource;
 import com.MoleLaw_backend.law.dto.request.LawSearchFilters;
-import com.MoleLaw_backend.law.service.LawSearchService;
+import com.MoleLaw_backend.law.service.search.LawSearchService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,8 +19,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
-import static com.MoleLaw_backend.law.service.tool.LegalToolContracts.*;
-import static com.MoleLaw_backend.law.service.tool.LegalToolException.Reason.*;
+import static com.MoleLaw_backend.law.dto.tool.LegalToolContracts.*;
+import static com.MoleLaw_backend.law.exception.LegalToolException.Reason.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;

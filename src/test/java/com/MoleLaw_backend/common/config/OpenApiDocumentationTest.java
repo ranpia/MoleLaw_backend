@@ -34,8 +34,9 @@ class OpenApiDocumentationTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
         Set<String> verbs = Set.of("get", "post", "put", "patch", "delete");
         Set<String> publicPaths = Set.of("/api/auth/signup", "/api/auth/login", "/api/auth/logout",
-                "/api/auth/reissue", "/api/auth/csrf");
+                "/api/auth/refresh", "/api/auth/csrf");
         int count = 0;
+        Set<String> actualOperations = new java.util.HashSet<>();
         var paths = document.path("paths").fields();
         while (paths.hasNext()) {
             var path = paths.next();
@@ -45,9 +46,10 @@ class OpenApiDocumentationTest {
                 if (!verbs.contains(method.getKey())) continue;
                 count++;
                 String context = method.getKey() + " " + path.getKey();
+                actualOperations.add(context);
                 JsonNode operation = method.getValue();
-                if (Set.of("/api/auth/signup", "/api/auth/login", "/api/auth/reissue", "/api/auth/logout", "/api/auth/password").contains(path.getKey())
-                        || (path.getKey().equals("/api/auth/me") && method.getKey().equals("delete"))) {
+                if (Set.of("/api/auth/signup", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout", "/api/users/me/password").contains(path.getKey())
+                        || (path.getKey().equals("/api/users/me") && method.getKey().equals("delete"))) {
                     JsonNode unavailable = operation.path("responses").path("503").path("content").path("application/json");
                     assertTrue(unavailable.has("schema"), context);
                     assertEquals("AUTH_STORE_UNAVAILABLE", unavailable.path("example").path("error").path("code").asText(), context);
@@ -96,7 +98,16 @@ class OpenApiDocumentationTest {
                 assertTrue(success, context);
             }
         }
-        assertEquals(21, count);
+        assertEquals(20, count);
+        assertEquals(Set.of(
+                "get /api/auth/csrf", "post /api/auth/signup", "post /api/auth/login",
+                "post /api/auth/refresh", "post /api/auth/logout",
+                "get /api/users/me", "delete /api/users/me", "patch /api/users/me/password", "patch /api/users/me/nickname",
+                "get /api/chat-rooms", "post /api/chat-rooms", "delete /api/chat-rooms/{roomId}",
+                "get /api/chat-rooms/{roomId}/messages", "post /api/chat-rooms/{roomId}/messages",
+                "get /api/laws", "post /api/laws/search", "get /api/precedents", "get /api/precedents/{id}",
+                "post /api/law-keywords", "post /api/legal-answers"), actualOperations);
+        assertFalse(document.path("paths").has("/api/test/import"));
         JsonNode schemes = document.path("components").path("securitySchemes");
         assertFalse(schemes.has("CsrfToken"));
         assertFalse(schemes.has("BearerAuth"));
@@ -106,16 +117,16 @@ class OpenApiDocumentationTest {
                 .path("responses").has("200"));
         assertFalse(document.path("paths").path("/api/auth/signup").path("post")
                 .path("responses").has("302"));
-        assertTrue(document.path("paths").path("/api/auth/reissue").path("post")
+        assertTrue(document.path("paths").path("/api/auth/refresh").path("post")
                 .path("responses").has("401"));
         assertFalse(document.path("components").path("schemas").path("AuthResponse").path("properties").has("refreshToken"));
         assertTrue(document.path("components").path("schemas").path("AuthResponse").path("properties").has("accessToken"));
         verifyLocalReferences(document, document);
-        JsonNode userSchema = resolve(document, document.path("paths").path("/api/auth/me").path("get")
+        JsonNode userSchema = resolve(document, document.path("paths").path("/api/users/me").path("get")
                 .path("responses").path("200").path("content").path("application/json").path("schema"));
         JsonNode userData = resolve(document, userSchema.path("properties").path("data"));
         assertTrue(userData.path("properties").has("email"), "User response must retain generic data schema");
-        JsonNode lawOperation = document.path("paths").path("/api/test/lawsearch").path("get");
+        JsonNode lawOperation = document.path("paths").path("/api/laws").path("get");
         JsonNode lawSchema = lawOperation.path("responses").path("200").path("content")
                 .path("application/json").path("schema");
         assertEquals("array", lawSchema.path("type").asText());
@@ -123,7 +134,7 @@ class OpenApiDocumentationTest {
         assertTrue(lawItem.path("properties").has("lawName"));
         assertTrue(lawItem.path("properties").has("lawType"));
         assertTrue(lawOperation.path("responses").has("400"));
-        JsonNode casesOperation = document.path("paths").path("/api/test/cases").path("get");
+        JsonNode casesOperation = document.path("paths").path("/api/precedents").path("get");
         assertEquals("array", casesOperation.path("responses").path("200").path("content")
                 .path("application/json").path("schema").path("type").asText());
         Set<String> caseParameters = new java.util.HashSet<>();
@@ -132,7 +143,7 @@ class OpenApiDocumentationTest {
             if (parameter.path("name").asText().equals("query")) assertTrue(parameter.path("required").asBoolean());
         }
         assertTrue(caseParameters.containsAll(Set.of("query", "search", "page", "display", "referenceLaw", "courtType", "courtName")));
-        JsonNode caseDetail = document.path("paths").path("/api/test/cases/{id}").path("get");
+        JsonNode caseDetail = document.path("paths").path("/api/precedents/{id}").path("get");
         JsonNode caseDetailSchema = resolve(document, caseDetail.path("responses").path("200").path("content")
                 .path("application/json").path("schema"));
         assertTrue(hasSchemaProperty(document, caseDetailSchema, "판례내용"));

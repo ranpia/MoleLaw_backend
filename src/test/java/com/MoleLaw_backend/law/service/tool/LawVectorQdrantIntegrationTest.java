@@ -1,4 +1,6 @@
 package com.MoleLaw_backend.law.service.tool;
+import com.MoleLaw_backend.law.client.vector.LawVectorClient;
+import com.MoleLaw_backend.law.exception.LegalToolException;
 
 import com.MoleLaw_backend.law.config.LawVectorProperties;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,14 +53,20 @@ class LawVectorQdrantIntegrationTest {
                     points.add(Map.of("id", UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8)).toString(),
                             "vector", List.of(Math.cos(angle), Math.sin(angle)),
                             "payload", Map.of("source_type", "LAW", "unit_id", "article-" + article,
-                                    "chunk_index", chunk, "text", "Synthetic article " + article)));
+                                    "chunk_index", chunk, "text", "Synthetic article " + article, "generation", "committed", "config_fingerprint", client.fingerprint())));
                 }
             }
             // A closer non-law point must never enter the legal retrieval result.
             points.add(Map.of("id", UUID.randomUUID().toString(), "vector", List.of(1.0, 0.0),
                     "payload", Map.of("source_type", "CASE", "unit_id", "excluded-case")));
+            points.add(Map.of("id", UUID.randomUUID().toString(), "vector", List.of(1.0, 0.0),
+                    "payload", Map.of("source_type", "LAW", "unit_id", "unpublished-law",
+                            "generation", "still-writing", "config_fingerprint", client.fingerprint())));
+            points.add(Map.of("id", UUID.randomUUID().toString(), "vector", List.of(1.0, 0.0),
+                    "payload", Map.of("source_type", "LAW", "unit_id", "different-configuration",
+                            "generation", "committed", "config_fingerprint", "different-configuration")));
             client.upsert(points, NOOP, NOOP);
-            JsonNode groups = client.query(List.of(1.0, 0.0), NOOP, NOOP);
+            JsonNode groups = client.query(List.of(1.0, 0.0), List.of("committed"), NOOP, NOOP);
             assertThat(groups).hasSize(15);
             var uniqueArticles = new HashSet<String>();
             double previous = Double.POSITIVE_INFINITY;

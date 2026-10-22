@@ -44,9 +44,9 @@ class UserIdAuthenticationTest {
         var account = signup("id-email-before@example.com");
         Long userId = jwt.getUserIdFromAccessToken(account.access().getValue());
         jdbc.update("UPDATE user SET email = ? WHERE id = ?", "id-email-after@example.com", userId);
-        mvc.perform(get("/api/auth/me").cookie(account.access())).andExpect(status().isOk())
+        mvc.perform(get("/api/users/me").cookie(account.access())).andExpect(status().isOk())
                 .andExpect(jsonPath("data.email").value("id-email-after@example.com"));
-        var reissue = mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(account.refresh()))
+        var reissue = mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(account.refresh()))
                 .andExpect(status().isOk()).andReturn().getResponse();
         assertThat(jwt.getUserIdFromAccessToken(reissue.getCookie("accessToken").getValue())).isEqualTo(userId);
     }
@@ -64,17 +64,17 @@ class UserIdAuthenticationTest {
         var loginJson = mapper.readTree(login.getContentAsString());
         assertThat(jwt.getUserIdFromAccessToken(loginJson.path("accessToken").asText())).isEqualTo(user.getId());
         assertThat(loginJson.has("refreshToken")).isFalse();
-        var reissue = mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(signup.refresh()))
+        var reissue = mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(signup.refresh()))
                 .andExpect(status().isOk()).andReturn().getResponse();
         Cookie access = reissue.getCookie("accessToken");
         assertThat(jwt.getUserIdFromAccessToken(access.getValue())).isEqualTo(user.getId());
-        mvc.perform(patch("/api/auth/nickname").with(csrf()).cookie(access).contentType("application/json")
+        mvc.perform(patch("/api/users/me/nickname").with(csrf()).cookie(access).contentType("application/json")
                         .content("{\"newNickname\":\"ID로 변경\"}"))
                 .andExpect(status().isOk());
-        mvc.perform(get("/api/auth/me").cookie(access)).andExpect(status().isOk())
+        mvc.perform(get("/api/users/me").cookie(access)).andExpect(status().isOk())
                 .andExpect(jsonPath("data.email").value("id-flow@example.com"))
                 .andExpect(jsonPath("data.nickname").value("ID로 변경"));
-        mvc.perform(patch("/api/auth/password").with(csrf()).cookie(access).contentType("application/json")
+        mvc.perform(patch("/api/users/me/password").with(csrf()).cookie(access).contentType("application/json")
                         .content("{\"newPassword\":\"Changed-password-123!\"}"))
                 .andExpect(status().isOk());
         mvc.perform(post("/api/auth/login").with(csrf()).contentType("application/json")
@@ -89,17 +89,17 @@ class UserIdAuthenticationTest {
         var outsider = signup("id-outsider@example.com");
         User user = users.findById(jwt.getUserIdFromAccessToken(owner.access().getValue())).orElseThrow();
         ChatRoom room = rooms.save(ChatRoom.builder().user(user).title("ID 소유권 확인").build());
-        mvc.perform(get("/api/chat-rooms/{id}", room.getId()).cookie(owner.access()))
+        mvc.perform(get("/api/chat-rooms/{id}/messages", room.getId()).cookie(owner.access()))
                 .andExpect(status().isOk());
-        mvc.perform(get("/api/chat-rooms/{id}", room.getId()).cookie(outsider.access()))
+        mvc.perform(get("/api/chat-rooms/{id}/messages", room.getId()).cookie(outsider.access()))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("error.code").value("UNAUTHORIZED_CHATROOM_ACCESS"));
         mvc.perform(delete("/api/chat-rooms/{id}", room.getId()).with(csrf()).cookie(outsider.access()))
                 .andExpect(status().isForbidden());
         assertThat(rooms.existsById(room.getId())).isTrue();
-        mvc.perform(delete("/api/auth/me").with(csrf()).cookie(owner.access()))
+        mvc.perform(delete("/api/users/me").with(csrf()).cookie(owner.access()))
                 .andExpect(status().isNoContent());
         assertThat(rooms.existsById(room.getId())).isFalse();
-        mvc.perform(get("/api/auth/me").cookie(owner.access())).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/users/me").cookie(owner.access())).andExpect(status().isUnauthorized());
         verifyNoInteractions(chatModel, embeddingModel);
     }
 
@@ -107,14 +107,14 @@ class UserIdAuthenticationTest {
     void deletedUsersTokensCannotAuthenticateAnAccountRecreatedWithTheSameEmail() throws Exception {
         var old = signup("id-recreated@example.com");
         Long oldId = jwt.getUserIdFromAccessToken(old.access().getValue());
-        mvc.perform(delete("/api/auth/me").with(csrf()).cookie(old.access())).andExpect(status().isNoContent());
+        mvc.perform(delete("/api/users/me").with(csrf()).cookie(old.access())).andExpect(status().isNoContent());
         var replacement = signup("id-recreated@example.com");
         Long newId = jwt.getUserIdFromAccessToken(replacement.access().getValue());
         assertThat(newId).isNotEqualTo(oldId);
-        mvc.perform(get("/api/auth/me").cookie(old.access())).andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(old.refresh()))
+        mvc.perform(get("/api/users/me").cookie(old.access())).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(old.refresh()))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("error.code").value("INVALID_REFRESH_TOKEN"));
-        mvc.perform(get("/api/auth/me").cookie(replacement.access())).andExpect(status().isOk());
+        mvc.perform(get("/api/users/me").cookie(replacement.access())).andExpect(status().isOk());
     }
 
     private Tokens signup(String email) throws Exception {

@@ -27,7 +27,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     @Value("${frontend.uri}")
     private String frontenduri;
 
-
     @Override
     @jakarta.transaction.Transactional
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -35,28 +34,27 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                                         Authentication authentication)
             throws IOException, ServletException {
 
-
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        String email = oAuth2User.getAttribute("email");
-        String provider = oAuth2User.getAttribute("provider"); // 예: "google"
-
-
-        if (email == null || provider == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "이메일 또는 provider를 가져올 수 없습니다.");
+        if (!(authentication.getPrincipal() instanceof OAuth2User principal)) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid OAuth identity");
+            return;
+        }
+        Object userId = principal.getAttribute("userId");
+        Object providerValue = principal.getAttribute("provider");
+        Object subjectValue = principal.getAttribute("providerSubject");
+        if (!(userId instanceof Long id) || id <= 0
+                || !(providerValue instanceof String provider)
+                || !(subjectValue instanceof String subject) || subject.isBlank()
+                || !("google".equals(provider) || "kakao".equals(provider))) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid OAuth identity");
+            return;
+        }
+        User user = userRepository.findByIdForUpdate(id).orElse(null);
+        if (user == null || !provider.equals(user.getProvider())
+                || !subject.equals(user.getProviderSubject())) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid OAuth identity");
             return;
         }
 
-        // ✅ 유저가 존재하지 않으면 새로 저장
-        User user = userRepository.findByCredentialsForUpdate(email, provider)
-                .orElseGet(() -> {
-                    User newUser = User.builder()
-                            .email(email)
-                            .provider(provider)
-                            .build();
-                    return userRepository.save(newUser);
-                });
-
-        // ✅ JWT 발급
         try {
             authTokens.issue(user.getId(), response);
         } catch (MolelawException e) {
@@ -69,9 +67,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             response.getWriter().write("{\"error\":\"" + e.getErrorCode().name() + "\"}");
             return;
         }
-        // ✅ 리다이렉트
         response.sendRedirect(frontenduri);
     }
 }
-
 

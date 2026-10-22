@@ -3,7 +3,8 @@ package com.MoleLaw_backend.law.util;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MinistryCodeMapper {
+public final class MinistryCodeMapper {
+    private MinistryCodeMapper() { }
 
     private static final Map<String, String> ministryCodeMap = new HashMap<>();
 
@@ -115,5 +116,4 @@ public class MinistryCodeMapper {
     }
 
 }
-
 

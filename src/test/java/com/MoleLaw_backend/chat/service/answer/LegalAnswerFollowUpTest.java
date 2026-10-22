@@ -8,14 +8,14 @@ import com.MoleLaw_backend.chat.repository.MessageRepository;
 import com.MoleLaw_backend.chat.service.memory.PersistedChatMemory;
 import com.MoleLaw_backend.chat.service.evidence.ChatEvidenceService;
 import com.MoleLaw_backend.chat.service.evidence.CitationValidator;
-import com.MoleLaw_backend.chat.service.evidence.EvidenceItem;
+import com.MoleLaw_backend.law.dto.evidence.EvidenceItem;
 import com.MoleLaw_backend.chat.util.EncryptUtil;
 import com.MoleLaw_backend.common.ai.config.AiConfig;
 import com.MoleLaw_backend.common.ai.exception.GptApiException;
 import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.user.entity.User;
-import com.MoleLaw_backend.law.service.LegalEvidenceCollector;
+import com.MoleLaw_backend.law.service.retrieval.LegalEvidenceCollector;
 import org.springframework.ai.chat.client.ChatClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,7 +61,7 @@ class LegalAnswerFollowUpTest {
     @Test
     void actualAdvisorLoadsDecryptedRolesAndAddsCurrentQuestionOnce() {
         ownRoom();
-        when(messages.findByChatRoomIdOrderByTimestampAsc(2L)).thenReturn(List.of(
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of(
                 message(2L, Message.Sender.BOT, "previous answer"),
                 message(1L, Message.Sender.USER, "first question"),
                 message(3L, Message.Sender.INFO, "private metadata")));
@@ -117,7 +117,7 @@ class LegalAnswerFollowUpTest {
 
     private void assertRejectedAnswer(String answer) {
         ownRoom();
-        when(messages.findByChatRoomIdOrderByTimestampAsc(2L)).thenReturn(List.of());
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
         when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(
                 List.of(new Generation(new AssistantMessage(answer)))));
         assertThatThrownBy(() -> service.answerFollowUp(1L, 2L, "question"))
@@ -129,11 +129,11 @@ class LegalAnswerFollowUpTest {
     @Test
     void modelFailureDoesNotAutomaticallyPersistPromptOrResponse() {
         ownRoom();
-        when(messages.findByChatRoomIdOrderByTimestampAsc(2L)).thenReturn(List.of());
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
         when(model.call(any(Prompt.class))).thenThrow(new IllegalStateException("provider failure"));
         assertThatThrownBy(() -> service.answerFollowUp(1L, 2L, "question"))
                 .isInstanceOf(GptApiException.class);
-        verify(messages).findByChatRoomIdOrderByTimestampAsc(2L);
+        verify(messages).findByChatRoomIdOrderByTimestampAscIdAsc(2L);
         verifyNoMoreInteractions(messages);
     }
 

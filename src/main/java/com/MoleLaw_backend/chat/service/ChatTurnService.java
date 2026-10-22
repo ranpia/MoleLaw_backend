@@ -4,7 +4,7 @@ import com.MoleLaw_backend.chat.entity.ChatRoom;
 import com.MoleLaw_backend.chat.entity.Message;
 import com.MoleLaw_backend.chat.repository.ChatRoomRepository;
 import com.MoleLaw_backend.chat.repository.MessageRepository;
-import com.MoleLaw_backend.chat.service.answer.PreparedLegalAnswer;
+import com.MoleLaw_backend.chat.dto.answer.PreparedLegalAnswer;
 import com.MoleLaw_backend.chat.service.evidence.ChatEvidenceService;
 import com.MoleLaw_backend.chat.util.EncryptUtil;
 import com.MoleLaw_backend.user.entity.User;
@@ -22,16 +22,20 @@ public class ChatTurnService {
 
     @Transactional
     public ChatRoom saveInitialTurn(User user, String title, String question, PreparedLegalAnswer prepared) {
+        ChatContentLimits.title(title);
+        ChatContentLimits.question(question);
+        ChatContentLimits.answer(prepared.response().getAnswer());
         ChatRoom room = rooms.save(ChatRoom.builder().user(user).title(title).build());
         evidence.freeze(room, prepared.evidence());
         add(room, Message.Sender.USER, question);
         add(room, Message.Sender.BOT, prepared.response().getAnswer());
-        add(room, Message.Sender.INFO, prepared.response().getInfo());
         return room;
     }
 
     @Transactional
     public Message saveFollowUpTurn(ChatRoom room, String question, String answer) {
+        ChatContentLimits.question(question);
+        ChatContentLimits.answer(answer);
         add(room, Message.Sender.USER, question);
         return add(room, Message.Sender.BOT, answer);
     }

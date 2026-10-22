@@ -16,7 +16,7 @@ public class MessageResponse {
     private String sender;
     @Schema(description = "메시지 본문", example = "퇴직금을 받지 못했습니다.")
     private String content;
-    @Schema(description = "메시지 생성 시각", example = "2026-01-15T10:30:00")
+    @Schema(description = "UTC 메시지 생성 시각. 가상 INFO는 최초 BOT의 시각을 사용합니다.", example = "2026-01-15T10:30:00")
     private LocalDateTime timestamp;
 
     public static MessageResponse from(Message message) {

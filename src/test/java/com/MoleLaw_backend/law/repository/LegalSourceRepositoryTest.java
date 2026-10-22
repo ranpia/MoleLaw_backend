@@ -23,10 +23,10 @@ class LegalSourceRepositoryTest {
     @Test
     void restoresLargeRawContentAndRetainsVersionsForSameExternalId() {
         String raw = "{\"text\":\"" + "법령 원문 ".repeat(12000) + "\"}";
-        LegalSource first = repository.save(new LegalSource("LAW", "123", "law-1", "20250101",
-                "https://law.go.kr/법령/123", "a".repeat(64), raw));
-        LegalSource second = repository.save(new LegalSource("LAW", "123", "law-1", "20260101",
-                "https://law.go.kr/법령/123", "b".repeat(64), "{}"));
+        LegalSource first = repository.save(new LegalSource("LAW", "123", "1", "20250101",
+                "https://www.law.go.kr/법령/123", "a".repeat(64), raw));
+        LegalSource second = repository.save(new LegalSource("LAW", "123", "1", "20260101",
+                "https://www.law.go.kr/법령/123", "b".repeat(64), "{}"));
         repository.flush();
         entityManager.clear();
 

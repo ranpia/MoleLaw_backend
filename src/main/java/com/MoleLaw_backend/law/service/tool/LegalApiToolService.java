@@ -1,8 +1,13 @@
 package com.MoleLaw_backend.law.service.tool;
 
+import com.MoleLaw_backend.law.service.source.LegalSourceService;
+import com.MoleLaw_backend.law.exception.LegalToolException;
+import com.MoleLaw_backend.law.exception.OpenLawRequestException;
+import com.MoleLaw_backend.law.client.openlaw.OpenLawCaseClient;
+
 import com.MoleLaw_backend.law.entity.LegalSource;
 import com.MoleLaw_backend.law.dto.request.LawSearchFilters;
-import com.MoleLaw_backend.law.service.LawSearchService;
+import com.MoleLaw_backend.law.service.search.LawSearchService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.MoleLaw_backend.law.service.tool.LegalToolContracts.*;
-import static com.MoleLaw_backend.law.service.tool.LegalToolException.Reason.*;
+import static com.MoleLaw_backend.law.dto.tool.LegalToolContracts.*;
+import static com.MoleLaw_backend.law.exception.LegalToolException.Reason.*;
 
 /** Explicit server tools. No automatic tool calling or chat memory side effects. */
 @Service
@@ -155,6 +160,10 @@ public class LegalApiToolService {
                     && !candidate.lawId().equals(lawId)) throw invalid();
             if (law && candidate.effectiveDate() != null && !candidate.effectiveDate().isBlank()
                     && !candidate.effectiveDate().equals(effectiveDate)) throw invalid();
+            if (law && !effectiveDate.isBlank()) {
+                try { java.time.LocalDate.parse(effectiveDate, java.time.format.DateTimeFormatter.BASIC_ISO_DATE); }
+                catch (java.time.DateTimeException malformedDate) { throw invalid(); }
+            }
             if (!law && !id.equals(content.path("판례정보일련번호").asText(
                     content.path("판례일련번호").asText()))) throw invalid();
             int articleCount = law ? rows(content.path("조문").path("조문단위")).size() : 0;

@@ -48,7 +48,7 @@ CSRF·Origin·credentials 계약은 유지한다. 먼저 `GET /api/auth/csrf`를
 | `POST /api/auth/signup` | 기존 200 성공 문자열 JSON과 Access/Refresh HttpOnly 쿠키 |
 | `POST /api/auth/login` | `{"accessToken":"<access-jwt>"}`와 두 HttpOnly 쿠키 |
 | OAuth 성공 콜백 | 두 HttpOnly 쿠키 발급 후 프론트 리다이렉트 |
-| `POST /api/auth/reissue` | `{"success":true,"data":{"accessToken":"<new-access-jwt>"}}`와 Access/회전한 Refresh 쿠키 |
+| `POST /api/auth/refresh` | `{"success":true,"data":{"accessToken":"<new-access-jwt>"}}`와 Access/회전한 Refresh 쿠키 |
 | `POST /api/auth/logout` | 제시된 Refresh family 폐기, 쿠키 삭제, 기존 성공 JSON |
 | 비밀번호 변경·탈퇴 | 모든 Refresh family 폐기 후 기존 성공 상태/본문 계약 |
 

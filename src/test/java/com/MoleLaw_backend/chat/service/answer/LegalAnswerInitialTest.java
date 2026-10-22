@@ -1,11 +1,11 @@
 package com.MoleLaw_backend.chat.service.answer;
 
 import com.MoleLaw_backend.chat.service.evidence.CitationValidator;
-import com.MoleLaw_backend.chat.service.evidence.EvidenceItem;
+import com.MoleLaw_backend.law.dto.evidence.EvidenceItem;
 import com.MoleLaw_backend.chat.service.evidence.ChatEvidenceService;
 import com.MoleLaw_backend.common.ai.exception.GptApiException;
 import com.MoleLaw_backend.common.exception.ErrorCode;
-import com.MoleLaw_backend.law.service.LegalEvidenceCollector;
+import com.MoleLaw_backend.law.service.retrieval.LegalEvidenceCollector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

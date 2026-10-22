@@ -24,6 +24,11 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatEvidenceSnapshot implements Persistable<Long> {
+    public static final int CURRENT_SCHEMA_VERSION = 2;
+
+    @Column(name = "schema_version", nullable = false, updatable = false)
+    private int schemaVersion = CURRENT_SCHEMA_VERSION;
+
     @Id
     @Column(name = "room_id", updatable = false)
     private Long roomId;
@@ -31,6 +36,7 @@ public class ChatEvidenceSnapshot implements Persistable<Long> {
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "room_id", nullable = false, updatable = false)
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     private ChatRoom room;
 
     @Lob

@@ -2,6 +2,8 @@ server:
   forward-headers-strategy: framework
 
 spring:
+  application:
+    name: MoleLaw_backend
   config:
     import: optional:file:.env[.properties]
 
@@ -63,6 +65,7 @@ spring:
             user-name-attribute: email
 
 springdoc:
+  override-with-generic-response: false
   api-docs:
     enabled: false
     path: /v3/api-docs
@@ -100,3 +103,11 @@ jwt:
   secret: ${JWT_SECRET}
   # Production/default lifetime. Local development overrides this for convenience.
   access-ttl: 5m
+
+app:
+  law-vector:
+    enabled: ${APP_LAW_VECTOR_ENABLED:false}
+    embedding-base-url: ${APP_LAW_VECTOR_EMBEDDING_BASE_URL:http://localhost:11436}
+    qdrant-base-url: ${APP_LAW_VECTOR_QDRANT_BASE_URL:http://localhost:6333}
+    collection-name: ${APP_LAW_VECTOR_COLLECTION_NAME:molelaw_service_law_kure_v1}
+    api-key: ${QDRANT_API_KEY:}

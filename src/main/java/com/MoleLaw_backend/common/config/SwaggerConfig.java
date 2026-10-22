@@ -27,7 +27,6 @@ import java.util.List;
         }
 )
 
-
 public class SwaggerConfig {
 
     @Bean
@@ -58,8 +57,8 @@ public class SwaggerConfig {
         return (operation, handler) -> {
             String method = handler.getMethod().getName();
             boolean publicEndpoint = handler.getBeanType().getSimpleName().equals("CsrfController")
-                    || (handler.getBeanType().getSimpleName().equals("UserController")
-                    && java.util.Set.of("signup", "login", "logout", "reissue").contains(method));
+                    || (handler.getBeanType().getSimpleName().equals("AuthController")
+                    && java.util.Set.of("signup", "login", "logout", "refresh").contains(method));
             operation.setSecurity(publicEndpoint ? List.of() : List.of(
                     new SecurityRequirement().addList("AccessCookie")));
             boolean unsafe = handler.hasMethodAnnotation(org.springframework.web.bind.annotation.PostMapping.class)
@@ -82,8 +81,8 @@ public class SwaggerConfig {
                                 .schema(new ObjectSchema().addProperty("error", new StringSchema()))
                                 .example(java.util.Map.of("error", "Unauthorized")))));
             }
-            if (handler.getBeanType().getSimpleName().equals("UserController")
-                    && java.util.Set.of("signup", "login", "reissue", "logout", "changePassword", "deleteUser").contains(method)) {
+            if ((handler.getBeanType().getSimpleName().equals("AuthController") || handler.getBeanType().getSimpleName().equals("UserController"))
+                    && java.util.Set.of("signup", "login", "refresh", "logout", "changePassword", "deleteUser").contains(method)) {
                 operation.getResponses().addApiResponse("503", new ApiResponse()
                         .description("Redis Refresh 저장·회전·폐기 실패. 기존 Access 검증은 Redis에 의존하지 않습니다. 사용한 Refresh로 자동 재시도하지 않습니다.")
                         .content(new Content().addMediaType("application/json", new MediaType()

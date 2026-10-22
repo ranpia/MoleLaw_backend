@@ -57,12 +57,12 @@ class RefreshRotationHttpTest {
         assertThat(body.path("data").has("accessToken")).isTrue();
         assertThat(body.path("data").has("refreshToken")).isFalse();
         var next = reissue(second);
-        mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(first))
+        mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(first))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("error.code").value("REFRESH_TOKEN_REUSED"));
-        mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(refresh(next)))
+        mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(refresh(next)))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("error.code").value("INVALID_REFRESH_TOKEN"));
         // This step revokes Refresh only; already issued Access follows its existing expiry policy.
-        mvc.perform(get("/api/auth/me").cookie(next.getCookie("accessToken"))).andExpect(status().isOk());
+        mvc.perform(get("/api/users/me").cookie(next.getCookie("accessToken"))).andExpect(status().isOk());
     }
 
     @Test
@@ -73,7 +73,7 @@ class RefreshRotationHttpTest {
         assertThat(mapper.readTree(another.getContentAsString()).has("refreshToken")).isFalse();
         mvc.perform(post("/api/auth/logout").with(csrf()).cookie(refresh(first), next.getCookie("accessToken")))
                 .andExpect(status().isOk());
-        mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(refresh(next)))
+        mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(refresh(next)))
                 .andExpect(status().isUnauthorized());
         reissue(refresh(another));
     }
@@ -82,14 +82,14 @@ class RefreshRotationHttpTest {
     void passwordChangeRevokesEveryRefreshFamilyAndLeavesIssuedAccessUntilExpiry() throws Exception {
         var first = signup("refresh-password@example.com");
         var second = login("refresh-password@example.com");
-        mvc.perform(patch("/api/auth/password").with(csrf()).cookie(first.getCookie("accessToken"))
+        mvc.perform(patch("/api/users/me/password").with(csrf()).cookie(first.getCookie("accessToken"))
                         .contentType("application/json").content("{\"newPassword\":\"Changed-password-123!\"}"))
                 .andExpect(status().isOk());
         for (var session : new MockHttpServletResponse[]{first, second}) {
-            mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(refresh(session)))
+            mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(refresh(session)))
                     .andExpect(status().isUnauthorized());
         }
-        mvc.perform(get("/api/auth/me").cookie(second.getCookie("accessToken"))).andExpect(status().isOk());
+        mvc.perform(get("/api/users/me").cookie(second.getCookie("accessToken"))).andExpect(status().isOk());
         mvc.perform(post("/api/auth/login").with(csrf()).contentType("application/json")
                         .content("{\"email\":\"refresh-password@example.com\",\"password\":\"Changed-password-123!\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("refreshToken").doesNotExist());
@@ -100,12 +100,12 @@ class RefreshRotationHttpTest {
         var signup = signup("refresh-failure@example.com");
         var user = users.findByEmailAndProvider("refresh-failure@example.com", "local").orElseThrow();
         doThrow(new MolelawException(ErrorCode.AUTH_STORE_UNAVAILABLE)).when(store).revokeAll(user.getId());
-        mvc.perform(patch("/api/auth/password").with(csrf()).cookie(signup.getCookie("accessToken"))
+        mvc.perform(patch("/api/users/me/password").with(csrf()).cookie(signup.getCookie("accessToken"))
                         .contentType("application/json").content("{\"newPassword\":\"Should-not-commit!\"}"))
                 .andExpect(status().isServiceUnavailable()).andExpect(jsonPath("error.code").value("AUTH_STORE_UNAVAILABLE"));
         var unchanged = users.findById(user.getId()).orElseThrow();
         assertThat(passwords.matches("Example-password-123!", unchanged.getPassword())).isTrue();
-        mvc.perform(delete("/api/auth/me").with(csrf()).cookie(signup.getCookie("accessToken")))
+        mvc.perform(delete("/api/users/me").with(csrf()).cookie(signup.getCookie("accessToken")))
                 .andExpect(status().isServiceUnavailable()).andExpect(header().doesNotExist("Set-Cookie"));
         assertThat(users.existsById(user.getId())).isTrue();
         reissue(refresh(signup));
@@ -126,13 +126,13 @@ class RefreshRotationHttpTest {
 
     @Test
     void legacyMissingAndUnknownRefreshCookiesAre401() throws Exception {
-        mvc.perform(post("/api/auth/reissue").with(csrf())).andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(new Cookie("refreshToken", "legacy.jwt.value")))
+        mvc.perform(post("/api/auth/refresh").with(csrf())).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(new Cookie("refreshToken", "legacy.jwt.value")))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("error.code").value("INVALID_REFRESH_TOKEN"));
         var signup = signup("refresh-unknown@example.com");
         String value = refresh(signup).getValue();
         String fake = value.substring(0, value.lastIndexOf('.') + 1) + "A".repeat(43);
-        mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(new Cookie("refreshToken", fake)))
+        mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(new Cookie("refreshToken", fake)))
                 .andExpect(status().isUnauthorized());
         reissue(refresh(signup));
     }
@@ -148,7 +148,7 @@ class RefreshRotationHttpTest {
                 .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(environment.getRequiredProperty("jwt.secret")
                         .getBytes(java.nio.charset.StandardCharsets.UTF_8)), io.jsonwebtoken.SignatureAlgorithm.HS256).compact();
         assertThat(jwt.validateAccessToken(expired)).isFalse();
-        mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(refresh(signup), new Cookie("accessToken", expired)))
+        mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(refresh(signup), new Cookie("accessToken", expired)))
                 .andExpect(status().isOk()).andExpect(jsonPath("data.accessToken").exists())
                 .andExpect(jsonPath("data.refreshToken").doesNotExist());
     }
@@ -166,7 +166,7 @@ class RefreshRotationHttpTest {
     }
 
     private MockHttpServletResponse reissue(Cookie refresh) throws Exception {
-        return mvc.perform(post("/api/auth/reissue").with(csrf()).cookie(refresh))
+        return mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(refresh))
                 .andExpect(status().isOk()).andReturn().getResponse();
     }
 

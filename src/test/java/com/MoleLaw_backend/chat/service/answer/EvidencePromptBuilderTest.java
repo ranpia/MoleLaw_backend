@@ -1,6 +1,7 @@
 package com.MoleLaw_backend.chat.service.answer;
 
-import com.MoleLaw_backend.chat.service.evidence.EvidenceItem;
+import com.MoleLaw_backend.law.dto.evidence.EvidenceItem;
+import com.MoleLaw_backend.law.dto.evidence.EvidenceProvenance;
 import com.MoleLaw_backend.common.ai.exception.GptApiException;
 import org.junit.jupiter.api.Test;
 
@@ -31,5 +32,24 @@ class EvidencePromptBuilderTest {
         assertThatThrownBy(() -> builder.build(" ", List.of())).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> builder.build("질문", List.of())).isInstanceOf(GptApiException.class);
         assertThatThrownBy(() -> builder.build("질문", null)).isInstanceOf(GptApiException.class);
+    }
+
+    @Test
+    void includesObservedLegalVersionWithoutPresentingIndexMetadataAsLawFacts() {
+        var provenance = new EvidenceProvenance("source-uuid", "123456", "001706", "20260101",
+                "제548조/제1항", "model-revision", "index-fingerprint", "index-generation");
+        var item = new EvidenceItem("evidence-id", "LAW_QDRANT", "123456:제548조/제1항", "민법",
+                "https://www.law.go.kr", "확보한 본문", provenance);
+        assertThat(builder.build("질문", List.of(item)))
+                .contains("법령 MST: 123456", "법령 ID: 001706", "원문에 표시된 시행일: 20260101", "조문 경로: 제548조/제1항")
+                .doesNotContain("model-revision", "index-fingerprint", "index-generation", item.sourceUrl());
+    }
+
+    @Test
+    void doesNotInventAnEffectiveDateForUnknownSourceMetadata() {
+        var item = new EvidenceItem("evidence-id", "LAW_CHUNK", "law:1", "민법", "https://www.law.go.kr", "본문",
+                new EvidenceProvenance(null, null, null, null, "제1조", null, null, null));
+        assertThat(builder.build("질문", List.of(item)))
+                .contains("조문 경로: 제1조").doesNotContain("시행일", "법령 MST", "null");
     }
 }

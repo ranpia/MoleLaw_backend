@@ -1,12 +1,13 @@
 package com.MoleLaw_backend.law.service;
+import com.MoleLaw_backend.law.service.search.CaseSearchService;
 
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.common.exception.MolelawException;
-import com.MoleLaw_backend.law.dto.PrecedentInfo;
+import com.MoleLaw_backend.law.dto.response.PrecedentSummaryResponse;
 import com.MoleLaw_backend.law.dto.request.PrecedentSearchRequest;
 import com.MoleLaw_backend.law.dto.response.PrecedentDetailResponse;
 import com.MoleLaw_backend.law.exception.OpenLawApiException;
-import com.MoleLaw_backend.law.service.tool.OpenLawCaseClient;
+import com.MoleLaw_backend.law.client.openlaw.OpenLawCaseClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,7 +25,7 @@ import static org.mockito.Mockito.when;
 class CaseSearchServiceTest {
     private final OpenLawCaseClient client = mock(OpenLawCaseClient.class);
     private final ObjectMapper mapper = new ObjectMapper();
-    private final CaseSearchService service = new CaseSearchServiceImpl(client, mapper);
+    private final CaseSearchService service = new CaseSearchService(client, mapper);
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
@@ -37,10 +38,10 @@ class CaseSearchServiceTest {
                 """;
         when(client.search(request)).thenReturn(mapper.readTree("{\"prec\":" + (array ? "[" + row + "]" : row) + "}"));
 
-        List<PrecedentInfo> result = service.searchCases(request);
+        List<PrecedentSummaryResponse> result = service.searchCases(request);
 
         assertThat(result).hasSize(1);
-        PrecedentInfo info = result.get(0);
+        PrecedentSummaryResponse info = result.get(0);
         assertThat(info.getCaseId()).isEqualTo("123");
         assertThat(info.getCaseName()).isEqualTo("손해배상");
         assertThat(info.getCaseNumber()).isEqualTo("2024다123");

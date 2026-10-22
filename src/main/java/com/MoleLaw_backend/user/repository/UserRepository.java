@@ -17,8 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.email = :email and u.provider = :provider")
     Optional<User> findByCredentialsForUpdate(@Param("email") String email, @Param("provider") String provider);
-    boolean existsByEmail(String email);
     boolean existsByEmailAndProvider(String email, String provider);
-    Optional<User> findByEmail(String email);
-    Optional<User> findByEmailAndProvider(String email, String provider); // ✅ 추가됨
+    Optional<User> findByProviderAndProviderSubject(String provider, String providerSubject);
+    Optional<User> findByEmailAndProvider(String email, String provider);
 }

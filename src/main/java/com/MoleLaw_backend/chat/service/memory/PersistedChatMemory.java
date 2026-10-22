@@ -45,7 +45,7 @@ public class PersistedChatMemory implements ChatMemory {
         if (room.getUser() == null || !Long.valueOf(ids[0]).equals(room.getUser().getId())) {
             throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
         }
-        List<Message> history = messages.findByChatRoomIdOrderByTimestampAsc(ids[1]).stream()
+        List<Message> history = messages.findByChatRoomIdOrderByTimestampAscIdAsc(ids[1]).stream()
                 .filter(message -> message.getSender() == Message.Sender.USER
                         || message.getSender() == Message.Sender.BOT)
                 .sorted(Comparator.comparing(Message::getTimestamp, Comparator.nullsLast(Comparator.naturalOrder()))

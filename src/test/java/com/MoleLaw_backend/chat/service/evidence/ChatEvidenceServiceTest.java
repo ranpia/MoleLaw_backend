@@ -1,4 +1,6 @@
 package com.MoleLaw_backend.chat.service.evidence;
+import com.MoleLaw_backend.law.dto.evidence.EvidenceProvenance;
+import com.MoleLaw_backend.law.dto.evidence.EvidenceItem;
 
 import com.MoleLaw_backend.chat.entity.ChatEvidenceSnapshot;
 import com.MoleLaw_backend.chat.entity.ChatRoom;
@@ -15,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,10 +51,56 @@ class ChatEvidenceServiceTest {
         assertThat(snapshot.getRoomId()).isEqualTo(3L);
         assertThat(snapshot.getContentHash()).hasSize(64);
         assertThat(snapshot.getCapturedAt()).isNotNull();
+        assertThat(snapshot.getSchemaVersion()).isEqualTo(2);
         when(snapshots.findById(3L)).thenReturn(Optional.of(snapshot));
         List<EvidenceItem> restored = service.load(7L, 3L);
         assertThat(restored).containsExactly(item);
         assertThatThrownBy(() -> restored.add(item)).isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void freezesActualQdrantVersionAndIndexProvenance() {
+        var provenance = new EvidenceProvenance(UUID.randomUUID().toString(), "123456", "001706", "20260101",
+                "제548조/제1항", "observed-model-revision", "a".repeat(64), UUID.randomUUID().toString());
+        var item = new EvidenceItem(UUID.randomUUID().toString(), "LAW_QDRANT", "123456:제548조/제1항",
+                "민법 제548조", "https://www.law.go.kr/법령/민법", "원상회복 의무", provenance);
+        service.freeze(room, List.of(item));
+        var captured = ArgumentCaptor.forClass(ChatEvidenceSnapshot.class);
+        verify(snapshots).saveAndFlush(captured.capture());
+        when(snapshots.findById(3L)).thenReturn(Optional.of(captured.getValue()));
+
+        assertThat(service.load(7L, 3L)).containsExactly(item);
+        assertThat(service.load(7L, 3L).get(0).provenance()).isEqualTo(provenance);
+    }
+
+    @Test
+    void leavesUnknownLegacyProvenanceAbsentInsteadOfInventingMetadata() {
+        service.freeze(room, List.of(evidence()));
+        var captured = ArgumentCaptor.forClass(ChatEvidenceSnapshot.class);
+        verify(snapshots).saveAndFlush(captured.capture());
+        ReflectionTestUtils.setField(captured.getValue(), "schemaVersion", 1);
+        when(snapshots.findById(3L)).thenReturn(Optional.of(captured.getValue()));
+        assertThat(service.load(7L, 3L).get(0).provenance()).isNull();
+    }
+
+    @Test
+    void rejectsFutureSnapshotSchemaBeforeParsingItsContents() {
+        var snapshot = new ChatEvidenceSnapshot(room, "[]", "unused");
+        ReflectionTestUtils.setField(snapshot, "schemaVersion", 3);
+        when(snapshots.findById(3L)).thenReturn(Optional.of(snapshot));
+        assertThatThrownBy(() -> service.load(7L, 3L)).isInstanceOf(MolelawException.class);
+    }
+
+    @Test
+    void rejectsUnversionedQdrantEvidenceAndInvalidObservedDates() {
+        var missing = new EvidenceItem(UUID.randomUUID().toString(), "LAW_QDRANT", "point", "법령",
+                "https://www.law.go.kr", "본문");
+        assertThatThrownBy(() -> service.freeze(room, List.of(missing))).isInstanceOf(MolelawException.class);
+        var invalidDate = new EvidenceItem(UUID.randomUUID().toString(), "LAW_QDRANT", "point", "법령",
+                "https://www.law.go.kr", "본문", new EvidenceProvenance(UUID.randomUUID().toString(),
+                "123", "001706", "20260230", "제1조", null, null, null));
+        assertThatThrownBy(() -> service.freeze(room, List.of(invalidDate))).isInstanceOf(MolelawException.class);
+        verify(snapshots, never()).saveAndFlush(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
