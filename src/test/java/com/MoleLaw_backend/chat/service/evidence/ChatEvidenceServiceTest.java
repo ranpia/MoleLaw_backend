@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 class ChatEvidenceServiceTest {
     private final ChatRoomRepository rooms = mock(ChatRoomRepository.class);
     private final ChatEvidenceSnapshotRepository snapshots = mock(ChatEvidenceSnapshotRepository.class);
-    private final ChatEvidenceService service = new ChatEvidenceService(rooms, snapshots, new ObjectMapper());
+    private final ChatEvidenceService service = new ChatEvidenceService(rooms, snapshots, new ObjectMapper(), mock(ChatCaseEvidenceService.class));
     private ChatRoom room;
 
     @BeforeEach

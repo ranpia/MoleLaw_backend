@@ -29,10 +29,11 @@ import java.util.UUID;
 public class ChatEvidenceService {
     private static final int MAX_ITEMS = 100;
     private static final int MAX_JSON_BYTES = 2 * 1024 * 1024;
-    private static final Set<String> KINDS = Set.of("LAW_CHUNK", "CASE_METADATA", "LAW_QDRANT", "LAW_AI_SEARCH");
+    private static final Set<String> KINDS = Set.of("LAW_CHUNK", "CASE_METADATA", "LAW_QDRANT", "LAW_AI_SEARCH", "CASE_BODY");
     private final ChatRoomRepository rooms;
     private final ChatEvidenceSnapshotRepository snapshots;
     private final ObjectMapper mapper;
+    private final ChatCaseEvidenceService cases;
 
     /** Called inside the initial successful-turn transaction; an existing snapshot is never replaced. */
     @Transactional
@@ -79,7 +80,11 @@ public class ChatEvidenceService {
         try {
             List<EvidenceItem> evidence = mapper.readValue(json, new TypeReference<List<EvidenceItem>>() {});
             validate(evidence);
-            return List.copyOf(evidence);
+            var combined = new java.util.ArrayList<>(evidence);
+            try { combined.addAll(cases.load(roomId)); }
+            catch (IllegalArgumentException malformed) { throw failure(); }
+            validate(combined);
+            return List.copyOf(combined);
         } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
             throw new MolelawException(ErrorCode.GPT_API_FAILURE, "근거 스냅샷 복원 실패", ex);
         }
@@ -109,6 +114,8 @@ public class ChatEvidenceService {
 
     private static void validateProvenance(EvidenceItem item) {
         EvidenceProvenance p = item.provenance();
+        if ("CASE_BODY".equals(item.kind()) && (p == null || blank(p.sourceUuid())
+                || !item.sourceId().matches("[0-9]{1,20}"))) throw failure();
         if (p == null) {
             if ("LAW_QDRANT".equals(item.kind()) || "LAW_AI_SEARCH".equals(item.kind())) throw failure();
             return;

@@ -55,9 +55,32 @@ class LegalAnswerFollowUpTest {
         service = new LegalAnswerService(collector, mock(ChatClient.class),
                 config.followUpAnswerChatClient(config.legalAnswerChatClient(builder, "gpt-5.4-mini", "medium", 16384,
                         mock(com.MoleLaw_backend.common.ai.AiPrompts.class)), memory), evidence,
-                new EvidencePromptBuilder(), new CitationValidator(), new EvidenceRenderer());
+                new EvidencePromptBuilder(), new CitationValidator(), new EvidenceRenderer(), new FollowUpCaseToolsFactory(
+                        mock(com.MoleLaw_backend.law.service.tool.LegalApiToolService.class),
+                        mock(com.MoleLaw_backend.law.service.tool.CaseEvidenceReader.class)));
         when(evidence.load(1L, 2L)).thenReturn(List.of(new EvidenceItem(EVIDENCE_ID,
                 "LAW_CHUNK", "law-1", "Civil law article", "https://www.law.go.kr/law/1", "original statute text")));
+    }
+
+    @Test
+    void consentRequestUsesGroundedServerQuestionWithoutRequiringAnUncitedModelAnswer() {
+        ownRoom();
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
+        when(model.call(any(Prompt.class))).thenAnswer(call -> {
+            Prompt prompt = call.getArgument(0);
+            var callbacks = ((org.springframework.ai.model.tool.ToolCallingChatOptions) prompt.getOptions()).getToolCallbacks();
+            assertThat(callbacks).noneMatch(callback -> callback.getToolDefinition().name().equals("searchRoomCases"));
+            callbacks.stream().filter(callback -> callback.getToolDefinition().name().equals("requestCaseSearchConsent"))
+                    .findFirst().orElseThrow().call("{\"lawEvidenceId\":\"" + EVIDENCE_ID + "\",\"reason\":\"판례 보강 필요\"}");
+            return new ChatResponse(List.of(new Generation(new AssistantMessage("찾아볼까요?"))));
+        });
+        var result = service.prepareFollowUp(1L, 2L, "판례도 필요한가요?");
+        assertThat(result.caseSearchRequested()).isTrue();
+        assertThat(result.caseSearchConsent()).isFalse();
+        assertThat(result.response().getAnswer()).contains("[[" + EVIDENCE_ID + "]]", "동의하신 경우에만");
+        assertThat(result.newEvidence()).isEmpty();
+        verifyNoInteractions(collector);
+        verify(messages, never()).save(any());
     }
 
     @Test

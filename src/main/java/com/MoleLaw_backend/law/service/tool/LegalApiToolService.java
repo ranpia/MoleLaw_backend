@@ -43,12 +43,24 @@ public class LegalApiToolService {
         return search(context, request, false);
     }
 
+    /** Reference law is derived from authenticated room evidence, never a model-supplied URL. */
+    public SearchResult searchCasesForLaw(LegalToolContext context, SearchRequest request, String referenceLaw) {
+        if (referenceLaw == null || referenceLaw.isBlank() || referenceLaw.length() > 200
+                || request.ministry() != null || !LawSearchFilters.NONE.equals(request.lawFilters()))
+            throw new IllegalArgumentException("Invalid room law reference");
+        return search(context, request, false, referenceLaw);
+    }
+
     private SearchResult search(LegalToolContext context, SearchRequest request, boolean law) {
+        return search(context, request, law, null);
+    }
+
+    private SearchResult search(LegalToolContext context, SearchRequest request, boolean law, String referenceLaw) {
         synchronized (context) {
-            context.authorize();
+            if (law) context.authorize(); else context.authorizeCases();
             String sourceUrl = "https://www.law.go.kr/DRF/lawSearch.do?target=" + (law ? "eflaw" : "prec");
             String condition = (law ? "LAW:" : "CASE:") + new SearchRequest(request.query(),
-                    request.search(), request.ministry(), 1, request.display(), request.lawFilters());
+                    request.search(), request.ministry(), 1, request.display(), request.lawFilters()) + ":JO=" + referenceLaw;
             String key = condition + ":" + request.page();
             if (context.completed.contains(key)) return result(context, request, Status.DUPLICATE, sourceUrl);
             if (context.exhausted.contains(condition)) return result(context, request, Status.EXHAUSTED, sourceUrl);
@@ -56,11 +68,11 @@ public class LegalApiToolService {
                 return result(context, request, Status.EXHAUSTED, sourceUrl);
             }
             if (!context.hasBudget()) return result(context, request, Status.BUDGET_EXHAUSTED, sourceUrl);
-            context.reserve();
+            if (law) context.reserve(); else context.reserveCase();
             JsonNode root;
             try {
                 root = law ? mapper.readTree(searchLawPage(request)).path("LawSearch")
-                        : cases.search(request.query(), request.search(), request.page(), request.display());
+                        : searchCasePage(request, referenceLaw);
             } catch (Exception failure) {
                 throw apiFailure(failure);
             }
@@ -132,15 +144,26 @@ public class LegalApiToolService {
         return detail(context, id, false);
     }
 
+    private JsonNode searchCasePage(SearchRequest request, String referenceLaw) {
+        if (referenceLaw == null) return cases.search(request.query(), request.search(), request.page(), request.display());
+        var parameters = new com.MoleLaw_backend.law.dto.request.PrecedentSearchRequest();
+        parameters.setQuery(request.query());
+        parameters.setSearch(request.search());
+        parameters.setPage(request.page());
+        parameters.setDisplay(request.display());
+        parameters.setReferenceLaw(referenceLaw);
+        return cases.search(parameters);
+    }
+
     private DetailResult detail(LegalToolContext context, String id, boolean law) {
         synchronized (context) {
-            context.authorize();
+            if (law) context.authorize(); else context.authorizeCases();
             if (id == null || !id.matches("[0-9]{1,20}")) throw new IllegalArgumentException("Invalid detail ID");
             Candidate candidate = (law ? context.laws : context.cases).get(id);
             if (candidate == null) throw new LegalToolException(UNKNOWN_ID, false);
             String key = (law ? "LAW:" : "CASE:") + id;
             if (context.details.containsKey(key)) return context.details.get(key);
-            context.reserve();
+            if (law) context.reserve(); else context.reserveCase();
             JsonNode content;
             try {
                 content = law ? laws.getLawDetailByMst(id, candidate.effectiveDate()) : cases.detail(id);
