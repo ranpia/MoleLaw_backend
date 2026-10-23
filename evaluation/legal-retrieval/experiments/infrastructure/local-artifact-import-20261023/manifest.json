@@ -1,0 +1,800 @@
+[
+    {
+        "Artifact":  "independent-validation-v1/corpus-unit-inventory.jsonl",
+        "SHA256":  "b5b493427c53de8163a5951a631a7d165f8a243c09f9ff1ed7b8dcad4caa1b9e",
+        "Bytes":  6403892,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/retrieval-validation/independent-v1/data/corpus-unit-inventory.jsonl"
+    },
+    {
+        "Artifact":  "organization-v1/file-inventory.json",
+        "SHA256":  "e27327eda44daa0b45ba97b196de18988f64384553b873a1f7a36f9095eff0e4",
+        "Bytes":  89861,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/infrastructure/qdrant/review/archive/organization-v1/file-inventory.json"
+    },
+    {
+        "Artifact":  "organization-v1/qdrant-before-20261020-143237.json",
+        "SHA256":  "d5123c396ed3474bfd044dd9a6895bb76d583f7e8836bc3886b85c57bc4ca4a0",
+        "Bytes":  42128,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/infrastructure/qdrant/review/archive/organization-v1/qdrant-before-20261020-143237.json"
+    },
+    {
+        "Artifact":  "organization-v1/qdrant-before-20261020-143411.json",
+        "SHA256":  "f7ea2f8ae5f6ed90a7ecc61a72f7b62c057abc0677774b166d293f381bb33719",
+        "Bytes":  48287,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/infrastructure/qdrant/review/archive/organization-v1/qdrant-before-20261020-143411.json"
+    },
+    {
+        "Artifact":  "organization-v1/qdrant-before-20261020-152308.json",
+        "SHA256":  "b28685c70170dc6c83f5e1668379ff2f2f569656402c337630f93d92a7626609",
+        "Bytes":  57561,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/infrastructure/qdrant/review/archive/organization-v1/qdrant-before-20261020-152308.json"
+    },
+    {
+        "Artifact":  "organization-v1/qdrant-before-20261020-184328.json",
+        "SHA256":  "b36fbdfcb8db45f60220a4c239bd8dfe5a0486095705056dc6900d794df48fb3",
+        "Bytes":  68050,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/infrastructure/qdrant/review/archive/organization-v1/qdrant-before-20261020-184328.json"
+    },
+    {
+        "Artifact":  "results/bge-m3-char300-overlap64-article-v1-20261016-093012-221/queries.csv",
+        "SHA256":  "b9fdecbebe55537ec1db55e7f443b41d757c76684e5e69faa202e3edea5e8fc4",
+        "Bytes":  12094,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char300-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char300-overlap64-article-v1-20261016-093012-221/report.json",
+        "SHA256":  "eef884e60094a5f40aea28de8b63282be74345768a51070b67f4c8d608bcea42",
+        "Bytes":  3463,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char300-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char300-overlap64-article-v1-20261016-093012-221/summary.csv",
+        "SHA256":  "cca04fb4088195d041441db92a4970848c6b27bcab7231f7833b5ba2b653b777",
+        "Bytes":  549,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char300-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char300-overlap64-article-v1-20261016-093012-221/top10.csv",
+        "SHA256":  "5cca9e18c8b5c5bd111a4770fb3fde83b956ce0ac6261edef30861e981842367",
+        "Bytes":  386389,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char300-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char300-overlap64-article-v1-llm-rewrite-v1-20261019-112812-279/queries.csv",
+        "SHA256":  "3971819466e2b10532755b9da086dbd5cda536cf8a64efc9ff1b21783e1596a5",
+        "Bytes":  11906,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/bge-m3/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char300-overlap64-article-v1-llm-rewrite-v1-20261019-112812-279/report.json",
+        "SHA256":  "beb0cef0b2235faced28a8b80b72b07579086785178c0b7b2f7e8fcc3ed1ab84",
+        "Bytes":  3580,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/bge-m3/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char300-overlap64-article-v1-llm-rewrite-v1-20261019-112812-279/summary.csv",
+        "SHA256":  "bafc0442eb670d746c50fc8ab9ec785875646b4459fe083d98c3d65cb5b9b794",
+        "Bytes":  554,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/bge-m3/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char300-overlap64-article-v1-llm-rewrite-v1-20261019-112812-279/top10.csv",
+        "SHA256":  "3b0a3fd3c89988f3a79896eda8a0a51f5396fd0fefe5c3a86855c7aebf8030c2",
+        "Bytes":  512788,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/bge-m3/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char500-overlap64-article-v1-20261015-173106-282/queries.csv",
+        "SHA256":  "8ca3b883f46f99e2f5c212f2a8192ac604e04dbefe5694c440b857cd4a6f88f3",
+        "Bytes":  11979,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char500-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char500-overlap64-article-v1-20261015-173106-282/report.json",
+        "SHA256":  "ae5e792eb1905b28901d864d95b63f5d6cde67f62ba2e88bb7c0ad31d8bbbbc0",
+        "Bytes":  3299,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char500-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char500-overlap64-article-v1-20261015-173106-282/summary.csv",
+        "SHA256":  "ccb0c9de68ee709205377d556ca932c7ade923cc56d1ecb0d0c9d489f6c0f07c",
+        "Bytes":  557,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char500-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char500-overlap64-article-v1-20261015-173106-282/top10.csv",
+        "SHA256":  "5562e9408125174ad3ac1e9db88fa7f5e0a1ea7bcbc1f420e2f1a14ab05d8995",
+        "Bytes":  386394,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char500-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char500-overlap64-article-v1-llm-rewrite-v1-20261019-112629-099/queries.csv",
+        "SHA256":  "57ce329d53aa6052fc11fb08e8bc7bc6d7931655e60abc3b32c24f40dcf4f5fd",
+        "Bytes":  11927,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/bge-m3/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char500-overlap64-article-v1-llm-rewrite-v1-20261019-112629-099/report.json",
+        "SHA256":  "66ada9d0b159a5bf50a803732718aa241d7b6c472d6ed6da443873aaf31220fe",
+        "Bytes":  3542,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/bge-m3/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char500-overlap64-article-v1-llm-rewrite-v1-20261019-112629-099/summary.csv",
+        "SHA256":  "83b10e34468172e6d080cbb3905ba6e4f0e6a903196de87607c46dd68018e93f",
+        "Bytes":  545,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/bge-m3/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char500-overlap64-article-v1-llm-rewrite-v1-20261019-112629-099/top10.csv",
+        "SHA256":  "643a2cafe529eefe3a5aba7ec436a9be38c1c9c7aee238120c31a73cb24eb2fb",
+        "Bytes":  512939,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/bge-m3/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char700-overlap64-article-v1-20261016-094602-240/queries.csv",
+        "SHA256":  "54c91f5923b8f5550cec54709da8dcf62b35813e8180d93071567b1bdf04feb0",
+        "Bytes":  12092,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char700-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char700-overlap64-article-v1-20261016-094602-240/report.json",
+        "SHA256":  "dfc12d6d5cec183826a549e4f89cf01ab49289da2ff38292f8380432421608b2",
+        "Bytes":  3488,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char700-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char700-overlap64-article-v1-20261016-094602-240/summary.csv",
+        "SHA256":  "75507963b3833fe8fbe99d41fa83208d06e6a8f2410bbb5eec17d67904b465e2",
+        "Bytes":  584,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char700-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char700-overlap64-article-v1-20261016-094602-240/top10.csv",
+        "SHA256":  "ee97d2931359964691a7c2ee34b18fd0f51135d69d3763549f79193674461083",
+        "Bytes":  385888,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/bge-m3/char700-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char700-overlap64-article-v1-llm-rewrite-v1-20261016-174747-817/queries.csv",
+        "SHA256":  "af1109490f3bef37d5ac5c882459f2369931e5f35a8051287aced5ea83ce4ac1",
+        "Bytes":  11910,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/bge-m3/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char700-overlap64-article-v1-llm-rewrite-v1-20261016-174747-817/report.json",
+        "SHA256":  "f63aa32632a6047dba3ec837e8d1cfc0c536b57c402a3c9ff971dcd73f7704d4",
+        "Bytes":  3558,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/bge-m3/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char700-overlap64-article-v1-llm-rewrite-v1-20261016-174747-817/summary.csv",
+        "SHA256":  "ebc79496f6ee7335dbe5c92572269f5cb81d8e6e4b89ab8a36a4f265c93a8b2f",
+        "Bytes":  552,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/bge-m3/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/bge-m3-char700-overlap64-article-v1-llm-rewrite-v1-20261016-174747-817/top10.csv",
+        "SHA256":  "c73af6d9aaf3b26b69e1a61fbc2904572e135a4eecaed9e43bcf10a692f6ec18",
+        "Bytes":  513502,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/bge-m3/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-20261015-162754-983/queries.csv",
+        "SHA256":  "22cfc264589c99c50acec9b8c43afbd8a2edd902bc000cf8629c4d680cb26854",
+        "Bytes":  12011,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/model-comparison/review/archive/local-runs/embeddinggemma-20261015-162754-983/queries.csv"
+    },
+    {
+        "Artifact":  "results/embeddinggemma-20261015-162754-983/report.json",
+        "SHA256":  "4b7455fb8bbac7df2dcf7c26ed8e8709f24f28195fbe20136e4f3d73e481d534",
+        "Bytes":  3185,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-20261015-162754-983/summary.csv",
+        "SHA256":  "ea81c7d41588cf9b52fb628b3a66f4d2277cdbc0384e44e644e3145ff9a57687",
+        "Bytes":  570,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/model-comparison/review/archive/local-runs/embeddinggemma-20261015-162754-983/summary.csv"
+    },
+    {
+        "Artifact":  "results/embeddinggemma-20261015-162754-983/top10.csv",
+        "SHA256":  "4522dc43526c6542725c6fa5bbb6ab78083ce665f86266b296127cd3266a6881",
+        "Bytes":  383026,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-20261015-164508-865/queries.csv",
+        "SHA256":  "c1a482c07f29e1184e03c4d6f52b8f3cbb7d9c7c1f0344291640095ff592f0a4",
+        "Bytes":  12104,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/model-comparison/review/archive/local-runs/embeddinggemma-20261015-164508-865/queries.csv"
+    },
+    {
+        "Artifact":  "results/embeddinggemma-20261015-164508-865/report.json",
+        "SHA256":  "b180500b4e3fa5b63b5f31cb9b267f6bcea53d89be6f51fe426c2638fa4f2548",
+        "Bytes":  3181,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/model-comparison/review/archive/local-runs/embeddinggemma-20261015-164508-865/report.json"
+    },
+    {
+        "Artifact":  "results/embeddinggemma-20261015-164508-865/summary.csv",
+        "SHA256":  "75b95b3024ec31c500b7402dd321d26d4fa3f1413085fe9131c46d2f8272522c",
+        "Bytes":  570,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/model-comparison/review/archive/local-runs/embeddinggemma-20261015-164508-865/summary.csv"
+    },
+    {
+        "Artifact":  "results/embeddinggemma-20261015-164508-865/top10.csv",
+        "SHA256":  "4522dc43526c6542725c6fa5bbb6ab78083ce665f86266b296127cd3266a6881",
+        "Bytes":  383026,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char300-overlap64-article-v1-20261016-100208-978/queries.csv",
+        "SHA256":  "ce200049a163917fb23b1d26a2283d2cc0f32727e4b8495aeb2b7bfdeff47beb",
+        "Bytes":  12094,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char300-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char300-overlap64-article-v1-20261016-100208-978/report.json",
+        "SHA256":  "847b95352436319aa25eadd65828a48df6c212541c593dc4f9e47c85eaad599a",
+        "Bytes":  3549,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char300-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char300-overlap64-article-v1-20261016-100208-978/summary.csv",
+        "SHA256":  "e2cd0132bdc48d924e39b8cc4a1edb55bc7bb394806623656cb6f0d87d6a4d51",
+        "Bytes":  597,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char300-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char300-overlap64-article-v1-20261016-100208-978/top10.csv",
+        "SHA256":  "5d0b69ddb22b9a3d8dc959fde8dd2bbf36014b720817b29e356756f1c62eac91",
+        "Bytes":  384100,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char300-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char300-overlap64-article-v1-llm-rewrite-v1-20261019-112332-332/queries.csv",
+        "SHA256":  "816685dbc91e0bf26036d1c2161d0f7e9c39b3cb19378af8b2fb31fce31ea747",
+        "Bytes":  11918,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/embeddinggemma/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char300-overlap64-article-v1-llm-rewrite-v1-20261019-112332-332/report.json",
+        "SHA256":  "b099c217fae1d3a9f5e8f2fa0532e1017ad17e239d0c3db148e838bd73bfa303",
+        "Bytes":  3669,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/embeddinggemma/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char300-overlap64-article-v1-llm-rewrite-v1-20261019-112332-332/summary.csv",
+        "SHA256":  "3151d88ade23ca70488101c1bab7744fb731c9649dacfa3690e2265cd9fce467",
+        "Bytes":  575,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/embeddinggemma/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char300-overlap64-article-v1-llm-rewrite-v1-20261019-112332-332/top10.csv",
+        "SHA256":  "07fef66ac2c8798c4a962c9282af01f370dcb4d62c1b35a029aa31d266116001",
+        "Bytes":  510979,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/embeddinggemma/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-20261015-165200-610/queries.csv",
+        "SHA256":  "08b1807560efa3c5a31c4bdb88db1edcf716578816e2412d4a7f418e83d98353",
+        "Bytes":  12015,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/model-comparison/review/archive/local-runs/embeddinggemma-char500-overlap64-article-v1-20261015-165200-610/queries.csv"
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-20261015-165200-610/report.json",
+        "SHA256":  "f1121d1cc1ee744ef88f58713db6ec0119c19b988bc522a0019dbaacf72292a3",
+        "Bytes":  3376,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/model-comparison/review/archive/local-runs/embeddinggemma-char500-overlap64-article-v1-20261015-165200-610/report.json"
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-20261015-165200-610/summary.csv",
+        "SHA256":  "898a98392a7b358510d746b868d733a60d112d2a7cf82c0251f1da2c65434236",
+        "Bytes":  570,
+        "ExistingTracked":  null,
+        "ArchivePath":  "evaluation/legal-retrieval/experiments/model-comparison/review/archive/local-runs/embeddinggemma-char500-overlap64-article-v1-20261015-165200-610/summary.csv"
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-20261015-165200-610/top10.csv",
+        "SHA256":  "4522dc43526c6542725c6fa5bbb6ab78083ce665f86266b296127cd3266a6881",
+        "Bytes":  383026,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-20261016-094654-381/queries.csv",
+        "SHA256":  "65d44546f93f148f13fd84ef447e481a8f1fd6acc7f0f4c9e69a35f091fb94ab",
+        "Bytes":  12014,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-20261016-094654-381/report.json",
+        "SHA256":  "408f53e4d9a151efbcb6310dd121b710382244992768419aaffd5365e370a34e",
+        "Bytes":  3515,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-20261016-094654-381/summary.csv",
+        "SHA256":  "20044d6783d98a7f31997ca60550c38a37d0f629860f6abcaf260d78cb90670e",
+        "Bytes":  570,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-20261016-094654-381/top10.csv",
+        "SHA256":  "4522dc43526c6542725c6fa5bbb6ab78083ce665f86266b296127cd3266a6881",
+        "Bytes":  383026,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-llm-rewrite-v1-20261019-112151-703/queries.csv",
+        "SHA256":  "d1f74b2b595825277da98b21707933496e2d4cf38abf8ba1fcd7906fa5ceecd4",
+        "Bytes":  11835,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/embeddinggemma/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-llm-rewrite-v1-20261019-112151-703/report.json",
+        "SHA256":  "a3f0a27e7e20cd14e49d7bd5b7bbce6851809af1449dfa1317e00a6a5998f2be",
+        "Bytes":  3656,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/embeddinggemma/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-llm-rewrite-v1-20261019-112151-703/summary.csv",
+        "SHA256":  "9a5b39aa293647076b574cbbca9017d86ca84d37aae5cfdf25adf762fe754e56",
+        "Bytes":  576,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/embeddinggemma/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char500-overlap64-article-v1-llm-rewrite-v1-20261019-112151-703/top10.csv",
+        "SHA256":  "df84ac08a360a4e091e3277b16ed7f4e3382893632dafe0899fced050bd5b6cc",
+        "Bytes":  510191,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/embeddinggemma/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char700-overlap64-article-v1-20261016-101015-115/queries.csv",
+        "SHA256":  "b0a104bfe7e881132e891aa835932b39ecca4d2cbbfd448e869e3f7ac7e2cc36",
+        "Bytes":  12019,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char700-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char700-overlap64-article-v1-20261016-101015-115/report.json",
+        "SHA256":  "9d8fc7d50c8f57b0fbdc037d01808f4d0f54cecfde18436701ddfe3a77878aea",
+        "Bytes":  3556,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char700-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char700-overlap64-article-v1-20261016-101015-115/summary.csv",
+        "SHA256":  "4a24ece235d0bff49fdbcc8aa981a14de3d58c6efda58bc059749ac48ba17fe9",
+        "Bytes":  584,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char700-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char700-overlap64-article-v1-20261016-101015-115/top10.csv",
+        "SHA256":  "b3fc7a33fe4bdd6c5eb610a2d7e21659223bf95963ccb4f29867d0b33df3d5f3",
+        "Bytes":  382807,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/embeddinggemma/char700-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char700-overlap64-article-v1-llm-rewrite-v1-20261016-174451-320/queries.csv",
+        "SHA256":  "b0ec082d630c282f07e66304bb890804d09b176fbfc86ab7157976a34b30f165",
+        "Bytes":  11937,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/embeddinggemma/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char700-overlap64-article-v1-llm-rewrite-v1-20261016-174451-320/report.json",
+        "SHA256":  "67a6614bc4ccc7734949164e318fd7b292f0f1172d8ea209a280e8065fcd1a59",
+        "Bytes":  3662,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/embeddinggemma/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char700-overlap64-article-v1-llm-rewrite-v1-20261016-174451-320/summary.csv",
+        "SHA256":  "24fe9350aad57657643a7e2821dfcc36f46f521747c56f4395825cda0f6450c9",
+        "Bytes":  562,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/embeddinggemma/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/embeddinggemma-char700-overlap64-article-v1-llm-rewrite-v1-20261016-174451-320/top10.csv",
+        "SHA256":  "16bd79839b566d4b968fe4159526eb8b3178977137a1b7594324146084b8a209",
+        "Bytes":  509742,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/embeddinggemma/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char300-overlap64-article-v1-20261016-115828-625/queries.csv",
+        "SHA256":  "60243dd6b4c4e0084aa7b2d467fd6f10a8995b986f3fda750bd9b121e2acde0f",
+        "Bytes":  12203,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char300-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char300-overlap64-article-v1-20261016-115828-625/report.json",
+        "SHA256":  "f826c2a00df58c15324d2b2353dbe51d4bb859f071573d29761055937afb3c85",
+        "Bytes":  3861,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char300-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char300-overlap64-article-v1-20261016-115828-625/summary.csv",
+        "SHA256":  "42b8d42c1a30766219cffe4f2aff4de74888920c940e236404550e23afd853f1",
+        "Bytes":  586,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char300-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char300-overlap64-article-v1-20261016-115828-625/top10.csv",
+        "SHA256":  "4580e6fdd1967545ad7e609343bb24003c794f6d57eec3f19a6c9c9eea9751a1",
+        "Bytes":  384966,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char300-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char300-overlap64-article-v1-llm-rewrite-v1-20261019-111906-691/queries.csv",
+        "SHA256":  "81189aeaf04f44cf4872469731bcb316661eb2e4bbb4ae20735e67356257bd0f",
+        "Bytes":  12132,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/kure-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char300-overlap64-article-v1-llm-rewrite-v1-20261019-111906-691/report.json",
+        "SHA256":  "15c0cc506663b6198164d23ffc5d385968a2f0b5045da6b2b811d73da3d3147c",
+        "Bytes":  3919,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/kure-v1/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char300-overlap64-article-v1-llm-rewrite-v1-20261019-111906-691/summary.csv",
+        "SHA256":  "aa040d704edd86f6aa86e3b8c5cd506a27434973ffc4a162ba257a252352cf0c",
+        "Bytes":  537,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/kure-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char300-overlap64-article-v1-llm-rewrite-v1-20261019-111906-691/top10.csv",
+        "SHA256":  "da9355b34b8c0387253b91dfa3225d8c38aed50ff04005b3556243f544c35052",
+        "Bytes":  510761,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/kure-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char500-overlap64-article-v1-20261016-111938-035/queries.csv",
+        "SHA256":  "1320686370b08d31fc18d960cd3440faf00938e6e6b790d6165291d86f0bf089",
+        "Bytes":  12131,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char500-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char500-overlap64-article-v1-20261016-111938-035/report.json",
+        "SHA256":  "ad03128c24ca1c2c753723624b95ed5a4e35c7f11fffeb3c8602f2610c77b587",
+        "Bytes":  3796,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char500-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char500-overlap64-article-v1-20261016-111938-035/summary.csv",
+        "SHA256":  "5d4d41366143bfe2163c2137b0dcfd6dbff7dadfdd0c5d9a8b8e905f90e20e58",
+        "Bytes":  568,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char500-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char500-overlap64-article-v1-20261016-111938-035/top10.csv",
+        "SHA256":  "5f376cc27e1244daa7ef3a5502da428e7be9dce930c2b0874e67ad9d0b1cdb26",
+        "Bytes":  384481,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char500-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char500-overlap64-article-v1-llm-rewrite-v1-20261019-111535-175/queries.csv",
+        "SHA256":  "99498aed3cb0671a2e8f18778d773cdaf9b858f528f53f343b7bd5b4cdffb6b2",
+        "Bytes":  12063,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/kure-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char500-overlap64-article-v1-llm-rewrite-v1-20261019-111535-175/report.json",
+        "SHA256":  "a2a7579d5db715d85a17acd577b91156a89ef5a26d39ce02698ebc61e5b18afa",
+        "Bytes":  3899,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/kure-v1/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char500-overlap64-article-v1-llm-rewrite-v1-20261019-111535-175/summary.csv",
+        "SHA256":  "efde47cf8df4221a220e12d602668a70727445a6ba2dee0e2dda6e8c143a72eb",
+        "Bytes":  547,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/kure-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char500-overlap64-article-v1-llm-rewrite-v1-20261019-111535-175/top10.csv",
+        "SHA256":  "8bf53e0efec0883ed344ae8f5d40d4239562b19bd4956b0d3b6f433d907e7362",
+        "Bytes":  510167,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/kure-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char700-overlap64-article-v1-20261016-142625-248/queries.csv",
+        "SHA256":  "8f5133f6fec28ced7a8d7136efcac0b5f1a3572996d03dffa6555003dc98238a",
+        "Bytes":  12181,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char700-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char700-overlap64-article-v1-20261016-142625-248/report.json",
+        "SHA256":  "81a1e69152b4e987c70c057ccef466f6e3a11522deff1ad7ae4e6d9c86ea50e6",
+        "Bytes":  3828,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char700-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char700-overlap64-article-v1-20261016-142625-248/summary.csv",
+        "SHA256":  "d868aa99490e244d9def9db359f2088af667ce5d5b167f5a49b21090778073ff",
+        "Bytes":  553,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char700-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char700-overlap64-article-v1-20261016-142625-248/top10.csv",
+        "SHA256":  "37b3bf7b1a66dc19b8898bbbe0baf5cb0c084d61ca8c68ef90a784e74840932e",
+        "Bytes":  384023,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/kure-v1/char700-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char700-overlap64-article-v1-llm-rewrite-v1-20261019-111018-586/queries.csv",
+        "SHA256":  "3c4ed6315a86da1bf7a335fb46cec623e6d528298c4ef4321770e910b0dd9760",
+        "Bytes":  12041,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/kure-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char700-overlap64-article-v1-llm-rewrite-v1-20261019-111018-586/report.json",
+        "SHA256":  "a246b4c17ee3cac6c38700a018c44de5f9cc151c77d32937903a1730e1d0c064",
+        "Bytes":  3931,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/kure-v1/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char700-overlap64-article-v1-llm-rewrite-v1-20261019-111018-586/summary.csv",
+        "SHA256":  "c302432b1cbfd37bbdd98db9117db07d5c9ff8a8bd9171f20180405066939f8f",
+        "Bytes":  540,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/kure-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/kure-v1-char700-overlap64-article-v1-llm-rewrite-v1-20261019-111018-586/top10.csv",
+        "SHA256":  "2f93978fa2264513a59dba9ed62a570ef8cdb38636efdd5b31e13aeb9b4f5b5e",
+        "Bytes":  510117,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/kure-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char300-overlap64-article-v1-20261019-163742-000/queries.csv",
+        "SHA256":  "2452cbef58c232449f9ee6fab989de7b67e0ee7ae2edc1bb1cf7167632c75f44",
+        "Bytes":  12213,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char300-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char300-overlap64-article-v1-20261019-163742-000/report.json",
+        "SHA256":  "a562faf33e399b2c3da759cede447921427097f5ee8c969e2944fb1d7032155b",
+        "Bytes":  4020,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char300-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char300-overlap64-article-v1-20261019-163742-000/summary.csv",
+        "SHA256":  "ebbd65a537d8ecfe31798a8f4f8bb58d3f784ae7ef5b2d7bf23b46aa92ded373",
+        "Bytes":  608,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char300-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char300-overlap64-article-v1-20261019-163742-000/top10.csv",
+        "SHA256":  "01a409967c420045220ba23c5821ab61a75df066cf213b59f1e2c8b8677dbfb9",
+        "Bytes":  497585,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char300-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char300-overlap64-article-v1-llm-rewrite-v1-20261019-163842-212/queries.csv",
+        "SHA256":  "1fe9873ff4c98ceeeb4dc6aede87eee9ae0877364eeb51a2d5c85dff4198f6ca",
+        "Bytes":  12048,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/qwen3-0.6b/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char300-overlap64-article-v1-llm-rewrite-v1-20261019-163842-212/report.json",
+        "SHA256":  "fcd4c2a448f3ec45862ed2c9d22deaa337c2349309370ef5275a3965c0546497",
+        "Bytes":  4123,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/qwen3-0.6b/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char300-overlap64-article-v1-llm-rewrite-v1-20261019-163842-212/summary.csv",
+        "SHA256":  "79fe16607b724525afad0ad1d81e6035efcf84aa045437db2c676fb26168d61c",
+        "Bytes":  599,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/qwen3-0.6b/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char300-overlap64-article-v1-llm-rewrite-v1-20261019-163842-212/top10.csv",
+        "SHA256":  "ab2e53b902bc5d93f02a2cb0d6c2c43c426caab67a6f69937059f832aa2150a9",
+        "Bytes":  509255,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char300/qwen3-0.6b/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char500-overlap64-article-v1-20261019-132906-385/queries.csv",
+        "SHA256":  "9ac1b89ac63ec4d9622b03142b6ee45b8d70907725c20f85b9df0d7f1a3a98a4",
+        "Bytes":  12100,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char500-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char500-overlap64-article-v1-20261019-132906-385/report.json",
+        "SHA256":  "e4fb90ff129296536fa51984db07d67ce8578a0eabf24f75bac6d0e7cd6d6b65",
+        "Bytes":  4010,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char500-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char500-overlap64-article-v1-20261019-132906-385/summary.csv",
+        "SHA256":  "470643250c4ed62ffbaa6d845acce476376a3b5841b7d4f390b0102ef23ed854",
+        "Bytes":  615,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char500-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char500-overlap64-article-v1-20261019-132906-385/top10.csv",
+        "SHA256":  "41aacfe1147496261f37b5bee53c74e25da97d3f78ea5c951051b9cb7cdd070c",
+        "Bytes":  497110,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char500-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char500-overlap64-article-v1-llm-rewrite-v1-20261019-132959-402/queries.csv",
+        "SHA256":  "78cb46c75f6006882988cecd1e39d9127850873ab77f8407fe202aea0c72f2a5",
+        "Bytes":  12014,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/qwen3-0.6b/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char500-overlap64-article-v1-llm-rewrite-v1-20261019-132959-402/report.json",
+        "SHA256":  "842821e5a5ba850462c18762eb591af9e6ad44e2c75310cc2c5a5d00c5774987",
+        "Bytes":  4105,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/qwen3-0.6b/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char500-overlap64-article-v1-llm-rewrite-v1-20261019-132959-402/summary.csv",
+        "SHA256":  "9ed361cbb020b4754c2ae8456464641d13baca3aaf34729fec8199449c0b3b12",
+        "Bytes":  599,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/qwen3-0.6b/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char500-overlap64-article-v1-llm-rewrite-v1-20261019-132959-402/top10.csv",
+        "SHA256":  "1dc6a06202d89cc30782950dca993d716501c8b60a77dc8461395c20029f04e4",
+        "Bytes":  508363,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/char500/qwen3-0.6b/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char700-overlap64-article-v1-20261019-145714-860/queries.csv",
+        "SHA256":  "fa8483d8238fee9e01b4b26112e99e814c1bb8109a2642ff1654a7abe99f4cb7",
+        "Bytes":  12071,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char700-overlap64-article-v1/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char700-overlap64-article-v1-20261019-145714-860/report.json",
+        "SHA256":  "f5376fd79e3b0f98a415910e8f42018ba4c1ae44d040342532f31bbed1b3d7c2",
+        "Bytes":  4033,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char700-overlap64-article-v1/summary.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char700-overlap64-article-v1-20261019-145714-860/summary.csv",
+        "SHA256":  "6a59f5b89708c013edc65fd8598b9ec54b3a4324642ae1fbdaa499f96117f06a",
+        "Bytes":  615,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char700-overlap64-article-v1/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char700-overlap64-article-v1-20261019-145714-860/top10.csv",
+        "SHA256":  "e652d06b2b183a44a37805c6194d537ed8d09d843d9e0add5e9af4f2c78e8dc1",
+        "Bytes":  497611,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/qwen3-0.6b/char700-overlap64-article-v1/top10.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char700-overlap64-article-v1-llm-rewrite-v1-20261019-145809-881/queries.csv",
+        "SHA256":  "fd293a4004125086f86ca50a80d6b3c39997abe7848858b2e3f9be6ab4517e80",
+        "Bytes":  11960,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/qwen3-0.6b/queries.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char700-overlap64-article-v1-llm-rewrite-v1-20261019-145809-881/report.json",
+        "SHA256":  "d7c012300ff284e426ad6e827b874c4b277a65739f5ecfeb5eafb51890605689",
+        "Bytes":  4125,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/qwen3-0.6b/report.json",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char700-overlap64-article-v1-llm-rewrite-v1-20261019-145809-881/summary.csv",
+        "SHA256":  "593f300b744f94df03c3fdfdf8727766ad92b8e1c6086f3b0b3d3b85d9340efc",
+        "Bytes":  592,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/qwen3-0.6b/summary.csv",
+        "ArchivePath":  null
+    },
+    {
+        "Artifact":  "results/qwen3-0.6b-char700-overlap64-article-v1-llm-rewrite-v1-20261019-145809-881/top10.csv",
+        "SHA256":  "1d75ceb07eb5e464c8532c799a13094852c4d11241db27238b908eab80fd8cef",
+        "Bytes":  508272,
+        "ExistingTracked":  "evaluation/legal-retrieval/experiments/model-comparison/reports/query-rewrite-v1/qwen3-0.6b/top10.csv",
+        "ArchivePath":  null
+    }
+]
