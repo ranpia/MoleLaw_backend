@@ -11,6 +11,17 @@ import com.MoleLaw_backend.law.dto.retrieval.QuestionRetrievalPlan;
 /** Formats immutable evidence as data, without interpreting it as a prompt template. */
 @Component
 public class EvidencePromptBuilder {
+    public String buildFollowUp(String question, List<EvidenceItem> evidence) {
+        var laws = evidence.stream().filter(item -> !"CASE_BODY".equals(item.kind())).toList();
+        StringBuilder prompt = new StringBuilder(build(question, laws));
+        prompt.append("\n방에 저장된 판례 목록(본문을 다시 읽으려면 readRoomCase에 판례 ID를 전달):\n");
+        for (var item : evidence) {
+            if ("CASE_BODY".equals(item.kind())) prompt.append("근거 ID: ").append(item.id())
+                    .append(" 판례 ID: ").append(item.sourceId()).append(" 제목: ").append(item.title()).append('\n');
+        }
+        return prompt.append("\n이전 답변의 인용이나 판례 목록은 본문을 대신하지 않습니다. 이번 요청에서 읽은 판례만 인용하세요.").toString();
+    }
+
     public String build(String question, List<EvidenceItem> evidence, QuestionRetrievalPlan plan) {
         String prompt = build(question, evidence);
         if (plan == null) return prompt;

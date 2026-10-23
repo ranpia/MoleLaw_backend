@@ -72,7 +72,8 @@ public class ChatService {
         }
         if (firstBot >= 0) {
             result.add(firstBot + 1, MessageResponse.builder().sender("INFO")
-                    .content(renderer.render(evidence.load(user.getId(), chatRoomId)))
+                    .content(renderer.render(evidence.load(user.getId(), chatRoomId).stream()
+                            .filter(item -> !"CASE_BODY".equals(item.kind())).toList()))
                     .timestamp(result.get(firstBot).getTimestamp()).build());
         }
         return List.copyOf(result);
@@ -83,8 +84,8 @@ public class ChatService {
         ChatContentLimits.question(request == null ? null : request.getContent());
 
         try {
-            LegalAnswerResponse answer = answers.answerFollowUp(user.getId(), chatRoomId, request.getContent());
-            Message botMessage = turns.saveFollowUpTurn(room, request.getContent(), answer.getAnswer());
+            var prepared = answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch());
+            Message botMessage = turns.savePreparedFollowUpTurn(room, request.getContent(), prepared);
             return MessageResponse.from(botMessage, encryptor.decrypt(botMessage.getContent()));
         } catch (Exception e) {
             if (e instanceof MolelawException failure) throw failure;

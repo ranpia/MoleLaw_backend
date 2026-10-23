@@ -38,3 +38,5 @@ DB 메시지는 `USER/BOT`만 저장합니다. API의 기존 `INFO` 응답은 �
 설정 주입 전환 검증(2026-10-22): 일반 테스트 287 개(실패 0, 선택 실행 1 개 건너뜀)와 bootJar 통과. 임시 .env만으로 실제 YAML·@Value 주입, 빈 키 기동 실패, 서로 다른 인스턴스 키 격리, 기존 암호문 envelope·변조 검사·큰 본문 복원을 확인했다. 로컬 .env는 Git 제외 상태다.
 
 운영 키 교체·보존 정책은 [사용자 판단 D09](decisions/README.md), 동시 턴·중단 복구는 [작업 계획 P05](plans/README.md)에서 관리합니다.
+
+후속 상담은 `caseSearchRequested`를 BOT에, 요청별 명시 동의를 USER의 `caseSearchConsent`에 저장한다. 동의 전 외부 판례 호출은 차단한다. 읽고 인용한 새 판례 참조는 USER/BOT과 같은 성공 트랜잭션으로 저장한다. 근거 조회는 메시지와 분리한 목록·본문 API를 사용한다. [후속 상담 계약](follow-up-consultation.md)을 참고한다.

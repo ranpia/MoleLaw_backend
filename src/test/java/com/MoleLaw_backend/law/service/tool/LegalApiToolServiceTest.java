@@ -26,6 +26,15 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class LegalApiToolServiceTest {
+    @Test void caseOnlyFollowUpContextCannotCollectLawsOrReserveEmbeddingCalls() {
+        var context = new LegalToolContext(LegalToolContext.Purpose.FOLLOW_UP_CASE, "case-turn",
+                Instant.now().plusSeconds(60), 8, Clock.systemUTC());
+        assertThatThrownBy(() -> tools.searchLaws(context, request(1))).isInstanceOf(LegalToolException.class);
+        assertThatThrownBy(() -> tools.getLawDetail(context, "11")).isInstanceOf(LegalToolException.class);
+        assertThatThrownBy(context::reserveEmbedding).isInstanceOf(LegalToolException.class);
+        assertThatThrownBy(context::reserveIndex).isInstanceOf(LegalToolException.class);
+        verifyNoInteractions(laws, cases);
+    }
     private final LawSearchService laws = mock(LawSearchService.class);
     private final OpenLawCaseClient cases = mock(OpenLawCaseClient.class);
     private final LegalSourceService sources = mock(LegalSourceService.class);

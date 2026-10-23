@@ -141,6 +141,16 @@ tasks.register('lawEffectiveDateSimulationTest', Test) {
     outputs.upToDateWhen { false }
 }
 
+tasks.register('followUpConsultationSimulationTest', Test) {
+    description = 'Checks room-scoped precedent consent, tool callbacks, HTTP transport, persistence and evidence APIs.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.common.config.FollowUpConsultationSimulationTest' }
+    outputs.upToDateWhen { false }
+}
+
 tasks.register('qdrantIntegrationTest', Test) {
     description = 'Validates isolated Qdrant collection metadata, vector upserts and distinct-article top-15 retrieval.'
     group = 'verification'

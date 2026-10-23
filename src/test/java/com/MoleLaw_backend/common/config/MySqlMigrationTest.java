@@ -51,7 +51,7 @@ class MySqlMigrationTest {
             runner(db).run(context -> {
                 assertThat(context).hasNotFailed();
                 var flyway = context.getBean(Flyway.class);
-                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("4");
+                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("5");
                 assertThat(flyway.migrate().migrationsExecuted).isZero();
                 assertThat(flyway.getConfiguration().isCleanDisabled()).isTrue();
                 assertThat(flyway.getConfiguration().isBaselineOnMigrate()).isFalse();
@@ -76,6 +76,10 @@ class MySqlMigrationTest {
                             "molelaw_service_test", "test-model", "test-revision", 2);
                     index.complete(1);
                     em.persist(index);
+                    var precedent = new LegalSource("CASE", "901", null, null,
+                            "https://www.law.go.kr/precInfoP.do?precSeq=901", "c".repeat(64), "{\"판례내용\":\"검증 본문\"}");
+                    em.persist(precedent);
+                    em.persist(new com.MoleLaw_backend.chat.entity.ChatCaseEvidence(java.util.UUID.randomUUID().toString(), room, precedent));
                     em.getTransaction().commit();
                     em.clear();
                     assertThat(TestEncryption.create().decrypt(em.find(Message.class, message.getId()).getContent())).isEqualTo(plaintext);
@@ -94,13 +98,14 @@ class MySqlMigrationTest {
                 assertThat(context).hasNotFailed();
                 var jdbc = new JdbcTemplate(context.getBean(DataSource.class));
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM message", Integer.class)).isEqualTo(1);
-                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success=1", Integer.class)).isEqualTo(4);
+                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success=1", Integer.class)).isEqualTo(5);
                 assertThat(context.getBean(Flyway.class).migrate().migrationsExecuted).isZero();
                 jdbc.update("DELETE FROM `user` WHERE email='mysql-test@example.com'");
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM chat_room", Integer.class)).isZero();
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM message", Integer.class)).isZero();
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM chat_evidence_snapshot", Integer.class)).isZero();
-                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM legal_source", Integer.class)).isEqualTo(1);
+                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM chat_case_evidence", Integer.class)).isZero();
+                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM legal_source", Integer.class)).isEqualTo(2);
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM legal_source_index", Integer.class)).isEqualTo(1);
             });
         }
