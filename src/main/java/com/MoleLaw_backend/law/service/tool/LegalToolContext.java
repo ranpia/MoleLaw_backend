@@ -17,7 +17,7 @@ import static com.MoleLaw_backend.law.exception.LegalToolException.Reason.*;
  * The caller must check authentication and room ownership before constructing it.
  */
 public final class LegalToolContext {
-    public enum Purpose { FIRST_QUESTION, PRECOLLECTION, FOLLOW_UP }
+    public enum Purpose { FIRST_QUESTION, PRECOLLECTION, FOLLOW_UP, FOLLOW_UP_CASE }
     private final Purpose purpose;
     private final String executionId;
     private Instant deadline;
@@ -54,7 +54,17 @@ public final class LegalToolContext {
     }
 
     void authorize() {
+        if (purpose == Purpose.FOLLOW_UP || purpose == Purpose.FOLLOW_UP_CASE)
+            throw new LegalToolException(FORBIDDEN, false);
+    }
+
+    void authorizeCases() {
         if (purpose == Purpose.FOLLOW_UP) throw new LegalToolException(FORBIDDEN, false);
+    }
+
+    void reserveCase() {
+        authorizeCases();
+        reserveCall();
     }
 
     Instant now() { return clock.instant(); }
@@ -64,7 +74,10 @@ public final class LegalToolContext {
     }
     void reserve() {
         authorize();
+        reserveCall();
+    }
 
+    private void reserveCall() {
         checkDeadline();
         if (calls >= maxCalls) throw exhausted("RETRIEVAL");
         calls++;

@@ -1,0 +1,10 @@
+version: 1
+name: Follow-up precedent contract
+slug: follow-up-cases
+protocol: http
+interceptRequests: true
+port: 14039
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true
