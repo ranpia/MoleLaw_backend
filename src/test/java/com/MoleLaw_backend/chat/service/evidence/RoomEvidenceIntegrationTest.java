@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest(properties = "spring.datasource.url=jdbc:h2:mem:room-evidence-test;MODE=MySQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-@Import({EncryptUtil.class, ChatEvidenceService.class, ChatTurnService.class, RoomEvidenceIntegrationTest.JsonConfiguration.class})
+@Import({ChatCaseEvidenceService.class, com.MoleLaw_backend.law.service.source.LegalSourceService.class, com.MoleLaw_backend.law.service.tool.CaseEvidenceReader.class, EncryptUtil.class, ChatEvidenceService.class, ChatTurnService.class, RoomEvidenceIntegrationTest.JsonConfiguration.class})
 class RoomEvidenceIntegrationTest {
     @Autowired private EncryptUtil encryptor;
     @Autowired private ChatEvidenceService service;

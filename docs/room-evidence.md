@@ -10,7 +10,7 @@ LegalEvidenceCollector가 충분성 판단에서 선택한 법령 조문을 Evid
 
 ## 후속 상담
 
-`ChatEvidenceService.load(userId, roomId)`가 소유권·스냅샷 해시·필드를 확인한 뒤 고정 ID·종류·제목·본문을 답변 Client에 제공합니다. `MessageChatMemoryAdvisor`는 별도로 대화 기록만 복원합니다. 대화 속 이전 인용이나 INFO를 원문 근거로 재해석하지 않습니다. 추가 검색·수집은 수행하지 않습니다.
+`ChatEvidenceService.load(userId, roomId)`가 소유권·스냅샷 해시·필드를 확인한 뒤 고정 ID·종류·제목·본문을 답변 Client에 제공합니다. `MessageChatMemoryAdvisor`는 별도로 대화 기록만 복원합니다. 대화 속 이전 인용이나 INFO를 원문 근거로 재해석하지 않습니다. 법령 추가 검색·ETL은 수행하지 않습니다. 사용자 동의 후 판례 본문 보강과 별도 근거 조회는 [후속 상담 계약](follow-up-consultation.md)을 따릅니다.
 
 스냅샷이 없는 기존 방은 실패 처리합니다(`GPT_API_FAILURE`). 이전 대화만으로 근거를 추정해 자동 보충하지 않습니다. 새 상담방에서 다시 시작해야 하며 별도 이관 기능은 제공하지 않습니다.
 

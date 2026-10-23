@@ -12,7 +12,7 @@
 | 근거 본문 읽기 | 전체 후보 목록 비교→서버 허용 ID 선택→MySQL 원문 복원·예산 검사→읽은 본문만 충분성 판단 | 검색 조건별 전체 페이지를 평가하고 70점 이상 상위 2개만 상세 후보로 보관. 한 건 색인 후 재판단 |
 | ETL | Spring AI Reader→Transformer→Writer, 기존 HTTP 임베딩 재사용, Qdrant 쓰기 후 포인트·벡터 재조회 검증 |
 | 재색인 | 완료 세대 재검증·재사용, 누락 확인 시 새 세대 재처리. 실패·부분 세대 검색 제외 |
-| 후속 상담 | MessageChatMemoryAdvisor로 기록 복원, 최초 고정 근거만 사용. 새 검색·수집 없음 |
+| 후속 상담 | MessageChatMemoryAdvisor로 기록 복원. 최초 법령 유지, 사용자 동의 후 방 법령 기반 판례 검색·본문 읽기·인용·누적. 근거 목록/본문 별도 조회 |
 | 모델 설정 | 분류·리랭크 mini/low, 충분성 GPT-5.4/medium, 답변 mini/medium. 역할별 환경변수 |
 | 임베딩 부하 | 서비스 배치 동시성·유한 대기열, threaded KURE 서버의 상태 조회 분리·추론 단일 실행 |
 | 로컬 진단 | Swagger, ETL index/reindex/search, AI Search 단독·Qdrant 비교 API |

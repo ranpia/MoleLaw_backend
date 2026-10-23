@@ -49,7 +49,7 @@ flowchart LR
     Answer --> Store[MySQL 방·암호화 메시지·근거]
 ```
 
-최초 질문은 필요한 수집을 허용하되 서버가 시간·호출·행동을 제한합니다. 법령 한 건을 색인·검증한 뒤 재검색·충분성 판단으로 돌아갑니다. 후속 질문에는 새 검색·수집을 제공하지 않습니다. [최초 상담 실행](docs/initial-consultation.md)을 참고하세요.
+최초 질문은 필요한 수집을 허용하되 서버가 시간·호출·행동을 제한합니다. 법령 한 건을 색인·검증한 뒤 재검색·충분성 판단으로 돌아갑니다. 후속 질문은 방 근거와 대화를 이어받고 사용자 동의 후에만 관련 판례를 검색·본문 수집합니다. [후속 상담·근거 조회](docs/follow-up-consultation.md)를 참고하세요. [최초 상담 실행](docs/initial-consultation.md)을 참고하세요.
 
 ## 현재 모델 배정
 
@@ -101,7 +101,7 @@ docker compose -f docker/compose.yml --env-file docker/.env.compose up -d
 
 Qdrant RAG는 APP_LAW_VECTOR_ENABLED=true와 별도 임베딩 서버가 필요합니다. 서비스 KURE 실행은 [Docker 가이드](docker/README.md)를 따르세요. 코드 기본 포트 11436과 서비스 컨테이너 11437을 혼동하지 않도록 APP_LAW_VECTOR_EMBEDDING_BASE_URL을 지정합니다. 모델·.env 변경 후 서버를 재시작합니다.
 
-local 주소는 API :8080, Swagger /swagger-ui.html, MySQL :3307, Qdrant HTTP/gRPC :6333/:6334, Redis :6379입니다. 기본 mysql 프로필은 MySQL·JPA validate, local은 mysql+qdrant·Swagger, test는 H2·모킹입니다. 운영에 local/test 프로필을 사용하지 않습니다. Flyway V1~V4 적용·오류 대응은 [MySQL 실행](docs/mysql-setup.md)을 따릅니다.
+local 주소는 API :8080, Swagger /swagger-ui.html, MySQL :3307, Qdrant HTTP/gRPC :6333/:6334, Redis :6379입니다. 기본 mysql 프로필은 MySQL·JPA validate, local은 mysql+qdrant·Swagger, test는 H2·모킹입니다. 운영에 local/test 프로필을 사용하지 않습니다. Flyway V1~V5 적용·오류 대응은 [MySQL 실행](docs/mysql-setup.md)을 따릅니다.
 
 ## 인증·API 사용
 

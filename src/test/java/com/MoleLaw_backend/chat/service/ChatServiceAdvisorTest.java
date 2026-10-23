@@ -74,7 +74,7 @@ class ChatServiceAdvisorTest {
     @Test
     void failedModelDoesNotPersistCurrentQuestionOrAssistant() throws Exception {
         when(rooms.findById(2L)).thenReturn(Optional.of(room));
-        when(gpt.answerFollowUp(1L, 2L, "후속 질문")).thenThrow(new RuntimeException("provider"));
+        when(gpt.prepareFollowUp(1L, 2L, "후속 질문", false)).thenThrow(new RuntimeException("provider"));
         assertThatThrownBy(() -> service.askQuestion(user, 2L, request())).isInstanceOf(MolelawException.class);
         verifyNoInteractions(turns, messages);
     }
@@ -82,13 +82,13 @@ class ChatServiceAdvisorTest {
     @Test
     void successfulAnswerPersistsOnePairAfterGeneration() throws Exception {
         when(rooms.findById(2L)).thenReturn(Optional.of(room));
-        when(gpt.answerFollowUp(1L, 2L, "후속 질문")).thenReturn(new LegalAnswerResponse("답변", ""));
-        when(turns.saveFollowUpTurn(room, "후속 질문", "답변")).thenReturn(Message.builder()
+        when(gpt.prepareFollowUp(1L, 2L, "후속 질문", false)).thenReturn(new com.MoleLaw_backend.chat.dto.answer.PreparedFollowUpAnswer(new LegalAnswerResponse("답변", ""), java.util.List.of(), false, false));
+        when(turns.savePreparedFollowUpTurn(eq(room), eq("후속 질문"), any())).thenReturn(Message.builder()
                 .id(4L).chatRoom(room).sender(Message.Sender.BOT).content(TestEncryption.create().encrypt("답변")).build());
         service.askQuestion(user, 2L, request());
         var order = inOrder(gpt, turns);
-        order.verify(gpt).answerFollowUp(1L, 2L, "후속 질문");
-        order.verify(turns).saveFollowUpTurn(room, "후속 질문", "답변");
+        order.verify(gpt).prepareFollowUp(1L, 2L, "후속 질문", false);
+        order.verify(turns).savePreparedFollowUpTurn(eq(room), eq("후속 질문"), any());
         verifyNoInteractions(messages);
     }
 
