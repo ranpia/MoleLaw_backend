@@ -23,13 +23,17 @@ public class ChatTurnService {
     private final ChatEvidenceService evidence;
     private final EncryptUtil encryptor;
     private final ChatCaseEvidenceService cases;
+    private final com.MoleLaw_backend.user.repository.UserRepository users;
 
     @Transactional
     public ChatRoom saveInitialTurn(User user, String title, String question, PreparedLegalAnswer prepared) {
         ChatContentLimits.title(title);
         ChatContentLimits.question(question);
         ChatContentLimits.answer(prepared.response().getAnswer());
-        ChatRoom room = rooms.save(ChatRoom.builder().user(user).title(title).build());
+        var activeUser = users.findByIdForUpdate(user.getId()).orElseThrow(() ->
+                new com.MoleLaw_backend.common.exception.MolelawException(
+                        com.MoleLaw_backend.common.exception.ErrorCode.USER_NOT_AUTHENTICATED));
+        ChatRoom room = rooms.save(ChatRoom.builder().user(activeUser).title(title).build());
         evidence.freeze(room, prepared.evidence());
         add(room, Message.Sender.USER, question);
         add(room, Message.Sender.BOT, prepared.response().getAnswer());

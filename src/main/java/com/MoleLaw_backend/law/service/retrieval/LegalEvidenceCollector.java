@@ -83,6 +83,7 @@ public class LegalEvidenceCollector {
         Map<EvidenceDecision.LawSearch, PageCursor> pages = new HashMap<>();
         Set<String> details = new HashSet<>(), queries = new HashSet<>();
         Set<String> observedLaws = new HashSet<>();
+        Set<String> retained = new java.util.LinkedHashSet<>();
         List<RetrievalAttempt> attempts = new ArrayList<>();
         String stage = "QUESTION_PLANNING";
         try {
@@ -95,11 +96,8 @@ public class LegalEvidenceCollector {
             stage = "INITIAL_SEARCH";
             log.info("Legal collection executionId={} stage={} queryCount={}",
                     context.executionId(), stage, plan.searchQueries().size());
-            List<EvidenceItem> evidence = List.of();
-            for (String query : plan.searchQueries()) {
-                evidence = search(query, evidence, ids, context, search, attempts);
-                queries.add(query);
-            }
+            List<EvidenceItem> evidence = searchBatch(plan.searchQueries(), List.of(), ids, context, search, attempts, retained);
+            queries.addAll(plan.searchQueries());
             for (int round = 0; round <= 4; round++) {
                 evidence.stream().map(EvidenceItem::provenance).filter(java.util.Objects::nonNull)
                         .map(EvidenceProvenance::mst).forEach(observedLaws::add);
@@ -119,6 +117,7 @@ public class LegalEvidenceCollector {
                         context.executionId(), round, decision.action(), evidence.size());
                 context.checkDeadline();
                 decision.validateAgainst(evidence.stream().map(EvidenceItem::id).toList());
+                retained.addAll(decision.evidenceIds());
                 if (round == 4 && decision.action() != EvidenceDecision.Action.ANSWER_READY) throw insufficient();
                 switch (decision.action()) {
                     case ANSWER_READY -> {
@@ -129,6 +128,7 @@ public class LegalEvidenceCollector {
                     case INSUFFICIENT -> throw insufficient();
                     case SEARCH_AGAIN -> {
                         stage = "SEARCH_AGAIN";
+                        List<String> freshQueries = new ArrayList<>();
                         for (String query : decision.searchQueries()) {
                             if (!queries.add(query)) {
                                 attempts.add(new RetrievalAttempt(RetrievalAttempt.Kind.VECTOR_SEARCH, query,
@@ -136,8 +136,10 @@ public class LegalEvidenceCollector {
                                 log.info("Legal collection executionId={} stage=SEARCH_SKIPPED reason=DUPLICATE_QUERY", context.executionId());
                                 continue;
                             }
-                            evidence = search(query, evidence, ids, context, search, attempts);
+                            freshQueries.add(query);
                         }
+                        if (!freshQueries.isEmpty())
+                            evidence = searchBatch(freshQueries, evidence, ids, context, search, attempts, retained);
                     }
                     case COLLECT_LAW -> {
                         boolean progressed = false;
@@ -217,8 +219,7 @@ public class LegalEvidenceCollector {
                         if (indexed) {
                             stage = "SEARCH_AFTER_INDEX";
                             log.info("Legal collection executionId={} stage={}", context.executionId(), stage);
-                            for (String query : plan.searchQueries())
-                                evidence = search(query, evidence, ids, context, search, attempts);
+                            evidence = searchBatch(plan.searchQueries(), evidence, ids, context, search, attempts, retained);
                         }
                     }
                 }
@@ -239,15 +240,25 @@ public class LegalEvidenceCollector {
         }
     }
 
-    private List<EvidenceItem> search(String query, List<EvidenceItem> before, Map<String, String> ids,
-            LegalToolContext context, LawRagSearchToolService search, List<RetrievalAttempt> attempts) {
-        var hits = search.searchTop15(context, query);
-        var after = merge(hits, before, ids);
-        var outcome = hits.isEmpty() ? RetrievalAttempt.Outcome.NO_RESULTS : changed(before, after)
-                ? RetrievalAttempt.Outcome.AVAILABLE : RetrievalAttempt.Outcome.NO_NEW_EVIDENCE;
-        attempts.add(new RetrievalAttempt(RetrievalAttempt.Kind.VECTOR_SEARCH, query, null, null,
-                outcome, hits.size(), false));
-        return after;
+    private List<EvidenceItem> searchBatch(List<String> queries, List<EvidenceItem> before, Map<String, String> ids,
+            LegalToolContext context, LawRagSearchToolService search, List<RetrievalAttempt> attempts, Set<String> retained) {
+        List<List<LawSearchEvidence>> rankings = new ArrayList<>();
+        Set<String> explicitUnits = new HashSet<>();
+        for (String query : queries) {
+            var hits = search.searchTop15(context, query);
+            rankings.add(hits);
+            for (var hit : hits) {
+                String lawTitle = hit.title().replaceFirst("\\s+제[0-9]+조.*$", "");
+                if (com.MoleLaw_backend.law.util.LawArticleQuery.paths(query, lawTitle)
+                        .contains(hit.unitId().substring(hit.unitId().indexOf(':') + 1))) explicitUnits.add(hit.unitId());
+            }
+            var after = merge(hits, before, ids, Set.of());
+            var outcome = hits.isEmpty() ? RetrievalAttempt.Outcome.NO_RESULTS : changed(before, after)
+                    ? RetrievalAttempt.Outcome.AVAILABLE : RetrievalAttempt.Outcome.NO_NEW_EVIDENCE;
+            attempts.add(new RetrievalAttempt(RetrievalAttempt.Kind.VECTOR_SEARCH, query, null, null,
+                    outcome, hits.size(), false));
+        }
+        return merge(com.MoleLaw_backend.law.util.LawSearchResultFusion.fuse(rankings, explicitUnits), before, ids, retained);
     }
 
     private RetrievalAttempt lawAttempt(EvidenceDecision.LawSearch condition, int page,
@@ -265,10 +276,9 @@ public class LegalEvidenceCollector {
     }
 
     private List<EvidenceItem> merge(List<LawSearchEvidence> hits,
-            List<EvidenceItem> previous, Map<String, String> ids) {
+            List<EvidenceItem> previous, Map<String, String> ids, Set<String> retained) {
         Map<String, EvidenceItem> merged = new LinkedHashMap<>();
         Map<String, String> observedVersions = new HashMap<>();
-        int bytes = 0;
         for (var hit : hits) {
             String version = hit.referenceId() + "|" + hit.modelRevision() + "|" + hit.configFingerprint() + "|" + hit.generation();
             String previousVersion = observedVersions.putIfAbsent(hit.externalId(), version);
@@ -277,7 +287,7 @@ public class LegalEvidenceCollector {
             }
             String content = hit.articleText();
             int size = content.getBytes(StandardCharsets.UTF_8).length;
-            if (size > 128 * 1024 || bytes + size > 1024 * 1024 || merged.size() >= 15) continue;
+            if (size > 128 * 1024) continue;
             String prefix = hit.externalId() + ":";
             if (!hit.unitId().startsWith(prefix)) throw new IllegalArgumentException("Invalid indexed source identity");
             var provenance = new EvidenceProvenance(hit.referenceId(), hit.externalId(), hit.lawId(),
@@ -287,7 +297,7 @@ public class LegalEvidenceCollector {
                     + "|" + hit.configFingerprint() + "|" + hit.generation() + "|" + digest(content);
             var item = new EvidenceItem(ids.computeIfAbsent(versionKey, ignored -> UUID.randomUUID().toString()),
                     "LAW_QDRANT", hit.unitId(), hit.title(), hit.sourceUrl(), content, provenance);
-            if (merged.putIfAbsent(item.sourceId(), item) == null) bytes += size;
+            merged.putIfAbsent(item.sourceId(), item);
         }
         for (var item : previous) {
             var provenance = item.provenance();
@@ -296,11 +306,21 @@ public class LegalEvidenceCollector {
                         + provenance.configFingerprint() + "|" + provenance.generation();
                 if (!observedVersions.get(provenance.mst()).equals(version)) continue;
             }
-            int size = item.content().getBytes(StandardCharsets.UTF_8).length;
-            if (merged.size() >= 15) break;
-            if (bytes + size <= 1024 * 1024 && merged.putIfAbsent(item.sourceId(), item) == null) bytes += size;
+            merged.putIfAbsent(item.sourceId(), item);
         }
-        return List.copyOf(merged.values());
+        var preferred = merged.values().stream().filter(item -> retained.contains(item.id())).limit(8).toList();
+        var ranked = new ArrayList<>(preferred);
+        merged.values().stream().filter(item -> !preferred.contains(item)).forEach(ranked::add);
+        List<EvidenceItem> bounded = new ArrayList<>();
+        int bytes = 0;
+        for (var item : ranked) {
+            int size = item.content().getBytes(StandardCharsets.UTF_8).length;
+            if (bounded.size() >= 15) break;
+            if (size > 128 * 1024 || bytes + size > 1024 * 1024) continue;
+            bounded.add(item);
+            bytes += size;
+        }
+        return List.copyOf(bounded);
     }
 
     private static boolean changed(List<EvidenceItem> before, List<EvidenceItem> after) {

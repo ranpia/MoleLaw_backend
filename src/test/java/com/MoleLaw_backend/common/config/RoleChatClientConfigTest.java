@@ -64,6 +64,7 @@ class RoleChatClientConfigTest {
             assertReasoning(captured.get(1), "gpt-5.4-mini", "medium", 16384);
             assertThat(captured.get(1).getSystemMessage().getText()).contains("공통 법률 상담 지침");
             assertThat(captured.get(2).getSystemMessage().getText()).isEqualTo(captured.get(1).getSystemMessage().getText());
+            assertReasoning(captured.get(2), "gpt-5.4-mini", "none", 16384);
             assertThat(captured.get(3).getInstructions()).hasSize(1);
             assertThat(application.getBean("baseAiChatClientBuilder"))
                     .isNotSameAs(application.getBean("baseAiChatClientBuilder"));

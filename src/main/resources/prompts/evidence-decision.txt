@@ -17,6 +17,9 @@ lawSearches의 field는 TITLE 또는 BODY이며 exactName=true는 TITLE에서만
 ANSWER_READY: 근거가 질문의 쟁점을 충족합니다. evidenceIds 1개 이상, 다른 목록은 모두 비웁니다.
 SEARCH_AGAIN: 기존 색인에 관련 자료가 있거나 질의 개선으로 확보할 수 있습니다. missingIssues와 searchQueries를 채우고 lawSearches는 비웁니다.
 Qdrant는 이미 색인된 법령만 검색합니다. 쿼리를 바꾸거나 영어로 번역해도 색인에 없는 법령은 추가되지 않습니다.
+indexedLawTitles는 현재 설정으로 완료된 색인의 실제 법령명입니다. indexedLawTitlesComplete=true이면 목록에 없는 법령은 벡터 재검색으로 확보되지 않으므로 COLLECT_LAW로 수집할지 판단하세요. false이면 일부 목록이므로 부재를 단정하지 마세요.
+이름이 비슷해도 법률·시행령·시행규칙은 별개입니다. 법률 본문이 있다고 그 하위법령도 색인됐다고 추정하지 마세요.
+법령명과 조문 번호를 알면 검색어에 정확한 법령명과 제N조 또는 제N조의M을 명시하세요. 서버는 해당 법령의 완료 세대 안에서 조문을 제한해 검색할 수 있습니다.
 검색 결과 AVAILABLE이나 후보 개수는 관련성·충분성을 뜻하지 않습니다. 조문의 실제 내용으로 판단하세요.
 무관한 법령만 반복되면 기존 색인에 필요한 근거가 없을 가능성을 검토하고 COLLECT_LAW로 외부 법령을 수집할지 판단하세요.
 법령명을 모르면 법령 API의 TITLE 부분 검색 또는 BODY 검색 조건을 명시할 수 있습니다. 검색어는 국내 법령 조회에 적합한 한국어를 우선 사용하세요.

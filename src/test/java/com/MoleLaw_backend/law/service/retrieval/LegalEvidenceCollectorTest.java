@@ -23,6 +23,22 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class LegalEvidenceCollectorTest {
+    @Test void multiQueryBatchKeepsTopArticlesFromAllThreeQueriesInsteadOfOnlyTheLastOne() {
+        when(questions.plan("질문")).thenReturn(new QuestionRetrievalPlan(QuestionRetrievalPlan.Type.LAW_EXPLANATION,
+                QuestionRetrievalPlan.ResponseScope.GENERAL_GUIDANCE, List.of("첫 쟁점", "두번째 쟁점", "세번째 쟁점"), List.of(), List.of()));
+        for (int group = 0; group < 3; group++) {
+            var hits = new java.util.ArrayList<LawSearchEvidence>();
+            for (int i = 1; i <= 15; i++) {
+                int article = group * 15 + i;
+                hits.add(new LawSearchEvidence("123:" + article, "00000000-0000-0000-0000-000000000001", "123", "1",
+                        "20260101", "법령 제" + article + "조", "조문", "전체 본문", "https://www.law.go.kr", .8,
+                        "revision", "a".repeat(64), "00000000-0000-0000-0000-000000000002"));
+            }
+            when(rag.searchTop15(any(), eq(List.of("첫 쟁점", "두번째 쟁점", "세번째 쟁점").get(group)))).thenReturn(hits);
+        }
+        when(planner.decide(anyString(), anyList(), any(), anyList(), anyInt())).thenAnswer(call -> ready(call.getArgument(1)));
+        assertThat(collector.collect("질문")).hasSize(15).extracting(EvidenceItem::sourceId).contains("123:1", "123:16", "123:31");
+    }
     private final LawRagSearchToolService rag = mock(LawRagSearchToolService.class);
     private final LawVectorizationToolService vectors = mock(LawVectorizationToolService.class);
     private final LegalApiToolService laws = mock(LegalApiToolService.class);
