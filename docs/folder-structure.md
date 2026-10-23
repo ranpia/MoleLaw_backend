@@ -51,3 +51,5 @@ controller는 HTTP, dto는 전달 계약, service는 기능 실행·흐름 조�
 
 세부 소유권·DTO·API 경로는 [구조·API 정리](package-api-organization.md)를 따른다.
 검증: 설정 통합 후 일반 테스트 283개(실패 0·선택 실행 1개 건너뜀)와 bootJar를 통과했다. SwaggerDisabledTest가 통합 YAML의 기존 옵션 보존과 운영 문서 비활성화를 확인한다.
+
+문서의 decisions는 사용자 선택·확정 기록, plans는 미완료 작업, archive는 과거 기준선입니다. 현재 폴더 규칙은 유지하며 문서 정리에서 Java 패키지나 관리 파일을 변경하지 않습니다.

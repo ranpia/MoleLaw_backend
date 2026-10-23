@@ -143,7 +143,7 @@ public class LegalApiToolService {
             context.reserve();
             JsonNode content;
             try {
-                content = law ? laws.getLawDetailByMst(id) : cases.detail(id);
+                content = law ? laws.getLawDetailByMst(id, candidate.effectiveDate()) : cases.detail(id);
             } catch (Exception failure) {
                 throw apiFailure(failure);
             }

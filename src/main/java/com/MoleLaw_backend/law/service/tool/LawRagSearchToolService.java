@@ -30,11 +30,15 @@ public class LawRagSearchToolService {
         }
         synchronized (context) {
             context.authorize();
+            context.configureVectorCallLimits(client.embeddingCallLimit(), client.indexingCallLimit());
             context.checkDeadline();
             if (!client.collectionAvailable(context::reserve, context::checkDeadline)) return List.of();
             var published = indexes.searchable(client.fingerprint());
             if (published.isEmpty()) return List.of();
-            var vector = client.embed(List.of(question.strip()), context::reserve, context::checkDeadline).get(0);
+            List<Double> vector;
+            try (var budget = context.embeddingTime(client.embeddingTimeout())) {
+                vector = client.embed(List.of(question.strip()), context::reserveEmbedding, context::checkDeadline).get(0);
+            }
             JsonNode groups = client.query(vector, List.copyOf(published.keySet()), context::reserve, context::checkDeadline);
             if (!groups.isArray() || groups.size() > 15) throw invalid();
             List<LawSearchEvidence> result = new ArrayList<>();

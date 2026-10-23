@@ -72,3 +72,5 @@ Refresh는 API DTO·OpenAPI schema·JSON 예시에서 제거했다. Path는 `/ap
 로컬 Redis는 영속화 없이 실행하므로 재시작 시 Refresh가 유실되고 재로그인이 필요하다. 운영은 전용 용량·noeviction·인증/TLS·영속화·복제·복구를 별도 준비한다. 오래된 Redis snapshot 복원이나 MySQL ID 초기화는 기존 세션과 사용자 매핑을 되살릴 수 있으므로 신뢰할 수 없는 상태는 인증 namespace와 키 전환으로 무효화한다. MySQL 복원만으로 Refresh를 복구하지 않는다.
 
 모니터링은 Redis Insight의 `molelaw:auth:refresh:v1:*` 패턴으로 hash·절대 만료·revoked·generation을 확인할 수 있다. 토큰 원문을 콘솔이나 Workbench에 넣지 않는다. Lua와 클라이언트 동작 근거는 [Redis 스크립팅](https://redis.io/docs/latest/develop/programmability/eval-intro/)과 [Spring Data Redis 스크립팅](https://docs.spring.io/spring-data/redis/reference/redis/scripting.html)을 따른다.
+
+운영 세션 관리·호출 제한·복구는 [작업 계획 P08](plans/README.md), 복구·보존 정책 선택은 [사용자 판단 D09](decisions/README.md)에 모읍니다.

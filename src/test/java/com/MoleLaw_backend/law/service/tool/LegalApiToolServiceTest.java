@@ -42,6 +42,19 @@ class LegalApiToolServiceTest {
     }
 
     @Test
+    void stagedEnforcementDetailReceivesTheListsExactEffectiveDate() throws Exception {
+        when(laws.searchPage("민법", 1, null, 1, 1))
+                .thenReturn(lawPage("11", 1, 1).replace("20260101", "20270309"));
+        when(laws.getLawDetailByMst("11", "20270309")).thenReturn(lawDetail("100", "20270309"));
+        var context = context(3);
+        tools.searchLaws(context, request(1));
+        var detail = tools.getLawDetail(context, "11");
+        assertThat(detail.effectiveDate()).isEqualTo("20270309");
+        verify(laws).getLawDetailByMst("11", "20270309");
+        verify(laws, never()).getLawDetailByMst("11");
+    }
+
+    @Test
     void lawPagesKeepMetadataAndDuplicateRequestsDoNotFetchAgain() {
         when(laws.searchPage("민법", 1, null, 1, 1)).thenReturn(lawPage("11", 1, 2));
         when(laws.searchPage("민법", 1, null, 2, 1)).thenReturn(lawPage("12", 2, 2));
@@ -86,7 +99,7 @@ class LegalApiToolServiceTest {
         tools.searchLaws(context, request(1));
         assertThat(tools.searchLaws(context, request(2)).status()).isEqualTo(Status.BUDGET_EXHAUSTED);
         expectReason(() -> tools.getLawDetail(context, "11"), BUDGET_EXHAUSTED);
-        verify(laws, never()).getLawDetailByMst(anyString());
+        verify(laws, never()).getLawDetailByMst(anyString(), nullable(String.class));
     }
 
     @Test
@@ -94,7 +107,7 @@ class LegalApiToolServiceTest {
         when(laws.searchPage("민법", 1, null, 1, 1)).thenReturn(lawPage("11", 1, 1));
         var context = context(3);
         tools.searchLaws(context, request(1));
-        when(laws.getLawDetailByMst("11")).thenAnswer(call -> {
+        when(laws.getLawDetailByMst("11", "20260101")).thenAnswer(call -> {
             clock.instant = clock.instant.plusSeconds(61);
             return lawDetail("100", "20260101");
         });
@@ -126,7 +139,7 @@ class LegalApiToolServiceTest {
         for (JsonNode detail : new JsonNode[]{lawDetail("999", "20260101"), lawDetail("100", "20270101")}) {
             var context = context(3);
             tools.searchLaws(context, request(1));
-            when(laws.getLawDetailByMst("11")).thenReturn(detail);
+            when(laws.getLawDetailByMst("11", "20260101")).thenReturn(detail);
             expectReason(() -> tools.getLawDetail(context, "11"), INVALID_RESPONSE);
         }
         verifyNoInteractions(sources);
@@ -135,7 +148,7 @@ class LegalApiToolServiceTest {
     @Test
     void lawDetailIsSavedOnceAndCachedReferenceIsReused() throws Exception {
         when(laws.searchPage("민법", 1, null, 1, 1)).thenReturn(lawPage("11", 1, 1));
-        when(laws.getLawDetailByMst("11")).thenReturn(lawDetail("100", "20260101"));
+        when(laws.getLawDetailByMst("11", "20260101")).thenReturn(lawDetail("100", "20260101"));
         var context = context(3);
         tools.searchLaws(context, request(1));
         var detail = tools.getLawDetail(context, "11");
@@ -143,7 +156,7 @@ class LegalApiToolServiceTest {
         assertThat(detail.articleCount()).isEqualTo(1);
         assertThat(detail.contentAvailable()).isTrue();
         assertThat(tools.getLawDetail(context, "11")).isSameAs(detail);
-        verify(laws, times(1)).getLawDetailByMst("11");
+        verify(laws, times(1)).getLawDetailByMst("11", "20260101");
         verify(sources, times(1)).save(eq("LAW"), eq("11"), eq("100"), eq("20260101"), anyString(), any());
         assertThat(context.callsUsed()).isEqualTo(2);
     }
@@ -219,7 +232,7 @@ class LegalApiToolServiceTest {
         var second = tools.searchLaws(context, new SearchRequest("민법", 1, null, 2, 1, filters));
         assertThat(second.status()).isEqualTo(Status.AVAILABLE);
         assertThat(second.candidates()).extracting(Candidate::title).containsExactly("민법");
-        verify(laws, never()).getLawDetailByMst("11");
+        verify(laws, never()).getLawDetailByMst("11", "20260101");
     }
 
     @Test

@@ -1,0 +1,6 @@
+simulation: AI law article search regression
+routing: path
+mocks:
+  - name: AI law article search contract
+    routeKey: DRF
+    path: ../mocks/law-ai-search/config.yaml

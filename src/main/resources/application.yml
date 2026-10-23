@@ -34,7 +34,6 @@ spring:
       chat:
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-4}
-          temperature: 0.5
       embedding:
         options:
           model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
@@ -106,11 +105,45 @@ jwt:
   access-ttl: 5m
 
 app:
+  law-retrieval:
+    backend: ${APP_LAW_RETRIEVAL_BACKEND:QDRANT}
+  law-ai-search:
+    base-url: ${APP_LAW_AI_SEARCH_BASE_URL:https://www.law.go.kr/DRF}
+  ai:
+    read-timeout-ms: ${APP_AI_READ_TIMEOUT_MS:120000}
+    read:
+      model: ${APP_AI_READ_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_READ_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_READ_MAX_COMPLETION_TOKENS:4096}
+    question:
+      model: ${APP_AI_QUESTION_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_QUESTION_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_QUESTION_MAX_COMPLETION_TOKENS:4096}
+    candidate:
+      model: ${APP_AI_CANDIDATE_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_CANDIDATE_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_CANDIDATE_MAX_COMPLETION_TOKENS:8192}
+    evidence:
+      catalog-max-input-tokens: ${APP_AI_EVIDENCE_CATALOG_MAX_INPUT_TOKENS:4000}
+      body-max-input-tokens: ${APP_AI_EVIDENCE_BODY_MAX_INPUT_TOKENS:12000}
+      decision-max-input-tokens: ${APP_AI_EVIDENCE_DECISION_MAX_INPUT_TOKENS:20000}
+      model: ${APP_AI_EVIDENCE_MODEL:gpt-5.4}
+      reasoning-effort: ${APP_AI_EVIDENCE_REASONING_EFFORT:medium}
+      max-completion-tokens: ${APP_AI_EVIDENCE_MAX_COMPLETION_TOKENS:12288}
+      max-input-tokens: ${APP_AI_EVIDENCE_MAX_INPUT_TOKENS:2500}
+    answer:
+      model: ${APP_AI_ANSWER_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_ANSWER_REASONING_EFFORT:medium}
+      max-completion-tokens: ${APP_AI_ANSWER_MAX_COMPLETION_TOKENS:16384}
   chat:
     encryption:
       key: ${CHAT_ENCRYPTION_KEY:}
       key-version: ${CHAT_ENCRYPTION_KEY_VERSION:v1}
   law-vector:
+    embedding-max-calls: ${APP_LAW_VECTOR_EMBEDDING_MAX_CALLS:1024}
+    indexing-max-calls: ${APP_LAW_VECTOR_INDEXING_MAX_CALLS:1024}
+    embedding-timeout-seconds: ${APP_LAW_VECTOR_EMBEDDING_TIMEOUT_SECONDS:900}
+    embedding-read-timeout-millis: ${APP_LAW_VECTOR_EMBEDDING_READ_TIMEOUT_MILLIS:120000}
     enabled: ${APP_LAW_VECTOR_ENABLED:false}
     embedding-base-url: ${APP_LAW_VECTOR_EMBEDDING_BASE_URL:http://localhost:11436}
     qdrant-base-url: ${APP_LAW_VECTOR_QDRANT_BASE_URL:http://localhost:6333}
