@@ -25,6 +25,6 @@ LegalEvidenceCollector가 충분성 판단에서 선택한 법령 조문을 Evid
 
 ## 검증
 
-`.\gradlew.bat test`는 최초 근거 복사·인용 허용/거절·소유권·해시·Advisor 주입과 H2의 실제 저장·삭제·트랜잭션을 검증합니다. `.\gradlew.bat mysqlIntegrationTest`는 격리 MySQL에서 V1→V2와 JPA 매핑을 검증합니다. 모델 API는 모킹하며 실제 법률 답변 품질 검증은 별도입니다.
+`.\gradlew.bat test`는 최초 근거 복사·인용 허용/거절·소유권·해시·Advisor 주입과 H2의 실제 저장·삭제·트랜잭션을 검증합니다. `.\gradlew.bat mysqlIntegrationTest`는 격리 MySQL에서 V1~V5와 JPA 매핑·판례 참조 보존·삭제를 검증합니다. 모델 API는 모킹하며 실제 법률 답변 품질 검증은 별도입니다.
 
 AI Search 경로는 LAW_AI_SEARCH 조문 식별자·출처를 검증해 같은 방 스냅샷에 고정할 수 있습니다. 실 API 정상 응답은 미검증이며 판례 자동 본문 수집·채택과는 별개입니다. [AI Search](ai-search-comparison.md)·[사용자 판단 D06](decisions/README.md)을 참고하세요.
