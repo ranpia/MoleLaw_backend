@@ -49,7 +49,7 @@ class EvidenceDecisionLiveTest {
         var model = OpenAiChatModel.builder().openAiApi(api)
                 .defaultOptions(OpenAiChatOptions.builder().model(modelName).build())
                 .retryTemplate(RetryTemplate.builder().maxAttempts(1).noBackoff().build()).build();
-        var client = new EvidenceChatClientConfig().evidenceCollectionChatClient(ChatClient.builder(model), 0.1, 1024,
+        var client = new EvidenceChatClientConfig().evidenceCollectionChatClient(ChatClient.builder(model), modelName, "medium", 12288,
                 new ClassPathResource("prompts/evidence-decision.txt"));
         String format = new BeanOutputConverter<>(EvidenceDecision.class).getFormat();
         var scenarios = List.of(

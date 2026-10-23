@@ -1,68 +1,51 @@
-# 역할별 ChatClient 설정
+# 역할별 ChatClient와 모델
 
-## 구성
+기준일: 2026-10-23. 모델 설정은 반영했으며 실제 모델 품질·계정 접근 검증은 [P01·P02](plans/README.md)에 남아 있다.
 
-`AiConfig.baseAiChatClientBuilder`는 기존 `ChatModel`을 공유하는 prototype Builder입니다. 역할별 설정은 받은 Builder를 `clone()`해 구성합니다. 생성 시 모델 API를 호출하지 않습니다.
+## 역할과 옵션
 
-| Bean | 설정 클래스 | 역할 |
-| --- | --- | --- |
-| `evidenceCollectionChatClient` | `law.config.EvidenceChatClientConfig` | 쟁점·근거 충분성·추가 검색 조건 검토 |
-| `legalAnswerChatClient` | `chat.config.AnswerChatClientConfig` | 최초 답변·대화 메모리 없음 |
-| `followUpAnswerChatClient` | 같은 Config에서 최초 답변 Client를 복제 | 후속 상담·MessageChatMemoryAdvisor |
-| `chatClient` (`@Primary`) | `common.ai.config.AiConfig` | 키워드 추출의 공통 구조화 호출 |
+| Bean | 기본 모델 | effort | 완료 토큰 한도 |
+| --- | --- | --- | ---: |
+| questionPlanningChatClient | gpt-5.4-mini | low | 4096 |
+| lawCandidateChatClient | gpt-5.4-mini | low | 8192 |
+| evidenceReadChatClient | gpt-5.4-mini | low | 4096 | gpt-5.4 | medium | 12288 |
+| legalAnswerChatClient | gpt-5.4-mini | medium | 16384 |
+| followUpAnswerChatClient | 최초 답변 Client 설정 복제 | medium | 16384 |
 
-서비스에는 역할에 맞는 Bean을 `@Qualifier`로 주입합니다. 역할 설정과 프롬프트는 각 도메인의 Config에서 관리합니다. 답변 Client는 `prompts/legal-system.txt`와 공통 인용 지시를 사용합니다. 공통 Builder에는 업무 프롬프트·대화 메모리·수집 Tool을 등록하지 않습니다.
+반복되는 분류·법령명 평가와 근거 기반 문장 생성은 mini, 수집 전환·답변 가능 여부 판단은 상위 모델에 배정했다. 이는 현재 배정 이유이며 비교 평가로 입증한 성능 우위가 아니다. 키워드 추출의 기존 Primary chatClient는 OPENAI_CHAT_MODEL을 유지한다.
 
-## 옵션
+공통 prototype Builder는 같은 ChatModel·API 연결·인증을 공유한다. EvidenceChatClientConfig와 AnswerChatClientConfig가 Builder를 clone하고 역할별 OpenAiChatOptions에서 모델·추론 수준을 재정의한다. Bean 생성 시 외부 API를 호출하지 않는다.
 
-```yaml
-app:
-  ai:
-    evidence:
-      temperature: 0.1
-      max-tokens: 2048
-    answer:
-      temperature: 0.3
-      max-tokens: 4096
-```
+## 환경변수
 
-모델 이름·접속·인증 설정은 기존 ChatModel 설정을 공유합니다. temperature와 max-tokens는 Client 기본값이며 실제 호출에서 재정의할 수 있습니다. 모델별 지원 옵션은 실제 제공자 계약에 맞춰야 합니다. temperature는 0~2, 출력 토큰은 양수로 검증합니다.
+.env의 APP_AI_{QUESTION,CANDIDATE,READ,EVIDENCE,ANSWER}_MODEL, APP_AI_*_REASONING_EFFORT, APP_AI_*_MAX_COMPLETION_TOKENS로 값을 바꾼다. 추론 수준은 low/medium/high만 허용한다. 실제 키와 전체 환경변수 예제는 [.env.example](../.env.example)을 따른다.
 
-## 연결 범위와 다음 작업
+완료 토큰 한도는 내부 추론과 실제 출력의 합계다. 예약 비용·고정 사용량·요청 전체 예산이 아니다. APP_AI_EVIDENCE_MAX_INPUT_TOKENS=2500은 질문·검색 이력 등 판단 기본 JSON의 상한이다. 후보 목록·본문·결합 입력은 [본문 읽기](evidence-reading.md)의 별도 예산을 적용한다. usage 기반 비용 정산은 미구현이다.
 
-`LegalAnswerService`가 최초·후속 답변의 공개 흐름을 구분하고 모델 호출·인용 검증은 공통 private 메서드로 처리합니다. 후속 Client에만 `MessageChatMemoryAdvisor`가 연결됩니다. 키워드 추출은 공통 구조화 호출을 사용합니다. 최초·후속 모두 방별 최초 근거 스냅샷을 사용합니다. [상담방 근거·기존 방 처리·검증 한계](room-evidence.md)를 따릅니다. 구조화된 근거 수집 판단과 Tool 실행·수집 반복·종료 제어는 후속 구현입니다.
+추론 요청에는 reasoning_effort와 max_completion_tokens를 사용한다. 기존 역할별 temperature·max-tokens는 사용하지 않으며 Spring AI 1.0.9가 암묵적으로 초기화하는 전역 temperature=0.7도 모델 생성 전에 제거한다. JSON 스키마는 프롬프트와 서버 검증 방식이며 API Structured Outputs를 활성화한 것은 아니다.
 
-| 클래스 | 책임 |
-| --- | --- |
-| `law.service.LegalEvidenceCollector` | 기존 상위 3청크 검색·판례 목록 조회·불변 근거 복사 |
-| `chat.service.ChatService` | API 흐름 조정·방 소유권 확인 |
-| `chat.service.answer.LegalAnswerService` | 최초 근거 수집/후속 근거 복원 → 역할별 Client 호출 → 인용 검증 |
-| `chat.service.ChatTurnService` | 최초 방·근거·메시지 또는 후속 USER/BOT의 원자적 저장 |
-| `EvidencePromptBuilder` | 최초·후속의 근거 및 질문 프롬프트 구성 |
-| `EvidenceRenderer` | 서버 출처 마크다운 생성·제목 이스케이프·URL 검증 |
-| `PreparedLegalAnswer` | 답변과 사용한 근거를 함께 전달하는 불변 내부 결과 |
+APP_AI_READ_TIMEOUT_MS 기본값은 120000이다. 수집기의 전체 시간·호출 한도는 그대로이며 호출 경계에서 확인한다. 진행 중인 모델 HTTP를 전체 deadline에 맞춰 즉시 취소하는 기능은 없다.
 
-기존 `FinalAnswer`·`GptService`는 제거했습니다. 최초 답변의 미사용 `keywordInfo` 인자와 테스트 답변 API의 불필요한 키워드 모델 호출도 제거했습니다. 방 제목을 만드는 최초 상담의 키워드 추출은 유지합니다. 현재 실제 검색은 기존 MySQL 경로이며 독립 Qdrant Tool 연결·수집 반복을 완료한 것은 아닙니다.
+## Advisor·저장·권한
 
-중복된 최초·후속 답변 서비스 2개는 `LegalAnswerService`로, 저장 서비스 2개는 `ChatTurnService`로 통합했습니다. `ChatService`의 직접 의존성은 7개에서 5개로 줄였습니다. 조회·후속 질문·삭제의 소유권 확인은 공통 메서드로 정리했습니다. 모델 호출은 트랜잭션 밖에서 수행하고 저장 공개 메서드에만 `@Transactional`을 적용합니다. 스냅샷·메모리의 자체 권한 검증과 순수 포맷팅·인용 검증 책임은 유지합니다.
+최초 답변에는 대화 메모리를 붙이지 않는다. 후속 Client만 MessageChatMemoryAdvisor를 사용하고 서버가 확인한 userId:roomId를 대화 ID로 전달한다. PersistedChatMemory도 소유권을 재검증한다.
 
-같은 정리에서 참조가 없던 `FinalAnswerRequest`, `PrecedentSearchResponse`, `ChatRoomRequest`, 저장소 조회 메서드 5개, 상속된 `findAll` 중복 선언, 미사용 `MinistryCodeMapper.contains`를 제거했습니다. `AiChatService.generateText`, `ChatService`의 EntityManager 주입과 RAG Tool의 미사용 설정 인자도 제거했습니다. API 경로와 응답 JSON 필드는 유지합니다.
+DB의 최초 USER/BOT과 최근 기록을 기본 최대 20개 복원하며 INFO는 제외한다. 메시지 수 제한은 토큰 예산을 보장하지 않는다. 현재 질문은 모델 입력에 한 번만 넣고, Advisor의 add/clear가 원본 DB 기록을 쓰거나 지우지 않는다.
 
-근거 수집 Client와 공통 Client에는 대화 Advisor를 붙이지 않습니다. 답변 Client에는 수집 Tool을 등록하지 않습니다.
+최초·후속 모두 서버의 고정 근거를 별도로 전달한다. LegalAnswerService가 호출·인용 검증을, ChatTurnService가 성공 턴 저장을 담당한다. 최초는 방·근거·메시지, 후속은 USER/BOT을 원자적으로 저장한다. 모델 실패·빈 출력·잘못된 인용은 성공 턴으로 확정하지 않는다.
 
-## 대화 Advisor 계약
+## 검색·판단 Client
 
-- `PersistedChatMemory`가 기존 MySQL `message` 테이블을 읽고 내용을 복호화합니다. 별도 평문 메모리 테이블이나 프로세스 내 대화 캐시는 만들지 않습니다.
-- 서버가 인증 사용자·방 ID로 `userId:roomId`를 구성해 `ChatMemory.CONVERSATION_ID`로 전달합니다. 기본 conversation ID에 의존하지 않으며 누락된 ID와 다른 사용자의 방은 거절합니다.
-- 메모리 조회 시에도 소유권을 다시 검증합니다. USER/BOT은 각각 user/assistant 역할로 전달하고 INFO는 제외합니다. 최초 질문·첫 답변과 최근 기록을 합쳐 기본 최대 20개를 보냅니다(`app.ai.memory.max-messages`, 4~100). 이는 메시지 수 제한이며 토큰 예산 보장은 아닙니다.
-- Advisor의 `add`·`clear`는 의도적으로 무동작입니다. 기록 저장·상담방 삭제는 서버 서비스가 담당합니다. 모델 호출 전에 현재 질문을 DB에 저장하지 않으므로 메모리와 현재 질문이 중복되지 않습니다.
-- `ChatTurnService.saveFollowUpTurn`이 인용 검증을 통과한 USER/BOT을 한 트랜잭션으로 저장합니다. 모델 실패·빈 응답·인용 오류는 저장하지 않습니다. `saveInitialTurn`은 방·근거·USER/BOT/INFO를 함께 저장합니다.
-- 현재 메모리는 방 기록을 읽은 뒤 전송 창을 제한합니다. DB 페이지 조회 최적화, 토큰별 창 제어, 동시 요청 직렬화·중복 방지는 별도 과제입니다. 이전 답변은 대화 맥락이며 근거는 별도의 방별 스냅샷에서 복원해 전달합니다.
+분류·법령 후보 리랭크·충분성 판단에는 대화 Advisor와 자동 실행 Tool을 붙이지 않는다. 서버가 검증한 모델 제안을 실행한다. 법령 후보는 페이지별 전원 평가 후 전체 페이지의 상위 후보를 선택한다. 상세 기준은 [질문 라우팅](question-routing.md), 상태 계약은 [판단 계약](evidence-decision.md)에서 관리한다.
 
-## 검증
+자동 모델 승격·병렬 토론·영속 작업·SSE는 구현하지 않았다. 후속 상담의 새 검색 금지도 유지한다.
 
-`RoleChatClientConfigTest`는 실제 ChatClient와 모킹한 ChatModel로 역할 프롬프트·옵션·prototype 격리, 기존 Primary 주입, 설정 오류 시 조기 실패를 확인합니다. 실제 모델 답변 품질은 검증하지 않습니다. 실행: `.\gradlew.bat test`.
+## 검증과 출처
 
-`LegalEvidenceCollectorTest`, `LegalAnswerInitialTest`, `LegalAnswerFollowUpTest`와 포맷팅 테스트는 근거 복사·판례 실패·인용 검증·실패 응답과 역할별 Client 격리를 확인합니다. `RoomEvidenceIntegrationTest`는 최초/후속 저장·실패 시 롤백을 실제 H2에서 검증합니다. `PersistedChatMemoryTest`, `ChatServiceAdvisorTest`는 소유권·기록 창·성공 후 저장을 검증합니다. 외부 모델 API는 모킹합니다. [Spring AI 대화 메모리 계약](https://docs.spring.io/spring-ai/reference/1.0/api/chat-memory.html)을 따릅니다.
+RoleChatClientConfigTest가 모델·effort·완료 토큰 격리, 기본 temperature 제거, 설정 오류와 Advisor 경계를 검증한다. 실제 모델의 옵션 수락·usage·정확도는 별도다. [검증 현황](validation-status.md)을 따른다.
 
-Builder API는 [Spring AI 1.0.9 ChatClient 문서](https://docs.spring.io/spring-ai/reference/1.0/api/chatclient.html)를 따릅니다.
+공식 사양: [GPT-5.4 mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini), [GPT-5.4](https://developers.openai.com/api/docs/models/gpt-5.4). 구현은 저장소에 고정한 Spring AI 1.0.9 API를 사용한다.
+
+## 읽은 근거로 충분성 판단
+
+최초 충분성 판단은 후보 전체 목록→본문 읽기 선택→MySQL 원문 확인→실제 읽은 본문 입력으로 변경했다. 기존 2500토큰은 판단 기본 JSON의 상한이며 본문을 그 안에서 한 조문만 남기는 방식은 사용하지 않는다. 후보 목록 4000·본문 누적 12000·결합 판단 입력 20000토큰의 추정 상한과 최대 2회 읽기 선택을 적용한다. [현재 계약과 제한](evidence-reading.md)을 따른다.

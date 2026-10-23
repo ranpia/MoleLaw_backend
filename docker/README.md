@@ -65,7 +65,7 @@ Spring은 IDE 또는 Gradle로 실행하고, 루트 `.env`에 다음 연결 정�
 | `REDIS_PASSWORD` | Compose의 `REDIS_PASSWORD` |
 | `REDIS_SSL_ENABLED` | `false` |
 
-빈 MySQL DB는 애플리케이션 시작 시 Flyway V1이 초기화하고 기본/mysql·local 모두 JPA `validate`로 검사한다. 기존 데이터는 이관하지 않는다. 이력 없는 비어 있지 않은 DB는 자동 baseline 없이 거절한다. 수동 `001-legal-source.sql`과 Hibernate `update`를 함께 사용하지 않는다. `JPA_DDL_AUTO`를 설정했다면 `validate`로 맞춘다. [MySQL 실행 가이드](../docs/mysql-setup.md)를 따른다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
+빈 MySQL DB는 애플리케이션 시작 시 Flyway V1~V4가 순서대로 초기화하고 기본/mysql·local 모두 JPA `validate`로 검사한다. 기존 데이터는 이관하지 않는다. 이력 없는 비어 있지 않은 DB는 자동 baseline 없이 거절한다. 수동 `001-legal-source.sql`과 Hibernate `update`를 함께 사용하지 않는다. `JPA_DDL_AUTO`를 설정했다면 `validate`로 맞춘다. [MySQL 실행 가이드](../docs/mysql-setup.md)를 따른다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
 
 다른 PC에서 연결할 때는 DB PC의 LAN IP를 `DB_BIND_ADDRESS`와 애플리케이션 호스트에 설정하고 방화벽에서 개발 PC의 접근만 허용한다. MySQL·Qdrant 볼륨은 Compose 파일을 복사해도 이동하지 않는다. 데이터 이동에는 별도 백업·복원이 필요하다.
 
@@ -92,3 +92,9 @@ docker build -f docker/app.Dockerfile -t molelaw-app:local .
 이미지는 프로젝트와 동일한 Java 17 JRE를 사용한다. Gradle 버전이나 프로젝트 이름을 변경해 JAR 이름이 달라지면 `--build-arg JAR_FILE=build/libs/<파일명>.jar`를 지정한다. 기본 파일명은 `MoleLaw_backend-0.0.1-SNAPSHOT.jar`다. 실행 환경변수는 이미지에 포함하지 않고 배포 시 `--env-file`로 전달한다. 컨테이너에서 `127.0.0.1`은 컨테이너 자신이므로 DB 호스트는 배포 환경에 맞춰 설정한다.
 
 수동 배포 workflow는 [deploy.yml](../.github/workflows/deploy.yml)에서 같은 Dockerfile을 사용한다. 운영에는 `local`·`test` 프로필을 지정하지 않는다.
+
+동시 상태 조회와 제한된 CPU 추론 대기열을 사용하는 [KURE 서비스](kure/README.md)는 기존 실험 서버와 분리한 11437 포트로 실행한다.
+
+## 문서와 정책 구분
+
+현재 서비스 모델·추론 설정은 [역할별 Client](../docs/role-chat-clients.md), 남은 운영 작업은 [작업 계획 P08](../docs/plans/README.md), 비용·보존·복구 정책은 [사용자 판단](../docs/decisions/README.md)에 둔다. Compose 실행 성공은 실제 모델 품질·배포 준비 완료와 다르다. 서비스용 컬렉션과 evaluation 실험 컬렉션은 별도로 관리한다.

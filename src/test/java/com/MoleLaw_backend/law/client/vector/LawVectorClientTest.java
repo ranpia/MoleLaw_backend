@@ -67,6 +67,44 @@ class LawVectorClientTest {
     }
 
     @Test
+    void readBackChecksExactCountIdsUnitAndSourceIdentityBeforePublication() {
+        String id = "11111111-1111-1111-1111-111111111111";
+        var expected = Map.<String, Object>of("generation", "test-generation", "content_hash", "expected-hash");
+        responder = request -> request.path().endsWith("/count") ? json(Map.of("result", Map.of("count", 1)))
+                : json(Map.of("result", List.of(Map.of("id", id, "vector", List.of(0.6, 0.8), "payload", Map.of(
+                        "generation", "test-generation", "content_hash", "expected-hash", "unit_id", "123:1")))));
+        assertTrue(client.verifyIndex(Map.of(id, "123:1"), expected, before::incrementAndGet, after::incrementAndGet));
+        assertTrue(requests.get(0).body().path("exact").asBoolean());
+        assertEquals("generation", requests.get(0).body().path("filter").path("must").get(0).path("key").asText());
+        assertTrue(requests.get(1).body().path("with_vector").asBoolean());
+        assertEquals(2, before.get());
+    }
+
+    @Test
+    void readBackRejectsMissingCountOrWrongPayloadRatherThanTrustingSuccessfulWrites() {
+        String id = "11111111-1111-1111-1111-111111111111";
+        var expected = Map.<String, Object>of("generation", "expected");
+        responder = request -> json(Map.of("result", Map.of("count", 0)));
+        assertFalse(client.verifyIndex(Map.of(id, "123:1"), expected, before::incrementAndGet, after::incrementAndGet));
+        assertEquals(1, requests.size());
+        responder = request -> request.path().endsWith("/count") ? json(Map.of("result", Map.of("count", 1)))
+                : json(Map.of("result", List.of(Map.of("id", id, "vector", List.of(0.6, 0.8), "payload", Map.of("generation", "different", "unit_id", "123:1")))));
+        assertFalse(client.verifyIndex(Map.of(id, "123:1"), expected, before::incrementAndGet, after::incrementAndGet));
+    }
+
+    @Test
+    void readBackRejectsDeletedOrWrongDimensionalVectorsEvenWhenPayloadAndCountMatch() {
+        String id = "11111111-1111-1111-1111-111111111111";
+        var expected = Map.<String, Object>of("generation", "expected");
+        for (var vector : List.of(List.of(), List.of(1.0), List.of(0.0, 0.0))) {
+            responder = request -> request.path().endsWith("/count") ? json(Map.of("result", Map.of("count", 1)))
+                    : json(Map.of("result", List.of(Map.of("id", id, "vector", vector,
+                            "payload", Map.of("generation", "expected", "unit_id", "123:1")))));
+            assertFalse(client.verifyIndex(Map.of(id, "123:1"), expected, before::incrementAndGet, after::incrementAndGet));
+        }
+    }
+
+    @Test
     void missingRetrievalCollectionNeverCreatesIt() {
         responder = request -> new Response(404, "{\"status\":{\"error\":\"Not found\"}}");
         assertFalse(client.collectionAvailable(before::incrementAndGet, after::incrementAndGet));
@@ -93,6 +131,24 @@ class LawVectorClientTest {
         assertEquals(0, embed.body().path("options").path("num_gpu").asInt(-1));
         assertEquals(6, embed.body().path("options").path("num_thread").asInt());
         assertNull(embed.apiKey(), "Qdrant credentials must not reach the embedding server");
+    }
+
+    @Test
+    void indexingSessionChecksRevisionOnceAndRechecksAfterAFailedBatch() {
+        responder = request -> request.path().equals("/api/tags") ? tags(properties.getRevision())
+                : json(Map.of("model", properties.getModel(), "embeddings", List.of(List.of(0.6, 0.8))));
+        var session = client.newEmbeddingSession();
+        session.embed(List.of("1"), before::incrementAndGet, after::incrementAndGet);
+        session.embed(List.of("2"), before::incrementAndGet, after::incrementAndGet);
+        assertEquals(1, requests.stream().filter(r -> r.path().equals("/api/tags")).count());
+        assertEquals(3, before.get());
+        responder = request -> json(Map.of("model", properties.getModel(), "embeddings", List.of(List.of(1.0))));
+        assertInvalid(() -> session.embed(List.of("bad"), before::incrementAndGet, after::incrementAndGet));
+        responder = request -> tags("changed-revision");
+        assertInvalid(() -> session.embed(List.of("retry"), before::incrementAndGet, after::incrementAndGet));
+        assertEquals("/api/tags", requests.get(requests.size() - 1).path());
+        assertInvalid(() -> client.newEmbeddingSession().embed(List.of("new-law"), before::incrementAndGet, after::incrementAndGet));
+        assertEquals("/api/tags", requests.get(requests.size() - 1).path());
     }
 
     @Test

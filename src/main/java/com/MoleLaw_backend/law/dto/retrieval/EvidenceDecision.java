@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.MoleLaw_backend.law.exception.EvidenceDecisionValidationException;
+import com.MoleLaw_backend.law.exception.EvidenceDecisionValidationException.Code;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -43,13 +45,13 @@ public record EvidenceDecision(Action action, String reason, List<String> missin
             case COLLECT_LAW -> !missingIssues.isEmpty() && !lawSearches.isEmpty() && searchQueries.isEmpty();
             case INSUFFICIENT -> !missingIssues.isEmpty() && searchQueries.isEmpty() && lawSearches.isEmpty();
         };
-        if (!valid) throw invalid();
+        if (!valid) throw new EvidenceDecisionValidationException(Code.ACTION_CONTRACT);
     }
 
     /** The caller supplies only IDs actually shown to the model in this authorized execution. */
     public void validateAgainst(Collection<String> suppliedEvidenceIds) {
         if (suppliedEvidenceIds == null || !new HashSet<>(suppliedEvidenceIds).containsAll(evidenceIds)) {
-            throw invalid();
+            throw new EvidenceDecisionValidationException(Code.UNKNOWN_EVIDENCE_ID);
         }
     }
 
@@ -70,7 +72,12 @@ public record EvidenceDecision(Action action, String reason, List<String> missin
             return decision;
         } catch (JsonProcessingException failure) {
             // Never propagate model output in errors or logs.
-            throw invalid();
+            Throwable cause = failure;
+            while (cause != null) {
+                if (cause instanceof EvidenceDecisionValidationException validation) throw validation;
+                cause = cause.getCause();
+            }
+            throw new EvidenceDecisionValidationException(Code.JSON_CONTRACT);
         }
     }
 
@@ -87,6 +94,6 @@ public record EvidenceDecision(Action action, String reason, List<String> missin
     }
 
     private static IllegalArgumentException invalid() {
-        return new IllegalArgumentException("Invalid evidence decision");
+        return new EvidenceDecisionValidationException(Code.FIELD_CONSTRAINT);
     }
 }

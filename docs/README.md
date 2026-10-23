@@ -1,38 +1,40 @@
 # 문서 안내
 
-- [Access stateless 구현](stateless-access.md): 버전 3·5분 수명·Redis 장애와 폐기 계약
+기준일: **2026-10-23**, `dev` 작업 트리. 미커밋 구현을 포함하므로 `main` 반영·배포 완료와 다르다.
 
-현재 코드와 실행 방법은 [프로젝트 README](../README.md), 로컬 컨테이너와 모델 비교 환경은 [Docker 가이드](../docker/README.md)를 따른다. 아래 계획 문서는 구현 완료를 의미하지 않는다.
+## 먼저 읽을 문서
 
 | 목적 | 문서 |
 | --- | --- |
-| 최상위·소스·테스트·설정·과거 자료의 폴더 기준 | [폴더 구조 검토](folder-structure.md) |
-| 패키지·DTO 소유권·엔드포인트 변경 대응표 | [구조·API 정리](package-api-organization.md) |
-| 사용자·상담·법령 개편 적용 결과와 남은 작업 | [스키마 개편 현황](schema-rebuild-status.md) |
-| 상담 저장 한도·AES-GCM·INFO 재구성·정렬 | [상담 저장 계약](chat-storage.md) |
-| 완료된 구현·실험 결과·미완료·다음 LLM 계획 | [개발 완료 현황](development-status.md) |
-| 패키지 소유권·클래스 배치·구조 변경 | [도메인 구조 스킬](../.agents/skills/domain-structure/SKILL.md) |
-| 전체 방향·구현 순서·미결정 사항 | [백엔드 재구축 계획](backend-rebuild-plan.md) |
-| 구현된 법령 Tool·스키마·후속 작업 | [개발 인수인계](development-handoff.md) |
-| 법령·판례 Tool 입력·반환·오류 계약 | [법령 API Tool](legal-api-tools.md) |
-| 법령 원문 벡터화·Qdrant 상위 15개 조문 검색 | [법령 벡터 Tool](law-vector-tools.md) |
-| Spring AI ETL 단계·수동 재색인·local 테스트 API | [법령 ETL 로컬 검증](law-etl-local.md) |
-| 근거 수집·답변 생성 Client별 Builder 설정 | [역할별 ChatClient](role-chat-clients.md) |
-| 상담방 최초 근거 고정·후속 인용 허용 범위 | [상담방 근거 스냅샷](room-evidence.md) |
-| 수집 LLM의 판단 상태·누락 쟁점·검색 조건 | [근거 판단 계약](evidence-decision.md) |
-| 기존 채팅 API·법령 수집 회귀 기준 | [동작 기준선](backend-baseline.md) |
-| 현재 인증 구현·CSRF·Access 5분 stateless/Redis Refresh 목표 | [인증·보안 계획](plans/auth-security.md) |
-| 구현된 Refresh 회전·쿠키/JSON·재사용·폐기·Redis 통합 검증 | [Refresh 회전 구현](refresh-rotation.md) |
-| MySQL 마이그레이션·업무/ETL 스키마 | [MySQL 계획](plans/mysql-schema.md) |
-| 사용자·방·메시지·법령의 기존 컬럼 유지/변경/삭제 검토 | [속성 재검토](schema-attribute-review.md) |
-| 사용자 DTO·서비스 이중 검증·로컬/OAuth 계정 모델·초기 DB 정책 | [사용자 계정·입력 검증](user-account-validation.md) |
-| 빈 MySQL 초기화·통합 테스트 | [MySQL 실행 가이드](mysql-setup.md) |
-| 개선 전 인증 위험과 설계 근거 | [JWT 보안 검토](jwt-security-review.md) |
-| 수집·청킹·벡터 검색·근거·Advisor | [RAG·ETL 계획](plans/rag-etl.md) |
-| 근거 충분성 판단·누락 법령 수집·벡터화·재검색 | [법령 추가 수집·재검색 계획](plans/adaptive-law-retrieval.md) |
-| 역할별 에이전트와 모델 평가 | [오케스트레이션·모델 계획](plans/orchestration-models.md) |
-| 단계별 완료 조건·평가·복구 | [구현·검증 계획](plans/delivery-validation.md) |
-| 미확정 보조 검색 후보 | [SerpApi 검토](plans/search-fallback.md) |
-| 자동 초기 스키마 | [Flyway V1](../src/main/resources/db/migration/V1__initial_schema.sql) |
+| 프로젝트 소개·로컬 실행 | [프로젝트 README](../README.md), [Docker](../docker/README.md) |
+| 현재 구현과 제한 | [개발 현황](development-status.md) |
+| 사용자가 정할 항목 | [사용자 판단 대기](decisions/README.md) |
+| 이미 확정한 방향 | [확정 결정](decisions/confirmed.md) |
+| 앞으로 할 일과 순서 | [작업 계획](plans/README.md) |
+| 검증 완료·미검증 구분 | [검증 현황](validation-status.md) |
+| 담당자 인수인계 | [인수인계](development-handoff.md) |
 
-문서에는 현재 구현, 목표, 과거 검증 결과를 구분해서 기록한다. 실행 방법은 루트·Docker README에서, 설계 결정은 해당 주제 문서에서 관리한다. 오래된 패키지 이미지와 중복 계획 보관본은 제거했으며 이전 내용은 Git 이력에서 확인할 수 있다.
+## 현재 동작·운영 계약
+
+| 영역 | 문서 |
+| --- | --- |
+| 최초 질문부터 답변·저장까지 | [최초 상담](initial-consultation.md) |
+| 분류·검색·전체 페이지 리랭크 | [질문 라우팅](question-routing.md) |
+| 후보 목록·본문 읽기·분리 입력 예산 | [근거 본문 읽기](evidence-reading.md) | [판단 계약](evidence-decision.md) |
+| 모델·추론 수준·Builder·Advisor | [역할별 Client](role-chat-clients.md) |
+| 법령·판례 검색·상세 Tool | [API Tool](legal-api-tools.md) |
+| 벡터화·상위 15개 조문 검색 | [벡터 Tool](law-vector-tools.md) |
+| ETL·저장 검증·수동 재색인 | [ETL 로컬 가이드](law-etl-local.md) |
+| 보류된 조문 API·비교 경로 | [AI Search 비교](ai-search-comparison.md) |
+| 최초 근거·후속 인용 | [상담방 근거](room-evidence.md) |
+| 암호화·저장·조회 | [상담 저장](chat-storage.md) |
+| Access·Refresh | [Access](stateless-access.md), [Refresh](refresh-rotation.md) |
+| 사용자 검증·계정 모델 | [사용자 계정](user-account-validation.md) |
+| 현재 테이블·마이그레이션 | [스키마 현황](schema-rebuild-status.md), [MySQL 실행](mysql-setup.md) |
+| 패키지·DTO·API·폴더 | [패키지와 API](package-api-organization.md), [폴더](folder-structure.md) |
+
+## 계획과 과거 자료
+
+주제별 미완료 작업은 [계획 목록](plans/README.md), 과거 정책·기준선은 [보관 안내](archive/README.md)를 따른다. [재구축 요약](backend-rebuild-plan.md)은 방향을 설명하는 짧은 진입점이다.
+
+현재 문서는 실제 동작만 설명하고, 미완료 작업은 계획에, 정책 선택은 사용자 판단 문서에 둔다. 과거 테스트 수치와 실험 결과를 최신 검증으로 승격하지 않는다. 구현 변경 시 해당 계약·개발 현황·관련 계획을 함께 갱신하며 확정한 결정을 다시 미결정으로 올리지 않는다.

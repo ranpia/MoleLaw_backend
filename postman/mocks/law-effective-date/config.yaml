@@ -1,0 +1,10 @@
+version: 1
+name: Effective-date law detail
+slug: law-effective-date
+protocol: http
+interceptRequests: true
+port: 14037
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

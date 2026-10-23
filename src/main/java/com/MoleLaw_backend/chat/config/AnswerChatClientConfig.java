@@ -4,7 +4,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import com.MoleLaw_backend.common.ai.AiPrompts;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.prompt.ChatOptions;
+import com.MoleLaw_backend.common.ai.config.ReasoningOptions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,12 +16,10 @@ public class AnswerChatClientConfig {
     @Bean
     public ChatClient legalAnswerChatClient(
             @Qualifier("baseAiChatClientBuilder") ChatClient.Builder builder,
-            @Value("${app.ai.answer.temperature:0.3}") double temperature,
-            @Value("${app.ai.answer.max-tokens:4096}") int maxTokens,
+            @Value("${app.ai.answer.model:gpt-5.4-mini}") String model,
+            @Value("${app.ai.answer.reasoning-effort:medium}") String effort,
+            @Value("${app.ai.answer.max-completion-tokens:16384}") int maxTokens,
             AiPrompts prompts) {
-        if (!Double.isFinite(temperature) || temperature < 0 || temperature > 2 || maxTokens < 1) {
-            throw new IllegalArgumentException("Invalid answer client settings");
-        }
         return builder.clone()
                 .defaultSystem(prompts.getLegalSystem() + "\n" + """
                         당신은 서버가 확정한 근거로 법률 상담 답변을 작성합니다.
@@ -31,7 +29,7 @@ public class AnswerChatClientConfig {
                         인용은 제공된 [[UUID]] 형식만 사용하고 URL은 작성하지 마세요. CASE_METADATA는 판결 내용의 근거가 아닙니다.
                         답변을 위해 추가 법령을 수집하거나 도구 실행을 지시하지 마세요.
                         """)
-                .defaultOptions(ChatOptions.builder().temperature(temperature).maxTokens(maxTokens).build())
+                .defaultOptions(ReasoningOptions.create(model, effort, maxTokens))
                 .build();
     }
 

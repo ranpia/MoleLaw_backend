@@ -29,7 +29,7 @@ import java.util.UUID;
 public class ChatEvidenceService {
     private static final int MAX_ITEMS = 100;
     private static final int MAX_JSON_BYTES = 2 * 1024 * 1024;
-    private static final Set<String> KINDS = Set.of("LAW_CHUNK", "CASE_METADATA", "LAW_QDRANT");
+    private static final Set<String> KINDS = Set.of("LAW_CHUNK", "CASE_METADATA", "LAW_QDRANT", "LAW_AI_SEARCH");
     private final ChatRoomRepository rooms;
     private final ChatEvidenceSnapshotRepository snapshots;
     private final ObjectMapper mapper;
@@ -110,7 +110,7 @@ public class ChatEvidenceService {
     private static void validateProvenance(EvidenceItem item) {
         EvidenceProvenance p = item.provenance();
         if (p == null) {
-            if ("LAW_QDRANT".equals(item.kind())) throw failure();
+            if ("LAW_QDRANT".equals(item.kind()) || "LAW_AI_SEARCH".equals(item.kind())) throw failure();
             return;
         }
         if (p.sourceUuid() != null) {
@@ -138,6 +138,9 @@ public class ChatEvidenceService {
         if ("LAW_QDRANT".equals(item.kind()) && !item.sourceId().equals(p.mst() + ":" + p.articlePath())) {
             throw failure();
         }
+        if ("LAW_AI_SEARCH".equals(item.kind()) && (blank(p.mst()) || blank(p.lawId())
+                || blank(p.articlePath()) || !p.articlePath().matches("[0-9]{1,20}")
+                || !item.sourceId().equals(p.mst() + ":" + p.articlePath()))) throw failure();
     }
 
     private static boolean blank(String value) {

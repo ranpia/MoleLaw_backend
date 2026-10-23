@@ -34,3 +34,5 @@
 ```powershell
 .\gradlew.bat test --tests '*UserValidationTest' --tests '*Utf8ByteLengthValidatorTest' --tests '*UserServiceMethodValidationTest'
 ```
+
+정책 선택은 [사용자 판단](decisions/README.md), 운영 검증은 [작업 계획 P08](plans/README.md), 최신 검증 범위는 [검증 현황](validation-status.md)을 따릅니다.

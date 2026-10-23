@@ -14,8 +14,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /** Internal, fixed-endpoint HTTP boundary; provider error bodies are never exposed. */
+@Slf4j
 public class LawVectorClient {
     private final LawVectorProperties properties;
     private final ObjectMapper mapper;
@@ -29,28 +31,46 @@ public class LawVectorClient {
         this.embeddingWork = new EmbeddingWorkLimiter(properties.getEmbeddingConcurrency(),
                 properties.getEmbeddingQueueCapacity(), properties.getEmbeddingWaitMillis());
         validateConfiguration();
-        this.embedding = client(properties.getEmbeddingBaseUrl(), 120_000, "");
+        this.embedding = client(properties.getEmbeddingBaseUrl(), properties.getEmbeddingReadTimeoutMillis(), "");
         this.qdrant = client(properties.getQdrantBaseUrl(), 15_000, properties.getApiKey());
     }
 
     public List<List<Double>> embed(List<String> inputs, Runnable before, Runnable after) {
-        try (var permit = embeddingWork.acquire()) {
-            // The first HTTP before callback checks the deadline after queue waiting.
-            return embedNow(inputs, before, after);
+        return newEmbeddingSession().embed(inputs, before, after);
+    }
+
+    /** Revision verification lasts only for this bounded indexing operation, never globally. */
+    public EmbeddingSession newEmbeddingSession() { return new EmbeddingSession(); }
+
+    public final class EmbeddingSession {
+        private boolean verified;
+        private EmbeddingSession() { }
+        public List<List<Double>> embed(List<String> inputs, Runnable before, Runnable after) {
+            try (var permit = embeddingWork.acquire()) {
+                // The first HTTP callback checks the deadline after queue waiting.
+                var result = embedNow(inputs, before, after, !verified);
+                verified = true;
+                return result;
+            } catch (RuntimeException failure) {
+                verified = false;
+                throw failure;
+            }
         }
     }
 
-    private List<List<Double>> embedNow(List<String> inputs, Runnable before, Runnable after) {
+    private List<List<Double>> embedNow(List<String> inputs, Runnable before, Runnable after, boolean verifyModel) {
         if (inputs == null || inputs.isEmpty() || inputs.size() > 32 || inputs.stream().anyMatch(s -> s == null || s.isBlank())) {
             throw invalid();
         }
-        JsonNode tags = request(embedding, "GET", "/api/tags", null, before, after);
-        boolean pinned = false;
-        for (JsonNode model : tags.path("models")) {
-            if (properties.getModel().equals(model.path("name").asText())
-                    && properties.getRevision().equals(model.path("digest").asText())) pinned = true;
+        if (verifyModel) {
+            JsonNode tags = request(embedding, "GET", "/api/tags", null, before, after);
+            boolean pinned = false;
+            for (JsonNode model : tags.path("models")) {
+                if (properties.getModel().equals(model.path("name").asText())
+                        && properties.getRevision().equals(model.path("digest").asText())) pinned = true;
+            }
+            if (!pinned) throw invalid();
         }
-        if (!pinned) throw invalid();
         JsonNode result = request(embedding, "POST", "/api/embed", Map.of(
                 "model", properties.getModel(), "input", inputs, "truncate", false,
                 "options", Map.of("num_thread", properties.getThreads(), "num_gpu", 0)), before, after);
@@ -115,6 +135,51 @@ public class LawVectorClient {
         if (!"completed".equals(result.path("result").path("status").asText())) throw invalid();
     }
 
+    /** Read-after-write verification. A transport error is not evidence that an index is missing. */
+    public boolean verifyIndex(Map<String, String> expectedUnits, Map<String, Object> expectedPayload,
+            Runnable before, Runnable after) {
+        if (expectedUnits == null || expectedUnits.isEmpty() || expectedPayload == null
+                || !expectedPayload.containsKey("generation")) throw invalid();
+        var filter = Map.of("must", List.of(Map.of("key", "generation", "match",
+                Map.of("value", expectedPayload.get("generation")))));
+        JsonNode count = request(qdrant, "POST", path() + "/points/count",
+                Map.of("filter", filter, "exact", true), before, after).path("result").path("count");
+        if (!count.isIntegralNumber() || !count.canConvertToLong() || count.asLong() < 0) throw invalid();
+        if (count.asLong() != expectedUnits.size()) {
+            log.warn("Law index verification mismatch reason=POINT_COUNT expected={} stored={}", expectedUnits.size(), count.asLong());
+            return false;
+        }
+        var ids = new ArrayList<>(expectedUnits.keySet());
+        var fields = new ArrayList<>(expectedPayload.keySet());
+        fields.add("unit_id");
+        for (int start = 0; start < ids.size(); start += 256) {
+            var batch = ids.subList(start, Math.min(start + 256, ids.size()));
+            JsonNode points = request(qdrant, "POST", path() + "/points",
+                    Map.of("ids", batch, "with_payload", fields, "with_vector", true), before, after).path("result");
+            if (!points.isArray()) throw invalid();
+            if (points.size() != batch.size()) return false;
+            var seen = new java.util.HashSet<String>();
+            for (JsonNode point : points) {
+                String id = point.path("id").asText();
+                if (!batch.contains(id) || !seen.add(id)
+                        || !expectedUnits.get(id).equals(point.path("payload").path("unit_id").asText())) return false;
+                JsonNode vector = point.path("vector");
+                if (!vector.isArray() || vector.size() != properties.getDimensions()) return false;
+                double norm = 0;
+                for (JsonNode component : vector) {
+                    double number = component.asDouble(Double.NaN);
+                    if (!component.isNumber() || !Double.isFinite(number)) return false;
+                    norm += number * number;
+                }
+                if (Math.abs(Math.sqrt(norm) - 1.0) > 0.01) return false;
+                for (var field : expectedPayload.entrySet()) {
+                    if (!mapper.valueToTree(field.getValue()).equals(point.path("payload").path(field.getKey()))) return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public JsonNode query(List<Double> vector, Runnable before, Runnable after) {
         // Legacy direct callers cannot make uncommitted points visible.
         return query(vector, List.of("unpublished"), before, after);
@@ -148,6 +213,9 @@ public class LawVectorClient {
     }
 
     public String collectionName() { return properties.getCollectionName(); }
+    public java.time.Duration embeddingTimeout() { return java.time.Duration.ofSeconds(properties.getEmbeddingTimeoutSeconds()); }
+    public int embeddingCallLimit() { return properties.getEmbeddingMaxCalls(); }
+    public int indexingCallLimit() { return properties.getIndexingMaxCalls(); }
 
     public String fingerprint() {
         try {
@@ -201,6 +269,13 @@ public class LawVectorClient {
     }
 
     private void validateConfiguration() {
+        if (properties.getEmbeddingMaxCalls() < 1 || properties.getEmbeddingMaxCalls() > 100000
+                || properties.getIndexingMaxCalls() < 1 || properties.getIndexingMaxCalls() > 100000)
+            throw new IllegalArgumentException("Invalid vector call limits");
+        if (properties.getEmbeddingTimeoutSeconds() < 1 || properties.getEmbeddingTimeoutSeconds() > 86400
+                || properties.getEmbeddingReadTimeoutMillis() < 1 || properties.getEmbeddingReadTimeoutMillis() > 3_600_000) {
+            throw new IllegalArgumentException("Invalid embedding time limits");
+        }
         for (String value : List.of(properties.getEmbeddingBaseUrl(), properties.getQdrantBaseUrl())) {
             URI uri = URI.create(value);
             if (!("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) || uri.getHost() == null

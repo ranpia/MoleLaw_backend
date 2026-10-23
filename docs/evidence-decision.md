@@ -1,6 +1,6 @@
 # 근거 수집 LLM 판단 계약
 
-`law.service.retrieval.EvidenceDecision`은 최초 질문의 근거 판단 결과를 표현하는 내부 계약입니다. LegalEvidenceCollector가 최초 상담의 Qdrant 검색·전용 판단 Client·법령 수집·벡터화·재검색 반복에 연결합니다. 후속 상담과 SSE에는 연결하지 않습니다. 현재 실행 상한과 종료 조건은 [스키마 개편 현황](schema-rebuild-status.md)을 따릅니다.
+`law.dto.retrieval.EvidenceDecision`은 최초 질문의 근거 판단 결과를 표현하는 내부 계약입니다. LegalEvidenceCollector가 최초 상담의 Qdrant 검색·전용 판단 Client·법령 수집·벡터화·재검색 반복에 연결합니다. 후속 상담과 SSE에는 연결하지 않습니다. 현재 실행 상한은 [최초 상담](initial-consultation.md), 모델은 [역할별 Client](role-chat-clients.md)를 따릅니다.
 
 ## 상태와 필드
 
@@ -38,8 +38,8 @@
 
 ## 예산·부하·상태 알림의 별도 경계
 
-- **LLM:** 서버 알고리즘이 각 응답의 실제 입력·출력 토큰 사용량을 누적·정산합니다. 호출 전 임시 예약과 최종 답변용 예약이 필요하며, usage 누락을 0으로 취급하지 않습니다. 모델은 예산을 설정하거나 소진 여부를 판단하지 않습니다. 아직 구현 전입니다.
-- **로컬 임베딩:** 토큰 예산과 별도로 동시 처리 수·유한 대기열·배치 크기·대기 시간·재시도/중복을 제어합니다. 초기에는 단일 처리와 제한된 대기열을 검토하고 실제 처리량으로 조정합니다. 현재 프로세스당 동시 배치 1개·대기 4개·대기 5초 제한을 구현했습니다. 설정은 app.law-vector.embedding-concurrency/embedding-queue-capacity/embedding-wait-millis입니다. 다중 프로세스의 분산 제어는 후속입니다.
+- **LLM:** 서버 알고리즘으로 각 응답의 실제 입력·출력·추론 토큰 사용량을 누적·정산할 계획입니다. 호출 전 임시 예약과 최종 답변용 예약이 필요하며, usage 누락을 0으로 취급하지 않습니다. 모델은 예산을 설정하거나 소진 여부를 판단하지 않습니다. 아직 구현 전입니다.
+- **로컬 임베딩:** 토큰 예산과 별도로 동시 처리 수·유한 대기열·배치 크기·대기 시간·재시도/중복을 제어합니다. 현재 처리량을 측정해 단일 추론과 유한 대기열 값을 조정합니다. 현재 프로세스당 동시 배치 1개·대기 4개·대기 5초 제한을 구현했습니다. 설정은 app.law-vector.embedding-concurrency/embedding-queue-capacity/embedding-wait-millis입니다. 다중 프로세스의 분산 제어는 후속입니다.
 - **SSE:** LLM/수집/임베딩 실행 상태를 전달하는 후속 추가사항입니다. 현재 엔드포인트·이벤트·스트리밍 상태 저장을 추가하지 않습니다. 판단 계약에 연결 상태나 진행 이벤트를 섞지 않습니다.
 
 검증: `.\gradlew.bat test --tests '*EvidenceDecisionTest'`. 최초 상담 호출 연결은 구현했고 실제 법률 판단의 품질 검증은 다음 단계입니다.
@@ -63,6 +63,16 @@
 .\gradlew.bat evidenceDecisionLiveTest
 ```
 
-실제 API 사용량이 발생합니다. `OPENAI_API_KEY`, `OPENAI_CHAT_MODEL`은 프로세스 환경변수, 이어서 로컬 `.env`, 모델 기본값 `gpt-4` 순으로 읽습니다. 일반 `test`에서는 제외합니다. 특정 상태만 확인하려면 `EVIDENCE_DECISION_LIVE_ACTIONS`에 쉼표로 구분한 상태 이름을 지정합니다. 로그에는 상태·usage·시간과 제한된 필드 형식만 남기고 키·질문·모델 응답 원문은 출력하지 않습니다.
+실제 API 사용량이 발생합니다. 이 선택 테스트의 독립 모델 설정은 OPENAI_CHAT_MODEL을 읽으므로 역할별 APP_AI_EVIDENCE_MODEL과 다릅니다. 현재 테스트는 추론 옵션을 사용하므로 실행 전 OPENAI_CHAT_MODEL을 지원 추론 모델(예: gpt-5.4)로 명시해야 합니다. 기존 .env의 gpt-4를 그대로 사용하면 현재 역할 설정의 검증이 아닙니다. 과거 표의 1024 출력 한도는 당시 기록이며 현재 테스트 완료 토큰 한도는 12288입니다. 일반 `test`에서는 제외합니다. 특정 상태만 확인하려면 `EVIDENCE_DECISION_LIVE_ACTIONS`에 쉼표로 구분한 상태 이름을 지정합니다. 로그에는 상태·usage·시간과 제한된 필드 형식만 남기고 키·질문·모델 응답 원문은 출력하지 않습니다.
 
 토큰 필드는 [OpenAI 공식 Chat Completions 계약](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)을 따릅니다. 실제 사용량 기반 예산 통제는 아직 별도 구현 대상이며 이 테스트는 사용량 관측만 수행합니다.
+
+## 질문 분류와 검색 피드백
+
+판단 입력은 retrievalPlan과 서버가 기록한 searchAttempts를 포함한다. 최근 최대 8개 시도를 토큰 예산 안에서 전달하며 최신 시도를 유지한다. 빈 결과·정확 제목 불일치·새 근거 없음·소진 상태를 보고 조건을 바꿀 수 있다. API 장애는 빈 결과로 바꾸지 않는다. 일반 안내에서는 누락 사실만으로 무조건 종료하지 않되 개별 허용 여부를 단정하지 않는다. [상세 계약](question-routing.md)을 참고한다.
+
+판단 정확도·usage 정산·운영 보강은 [P01~P06](plans/README.md), 비용·품질 정책은 [사용자 판단](decisions/README.md)에서 관리합니다.
+
+## 읽은 근거로 충분성 판단
+
+최초 충분성 판단은 후보 전체 목록→본문 읽기 선택→MySQL 원문 확인→실제 읽은 본문 입력으로 변경했다. 기존 2500토큰은 판단 기본 JSON의 상한이며 본문을 그 안에서 한 조문만 남기는 방식은 사용하지 않는다. 후보 목록 4000·본문 누적 12000·결합 판단 입력 20000토큰의 추정 상한과 최대 2회 읽기 선택을 적용한다. [현재 계약과 제한](evidence-reading.md)을 따른다.

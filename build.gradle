@@ -107,6 +107,40 @@ tasks.register('lawEtlSimulationTest', Test) {
     outputs.upToDateWhen { false }
 }
 
+tasks.register('aiLawSearchSimulationTest', Test) {
+    description = 'Checks aiSearch HTTP contract, failures, and cited consultation persistence without Qdrant.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter {
+        includeTestsMatching 'com.MoleLaw_backend.law.client.openlaw.AiLawSearchSimulationTest'
+        includeTestsMatching 'com.MoleLaw_backend.common.config.AiSearchConsultationSimulationTest'
+    }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('initialConsultationSimulationTest', Test) {
+    description = 'Checks question-to-first-answer HTTP flow, ETL and atomic persistence with Postman embeddings and isolated Qdrant.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.common.config.InitialConsultationSimulationTest' }
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('lawEffectiveDateSimulationTest', Test) {
+    description = 'Verifies effective-date law detail requests over real HTTP against the local Postman fixture.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.law.service.search.LawEffectiveDateSimulationTest' }
+    outputs.upToDateWhen { false }
+}
+
 tasks.register('qdrantIntegrationTest', Test) {
     description = 'Validates isolated Qdrant collection metadata, vector upserts and distinct-article top-15 retrieval.'
     group = 'verification'
