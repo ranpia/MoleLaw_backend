@@ -31,6 +31,12 @@ public class Message {
     @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp;
 
+    @Column(nullable = false, updatable = false)
+    private boolean caseSearchRequested;
+
+    @Column(nullable = false, updatable = false)
+    private boolean caseSearchConsent;
+
     @PrePersist
     public void prePersist() {
         validate();
@@ -39,6 +45,8 @@ public class Message {
 
     @PreUpdate
     public void validate() {
+        if ((caseSearchRequested && sender != Sender.BOT) || (caseSearchConsent && sender != Sender.USER))
+            throw new IllegalArgumentException("Invalid message consent role");
         if (chatRoom == null || sender == null || sender == Sender.INFO || content == null || content.isBlank()) {
             throw new IllegalArgumentException("Persisted messages require room, USER/BOT sender and encrypted content");
         }

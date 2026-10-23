@@ -98,13 +98,14 @@ class OpenApiDocumentationTest {
                 assertTrue(success, context);
             }
         }
-        assertEquals(20, count);
+        assertEquals(22, count);
         assertEquals(Set.of(
                 "get /api/auth/csrf", "post /api/auth/signup", "post /api/auth/login",
                 "post /api/auth/refresh", "post /api/auth/logout",
                 "get /api/users/me", "delete /api/users/me", "patch /api/users/me/password", "patch /api/users/me/nickname",
                 "get /api/chat-rooms", "post /api/chat-rooms", "delete /api/chat-rooms/{roomId}",
                 "get /api/chat-rooms/{roomId}/messages", "post /api/chat-rooms/{roomId}/messages",
+                "get /api/chat-rooms/{roomId}/evidence", "get /api/chat-rooms/{roomId}/evidence/{evidenceId}",
                 "get /api/laws", "post /api/laws/search", "get /api/precedents", "get /api/precedents/{id}",
                 "post /api/law-keywords", "post /api/legal-answers"), actualOperations);
         assertFalse(document.path("paths").has("/api/test/import"));

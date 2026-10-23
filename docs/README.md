@@ -27,6 +27,7 @@
 | ETL·저장 검증·수동 재색인 | [ETL 로컬 가이드](law-etl-local.md) |
 | 보류된 조문 API·비교 경로 | [AI Search 비교](ai-search-comparison.md) |
 | 최초 근거·후속 인용 | [상담방 근거](room-evidence.md) |
+| 동의 기반 후속 판례·근거 목록/본문 API | [후속 상담](follow-up-consultation.md) |
 | 암호화·저장·조회 | [상담 저장](chat-storage.md) |
 | Access·Refresh | [Access](stateless-access.md), [Refresh](refresh-rotation.md) |
 | 사용자 검증·계정 모델 | [사용자 계정](user-account-validation.md) |

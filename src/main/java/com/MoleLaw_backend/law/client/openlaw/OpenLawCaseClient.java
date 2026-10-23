@@ -24,9 +24,22 @@ public class OpenLawCaseClient {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
     private final String apiKey;
+    private final java.net.URI baseUrl;
 
     public OpenLawCaseClient(WebClient.Builder builder, ObjectMapper objectMapper,
                              @Value("${openlaw.api-key}") String apiKey) {
+        this(builder, objectMapper, apiKey, "https://www.law.go.kr/DRF/");
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public OpenLawCaseClient(WebClient.Builder builder, ObjectMapper objectMapper,
+                             @Value("${openlaw.api-key}") String apiKey,
+                             @Value("${openlaw.case-base-url:https://www.law.go.kr/DRF/}") String baseUrl) {
+        this.baseUrl = java.net.URI.create(baseUrl);
+        if (!("https".equals(this.baseUrl.getScheme()) || "http".equals(this.baseUrl.getScheme()))
+                || this.baseUrl.getHost() == null || this.baseUrl.getUserInfo() != null
+                || this.baseUrl.getQuery() != null || this.baseUrl.getFragment() != null)
+            throw new IllegalArgumentException("Invalid precedent API base URL");
         this.webClient = builder.clone()
                 .codecs(config -> config.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
                 .build();
@@ -91,7 +104,8 @@ public class OpenLawCaseClient {
         String body;
         try {
             body = webClient.get().uri(builder -> {
-                builder.scheme("https").host("www.law.go.kr").path("/DRF/" + endpoint)
+                builder.scheme(baseUrl.getScheme()).host(baseUrl.getHost()).port(baseUrl.getPort())
+                        .path(baseUrl.getPath().replaceAll("/+$", "") + "/" + endpoint)
                         .queryParam("OC", apiKey).queryParam("target", "prec").queryParam("type", "JSON");
                 // URI variables ensure query text containing '&', '+', or braces stays data.
                 parameters.forEach((name, value) -> builder.queryParam(name, "{" + name + "}"));
