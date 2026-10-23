@@ -7,4 +7,4 @@
 - [과거 스키마 속성 검토](schema-attribute-review.md)
 - sql/001-legal-source.sql: Flyway 이전 수동 SQL. 실행하지 않는다.
 
-현재 설명은 [문서 안내](../README.md), 정책 선택은 [사용자 판단](../decisions/README.md), 개발 순서는 [작업 계획](../plans/README.md)을 따른다. 실행 SQL은 src/main/resources/db/migration의 Flyway V1~V4이며 적용된 migration을 archive로 옮기거나 수정하지 않는다.
+현재 설명은 [문서 안내](../README.md), 정책 선택은 [사용자 판단](../decisions/README.md), 개발 순서는 [작업 계획](../plans/README.md)을 따른다. 실행 SQL은 src/main/resources/db/migration의 Flyway V1~V5이며 적용된 migration을 archive로 옮기거나 수정하지 않는다.

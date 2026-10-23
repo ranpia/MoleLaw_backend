@@ -65,7 +65,7 @@ Spring은 IDE 또는 Gradle로 실행하고, 루트 `.env`에 다음 연결 정�
 | `REDIS_PASSWORD` | Compose의 `REDIS_PASSWORD` |
 | `REDIS_SSL_ENABLED` | `false` |
 
-빈 MySQL DB는 애플리케이션 시작 시 Flyway V1~V4가 순서대로 초기화하고 기본/mysql·local 모두 JPA `validate`로 검사한다. 기존 데이터는 이관하지 않는다. 이력 없는 비어 있지 않은 DB는 자동 baseline 없이 거절한다. 수동 `001-legal-source.sql`과 Hibernate `update`를 함께 사용하지 않는다. `JPA_DDL_AUTO`를 설정했다면 `validate`로 맞춘다. [MySQL 실행 가이드](../docs/mysql-setup.md)를 따른다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
+빈 MySQL DB는 애플리케이션 시작 시 Flyway V1~V5가 순서대로 초기화하고 기본/mysql·local 모두 JPA `validate`로 검사한다. 기존 데이터는 이관하지 않는다. 이력 없는 비어 있지 않은 DB는 자동 baseline 없이 거절한다. 수동 `001-legal-source.sql`과 Hibernate `update`를 함께 사용하지 않는다. `JPA_DDL_AUTO`를 설정했다면 `validate`로 맞춘다. [MySQL 실행 가이드](../docs/mysql-setup.md)를 따른다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
 
 다른 PC에서 연결할 때는 DB PC의 LAN IP를 `DB_BIND_ADDRESS`와 애플리케이션 호스트에 설정하고 방화벽에서 개발 PC의 접근만 허용한다. MySQL·Qdrant 볼륨은 Compose 파일을 복사해도 이동하지 않는다. 데이터 이동에는 별도 백업·복원이 필요하다.
 

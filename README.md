@@ -2,7 +2,7 @@
 
 **몰루로 묻고 법으로 답하다.** 법령 검색·근거 기반 AI 상담과 사용자별 대화 기록을 제공하는 Java 17 / Spring Boot 3.5 백엔드입니다.
 
-기준일: **2026-10-23**, `dev` 작업 트리입니다. 미커밋 변경을 포함하며 `main` 반영·배포·법률 품질 검증 완료와 다릅니다.
+기준일: **2026-10-23**, 법령 PR #8과 후속 상담 PR #9의 병합 내용을 `dev`에 통합했습니다. `main` 반영·배포·법률 품질 검증 완료와는 다릅니다.
 
 | 읽을 내용 | 문서 |
 | --- | --- |
@@ -80,7 +80,7 @@ docker/              로컬 컨테이너·임베딩
 postman/             HTTP 모의 계약·simulation
 scripts/             실행 검증 스크립트
 docs/                현재 계약·decisions·plans·archive
-evaluation/          별도 검색·모델 실험
+../MoleLaw_backend-experiments/  별도 실험 워크트리 (실험 브랜치)
 ```
 
 코드 배치는 [domain-structure](.agents/skills/domain-structure/SKILL.md), 기여 기준은 [AGENTS.md](AGENTS.md)를 따릅니다. 실험 자료·컬렉션은 서비스 데이터와 분리합니다.
@@ -140,3 +140,5 @@ Access는 모든 프로필에서 최대 5분 stateless JWT입니다. Refresh는 
 추론 모델 실 API 호환성 → 독립 법령·답변 평가 → 실제 usage 예산 → 검색·기준일 보강 → 중복·중단 복구 → 판례·후속 품질 → 선택 공급자 검토 → 운영 준비 순서입니다. 상세 상태는 [작업 계획](docs/plans/README.md), 비용·품질·운영의 선택은 [사용자 판단](docs/decisions/README.md)에서 관리합니다. SSE는 후순위입니다.
 
 개발은 dev에서 진행합니다. 검증한 통합본을 main에 반영하며 EC2 배포는 main의 Deploy to EC2 수동 실행입니다. push만으로 배포하지 않습니다. 이번 문서 정리는 커밋·push·배포를 수행하지 않습니다.
+
+브랜치별 파일 관리와 갱신 방법은 [브랜치 작업 가이드](docs/branch-workflow.md)를 참고하세요.
