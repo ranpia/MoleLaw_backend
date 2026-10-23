@@ -1,0 +1,1778 @@
+[
+    {
+        "source":  "data/corpus-manifest.json",
+        "target":  "experiments/model-comparison/data/corpus-manifest.json",
+        "sha256":  "4CB2E125D078948BE62107BE99E14C8F3442C0876A8F1B6CDC29561A6248311C",
+        "immutable":  true
+    },
+    {
+        "source":  "data/corpus.jsonl",
+        "target":  "experiments/model-comparison/data/corpus.jsonl",
+        "sha256":  "5476BA7333F16A26965B32FFB59EBE3EC82A07FDCC3B1CE8FDA51F3182A3EEAB",
+        "immutable":  true
+    },
+    {
+        "source":  "data/questions.json",
+        "target":  "experiments/model-comparison/data/questions.json",
+        "sha256":  "A06B9ECAE98AA9E691C811FA71CC3BB22D6010230832A7425781983EA0D393E3",
+        "immutable":  true
+    },
+    {
+        "source":  "data/final-validation-v1/corpus.jsonl",
+        "target":  "experiments/retrieval-validation/expanded-v1/data/corpus.jsonl",
+        "sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+        "immutable":  true
+    },
+    {
+        "source":  "data/final-validation-v1/manifest.json",
+        "target":  "experiments/retrieval-validation/expanded-v1/data/manifest.json",
+        "sha256":  "B0DE18307C64248E8B57C79FA57FDEC832324C826DF7CCEAE786DD42F5CEB9E0",
+        "immutable":  true
+    },
+    {
+        "source":  "data/final-validation-v1/questions.json",
+        "target":  "experiments/retrieval-validation/expanded-v1/data/questions.json",
+        "sha256":  "70AFB82B8E26651AE50FB7026E2C9F604A27B78166A8DA8D6927FBDD7CEAB727",
+        "immutable":  true
+    },
+    {
+        "source":  "data/final-validation-v1/rewrites.json",
+        "target":  "experiments/retrieval-validation/expanded-v1/data/rewrites.json",
+        "sha256":  "5469ABB6CBCC090BD9F6D56DD2DBD40A60B7408CC6E129CBF49BE25B33E8F747",
+        "immutable":  true
+    },
+    {
+        "source":  "data/independent-validation-v1/manifest.json",
+        "target":  "experiments/retrieval-validation/independent-v1/data/manifest.json",
+        "sha256":  "266C332B0331CFBA0950B116BAA2D131E6840A0B4B6ED049B152DE97E26BB356",
+        "immutable":  true
+    },
+    {
+        "source":  "data/independent-validation-v1/questions.json",
+        "target":  "experiments/retrieval-validation/independent-v1/data/questions.json",
+        "sha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB",
+        "immutable":  true
+    },
+    {
+        "source":  "data/legal-query-chunks-v1/manifest.json",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/data/manifest.json",
+        "sha256":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+        "immutable":  true
+    },
+    {
+        "source":  "data/legal-query-chunks-v1/char500/corpus.jsonl",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/data/char500/corpus.jsonl",
+        "sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+        "immutable":  true
+    },
+    {
+        "source":  "data/legal-query-chunks-v1/char700/corpus.jsonl",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/data/char700/corpus.jsonl",
+        "sha256":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0",
+        "immutable":  true
+    },
+    {
+        "source":  "data/legal-query-transform-v1/manifest.json",
+        "target":  "experiments/query-strategies/sentence-transform-v1/data/manifest.json",
+        "sha256":  "A15C853E79D1DB17926CA563C386D8F1A7E92DC2DFD710DA43958442957BABC9",
+        "immutable":  true
+    },
+    {
+        "source":  "data/variants/char300-overlap64-article-v1/corpus-manifest.json",
+        "target":  "experiments/model-comparison/data/variants/char300-overlap64-article-v1/corpus-manifest.json",
+        "sha256":  "892E2245589C8FE98D6536EC3E01D3572D627C4F6339B73DACE00ACD21F06DB3",
+        "immutable":  true
+    },
+    {
+        "source":  "data/variants/char300-overlap64-article-v1/corpus.jsonl",
+        "target":  "experiments/model-comparison/data/variants/char300-overlap64-article-v1/corpus.jsonl",
+        "sha256":  "39F09DE4E489132A863F2D5214C07AD16B650C2B5A6A94595A59F6BB60510BBB",
+        "immutable":  true
+    },
+    {
+        "source":  "data/variants/char300-overlap64-article-v1/questions.json",
+        "target":  "experiments/model-comparison/data/variants/char300-overlap64-article-v1/questions.json",
+        "sha256":  "612614172F74217844CF64D0FD94C5E6F40C4D93103AD553DD0AA277FADAB7E0",
+        "immutable":  true
+    },
+    {
+        "source":  "data/variants/char700-overlap64-article-v1/corpus-manifest.json",
+        "target":  "experiments/model-comparison/data/variants/char700-overlap64-article-v1/corpus-manifest.json",
+        "sha256":  "053101FE60744A574270E5BAE3996CFCD732AB421007546B2B501B24C78865DC",
+        "immutable":  true
+    },
+    {
+        "source":  "data/variants/char700-overlap64-article-v1/corpus.jsonl",
+        "target":  "experiments/model-comparison/data/variants/char700-overlap64-article-v1/corpus.jsonl",
+        "sha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+        "immutable":  true
+    },
+    {
+        "source":  "data/variants/char700-overlap64-article-v1/questions.json",
+        "target":  "experiments/model-comparison/data/variants/char700-overlap64-article-v1/questions.json",
+        "sha256":  "0B875A1EF22CCE51C0E40672534ECF527C159C1633B93EF8551BAA459B09A117",
+        "immutable":  true
+    },
+    {
+        "source":  "review/article-review-map.json",
+        "target":  "experiments/model-comparison/review/article-review-map.json",
+        "sha256":  "4ECC48F33926CEFAA315ACF391157AF4A629AB2628265B74A67F9A6AC7E4CAF1",
+        "immutable":  true
+    },
+    {
+        "source":  "review/korean-model-candidates.md",
+        "target":  "experiments/model-comparison/review/korean-model-candidates.md",
+        "sha256":  "8CC1BAFA3D5567D8DD8FEE2091481A706EF38209D4A285D966850F6845F23C3C",
+        "immutable":  false
+    },
+    {
+        "source":  "review/model-selection.md",
+        "target":  "experiments/model-comparison/review/model-selection.md",
+        "sha256":  "B3F39CBCCE096E243916C9EFE9C86FDE18389B7DA44E8A5B7704BEE6E9DCA478",
+        "immutable":  false
+    },
+    {
+        "source":  "review/models.json",
+        "target":  "experiments/model-comparison/review/models.json",
+        "sha256":  "2C95FF3CEA67AC11A2526132EA31C356D0CB4E677C17D386A15DC8FB9F09FFA0",
+        "immutable":  true
+    },
+    {
+        "source":  "review/no-answer-questions.json",
+        "target":  "experiments/model-comparison/review/no-answer-questions.json",
+        "sha256":  "1BEBB4ED23CBA1CFFFCD955C12EBFB045D3F2A3398F9785C764DD1DE7488F331",
+        "immutable":  true
+    },
+    {
+        "source":  "review/query-rewrite-prompt-v1.txt",
+        "target":  "experiments/model-comparison/review/query-rewrite-prompt-v1.txt",
+        "sha256":  "7272C19B97D3C552978D58A1E4C29CF9BB14EB3F1DB40E8BD030DFCCA0550DD7",
+        "immutable":  true
+    },
+    {
+        "source":  "review/query-rewrites-v1.json",
+        "target":  "experiments/model-comparison/review/query-rewrites-v1.json",
+        "sha256":  "981FD202C9E24019A2BD79848906A500A8192D11045FA90BE24C02AF968DE123",
+        "immutable":  true
+    },
+    {
+        "source":  "review/question-bank.json",
+        "target":  "experiments/model-comparison/review/question-bank.json",
+        "sha256":  "8F1212E4166F9E0D7F2A1A6FEECD23EB2317C42BA066363906BE41DA91367798",
+        "immutable":  true
+    },
+    {
+        "source":  "review/review-decisions.json",
+        "target":  "experiments/model-comparison/review/review-decisions.json",
+        "sha256":  "FEF8CE3A55DCF456B869058BE482FB015A030E8CB24EA8722B79B2F996E40308",
+        "immutable":  true
+    },
+    {
+        "source":  "review/special-evidence.json",
+        "target":  "experiments/model-comparison/review/special-evidence.json",
+        "sha256":  "669BD24CA5ACD40534AF10DE5F8F069945409F2E77C942740AAD08584617EFD5",
+        "immutable":  true
+    },
+    {
+        "source":  "review/special-sources.json",
+        "target":  "experiments/model-comparison/review/special-sources.json",
+        "sha256":  "C06126023629718356C26DDC36C8F0A1F3CA14554CCC187A46445002C75FDE2A",
+        "immutable":  true
+    },
+    {
+        "source":  "review/supplemental-review.json",
+        "target":  "experiments/model-comparison/review/supplemental-review.json",
+        "sha256":  "E3884F1FC6C5CC59CD84453E0667F987E986D026027E2698E41215FDBE391CE8",
+        "immutable":  true
+    },
+    {
+        "source":  "review/supplemental-sources.json",
+        "target":  "experiments/model-comparison/review/supplemental-sources.json",
+        "sha256":  "2663F49FBF885DB9770A4CE6A08BCF0BC5987A19B8A5D5CAEC592A7A57C492B8",
+        "immutable":  true
+    },
+    {
+        "source":  "review/verified-evidence.json",
+        "target":  "experiments/model-comparison/review/verified-evidence.json",
+        "sha256":  "34DC72884A90B8487CA17247DB0BBD9FD0F6E227CFDB586AFD152593A2442386",
+        "immutable":  true
+    },
+    {
+        "source":  "review/archive/evaluate-smoke.ps1",
+        "target":  "experiments/model-comparison/review/archive/evaluate-smoke.ps1",
+        "sha256":  "EC7C0B63545662E8337C867BFE08E1BF1A7B1369D013DA59898AF5B5250A690A",
+        "immutable":  true
+    },
+    {
+        "source":  "review/archive/fixtures/retrieval-smoke.json",
+        "target":  "experiments/model-comparison/review/archive/fixtures/retrieval-smoke.json",
+        "sha256":  "A15F2456CEE41F2B683CE01FB58C954B6319DA1B6037BA803B8B593081A3F8B8",
+        "immutable":  true
+    },
+    {
+        "source":  "review/final-validation-v1/gold-evidence.json",
+        "target":  "experiments/retrieval-validation/expanded-v1/review/gold-evidence.json",
+        "sha256":  "E28138E76322F15E46EA62EE3697E5B5E4DFFEF2B3A52E521E781A7CF6E58E49",
+        "immutable":  true
+    },
+    {
+        "source":  "review/final-validation-v1/questions.psv",
+        "target":  "experiments/retrieval-validation/expanded-v1/review/questions.psv",
+        "sha256":  "58426CD3561CD228970E00E4F5BE8C0633E06306A545D26161C032FC823B7445",
+        "immutable":  true
+    },
+    {
+        "source":  "review/final-validation-v1/README.md",
+        "target":  "experiments/retrieval-validation/expanded-v1/review/README.md",
+        "sha256":  "7AC6D6BCA3C1AFA18C46BC2D9270C9FB6E1156C99F2786271F0DE2AAAB178FDA",
+        "immutable":  false
+    },
+    {
+        "source":  "review/final-validation-v1/selected-articles.json",
+        "target":  "experiments/retrieval-validation/expanded-v1/review/selected-articles.json",
+        "sha256":  "6E6F153933269F5544D22448B7804CD00B0C80C9806685AE473489FEF0F471C7",
+        "immutable":  true
+    },
+    {
+        "source":  "review/final-validation-v1/source-inventory.json",
+        "target":  "experiments/retrieval-validation/expanded-v1/review/source-inventory.json",
+        "sha256":  "D88415EA690C39332E81F113AC5BEE7BEC81512EBBC3E74FE0E0429F50AE8904",
+        "immutable":  true
+    },
+    {
+        "source":  "review/final-validation-v1/sources.json",
+        "target":  "experiments/retrieval-validation/expanded-v1/review/sources.json",
+        "sha256":  "ADF9D18913CFE44E5CC87E90EFCE85A49D1D58D98F3FDA73E9EA420753D73A2F",
+        "immutable":  true
+    },
+    {
+        "source":  "review/independent-validation-v1/audit.json",
+        "target":  "experiments/retrieval-validation/independent-v1/review/audit.json",
+        "sha256":  "566BEA3C85BD5FE3F45146920510684AD49A3786F2F312C406B8CED119183B88",
+        "immutable":  true
+    },
+    {
+        "source":  "review/independent-validation-v1/author-freeze.json",
+        "target":  "experiments/retrieval-validation/independent-v1/review/author-freeze.json",
+        "sha256":  "5239F4887B6448570A4A2D3C3B56B32B4DB656B68EE7E3D9FBB710D6DD51BEC6",
+        "immutable":  true
+    },
+    {
+        "source":  "review/independent-validation-v1/authored-questions.json",
+        "target":  "experiments/retrieval-validation/independent-v1/review/authored-questions.json",
+        "sha256":  "6FA0336B5126F35C200AB841499525B0F02EE66E8460591F57B67C9F6A4891E0",
+        "immutable":  true
+    },
+    {
+        "source":  "review/independent-validation-v1/gold-review.json",
+        "target":  "experiments/retrieval-validation/independent-v1/review/gold-review.json",
+        "sha256":  "8DFB13FA1E87DC60F4262B7E8DB5768BE3A6F32C08707391C947D3A772BFDF58",
+        "immutable":  true
+    },
+    {
+        "source":  "review/independent-validation-v1/README.md",
+        "target":  "experiments/retrieval-validation/independent-v1/review/README.md",
+        "sha256":  "5E415A8F4E48C291F1D2B08A4F443E66F35BD9A65D0272BC4377002769B24686",
+        "immutable":  false
+    },
+    {
+        "source":  "review/independent-validation-v1/rewrites.json",
+        "target":  "experiments/retrieval-validation/independent-v1/review/rewrites.json",
+        "sha256":  "7B09200422B5852A9B693102A3485C95D6A66ADE481C29B311F319E7D835DC27",
+        "immutable":  true
+    },
+    {
+        "source":  "review/legal-query-chunks-v1/README.md",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/review/README.md",
+        "sha256":  "782F3F76B7E67B35CED919FA7D2E2BA12B4035C1B96E947D7AC521818B242798",
+        "immutable":  false
+    },
+    {
+        "source":  "review/legal-query-transform-v1/audit.json",
+        "target":  "experiments/query-strategies/sentence-transform-v1/review/audit.json",
+        "sha256":  "6AD2C6D783BB5F2944A63EA1A0DC6FD01172146E02604A2E9EAAC795679D64E9",
+        "immutable":  true
+    },
+    {
+        "source":  "review/legal-query-transform-v1/README.md",
+        "target":  "experiments/query-strategies/sentence-transform-v1/review/README.md",
+        "sha256":  "2E22602909BB223534E31D3F3E5D7419071CEFD4590D72F1CDC78238D0EF7B7F",
+        "immutable":  false
+    },
+    {
+        "source":  "review/legal-query-transform-v1/transforms.json",
+        "target":  "experiments/query-strategies/sentence-transform-v1/review/transforms.json",
+        "sha256":  "47E88701CE6F47F4C6C052BB9B60F66A91743ABB6756117540179729AA367031",
+        "immutable":  true
+    },
+    {
+        "source":  "review/retrieval-ablation-v1/README.md",
+        "target":  "experiments/hybrid-search/ablation-v1/review/README.md",
+        "sha256":  "11BBBD0FA1F74DCA88A97CA3FA9D431B8D93EAF1B7D04758297D5BA30EFDDFCD",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/comparison.csv",
+        "target":  "experiments/model-comparison/reports/comparison.csv",
+        "sha256":  "E34FD117937FB92CF36C96ECFC30AE77D79B2FF5C10CF048F5F63F01805C8309",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/comparison.md",
+        "target":  "experiments/model-comparison/reports/comparison.md",
+        "sha256":  "01799BB945320A3F6371DF7CA88640302D021A7F5047E16FE50C08087215C0C1",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/final-summary.md",
+        "target":  "experiments/summary.md",
+        "sha256":  "04BB1BF82986E1D7880306710BE2F719B3CEF0222CEEA94B1ECE23724BF850F9",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/ranking-comparison.csv",
+        "target":  "experiments/model-comparison/reports/ranking-comparison.csv",
+        "sha256":  "0278CAAEB6381CAC42A5662017760EC9DC81ECB67BC635E868987B2341760E6F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/ranking-comparison.md",
+        "target":  "experiments/model-comparison/reports/ranking-comparison.md",
+        "sha256":  "2E295DC1CF4D26E6CB889CDAAF1468B2E6A90BC9FD2EE742FD39E2B525CAEA69",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/ranking-queries.csv",
+        "target":  "experiments/model-comparison/reports/ranking-queries.csv",
+        "sha256":  "1640FB22EEF1DA657425668254B3A250BDBB8C04EE5F63458D882E7B373AC18B",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/similarity-and-metrics.md",
+        "target":  "experiments/model-comparison/reports/similarity-and-metrics.md",
+        "sha256":  "D3CCE80CC86BD333A34BE0D1A3E00B0C58156D769C61F1B4C069DA08FF04C0FD",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/similarity-examples.csv",
+        "target":  "experiments/model-comparison/reports/similarity-examples.csv",
+        "sha256":  "A86C6E8F2769664805D7A0F0D49A8A07A11F228C5DDC1F1F199DE415BA4F6834",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/verification.md",
+        "target":  "experiments/model-comparison/reports/verification.md",
+        "sha256":  "F0069DEB7651B27DC18B52CC8EA7F811A034F343CFDD750CEF60CCDBAAA60A0E",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/bge-m3/README.md",
+        "target":  "experiments/model-comparison/reports/bge-m3/README.md",
+        "sha256":  "1213F48AE9868CF5E542CE00BB43E0E6626743C216FDA83280C5396BE5BC32ED",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/bge-m3/char300-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/bge-m3/char300-overlap64-article-v1/queries.csv",
+        "sha256":  "B9FDECBEBE55537EC1DB55E7F443B41D757C76684E5E69FAA202E3EDEA5E8FC4",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char300-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/bge-m3/char300-overlap64-article-v1/summary.csv",
+        "sha256":  "CCA04FB4088195D041441DB92A4970848C6B27BCAB7231F7833B5BA2B653B777",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char300-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/bge-m3/char300-overlap64-article-v1/summary.json",
+        "sha256":  "EEF884E60094A5F40AEA28DE8B63282BE74345768A51070B67F4C8D608BCEA42",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char300-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/bge-m3/char300-overlap64-article-v1/top10.csv",
+        "sha256":  "5CCA9E18C8B5C5BD111A4770FB3FDE83B956CE0AC6261EDEF30861E981842367",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char500-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/bge-m3/char500-overlap64-article-v1/queries.csv",
+        "sha256":  "8CA3B883F46F99E2F5C212F2A8192AC604E04DBEFE5694C440B857CD4A6F88F3",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char500-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/bge-m3/char500-overlap64-article-v1/summary.csv",
+        "sha256":  "CCB0C9DE68EE709205377D556CA932C7ADE923CC56D1ECB0D0C9D489F6C0F07C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char500-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/bge-m3/char500-overlap64-article-v1/summary.json",
+        "sha256":  "AE5E792EB1905B28901D864D95B63F5D6CDE67F62BA2E88BB7C0AD31D8BBBBC0",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char500-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/bge-m3/char500-overlap64-article-v1/top10.csv",
+        "sha256":  "5562E9408125174AD3AC1E9DB88FA7F5E0A1EA7BCBC1F420E2F1A14AB05D8995",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char700-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/bge-m3/char700-overlap64-article-v1/queries.csv",
+        "sha256":  "54C91F5923B8F5550CEC54709DA8DCF62B35813E8180D93071567B1BDF04FEB0",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char700-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/bge-m3/char700-overlap64-article-v1/summary.csv",
+        "sha256":  "75507963B3833FE8FBE99D41FA83208D06E6A8F2410BBB5EEC17D67904B465E2",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char700-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/bge-m3/char700-overlap64-article-v1/summary.json",
+        "sha256":  "DFC12D6D5CEC183826A549E4F89CF01AB49289DA2FF38292F8380432421608B2",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/bge-m3/char700-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/bge-m3/char700-overlap64-article-v1/top10.csv",
+        "sha256":  "EE97D2931359964691A7C2EE34B18FD0F51135D69D3763549F79193674461083",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/chunk-experiments/agreement.csv",
+        "target":  "experiments/model-comparison/reports/chunk-experiments/agreement.csv",
+        "sha256":  "38307220A6B63E3833007B8209F8EE865B4DE166A898EF39A80EA66AA409E64F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/chunk-experiments/comparison.csv",
+        "target":  "experiments/model-comparison/reports/chunk-experiments/comparison.csv",
+        "sha256":  "6BA5F614D2BAF05D6021F5AC77FBDA2CFC4E328FFF1ADFBF5375B897E140A0F4",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/chunk-experiments/comparison.md",
+        "target":  "experiments/model-comparison/reports/chunk-experiments/comparison.md",
+        "sha256":  "9C95A9F425F88FFF76C7B84F6D7BA60C94DF6B72CA2C595A3D5B39A7E23AB71D",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/chunk-experiments/latency.csv",
+        "target":  "experiments/model-comparison/reports/chunk-experiments/latency.csv",
+        "sha256":  "EA4D996BE173856A83771AB835206A5D50DB7A3E7077AAE292B823415D07B10E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/chunk-experiments/overview.md",
+        "target":  "experiments/model-comparison/reports/chunk-experiments/overview.md",
+        "sha256":  "D08135D032DA2EA816C83F5DBD4D61D1728D4F17C3631686C5A7AC702F4E6700",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/chunk-experiments/recall-by-chunk.png",
+        "target":  "experiments/model-comparison/reports/chunk-experiments/recall-by-chunk.png",
+        "sha256":  "AE2A5449A3DE78ADF3BC451CB8BF47E055BADBA6A0556E6FE41732B008950840",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/README.md",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/README.md",
+        "sha256":  "9D89902F4034D43A643D00B87F395EF01423F06877691EAF5E6299F6E8A1CCB6",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/embeddinggemma/summary.json",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/summary.json",
+        "sha256":  "4B7455FB8BBAC7DF2DCF7C26ED8E8709F24F28195FBE20136E4F3D73E481D534",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char300-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char300-overlap64-article-v1/queries.csv",
+        "sha256":  "CE200049A163917FB23B1D26A2283D2CC0F32727E4B8495AEB2B7BFDEFF47BEB",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char300-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char300-overlap64-article-v1/summary.csv",
+        "sha256":  "E2CD0132BDC48D924E39B8CC4A1EDB55BC7BB394806623656CB6F0D87D6A4D51",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char300-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char300-overlap64-article-v1/summary.json",
+        "sha256":  "847B95352436319AA25EADD65828A48DF6C212541C593DC4F9E47C85EAAD599A",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char300-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char300-overlap64-article-v1/top10.csv",
+        "sha256":  "5D0B69DDB22B9A3D8DC959FDE8DD2BBF36014B720817B29E356756F1C62EAC91",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char500-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/queries.csv",
+        "sha256":  "65D44546F93F148F13FD84EF447E481A8F1FD6ACC7F0F4C9E69A35F091FB94AB",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char500-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/summary.csv",
+        "sha256":  "20044D6783D98A7F31997CA60550C38A37D0F629860F6ABCAF260D78CB90670E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char500-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/summary.json",
+        "sha256":  "408F53E4D9A151EFBCB6310DD121B710382244992768419AAFFD5365E370A34E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char500-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char500-overlap64-article-v1/top10.csv",
+        "sha256":  "4522DC43526C6542725C6FA5BBB6AB78083CE665F86266B296127CD3266A6881",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char700-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char700-overlap64-article-v1/queries.csv",
+        "sha256":  "B0A104BFE7E881132E891AA835932B39ECCA4D2CBBFD448E869E3F7AC7E2CC36",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char700-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char700-overlap64-article-v1/summary.csv",
+        "sha256":  "4A24ECE235D0BFF49FDBCC8AA981A14DE3D58C6EFDA58BC059749AC48BA17FE9",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char700-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char700-overlap64-article-v1/summary.json",
+        "sha256":  "9D8FC7D50C8F57B0FBDC037D01808F4D0F54CECFDE18436701DDFE3A77878AEA",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/embeddinggemma/char700-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/embeddinggemma/char700-overlap64-article-v1/top10.csv",
+        "sha256":  "B3FC7A33FE4BDD6C5EB610A2D7E21659223BF95963CCB4F29867D0B33DF3D5F3",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/final-validation-v1/kure-v1/queries.csv",
+        "target":  "experiments/retrieval-validation/expanded-v1/reports/kure-v1/queries.csv",
+        "sha256":  "B6030FBA034BE57CD1A1B0CE50F3C347AE9DFFDF34D182CC6463C8528AA5464B",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/final-validation-v1/kure-v1/README.md",
+        "target":  "experiments/retrieval-validation/expanded-v1/reports/kure-v1/README.md",
+        "sha256":  "AEE94FA41322B1E7493BA6A7568E7DF5EB9424181EEEFCA4E38BA451EA184F58",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/final-validation-v1/kure-v1/report.json",
+        "target":  "experiments/retrieval-validation/expanded-v1/reports/kure-v1/report.json",
+        "sha256":  "10D76CD04F50E6081E3B763EEB0F07B2EF97B768C5BA4BE7BE6C8B195F1287FF",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/final-validation-v1/kure-v1/strata.csv",
+        "target":  "experiments/retrieval-validation/expanded-v1/reports/kure-v1/strata.csv",
+        "sha256":  "1F172C76303BE1286DE20FDF4D72CDAF7FFF3A0108E14C35D0AB1BA0C79DEE2C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/final-validation-v1/kure-v1/summary.csv",
+        "target":  "experiments/retrieval-validation/expanded-v1/reports/kure-v1/summary.csv",
+        "sha256":  "EA5198E727878EF49FFB64859ED9C62330B9218593FEC7A75FBF08CA6EFBF826",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/final-validation-v1/kure-v1/top10.csv",
+        "target":  "experiments/retrieval-validation/expanded-v1/reports/kure-v1/top10.csv",
+        "sha256":  "DC20E583CC555E524D33669FF9501F7D63B80ED6FD05CE2AD3272B33DA1AA481",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/independent-validation-v1/kure-v1/execution-check.json",
+        "target":  "experiments/retrieval-validation/independent-v1/reports/kure-v1/execution-check.json",
+        "sha256":  "70E570C1BAE9A827C5031D0A1CE0081BC4FB1A8AAB42BEFA6C3FCB0A29B40E2C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/independent-validation-v1/kure-v1/interpretation.md",
+        "target":  "experiments/retrieval-validation/independent-v1/reports/kure-v1/interpretation.md",
+        "sha256":  "14F0F6D91E7C76B91295C36221D150E5E1A60D5D74C3586CE058332E8455D6C6",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/independent-validation-v1/kure-v1/queries.csv",
+        "target":  "experiments/retrieval-validation/independent-v1/reports/kure-v1/queries.csv",
+        "sha256":  "147010D3650A9F7A140AF376EFD5F327C6290541B5BC73EE8063E5CDF30B060E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/independent-validation-v1/kure-v1/README.md",
+        "target":  "experiments/retrieval-validation/independent-v1/reports/kure-v1/README.md",
+        "sha256":  "E382F7E44706AD0A1F2A6DE8AE416A834532E385EE04DBE6F28CCE02BD6D7135",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/independent-validation-v1/kure-v1/report.json",
+        "target":  "experiments/retrieval-validation/independent-v1/reports/kure-v1/report.json",
+        "sha256":  "BD0FAED57ADC55B5AC2DC9F9530AE0E69E0C0B480B7814BDDB7207C93360B428",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/independent-validation-v1/kure-v1/summary.csv",
+        "target":  "experiments/retrieval-validation/independent-v1/reports/kure-v1/summary.csv",
+        "sha256":  "0359BA7CDAD43A3822F4B311975D0CE72E4D466BB7326EF26A363F4B9A2E8697",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/independent-validation-v1/kure-v1/top10.csv",
+        "target":  "experiments/retrieval-validation/independent-v1/reports/kure-v1/top10.csv",
+        "sha256":  "A77E62F8EDF40CFE4C68D9BB1E7A0E334BCBE678A9F42F34FD71C65A036DFC6E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/environment.json",
+        "target":  "experiments/model-comparison/reports/kure-v1/environment.json",
+        "sha256":  "C10B9066A87879F4D036DB8AB29233775EF6A01F8561E4BBC0CAAE284CF07A00",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/README.md",
+        "target":  "experiments/model-comparison/reports/kure-v1/README.md",
+        "sha256":  "8C4A7EB7380EED59984F3950E3DD8FDEE903A4455E821F235FE67D88AFC86278",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/kure-v1/char300-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/kure-v1/char300-overlap64-article-v1/queries.csv",
+        "sha256":  "60243DD6B4C4E0084AA7B2D467FD6F10A8995B986F3FDA750BD9B121E2ACDE0F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char300-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/kure-v1/char300-overlap64-article-v1/summary.csv",
+        "sha256":  "42B8D42C1A30766219CFFE4F2AFF4DE74888920C940E236404550E23AFD853F1",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char300-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/kure-v1/char300-overlap64-article-v1/summary.json",
+        "sha256":  "F826C2A00DF58C15324D2B2353DBE51D4BB859F071573D29761055937AFB3C85",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char300-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/kure-v1/char300-overlap64-article-v1/top10.csv",
+        "sha256":  "4580E6FDD1967545AD7E609343BB24003C794F6D57EEC3F19A6C9C9EEA9751A1",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char500-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/kure-v1/char500-overlap64-article-v1/queries.csv",
+        "sha256":  "1320686370B08D31FC18D960CD3440FAF00938E6E6B790D6165291D86F0BF089",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char500-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/kure-v1/char500-overlap64-article-v1/summary.csv",
+        "sha256":  "5D4D41366143BFE2163C2137B0DCFD6DBFF7DADFDD0C5D9A8B8E905F90E20E58",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char500-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/kure-v1/char500-overlap64-article-v1/summary.json",
+        "sha256":  "AD03128C24CA1C2C753723624B95ED5A4E35C7F11FFFEB3C8602F2610C77B587",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char500-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/kure-v1/char500-overlap64-article-v1/top10.csv",
+        "sha256":  "5F376CC27E1244DAA7EF3A5502DA428E7BE9DCE930C2B0874E67AD9D0B1CDB26",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char700-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/kure-v1/char700-overlap64-article-v1/queries.csv",
+        "sha256":  "8F5133F6FEC28CED7A8D7136EFCAC0B5F1A3572996D03DFFA6555003DC98238A",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char700-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/kure-v1/char700-overlap64-article-v1/summary.csv",
+        "sha256":  "D868AA99490E244D9DEF9DB359F2088AF667CE5D5B167F5A49B21090778073FF",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char700-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/kure-v1/char700-overlap64-article-v1/summary.json",
+        "sha256":  "81A1E69152B4E987C70C057CCEF466F6E3A11522DEFF1AD7AE4E6D9C86EA50E6",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/kure-v1/char700-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/kure-v1/char700-overlap64-article-v1/top10.csv",
+        "sha256":  "37B3BF7B1A66DC19B8898BBBE0BAF5CB0C084D61CA8C68EF90A784E74840932E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/comparison.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/comparison.csv",
+        "sha256":  "8AEF416EB7EA50ED066A3CF16E69EC65F997BA115451DE7756B36E129713A4E5",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/execution-check.json",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/execution-check.json",
+        "sha256":  "6B98268C654B5F6B6B987B5E7307DF00E1FB73C2AA7A0FBA41266D682AA8003D",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/interpretation.md",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/interpretation.md",
+        "sha256":  "A7FFFA59ABF7083A9AEA1A4E25E40F312FD4296CE644C982C95ACA44660645DF",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/paired-recall-changes.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/paired-recall-changes.csv",
+        "sha256":  "57875B248181DCE18467F8EA5B6E2A6C444BCFD0C69D0C3223D523256E85593B",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/queries.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/queries.csv",
+        "sha256":  "49EAD3847681FEE4CE7D487B4ED30E382E91A4BB29E70353DDB04929E6402CA5",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/query-chunk-comparison.png",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/query-chunk-comparison.png",
+        "sha256":  "287B407CC142C1D7C2159EC6994DB19D84D63A2F6944B91FBC13DC15F2B206A4",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/README.md",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/README.md",
+        "sha256":  "4C75D695BFE8C1C193B074F98972606FBA0C31DCC3CCE19E1A14FCBD549A4F86",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/report.json",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/report.json",
+        "sha256":  "4259C8A3F2FB9A0139194E1A9528B416A9970DAC081487E584BE6AA4DE4425D3",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/top10.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/top10.csv",
+        "sha256":  "0BB165D4E22A5F044A2323FEAFA4EDB1038D64297C2407A7BA36724A348607E5",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/char500/queries.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/char500/queries.csv",
+        "sha256":  "CA9F1F7F640884CE536971955BC813916DF21FDFB1019353CAB189B0CA4E6EF0",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/char500/report.json",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/char500/report.json",
+        "sha256":  "C4AD2F588ACC639D10F8043B98BB3B6EE810EB7567D67F1AD39B63667A2F41DB",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/char500/summary.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/char500/summary.csv",
+        "sha256":  "750CB89E6657A00501519933F53C89E0C118E782C4D88997DB7DFF36BD75BC07",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/char500/top10.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/char500/top10.csv",
+        "sha256":  "3C90864453E919FFDFFF57673125B1BA6D6C54F12A3C4F7832ECEE609E99CB85",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/char700/queries.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/char700/queries.csv",
+        "sha256":  "1B7DBD58F9BC34A3328E2FC1527D3921416794153A933A2AB39E3F06503357D3",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/char700/report.json",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/char700/report.json",
+        "sha256":  "D90F645247D4374839AD37D782D7D06B2DE9CA805085D195ECE3FC86B7C01D8C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/char700/summary.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/char700/summary.csv",
+        "sha256":  "7E3D46F8641DCEDE4FB68883D59E360D30ACD849F1ED4A40D91E0E285AB68906",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-chunks-v1/kure-v1/char700/top10.csv",
+        "target":  "experiments/query-strategies/chunk-sizes-v1/reports/kure-v1/char700/top10.csv",
+        "sha256":  "96A630195CCDEE18033DBBBA72557AC07CB9067A3E8B1AE5B1D45AEEE269E549",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-transform-v1/kure-v1/execution-check.json",
+        "target":  "experiments/query-strategies/sentence-transform-v1/reports/kure-v1/execution-check.json",
+        "sha256":  "43A78EB57A23623EC71BA63235DD0BE03BD5A54704B9C2F7C1B5A4EC2F87092C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-transform-v1/kure-v1/interpretation.md",
+        "target":  "experiments/query-strategies/sentence-transform-v1/reports/kure-v1/interpretation.md",
+        "sha256":  "89FC7B96D9D9083B8388A9C7D475B4461472A71723495F323A705280C13244D5",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/legal-query-transform-v1/kure-v1/paired-recall-changes.csv",
+        "target":  "experiments/query-strategies/sentence-transform-v1/reports/kure-v1/paired-recall-changes.csv",
+        "sha256":  "97518A4F8EE6990A426560BC608CBAD30D460FB9BA00BD47E02F49D90276A10B",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-transform-v1/kure-v1/queries.csv",
+        "target":  "experiments/query-strategies/sentence-transform-v1/reports/kure-v1/queries.csv",
+        "sha256":  "6F092852F42670426807EA07CCB93DA8AA07C5C796D5565E794A1C2C6DCEC7C1",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-transform-v1/kure-v1/query-strategy-comparison.png",
+        "target":  "experiments/query-strategies/sentence-transform-v1/reports/kure-v1/query-strategy-comparison.png",
+        "sha256":  "350396404C6F7F638A0403DA30445BECB3B5FAEE4B8259201F61B19BB67A0F53",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-transform-v1/kure-v1/README.md",
+        "target":  "experiments/query-strategies/sentence-transform-v1/reports/kure-v1/README.md",
+        "sha256":  "8EA19F4D25EC80B4F0A843F99E96A2192788F200C3261E23F8616B8717029C10",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/legal-query-transform-v1/kure-v1/report.json",
+        "target":  "experiments/query-strategies/sentence-transform-v1/reports/kure-v1/report.json",
+        "sha256":  "F973CF9097DE33CFE0724F3C495D4003A1655B2E3FF0FC0BF19AED0B57AE4E89",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-transform-v1/kure-v1/summary.csv",
+        "target":  "experiments/query-strategies/sentence-transform-v1/reports/kure-v1/summary.csv",
+        "sha256":  "53DB353C50133BD4B8F29D85D219CBE5D4553D373076301A0B5A6EE9BB9B1A4B",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/legal-query-transform-v1/kure-v1/top10.csv",
+        "target":  "experiments/query-strategies/sentence-transform-v1/reports/kure-v1/top10.csv",
+        "sha256":  "1E3D025CF9D015C42869F31C134878D0670C9E1506FC466A528F19C3F416076B",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/bge-m3-char300-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/bge-m3-char300-verification.json",
+        "sha256":  "35F770E856106968A0D597EA8044167A016AC9509FE52175360118994BAE2A0B",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/bge-m3-char500-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/bge-m3-char500-verification.json",
+        "sha256":  "006A040E0EC22453170732BCBB407E5DC50A3D4073A6D03A5934A97ED6003D78",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/bge-m3-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/bge-m3-verification.json",
+        "sha256":  "19AA8A0DCBA38EDEA65E41A91BF4F0E7539896B27FBD1FCD43ACCB3F5E80983E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/embeddinggemma-char300-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/embeddinggemma-char300-verification.json",
+        "sha256":  "A7DDAE5A7F1BF6276D4C5928F06C0C265D40B3A8C930A7A8A8B86B56B880CC23",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/embeddinggemma-char500-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/embeddinggemma-char500-verification.json",
+        "sha256":  "89468314CC4465CE5B691E17A7A16B35FB20DEC071993B8C56CAB8744BBF771A",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/embeddinggemma-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/embeddinggemma-verification.json",
+        "sha256":  "2B021D44D6F6324D64F496628068E776D89F95B02C0E189C9F431A7EC5CDC928",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/kure-v1-char300-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/kure-v1-char300-verification.json",
+        "sha256":  "932C698CDEDBC92759C3EED7641C06F141ADB9BAF033C0F6255BE4495D2023E0",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/kure-v1-char500-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/kure-v1-char500-verification.json",
+        "sha256":  "21D4D22C9F3C1538B94598FB2018494759306545D5609D3B4A41B4F53C5C6B12",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/kure-v1-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/kure-v1-verification.json",
+        "sha256":  "3F0F1101FFA0AA80704C2F5FF2BADB2CD0C5F9457531523666F528A0485EECA0",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/qwen3-0.6b-char300-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/qwen3-0.6b-char300-verification.json",
+        "sha256":  "0F4ECBA621930D7BBBAD3F98727C17171608676E4E6842F35BD81D0F6676A01B",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/qwen3-0.6b-char500-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/qwen3-0.6b-char500-verification.json",
+        "sha256":  "1144E1A3649DED1449D9466675D41D142AC2BF7DFC4C76E1D785FE16C6DBF2ED",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/qwen3-0.6b-verification.json",
+        "target":  "experiments/infrastructure/qdrant/reports/qwen3-0.6b-verification.json",
+        "sha256":  "0F407322A338B619F9D764F3318C95A65AE2CACB71BED6DC7B85A46AA3083BB1",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/README.md",
+        "target":  "experiments/infrastructure/qdrant/reports/README.md",
+        "sha256":  "65C13ED85512A47C39D1942B91D29B3B1EEFE5CFDE0364BC1B52036861AE3D23",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/agreement.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/agreement.csv",
+        "sha256":  "342EA3C5E82BB836EEE977A9388DE3D251F08BF4B8B96332B34FA821D4760FF9",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/comparison.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/comparison.csv",
+        "sha256":  "EF2FA205D79AE75923023EABF41918820C902B093BBC6EC804AD26C407B81173",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/comparison.md",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/comparison.md",
+        "sha256":  "98FD1F5751E7B6BE03758C3FFF849D35BC9EDB68879F32297762C13AC6282351",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/latency-summary.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/latency-summary.csv",
+        "sha256":  "6048D19E28CCF34159F8506162E36CA254A9CC6E16DA2D0C8CD3CF7E91F4A378",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/bge-m3/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/bge-m3/latency.csv",
+        "sha256":  "5036F7F44DDB7D5CAE25C478FE2FFE29A46DA1EBE93DEF9716B8CA7DE371C0CD",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/bge-m3/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/bge-m3/queries.csv",
+        "sha256":  "84FC0CF3F634A3AD6B39C597F708CE827BA5F43B920597BE6DDE1D6234D66463",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/bge-m3/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/bge-m3/report.json",
+        "sha256":  "01BB8E930202B4BFF139DA37CEEA8AFC8D0CFC836F2FDCE321CAEA334E658D15",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/bge-m3/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/bge-m3/top10.csv",
+        "sha256":  "8752F770440F8A9F9DBFB28FA429344ADB2038395FB4EBB180687B36A0C03BF7",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/agreement.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/agreement.csv",
+        "sha256":  "D3F209D0A57B1534AF6241B079BB699E0283C9F86C084FD8F3CECF77CCBBE9E3",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/comparison.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/comparison.csv",
+        "sha256":  "8C2C4DF3CF7975B755674D5EC4D9054481FD88059FA162DF027D0C670D4F3E29",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/comparison.md",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/comparison.md",
+        "sha256":  "76DE9A99E0A40E07F1B85272A49A735F73E61BC73FB702D9BA58067F68DAE017",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/latency-summary.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/latency-summary.csv",
+        "sha256":  "3D1796B3DD3D9E07044365C755C55F4F5AE615737BB3E51E18237CDCD040E75C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/bge-m3/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/bge-m3/latency.csv",
+        "sha256":  "340B3D39B09456D0E22F7CD96EDDAE12EA15B3B0F97D5D34CE8F12B9B32608C2",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/bge-m3/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/bge-m3/queries.csv",
+        "sha256":  "DB3F0EB0C408D2E074523716CDC9AE783F716ED6B166585309EAE968C40BF883",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/bge-m3/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/bge-m3/report.json",
+        "sha256":  "3C293A22B8BBBC4961E0C6C9EC293F42E6319C5BC349495692BFFC1585C813EE",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/bge-m3/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/bge-m3/top10.csv",
+        "sha256":  "2FF77F20BA11C09D9971EE0653CEA36FE1592E05815A6DF4C8B8A9B6977E88FD",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/embeddinggemma/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/embeddinggemma/latency.csv",
+        "sha256":  "369B1B1E35FF1E2A5AB2E9A141378A39A6FF8EA35FDE8DC4A23E3705C863CA4E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/embeddinggemma/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/embeddinggemma/queries.csv",
+        "sha256":  "25114C4EBCB23A5D3370509AE928702BE3793F11F2486EDA69E0775FD200D7D1",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/embeddinggemma/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/embeddinggemma/report.json",
+        "sha256":  "41047AAEABE408AE0662C1C925FAB6F6665540D8A844B6997C30DC471E0778C6",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/embeddinggemma/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/embeddinggemma/top10.csv",
+        "sha256":  "AD105435D75E1E19CC2FB1E6ADC008E5A2600D6E017217DB50386C8ED125159F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/kure-v1/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/kure-v1/latency.csv",
+        "sha256":  "F3CF9F7199832E97A9E526E1825C95D127C42F065B709678C08982DDCA09A047",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/kure-v1/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/kure-v1/queries.csv",
+        "sha256":  "F80B0925B12F1834AFD01ACB9AFB17E25BA3B0AF5CBC62F4A01016EB45A0AA06",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/kure-v1/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/kure-v1/report.json",
+        "sha256":  "E5061C2D1C4109AD233004205F53FAC21D6AC323F62FE9B5B4B870DA41C23C19",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/kure-v1/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/kure-v1/top10.csv",
+        "sha256":  "24510A65398387F4DD59F7B9E241C372A66469D533D978C65308ABEA8E1CBB2F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/qwen3-0.6b/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/qwen3-0.6b/latency.csv",
+        "sha256":  "A5F21E0DDCCC8702A8E213EB454008CBC79124BDA40044D32A39C6781281308C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/qwen3-0.6b/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/qwen3-0.6b/queries.csv",
+        "sha256":  "FC709B6D53AAF77400AA2C9F7FE49A1F9B7D8CCBE23E2F3583C5A40EDCAEDBC8",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/qwen3-0.6b/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/qwen3-0.6b/report.json",
+        "sha256":  "0504C620415254A7FFF5E3EA842BC5507B49D695BC2AA44E307B1EB1457FABE7",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char300/qwen3-0.6b/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char300/qwen3-0.6b/top10.csv",
+        "sha256":  "D618A191FDD55C90F86199F4BCB53D76708A42DC0738C4380FC7525201F3534F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/agreement.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/agreement.csv",
+        "sha256":  "E31D6FB449FDFE8198C3954D3F86F65D285A309F092564A29C87FD1C614D1A25",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/comparison.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/comparison.csv",
+        "sha256":  "87163809E2814207B59D971E0CB87691A371019F548F79D4D3A95965AD1D7AEA",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/comparison.md",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/comparison.md",
+        "sha256":  "DE3C2A2F56892EBB609EBC14846E9E59EEF4934E71D0AA97138401DFBB9EFF39",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/latency-summary.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/latency-summary.csv",
+        "sha256":  "72F877D024F2696C0A877A52CCEEA9B2F9C35A825EBEFAAA9AB0BD306B851166",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/bge-m3/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/bge-m3/latency.csv",
+        "sha256":  "3C414D3C9943FBDA6052C33045E8210F05824F14E8307DA8D91669F2FAFE3203",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/bge-m3/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/bge-m3/queries.csv",
+        "sha256":  "F4DE43DFF1F6067F7D1464F2521CF2828A7FAAA5B6B9416A2A63FC5EEE8CF96E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/bge-m3/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/bge-m3/report.json",
+        "sha256":  "02101222D7EE7CC6BB190690A6082AE448F09D481152A82DE7FE53CA23CCC88E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/bge-m3/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/bge-m3/top10.csv",
+        "sha256":  "FD513C28D5CCE66DCD83BB3F3CE1763ACD783238F59330E585551DB4C1DC59C2",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/embeddinggemma/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/embeddinggemma/latency.csv",
+        "sha256":  "A41D7B061ADE459C540CF849B46BB855C74ABE78338F96959146F831750ED380",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/embeddinggemma/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/embeddinggemma/queries.csv",
+        "sha256":  "84E15D358615B725DB12CA3BAA2CCD3E2F48CADA45847D8571CA336C91C96636",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/embeddinggemma/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/embeddinggemma/report.json",
+        "sha256":  "6B641D31A9F5FC4C58BC00299FF3CE5E0DB14A0EF3D6DB53CFDAB4603455C0BB",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/embeddinggemma/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/embeddinggemma/top10.csv",
+        "sha256":  "4203423AF9C7B7FCBC6692123C094ECEFAEB19BC55A1029995EFC6B641CEA14C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/kure-v1/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/kure-v1/latency.csv",
+        "sha256":  "B5E9DB1D862ACF791AE18B1D7C872E25E1E392904A03DBF536BB04D24E202C65",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/kure-v1/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/kure-v1/queries.csv",
+        "sha256":  "939D2FF86E77D36E263CB631BB77F37964773EA79FF58E2016618FF36524D65C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/kure-v1/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/kure-v1/report.json",
+        "sha256":  "D447C95F932732730CC63655DF172A550A9A3332FB3006EEAA8ED48FB2EA612D",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/kure-v1/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/kure-v1/top10.csv",
+        "sha256":  "699B7354E9D8809A51FC259441E4C4CC9673EAC59EEC8278F81A27096B6D129C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/qwen3-0.6b/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/qwen3-0.6b/latency.csv",
+        "sha256":  "EF02BACB03D54DA6F1641ABBAAAFB6FCE4BF4FAFF1F73CC2F2AFB55D2A0E807F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/qwen3-0.6b/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/qwen3-0.6b/queries.csv",
+        "sha256":  "0B48325AD911E5BBBBD21CFAC6DC7B01504B31E4A8297CB452466C7D21806886",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/qwen3-0.6b/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/qwen3-0.6b/report.json",
+        "sha256":  "732FD3DD991BD218B65140FDFED7C783B54187A00C42B85153FA0E43B6929E64",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/char500/qwen3-0.6b/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/char500/qwen3-0.6b/top10.csv",
+        "sha256":  "9E2C2A02509FFD0970ECB87A25970867C1DAEC0631F2665FE58C95E63550EE89",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/embeddinggemma/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/embeddinggemma/latency.csv",
+        "sha256":  "D5FACCEFCDBC2BD07823EBA59328D1E5C40CDC9B2C706B26C20C9909D2AD2B46",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/embeddinggemma/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/embeddinggemma/queries.csv",
+        "sha256":  "AA7030DA400342E7427414C192DBB5344B30A1B2B411C2EDD71C74587D2F894F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/embeddinggemma/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/embeddinggemma/report.json",
+        "sha256":  "5AC44DB3FAF657808AF6466D29D979DB8548DEDC5D7E5E87D632EF3CAB169B8A",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/embeddinggemma/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/embeddinggemma/top10.csv",
+        "sha256":  "04DB90551DA64EFD7D07AFBDF414914D2AAA84300A1B03321470999DDC6EC48F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/kure-v1/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/kure-v1/latency.csv",
+        "sha256":  "97677A93E1D1FC40D83ECEB4AD453E9C4DA1AAE203CA2F5ED21337384A8657FA",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/kure-v1/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/kure-v1/queries.csv",
+        "sha256":  "6613F7DA03D34820481F2C4D920CDA31E897260DBBAE858462CCF4679A2BDFD7",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/kure-v1/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/kure-v1/report.json",
+        "sha256":  "E72CA389880CF9F67785A1A9F76AC6401EED6AD2DC2A5FE961350F3F1C1E6B8D",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/kure-v1/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/kure-v1/top10.csv",
+        "sha256":  "422A61F67DE026EFE88FA252883E047A1E71D315F35CE18A1B215BC2668E85D3",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/qwen3-0.6b/latency.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/qwen3-0.6b/latency.csv",
+        "sha256":  "FFCAA0D9BF450EF24ED615C4AC4A25A356B0F054577DA4BD35AC1EA510433497",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/qwen3-0.6b/queries.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/qwen3-0.6b/queries.csv",
+        "sha256":  "7CAB9DC344B77FF8B3E37E6CF5B4E52A46115FF4C45696B3842C76A5F59542DA",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/qwen3-0.6b/report.json",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/qwen3-0.6b/report.json",
+        "sha256":  "F776ABE9E880DF254A8279FAC4A487C2D88D3B5C5DD2000FB69C53331FFCF8FE",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qdrant-lab/benchmark/qwen3-0.6b/top10.csv",
+        "target":  "experiments/infrastructure/qdrant/reports/benchmark/qwen3-0.6b/top10.csv",
+        "sha256":  "7886C0F70A5D21AA563D0F9C9584168F373A25BC9083A544F0B6A6193E589788",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/comparison.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/comparison.csv",
+        "sha256":  "37435156F1A119DB432BBDE215CC73D89A2A569FDEAF37FD1B287BAC2D25550A",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/comparison.md",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/comparison.md",
+        "sha256":  "65BEDE71525F875B013EC6D94C90080CCF14DBD7386DF48F7A78397F1919BE93",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/query-rewrite-v1/paired-queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/paired-queries.csv",
+        "sha256":  "9306DC3A817EA2ED3319D9715012D3522CD225CAE15C0E8123717601E0FE9E59",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/README.md",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/README.md",
+        "sha256":  "0077A9E8C426E13D9C05DE33A2FC6228F283E52CCBC7CE705FB4E5C15911F80F",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/query-rewrite-v1/bge-m3/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/bge-m3/queries.csv",
+        "sha256":  "AF1109490F3BEF37D5AC5C882459F2369931E5F35A8051287ACED5EA83CE4AC1",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/bge-m3/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/bge-m3/report.json",
+        "sha256":  "F63AA32632A6047DBA3EC837E8D1CFC0C536B57C402A3C9FF971DCD73F7704D4",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/bge-m3/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/bge-m3/summary.csv",
+        "sha256":  "EBC79496F6EE7335DBE5C92572269F5CB81D8E6E4B89AB8A36A4F265C93A8B2F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/bge-m3/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/bge-m3/top10.csv",
+        "sha256":  "C73AF6D9AAF3B26B69E1A61FBC2904572E135A4EECAED9E43BCF10A692F6EC18",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/bge-m3/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/bge-m3/queries.csv",
+        "sha256":  "3971819466E2B10532755B9DA086DBD5CDA536CF8A64EFC9FF1B21783E1596A5",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/bge-m3/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/bge-m3/report.json",
+        "sha256":  "BEB0CEF0B2235FACED28A8B80B72B07579086785178C0B7B2F7E8FCC3ED1AB84",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/bge-m3/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/bge-m3/summary.csv",
+        "sha256":  "BAFC0442EB670D746C50FC8AB9EC785875646B4459FE083D98C3D65CB5B9B794",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/bge-m3/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/bge-m3/top10.csv",
+        "sha256":  "3B0A3FD3C89988F3A79896EDA8A0A51F5396FD0FEFE5C3A86855C7AEBF8030C2",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/embeddinggemma/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/embeddinggemma/queries.csv",
+        "sha256":  "816685DBC91E0BF26036D1C2161D0F7E9C39B3CB19378AF8B2FB31FCE31EA747",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/embeddinggemma/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/embeddinggemma/report.json",
+        "sha256":  "B099C217FAE1D3A9F5E8F2FA0532E1017AD17E239D0C3DB148E838BD73BFA303",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/embeddinggemma/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/embeddinggemma/summary.csv",
+        "sha256":  "3151D88ADE23CA70488101C1BAB7744FB731C9649DACFA3690E2265CD9FCE467",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/embeddinggemma/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/embeddinggemma/top10.csv",
+        "sha256":  "07FEF66AC2C8798C4A962C9282AF01F370DCB4D62C1B35A029AA31D266116001",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/kure-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/kure-v1/queries.csv",
+        "sha256":  "81189AEAF04F44CF4872469731BCB316661EB2E4BBB4AE20735E67356257BD0F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/kure-v1/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/kure-v1/report.json",
+        "sha256":  "15C0CC506663B6198164D23FFC5D385968A2F0B5045DA6B2B811D73DA3D3147C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/kure-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/kure-v1/summary.csv",
+        "sha256":  "AA040D704EDD86F6AA86E3B8C5CD506A27434973FFC4A162BA257A252352CF0C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/kure-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/kure-v1/top10.csv",
+        "sha256":  "DA9355B34B8C0387253B91DFA3225D8C38AED50FF04005B3556243F544C35052",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/qwen3-0.6b/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/qwen3-0.6b/queries.csv",
+        "sha256":  "1FE9873FF4C98CEEEB4DC6AEDE87EEE9AE0877364EEB51A2D5C85DFF4198F6CA",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/qwen3-0.6b/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/qwen3-0.6b/report.json",
+        "sha256":  "FCD4C2A448F3EC45862ED2C9D22DEAA337C2349309370EF5275A3965C0546497",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/qwen3-0.6b/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/qwen3-0.6b/summary.csv",
+        "sha256":  "79FE16607B724525AFAD0AD1D81E6035EFCF84AA045437DB2C676FB26168D61C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char300/qwen3-0.6b/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char300/qwen3-0.6b/top10.csv",
+        "sha256":  "AB2E53B902BC5D93F02A2CB0D6C2C43C426CAAB67A6F69937059F832AA2150A9",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/bge-m3/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/bge-m3/queries.csv",
+        "sha256":  "57CE329D53AA6052FC11FB08E8BC7BC6D7931655E60ABC3B32C24F40DCF4F5FD",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/bge-m3/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/bge-m3/report.json",
+        "sha256":  "66ADA9D0B159A5BF50A803732718AA241D7B6C472D6ED6DA443873AAF31220FE",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/bge-m3/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/bge-m3/summary.csv",
+        "sha256":  "83B10E34468172E6D080CBB3905BA6E4F0E6A903196DE87607C46DD68018E93F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/bge-m3/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/bge-m3/top10.csv",
+        "sha256":  "643A2CAFE529EEFE3A5ABA7EC436A9BE38C1C9C7AEE238120C31A73CB24EB2FB",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/embeddinggemma/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/embeddinggemma/queries.csv",
+        "sha256":  "D1F74B2B595825277DA98B21707933496E2D4CF38ABF8BA1FCD7906FA5CEECD4",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/embeddinggemma/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/embeddinggemma/report.json",
+        "sha256":  "A3F0A27E7E20CD14E49D7BD5B7BBCE6851809AF1449DFA1317E00A6A5998F2BE",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/embeddinggemma/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/embeddinggemma/summary.csv",
+        "sha256":  "9A5B39AA293647076B574CBBCA9017D86CA84D37AAE5CFDF25ADF762FE754E56",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/embeddinggemma/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/embeddinggemma/top10.csv",
+        "sha256":  "DF84AC08A360A4E091E3277B16ED7F4E3382893632DAFE0899FCED050BD5B6CC",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/kure-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/kure-v1/queries.csv",
+        "sha256":  "99498AED3CB0671A2E8F18778D773CDAF9B858F528F53F343B7BD5B4CDFFB6B2",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/kure-v1/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/kure-v1/report.json",
+        "sha256":  "A2A7579D5DB715D85A17ACD577B91156A89EF5A26D39CE02698EBC61E5B18AFA",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/kure-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/kure-v1/summary.csv",
+        "sha256":  "EFDE47CF8DF4221A220E12D602668A70727445A6BA2DEE0E2DDA6E8C143A72EB",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/kure-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/kure-v1/top10.csv",
+        "sha256":  "8BF53E0EFEC0883ED344AE8F5D40D4239562B19BD4956B0D3B6F433D907E7362",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/qwen3-0.6b/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/qwen3-0.6b/queries.csv",
+        "sha256":  "78CB46C75F6006882988CECD1E39D9127850873AB77F8407FE202AEA0C72F2A5",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/qwen3-0.6b/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/qwen3-0.6b/report.json",
+        "sha256":  "842821E5A5BA850462C18762EB591AF9E6AD44E2C75310CC2C5A5D00C5774987",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/qwen3-0.6b/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/qwen3-0.6b/summary.csv",
+        "sha256":  "9ED361CBB020B4754C2AE8456464641D13BACA3AAF34729FEC8199449C0B3B12",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/char500/qwen3-0.6b/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/char500/qwen3-0.6b/top10.csv",
+        "sha256":  "1DC6A06202D89CC30782950DCA993D716501C8B60A77DC8461395C20029F04E4",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/embeddinggemma/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/embeddinggemma/queries.csv",
+        "sha256":  "B0EC082D630C282F07E66304BB890804D09B176FBFC86AB7157976A34B30F165",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/embeddinggemma/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/embeddinggemma/report.json",
+        "sha256":  "67A6614BC4CCC7734949164E318FD7B292F0F1172D8EA209A280E8065FCD1A59",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/embeddinggemma/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/embeddinggemma/summary.csv",
+        "sha256":  "24FE9350AAD57657643A7E2821DFCC36F46F521747C56F4395825CDA0F6450C9",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/embeddinggemma/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/embeddinggemma/top10.csv",
+        "sha256":  "16BD79839B566D4B968FE4159526EB8B3178977137A1B7594324146084B8A209",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/kure-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/kure-v1/queries.csv",
+        "sha256":  "3C4ED6315A86DA1BF7A335FB46CEC623E6D528298C4EF4321770E910B0DD9760",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/kure-v1/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/kure-v1/report.json",
+        "sha256":  "A246B4C17EE3CAC6C38700A018C44DE5F9CC151C77D32937903A1730E1D0C064",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/kure-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/kure-v1/summary.csv",
+        "sha256":  "C302432B1CBFD37BBDD98DB9117DB07D5C9FF8A8BD9171F20180405066939F8F",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/kure-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/kure-v1/top10.csv",
+        "sha256":  "2F93978FA2264513A59DBA9ED62A570EF8CDB38636EFDD5B31E13AEB9B4F5B5E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/qwen3-0.6b/queries.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/qwen3-0.6b/queries.csv",
+        "sha256":  "FD293A4004125086F86CA50A80D6B3C39997ABE7848858B2E3F9BE6AB4517E80",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/qwen3-0.6b/report.json",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/qwen3-0.6b/report.json",
+        "sha256":  "D7C012300FF284E426AD6E827B874C4B277A65739F5ECFEB5EAFB51890605689",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/qwen3-0.6b/summary.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/qwen3-0.6b/summary.csv",
+        "sha256":  "593F300B744F94DF03C3FDFDF8727766AD92B8E1C6086F3B0B3D3B85D9340EFC",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/query-rewrite-v1/qwen3-0.6b/top10.csv",
+        "target":  "experiments/model-comparison/reports/query-rewrite-v1/qwen3-0.6b/top10.csv",
+        "sha256":  "1D75CEB07EB5E464C8532C799A13094852C4D11241DB27238B908EAB80FD8CEF",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/README.md",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/README.md",
+        "sha256":  "DA028DEC95BBF70FDFC0F2C9E05C358D49066387898EC25D8B228A3D017A49B8",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char300-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char300-overlap64-article-v1/queries.csv",
+        "sha256":  "2452CBEF58C232449F9EE6FAB989DE7B67E0EE7AE2EDC1BB1CF7167632C75F44",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char300-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char300-overlap64-article-v1/summary.csv",
+        "sha256":  "EBBD65A537D8ECFE31798A8F4F8BB58D3F784AE7EF5B2D7BF23B46AA92DED373",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char300-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char300-overlap64-article-v1/summary.json",
+        "sha256":  "A562FAF33E399B2C3DA759CEDE447921427097F5EE8C969E2944FB1D7032155B",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char300-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char300-overlap64-article-v1/top10.csv",
+        "sha256":  "01A409967C420045220BA23C5821AB61A75DF066CF213B59F1E2C8B8677DBFB9",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char500-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char500-overlap64-article-v1/queries.csv",
+        "sha256":  "9AC1B89AC63EC4D9622B03142B6EE45B8D70907725C20F85B9DF0D7F1A3A98A4",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char500-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char500-overlap64-article-v1/summary.csv",
+        "sha256":  "470643250C4ED62FFBAA6D845ACCE476376A3B5841B7D4F390B0102EF23ED854",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char500-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char500-overlap64-article-v1/summary.json",
+        "sha256":  "E4FB90FF129296536FA51984DB07D67CE8578A0EABF24F75BAC6D0E7CD6D6B65",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char500-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char500-overlap64-article-v1/top10.csv",
+        "sha256":  "41AACFE1147496261F37B5BEE53C74E25DA97D3F78EA5C951051B9CB7CDD070C",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char700-overlap64-article-v1/queries.csv",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char700-overlap64-article-v1/queries.csv",
+        "sha256":  "FA8483D8238FEE9E01B4B26112E99E814C1BB8109A2642FF1654A7ABE99F4CB7",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char700-overlap64-article-v1/summary.csv",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char700-overlap64-article-v1/summary.csv",
+        "sha256":  "6A59F5B89708C013EDC65FD8598B9EC54B3A4324642AE1FBDAA499F96117F06A",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char700-overlap64-article-v1/summary.json",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char700-overlap64-article-v1/summary.json",
+        "sha256":  "F5376FD79E3B0F98A415910E8F42018BA4C1AE44D040342532F31BBED1B3D7C2",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/qwen3-0.6b/char700-overlap64-article-v1/top10.csv",
+        "target":  "experiments/model-comparison/reports/qwen3-0.6b/char700-overlap64-article-v1/top10.csv",
+        "sha256":  "E652D06B2B183A44A37805C6194D537ED8D09D843D9E0ADD5E9AF4F2C78E8DC1",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/recall50-v1/kure-v1/manifest.json",
+        "target":  "experiments/query-strategies/candidate-coverage-v1/reports/kure-v1/manifest.json",
+        "sha256":  "E38E727792375BE90EF8532BF7730FA1AD08EA7F794F79E173E6F638B81C93A1",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/recall50-v1/kure-v1/queries.csv",
+        "target":  "experiments/query-strategies/candidate-coverage-v1/reports/kure-v1/queries.csv",
+        "sha256":  "E350F8B2C75688A06891B726D6AA982FFF8B81FC8931AB87CB3650BA194F4533",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/recall50-v1/kure-v1/README.md",
+        "target":  "experiments/query-strategies/candidate-coverage-v1/reports/kure-v1/README.md",
+        "sha256":  "C4B3A880A659578EC440B8E6CB0D2C2E2437932BC4A054DF3B618768CA0C2E6A",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/recall50-v1/kure-v1/report.json",
+        "target":  "experiments/query-strategies/candidate-coverage-v1/reports/kure-v1/report.json",
+        "sha256":  "E4E589D5ECB83873BC38F811A7E01AB8608733B21C427814A1770612DAC6395A",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/recall50-v1/kure-v1/summary.csv",
+        "target":  "experiments/query-strategies/candidate-coverage-v1/reports/kure-v1/summary.csv",
+        "sha256":  "538CBCA0945A1B13F0E8AA08079B25C2F7401DB2043640024E422634AECCE378",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/recall50-v1/kure-v1/top50.csv",
+        "target":  "experiments/query-strategies/candidate-coverage-v1/reports/kure-v1/top50.csv",
+        "sha256":  "00D4E96EB09BEAA7D7F9B348B69810C9D4E27D8B19582A1A3DCF78B8B41CF246",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/threshold-sweep-v1/candidates.csv",
+        "target":  "experiments/query-strategies/threshold-sweep-v1/reports/candidates.csv",
+        "sha256":  "1159BDAADA1B392CDE77363C9B1A5311E6E96ADC08C62F1A6F95A8C52EB5A72E",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/threshold-sweep-v1/README.md",
+        "target":  "experiments/query-strategies/threshold-sweep-v1/reports/README.md",
+        "sha256":  "D478FD5993126E38A75C534BA9FDD79939ACF674AB0BEFF35CBB6C81BC5D2B7C",
+        "immutable":  false
+    },
+    {
+        "source":  "reports/threshold-sweep-v1/report.json",
+        "target":  "experiments/query-strategies/threshold-sweep-v1/reports/report.json",
+        "sha256":  "86B4F132D579115E9C9D36AF17E21E0C383D8B043167CBECFF9AB5D83F639A50",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/threshold-sweep-v1/sweep.csv",
+        "target":  "experiments/query-strategies/threshold-sweep-v1/reports/sweep.csv",
+        "sha256":  "10A04C6D5E0361BDFFA413E6EB4AF3699D7E416182B656A78A684390C1C8C822",
+        "immutable":  true
+    },
+    {
+        "source":  "reports/threshold-sweep-v1/threshold-tradeoff.png",
+        "target":  "experiments/query-strategies/threshold-sweep-v1/reports/threshold-tradeoff.png",
+        "sha256":  "71CE7C6C5775CDC24F70CC1C31AAD74578B631DF649F3D0D21AFB1D949F7D321",
+        "immutable":  true
+    }
+]

@@ -13,6 +13,7 @@
 | 점수 임계값 탐색 | [query-strategies/threshold-sweep-v1](query-strategies/threshold-sweep-v1/reports/README.md) | 과거 분석 보존, 탐색 후보 초기화·현재 미사용 |
 | Multi-Query·BM25·RRF 비교 | [hybrid-search/ablation-v1](hybrid-search/ablation-v1/review/README.md) | 기준선 완료, 후속 2~4단계 계획 |
 | Qdrant 관리와 과거 검색 대조 | [infrastructure/qdrant](infrastructure/qdrant/README.md) | 데이터 보존, 목적별 별칭 적용 |
+| 로컬에 남은 실험 자료 보존 | [infrastructure/local-artifact-import-20261023](infrastructure/local-artifact-import-20261023/README.md) | 기존 결과 중복 확인·추가 14개 보존, 새 평가 없음 |
 
 현재 후속 실험 기준은 KURE-v1·500자·중복 64자·법률 쟁점 변환이며 Hit@5와 Complete@5를 공동 우선으로 본다. 운영 확정은 아니다. 과거 모델 선정 기준은 당시 기록으로 유지한다.
 

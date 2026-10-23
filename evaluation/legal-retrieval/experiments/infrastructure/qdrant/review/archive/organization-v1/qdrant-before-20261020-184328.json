@@ -1,0 +1,1019 @@
+{
+    "collections":  [
+                        {
+                            "collection":  "molelaw_candidates_bge_m3_c300_87bbbc31",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_bge_m3_c300_docs",
+                            "role":  "docs",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  10999,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                                             "model":  "bge-m3",
+                                             "max_chars":  300,
+                                             "freeze_sha256":  "87bbbc318e4bc973d5db6d3feb9fa22880d2928ef7328f759f15d2fae67e5de5",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_bge_m3_c300_87bbbc31_queries",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_bge_m3_c300_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  108,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                                             "model":  "bge-m3",
+                                             "max_chars":  300,
+                                             "freeze_sha256":  "87bbbc318e4bc973d5db6d3feb9fa22880d2928ef7328f759f15d2fae67e5de5",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_bge_m3_c500_87bbbc31",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_bge_m3_c500_docs",
+                            "role":  "docs",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  8286,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                                             "model":  "bge-m3",
+                                             "max_chars":  500,
+                                             "freeze_sha256":  "87bbbc318e4bc973d5db6d3feb9fa22880d2928ef7328f759f15d2fae67e5de5",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_bge_m3_c500_87bbbc31_queries",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_bge_m3_c500_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  108,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                                             "model":  "bge-m3",
+                                             "max_chars":  500,
+                                             "freeze_sha256":  "87bbbc318e4bc973d5db6d3feb9fa22880d2928ef7328f759f15d2fae67e5de5",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_bge_m3_c700_87bbbc31",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_bge_m3_c700_docs",
+                            "role":  "docs",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  7396,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0",
+                                             "model":  "bge-m3",
+                                             "max_chars":  700,
+                                             "freeze_sha256":  "87bbbc318e4bc973d5db6d3feb9fa22880d2928ef7328f759f15d2fae67e5de5",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_bge_m3_c700_87bbbc31_queries",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_bge_m3_c700_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  108,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0",
+                                             "model":  "bge-m3",
+                                             "max_chars":  700,
+                                             "freeze_sha256":  "87bbbc318e4bc973d5db6d3feb9fa22880d2928ef7328f759f15d2fae67e5de5",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_qwen3_0_6b_c300_8d2fb150",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_qwen3_0_6b_c300_docs",
+                            "role":  "docs",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  10999,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                                             "model":  "qwen3-0.6b",
+                                             "max_chars":  300,
+                                             "freeze_sha256":  "8d2fb150b6de26b1a29d7b4bbc9822116945fefca9c05264ce2fd0ff244f6375",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_qwen3_0_6b_c300_8d2fb150_queries",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_qwen3_0_6b_c300_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  108,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                                             "model":  "qwen3-0.6b",
+                                             "max_chars":  300,
+                                             "freeze_sha256":  "8d2fb150b6de26b1a29d7b4bbc9822116945fefca9c05264ce2fd0ff244f6375",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_qwen3_0_6b_c500_8d2fb150",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_qwen3_0_6b_c500_docs",
+                            "role":  "docs",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  8286,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                                             "model":  "qwen3-0.6b",
+                                             "max_chars":  500,
+                                             "freeze_sha256":  "8d2fb150b6de26b1a29d7b4bbc9822116945fefca9c05264ce2fd0ff244f6375",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_qwen3_0_6b_c500_8d2fb150_queries",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_qwen3_0_6b_c500_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  108,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                                             "model":  "qwen3-0.6b",
+                                             "max_chars":  500,
+                                             "freeze_sha256":  "8d2fb150b6de26b1a29d7b4bbc9822116945fefca9c05264ce2fd0ff244f6375",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_qwen3_0_6b_c700_8d2fb150",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_qwen3_0_6b_c700_docs",
+                            "role":  "docs",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  7396,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0",
+                                             "model":  "qwen3-0.6b",
+                                             "max_chars":  700,
+                                             "freeze_sha256":  "8d2fb150b6de26b1a29d7b4bbc9822116945fefca9c05264ce2fd0ff244f6375",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_candidates_qwen3_0_6b_c700_8d2fb150_queries",
+                            "group":  "query-strategies",
+                            "alias":  "lab_candidates_qwen3_0_6b_c700_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  108,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0",
+                                             "model":  "qwen3-0.6b",
+                                             "max_chars":  700,
+                                             "freeze_sha256":  "8d2fb150b6de26b1a29d7b4bbc9822116945fefca9c05264ce2fd0ff244f6375",
+                                             "kind":  "recall50-models-v1",
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "threshold_policy":  "none"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_eval_catalog_v1",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_catalog",
+                            "role":  "catalog",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  8,
+                            "metadata":  {
+                                             "kind":  "evaluation-catalog-v1",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1"
+                                         },
+                            "vectors":  {
+
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_eval_queries_bge_m3_79076464_981fd202",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_bge_m3_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  220,
+                            "metadata":  {
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "dataset_sha256":  "0B875A1EF22CCE51C0E40672534ECF527C159C1633B93EF8551BAA459B09A117",
+                                             "model":  "bge-m3",
+                                             "input_mode":  "bge-m3-title-text-v1",
+                                             "kind":  "evaluation-queries-v1",
+                                             "rewrite_sha256":  "981FD202C9E24019A2BD79848906A500A8192D11045FA90BE24C02AF968DE123"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_eval_queries_embeddinggemma_85462619_981fd202",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_embeddinggemma_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  220,
+                            "metadata":  {
+                                             "model_digest":  "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "dataset_sha256":  "0B875A1EF22CCE51C0E40672534ECF527C159C1633B93EF8551BAA459B09A117",
+                                             "model":  "embeddinggemma",
+                                             "input_mode":  "gemma-retrieval-v1",
+                                             "kind":  "evaluation-queries-v1",
+                                             "rewrite_sha256":  "981FD202C9E24019A2BD79848906A500A8192D11045FA90BE24C02AF968DE123"
+                                         },
+                            "vectors":  {
+                                            "size":  768,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_eval_queries_kure_v1_8b418a58_981fd202",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_kure_v1_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  220,
+                            "metadata":  {
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "dataset_sha256":  "0B875A1EF22CCE51C0E40672534ECF527C159C1633B93EF8551BAA459B09A117",
+                                             "model":  "kure-v1",
+                                             "input_mode":  "kure-st-cls-normalized-v1",
+                                             "kind":  "evaluation-queries-v1",
+                                             "rewrite_sha256":  "981FD202C9E24019A2BD79848906A500A8192D11045FA90BE24C02AF968DE123"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_eval_queries_qwen3_0_6b_97b0c614_981fd202",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_qwen3_0_6b_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  220,
+                            "metadata":  {
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "dataset_sha256":  "A06B9ECAE98AA9E691C811FA71CC3BB22D6010230832A7425781983EA0D393E3",
+                                             "model":  "qwen3-0.6b",
+                                             "input_mode":  "qwen3-st-lasttoken-normalized-v1",
+                                             "kind":  "evaluation-queries-v1",
+                                             "rewrite_sha256":  "981FD202C9E24019A2BD79848906A500A8192D11045FA90BE24C02AF968DE123"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_bge_m3_c300_39f09de4_79076464",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_bge_m3_c300_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  8497,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "39F09DE4E489132A863F2D5214C07AD16B650C2B5A6A94595A59F6BB60510BBB",
+                                             "model":  "bge-m3",
+                                             "input_mode":  "bge-m3-title-text-v1",
+                                             "dimensions":  1024,
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "chunking_version":  "char300-overlap64-article-v1",
+                                             "chunk_count":  8497
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_bge_m3_c500_5476ba73_79076464",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_bge_m3_c500_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  6634,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "5476BA7333F16A26965B32FFB59EBE3EC82A07FDCC3B1CE8FDA51F3182A3EEAB",
+                                             "model":  "bge-m3",
+                                             "input_mode":  "bge-m3-title-text-v1",
+                                             "dimensions":  1024,
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "chunking_version":  "char500-overlap64-article-v1",
+                                             "chunk_count":  6634
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_bge_m3_c700_66106d14_79076464",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_bge_m3_c700_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  6031,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+                                             "model":  "bge-m3",
+                                             "input_mode":  "bge-m3-title-text-v1",
+                                             "dimensions":  1024,
+                                             "model_digest":  "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+                                             "chunking_version":  "char700-overlap64-article-v1",
+                                             "chunk_count":  6031
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_embeddinggemma_c300_39f09de4_85462619",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_embeddinggemma_c300_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  8497,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "39F09DE4E489132A863F2D5214C07AD16B650C2B5A6A94595A59F6BB60510BBB",
+                                             "model":  "embeddinggemma",
+                                             "input_mode":  "gemma-retrieval-v1",
+                                             "dimensions":  768,
+                                             "model_digest":  "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+                                             "chunking_version":  "char300-overlap64-article-v1",
+                                             "chunk_count":  8497
+                                         },
+                            "vectors":  {
+                                            "size":  768,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_embeddinggemma_c500_5476ba73_85462619",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_embeddinggemma_c500_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  6634,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "5476BA7333F16A26965B32FFB59EBE3EC82A07FDCC3B1CE8FDA51F3182A3EEAB",
+                                             "model":  "embeddinggemma",
+                                             "input_mode":  "gemma-retrieval-v1",
+                                             "dimensions":  768,
+                                             "model_digest":  "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+                                             "chunking_version":  "char500-overlap64-article-v1",
+                                             "chunk_count":  6634
+                                         },
+                            "vectors":  {
+                                            "size":  768,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_embeddinggemma_c700_66106d14_85462619",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_embeddinggemma_c700_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  6031,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+                                             "model":  "embeddinggemma",
+                                             "input_mode":  "gemma-retrieval-v1",
+                                             "dimensions":  768,
+                                             "model_digest":  "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+                                             "chunking_version":  "char700-overlap64-article-v1",
+                                             "chunk_count":  6031
+                                         },
+                            "vectors":  {
+                                            "size":  768,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_kure_v1_c300_39f09de4_8b418a58",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_kure_v1_c300_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  8497,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "39F09DE4E489132A863F2D5214C07AD16B650C2B5A6A94595A59F6BB60510BBB",
+                                             "model":  "kure-v1",
+                                             "input_mode":  "kure-st-cls-normalized-v1",
+                                             "dimensions":  1024,
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "chunking_version":  "char300-overlap64-article-v1",
+                                             "chunk_count":  8497
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_kure_v1_c500_5476ba73_8b418a58",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_kure_v1_c500_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  6634,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "5476BA7333F16A26965B32FFB59EBE3EC82A07FDCC3B1CE8FDA51F3182A3EEAB",
+                                             "model":  "kure-v1",
+                                             "input_mode":  "kure-st-cls-normalized-v1",
+                                             "dimensions":  1024,
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "chunking_version":  "char500-overlap64-article-v1",
+                                             "chunk_count":  6634
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_kure_v1_c700_66106d14_8b418a58",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_kure_v1_c700_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  6031,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+                                             "model":  "kure-v1",
+                                             "input_mode":  "kure-st-cls-normalized-v1",
+                                             "dimensions":  1024,
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "chunking_version":  "char700-overlap64-article-v1",
+                                             "chunk_count":  6031
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_qwen3_0.6b_c300_39f09de4_97b0c614",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_qwen3_0_6b_c300_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  8497,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "39F09DE4E489132A863F2D5214C07AD16B650C2B5A6A94595A59F6BB60510BBB",
+                                             "model":  "qwen3-0.6b",
+                                             "input_mode":  "qwen3-st-lasttoken-normalized-v1",
+                                             "dimensions":  1024,
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "chunking_version":  "char300-overlap64-article-v1",
+                                             "chunk_count":  8497
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_qwen3_0.6b_c500_5476ba73_97b0c614",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_qwen3_0_6b_c500_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  6634,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "5476BA7333F16A26965B32FFB59EBE3EC82A07FDCC3B1CE8FDA51F3182A3EEAB",
+                                             "model":  "qwen3-0.6b",
+                                             "input_mode":  "qwen3-st-lasttoken-normalized-v1",
+                                             "dimensions":  1024,
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "chunking_version":  "char500-overlap64-article-v1",
+                                             "chunk_count":  6634
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_exp_qwen3_0.6b_c700_66106d14_97b0c614",
+                            "group":  "model-comparison",
+                            "alias":  "lab_models_qwen3_0_6b_c700_docs",
+                            "role":  "documents",
+                            "reports":  "experiments/model-comparison/reports",
+                            "points":  6031,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "corpus_sha256":  "66106D1437BEE0027472068185107FB2D8C2691FDEFE56DBDFA91B1ABCFA7B9E",
+                                             "model":  "qwen3-0.6b",
+                                             "input_mode":  "qwen3-st-lasttoken-normalized-v1",
+                                             "dimensions":  1024,
+                                             "model_digest":  "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+                                             "chunking_version":  "char700-overlap64-article-v1",
+                                             "chunk_count":  6031
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_independent_kure_v1_b2b30df8",
+                            "group":  "retrieval-validation",
+                            "alias":  "lab_validation_independent_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/retrieval-validation/independent-v1/reports",
+                            "points":  200,
+                            "metadata":  {
+                                             "freeze_sha256":  "266C332B0331CFBA0950B116BAA2D131E6840A0B4B6ED049B152DE97E26BB356",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                                             "kind":  "independent-validation-v1",
+                                             "questions_sha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58",
+                            "group":  "query-strategies",
+                            "alias":  "lab_queries_c500_docs",
+                            "role":  "docs",
+                            "reports":  "experiments/query-strategies/chunk-sizes-v1/reports",
+                            "points":  8286,
+                            "metadata":  {
+                                             "source_units_sha256":  "0bbe79049c3a2fbb7ebd1f974cb284249b64c19bb5b674abdc48a160d415c726",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "corpus_sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                                             "kind":  "legal-query-chunks-v1",
+                                             "freeze_sha256":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+                                             "max_chars":  500
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58_queries",
+                            "group":  "query-strategies",
+                            "alias":  "lab_queries_c500_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/query-strategies/chunk-sizes-v1/reports",
+                            "points":  300,
+                            "metadata":  {
+                                             "source_units_sha256":  "0bbe79049c3a2fbb7ebd1f974cb284249b64c19bb5b674abdc48a160d415c726",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "corpus_sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                                             "kind":  "legal-query-chunks-v1",
+                                             "freeze_sha256":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+                                             "max_chars":  500
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58",
+                            "group":  "query-strategies",
+                            "alias":  "lab_queries_c700_docs",
+                            "role":  "docs",
+                            "reports":  "experiments/query-strategies/chunk-sizes-v1/reports",
+                            "points":  7396,
+                            "metadata":  {
+                                             "source_units_sha256":  "0bbe79049c3a2fbb7ebd1f974cb284249b64c19bb5b674abdc48a160d415c726",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "corpus_sha256":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0",
+                                             "kind":  "legal-query-chunks-v1",
+                                             "freeze_sha256":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+                                             "max_chars":  700
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58_queries",
+                            "group":  "query-strategies",
+                            "alias":  "lab_queries_c700_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/query-strategies/chunk-sizes-v1/reports",
+                            "points":  300,
+                            "metadata":  {
+                                             "source_units_sha256":  "0bbe79049c3a2fbb7ebd1f974cb284249b64c19bb5b674abdc48a160d415c726",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "corpus_sha256":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0",
+                                             "kind":  "legal-query-chunks-v1",
+                                             "freeze_sha256":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+                                             "max_chars":  700
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_legal_query_kure_v1_a15c853e",
+                            "group":  "query-strategies",
+                            "alias":  "lab_queries_transformed_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/query-strategies/sentence-transform-v1/reports",
+                            "points":  100,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "transforms_sha256":  "47E88701CE6F47F4C6C052BB9B60F66A91743ABB6756117540179729AA367031",
+                                             "kind":  "legal-query-transform-v1",
+                                             "freeze_sha256":  "A15C853E79D1DB17926CA563C386D8F1A7E92DC2DFD710DA43958442957BABC9",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_recall50_kure_v1_c300_e8ec1af6",
+                            "group":  "query-strategies",
+                            "alias":  "lab_queries_c300_candidates50",
+                            "role":  "candidates",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  108,
+                            "metadata":  {
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "freeze_sha256":  "e8ec1af69be9ec8ee2248f27869c5785e45325d105aa52ae2e87ecdfa86337a8",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                                             "kind":  "recall50-v1",
+                                             "max_rank":  50,
+                                             "max_chars":  300
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_recall50_kure_v1_c500_e8ec1af6",
+                            "group":  "query-strategies",
+                            "alias":  "lab_queries_c500_candidates50",
+                            "role":  "candidates",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  108,
+                            "metadata":  {
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "freeze_sha256":  "e8ec1af69be9ec8ee2248f27869c5785e45325d105aa52ae2e87ecdfa86337a8",
+                                             "corpus_sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                                             "kind":  "recall50-v1",
+                                             "max_rank":  50,
+                                             "max_chars":  500
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_recall50_kure_v1_c700_e8ec1af6",
+                            "group":  "query-strategies",
+                            "alias":  "lab_queries_c700_candidates50",
+                            "role":  "candidates",
+                            "reports":  "experiments/query-strategies/candidate-coverage-v1/reports",
+                            "points":  108,
+                            "metadata":  {
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "freeze_sha256":  "e8ec1af69be9ec8ee2248f27869c5785e45325d105aa52ae2e87ecdfa86337a8",
+                                             "corpus_sha256":  "297BFC5032C5AA68AD653727CE942008DB6A02A50C1BBFAA07DD080B19261FE0",
+                                             "kind":  "recall50-v1",
+                                             "max_rank":  50,
+                                             "max_chars":  700
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_validation_final_v1_manifest_b0de1830",
+                            "group":  "retrieval-validation",
+                            "alias":  "lab_validation_expanded_manifest",
+                            "role":  "manifest",
+                            "reports":  "experiments/retrieval-validation/expanded-v1/reports",
+                            "points":  1,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "dataset_sha256":  "70AFB82B8E26651AE50FB7026E2C9F604A27B78166A8DA8D6927FBDD7CEAB727",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                                             "kind":  "final-validation-v1",
+                                             "freeze_sha256":  "B0DE18307C64248E8B57C79FA57FDEC832324C826DF7CCEAE786DD42F5CEB9E0"
+                                         },
+                            "vectors":  {
+
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58",
+                            "group":  "retrieval-validation",
+                            "alias":  "lab_validation_expanded_docs",
+                            "role":  "docs",
+                            "reports":  "experiments/retrieval-validation/expanded-v1/reports",
+                            "points":  10999,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "dataset_sha256":  "70AFB82B8E26651AE50FB7026E2C9F604A27B78166A8DA8D6927FBDD7CEAB727",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                                             "kind":  "final-validation-v1",
+                                             "freeze_sha256":  "B0DE18307C64248E8B57C79FA57FDEC832324C826DF7CCEAE786DD42F5CEB9E0"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        },
+                        {
+                            "collection":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58_queries",
+                            "group":  "retrieval-validation",
+                            "alias":  "lab_validation_expanded_queries",
+                            "role":  "queries",
+                            "reports":  "experiments/retrieval-validation/expanded-v1/reports",
+                            "points":  540,
+                            "metadata":  {
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "dataset_sha256":  "70AFB82B8E26651AE50FB7026E2C9F604A27B78166A8DA8D6927FBDD7CEAB727",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "corpus_sha256":  "1117ADA1D1636C177E27FE1B2887B604CA69162B7B895DFB80B93150C11C6659",
+                                             "kind":  "final-validation-v1",
+                                             "freeze_sha256":  "B0DE18307C64248E8B57C79FA57FDEC832324C826DF7CCEAE786DD42F5CEB9E0"
+                                         },
+                            "vectors":  {
+                                            "size":  1024,
+                                            "distance":  "Cosine"
+                                        }
+                        }
+                    ],
+    "aliases":  [
+                    {
+                        "alias_name":  "lab_candidates_bge_m3_c300_docs",
+                        "collection_name":  "molelaw_candidates_bge_m3_c300_87bbbc31"
+                    },
+                    {
+                        "alias_name":  "lab_candidates_bge_m3_c300_queries",
+                        "collection_name":  "molelaw_candidates_bge_m3_c300_87bbbc31_queries"
+                    },
+                    {
+                        "alias_name":  "lab_candidates_bge_m3_c500_docs",
+                        "collection_name":  "molelaw_candidates_bge_m3_c500_87bbbc31"
+                    },
+                    {
+                        "alias_name":  "lab_candidates_bge_m3_c500_queries",
+                        "collection_name":  "molelaw_candidates_bge_m3_c500_87bbbc31_queries"
+                    },
+                    {
+                        "alias_name":  "lab_candidates_bge_m3_c700_docs",
+                        "collection_name":  "molelaw_candidates_bge_m3_c700_87bbbc31"
+                    },
+                    {
+                        "alias_name":  "lab_candidates_bge_m3_c700_queries",
+                        "collection_name":  "molelaw_candidates_bge_m3_c700_87bbbc31_queries"
+                    },
+                    {
+                        "alias_name":  "lab_models_catalog",
+                        "collection_name":  "molelaw_eval_catalog_v1"
+                    },
+                    {
+                        "alias_name":  "lab_models_bge_m3_queries",
+                        "collection_name":  "molelaw_eval_queries_bge_m3_79076464_981fd202"
+                    },
+                    {
+                        "alias_name":  "lab_models_embeddinggemma_queries",
+                        "collection_name":  "molelaw_eval_queries_embeddinggemma_85462619_981fd202"
+                    },
+                    {
+                        "alias_name":  "lab_models_kure_v1_queries",
+                        "collection_name":  "molelaw_eval_queries_kure_v1_8b418a58_981fd202"
+                    },
+                    {
+                        "alias_name":  "lab_models_qwen3_0_6b_queries",
+                        "collection_name":  "molelaw_eval_queries_qwen3_0_6b_97b0c614_981fd202"
+                    },
+                    {
+                        "alias_name":  "lab_models_bge_m3_c300_docs",
+                        "collection_name":  "molelaw_exp_bge_m3_c300_39f09de4_79076464"
+                    },
+                    {
+                        "alias_name":  "lab_models_bge_m3_c500_docs",
+                        "collection_name":  "molelaw_exp_bge_m3_c500_5476ba73_79076464"
+                    },
+                    {
+                        "alias_name":  "lab_models_bge_m3_c700_docs",
+                        "collection_name":  "molelaw_exp_bge_m3_c700_66106d14_79076464"
+                    },
+                    {
+                        "alias_name":  "lab_models_embeddinggemma_c300_docs",
+                        "collection_name":  "molelaw_exp_embeddinggemma_c300_39f09de4_85462619"
+                    },
+                    {
+                        "alias_name":  "lab_models_embeddinggemma_c500_docs",
+                        "collection_name":  "molelaw_exp_embeddinggemma_c500_5476ba73_85462619"
+                    },
+                    {
+                        "alias_name":  "lab_models_embeddinggemma_c700_docs",
+                        "collection_name":  "molelaw_exp_embeddinggemma_c700_66106d14_85462619"
+                    },
+                    {
+                        "alias_name":  "lab_models_kure_v1_c300_docs",
+                        "collection_name":  "molelaw_exp_kure_v1_c300_39f09de4_8b418a58"
+                    },
+                    {
+                        "alias_name":  "lab_models_kure_v1_c500_docs",
+                        "collection_name":  "molelaw_exp_kure_v1_c500_5476ba73_8b418a58"
+                    },
+                    {
+                        "alias_name":  "lab_models_kure_v1_c700_docs",
+                        "collection_name":  "molelaw_exp_kure_v1_c700_66106d14_8b418a58"
+                    },
+                    {
+                        "alias_name":  "lab_models_qwen3_0_6b_c300_docs",
+                        "collection_name":  "molelaw_exp_qwen3_0.6b_c300_39f09de4_97b0c614"
+                    },
+                    {
+                        "alias_name":  "lab_models_qwen3_0_6b_c500_docs",
+                        "collection_name":  "molelaw_exp_qwen3_0.6b_c500_5476ba73_97b0c614"
+                    },
+                    {
+                        "alias_name":  "lab_models_qwen3_0_6b_c700_docs",
+                        "collection_name":  "molelaw_exp_qwen3_0.6b_c700_66106d14_97b0c614"
+                    },
+                    {
+                        "alias_name":  "lab_validation_independent_queries",
+                        "collection_name":  "molelaw_independent_kure_v1_b2b30df8"
+                    },
+                    {
+                        "alias_name":  "lab_queries_c500_docs",
+                        "collection_name":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58"
+                    },
+                    {
+                        "alias_name":  "lab_queries_c500_queries",
+                        "collection_name":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58_queries"
+                    },
+                    {
+                        "alias_name":  "lab_queries_c700_docs",
+                        "collection_name":  "molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58"
+                    },
+                    {
+                        "alias_name":  "lab_queries_c700_queries",
+                        "collection_name":  "molelaw_legal_chunks_kure_v1_c700_297bfc50_8b418a58_queries"
+                    },
+                    {
+                        "alias_name":  "lab_queries_transformed_queries",
+                        "collection_name":  "molelaw_legal_query_kure_v1_a15c853e"
+                    },
+                    {
+                        "alias_name":  "lab_queries_c300_candidates50",
+                        "collection_name":  "molelaw_recall50_kure_v1_c300_e8ec1af6"
+                    },
+                    {
+                        "alias_name":  "lab_queries_c500_candidates50",
+                        "collection_name":  "molelaw_recall50_kure_v1_c500_e8ec1af6"
+                    },
+                    {
+                        "alias_name":  "lab_queries_c700_candidates50",
+                        "collection_name":  "molelaw_recall50_kure_v1_c700_e8ec1af6"
+                    },
+                    {
+                        "alias_name":  "lab_validation_expanded_manifest",
+                        "collection_name":  "molelaw_validation_final_v1_manifest_b0de1830"
+                    },
+                    {
+                        "alias_name":  "lab_validation_expanded_docs",
+                        "collection_name":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58"
+                    },
+                    {
+                        "alias_name":  "lab_validation_expanded_queries",
+                        "collection_name":  "molelaw_validation_kure_v1_c300_1117ada1_8b418a58_queries"
+                    }
+                ]
+}
