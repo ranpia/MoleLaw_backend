@@ -1,6 +1,6 @@
 # 빈 MySQL DB 초기화와 검증
 
-기존 데이터 이관 없이 시작한다. 기본/mysql·local에서 Flyway V1~V4를 순서대로 적용한 뒤 Hibernate가 validate한다. 적용한 버전은 수정하지 않으며 기존 V3 DB에는 V4만 추가한다. V4는 구 법령·청크·벡터 테이블을 삭제하므로 이 저장소의 초기 개발 전환 기준으로만 적용한다. 이전 INFO 행·구 암호문은 자동 변환하지 않는다.
+기존 데이터 이관 없이 시작한다. 기본/mysql·local에서 Flyway V1~V5를 순서대로 적용한 뒤 Hibernate가 validate한다. 적용한 버전은 수정하지 않으며 기존 V3 DB에는 V4만 추가한다. V4는 구 법령·청크·벡터 테이블을 삭제하므로 이 저장소의 초기 개발 전환 기준으로만 적용한다. 이전 INFO 행·구 암호문은 자동 변환하지 않는다.
 
 ## 실행
 
@@ -62,3 +62,5 @@ Docker 29 호환을 위해 테스트 태스크의 docker-java API를 1.44로 지
 검증 결과: 일반 테스트 282개(실패 0, 환경변수로 선택 실행하는 Postman 테스트 1개 건너뜀), MySQL 통합 2개·Qdrant 통합 1개·실제 KURE 임베딩 1개 통과, 실행 JAR 빌드 완료. 실제 MySQL에서 64KiB를 넘는 한글 암호문의 LONGTEXT 복원·사용자 삭제 cascade·V1~V4 신규 적용·재기동을 확인했다. KURE 검증은 통제된 20개 조문→40개 청크→1024차원→서로 다른 상위 15개 조문이며 검색 정확도 평가는 아니다.
 
 추가로 기존 로컬 Postman simulation에서 실제 클라이언트의 /api/tags·/api/embed 두 요청과 HTTP 200, 선택 테스트 1개 통과를 확인했다. 실제 OpenLaw·OAuth·유료 LLM을 연결한 전체 상담 실호출은 이번 검증에 포함하지 않았다.
+
+V5는 기존 법령 원문·최초 상담 스냅샷을 변경하지 않고 `chat_case_evidence`와 메시지의 `case_search_requested`·`case_search_consent`를 추가한다. 새 판례 근거는 방 삭제 시 cascade 삭제되며 원문은 보존한다. `mysqlIntegrationTest`에서 빈 MySQL의 V1~V5 적용·JPA validate·재시작 후 데이터 유지·cascade를 확인했다. 사용자 실행 DB는 이 검증의 대상이 아니며 재초기화하지 않았다.

@@ -1,6 +1,7 @@
 package com.MoleLaw_backend.chat.service.answer;
 
 import com.MoleLaw_backend.chat.dto.answer.PreparedLegalAnswer;
+import com.MoleLaw_backend.chat.dto.answer.PreparedFollowUpAnswer;
 
 import com.MoleLaw_backend.chat.dto.response.LegalAnswerResponse;
 import com.MoleLaw_backend.chat.service.ChatContentLimits;
@@ -29,12 +30,13 @@ public class LegalAnswerService {
     private final EvidencePromptBuilder prompts;
     private final CitationValidator citations;
     private final EvidenceRenderer renderer;
+    private final FollowUpCaseToolsFactory caseTools;
 
     public LegalAnswerService(LegalEvidenceCollector collector,
                               @Qualifier("legalAnswerChatClient") ChatClient initialAnswers,
                               @Qualifier("followUpAnswerChatClient") ChatClient followUpAnswers,
                               ChatEvidenceService evidence, EvidencePromptBuilder prompts,
-                              CitationValidator citations, EvidenceRenderer renderer) {
+                              CitationValidator citations, EvidenceRenderer renderer, FollowUpCaseToolsFactory caseTools) {
         this.collector = collector;
         this.initialAnswers = initialAnswers;
         this.followUpAnswers = followUpAnswers;
@@ -42,6 +44,7 @@ public class LegalAnswerService {
         this.prompts = prompts;
         this.citations = citations;
         this.renderer = renderer;
+        this.caseTools = caseTools;
     }
 
     public PreparedLegalAnswer prepareInitialAnswer(String question) {
@@ -62,28 +65,50 @@ public class LegalAnswerService {
 
     /** IDs come from authenticated server state after room ownership checks. */
     public LegalAnswerResponse answerFollowUp(Long userId, Long roomId, String question) {
+        return prepareFollowUp(userId, roomId, question).response();
+    }
+
+    public PreparedFollowUpAnswer prepareFollowUp(Long userId, Long roomId, String question) {
+        return prepareFollowUp(userId, roomId, question, false);
+    }
+
+    public PreparedFollowUpAnswer prepareFollowUp(Long userId, Long roomId, String question, boolean allowCaseSearch) {
         if (userId == null || userId < 1 || roomId == null || roomId < 1 || question == null || question.isBlank()) {
             throw new IllegalArgumentException("Invalid authorized conversation");
         }
         ChatContentLimits.question(question);
         var sources = evidence.load(userId, roomId);
-        return new LegalAnswerResponse(generate(followUpAnswers, question, sources, userId + ":" + roomId), "");
-    }
-
-    private String generate(ChatClient client, String question, List<EvidenceItem> sources, String conversationId) {
-        return generate(client, question, sources, conversationId, null);
+        var tools = caseTools.create(sources, allowCaseSearch);
+        String answer = generate(followUpAnswers, question, sources, userId + ":" + roomId, null, tools);
+        ChatContentLimits.answer(answer);
+        return new PreparedFollowUpAnswer(new LegalAnswerResponse(answer, ""),
+                tools.citedAdditions(answer), tools.consentRequested(), allowCaseSearch);
     }
 
     private String generate(ChatClient client, String question, List<EvidenceItem> sources, String conversationId,
             QuestionRetrievalPlan plan) {
+        return generate(client, question, sources, conversationId, plan, null);
+    }
+
+    private String generate(ChatClient client, String question, List<EvidenceItem> sources, String conversationId,
+            QuestionRetrievalPlan plan, FollowUpCaseToolsFactory.Session tools) {
         try {
-            var request = client.prompt().messages(List.of(new UserMessage(prompts.build(question, sources, plan))));
+            String input = tools == null ? prompts.build(question, sources, plan) : prompts.buildFollowUp(question, sources);
+            var request = client.prompt().messages(List.of(new UserMessage(input)));
             if (conversationId != null) {
                 request.advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId));
             }
+            if (tools != null) {
+                var callbacks = java.util.Arrays.stream(org.springframework.ai.support.ToolCallbacks.from(tools))
+                        .filter(callback -> tools.consentGranted()
+                                ? !callback.getToolDefinition().name().equals("requestCaseSearchConsent")
+                                : !callback.getToolDefinition().name().equals("searchRoomCases")).toList();
+                request.toolCallbacks(callbacks);
+            }
             String answer = request.call().content();
+            if (tools != null && tools.consentRequested()) answer = tools.consentMessage();
             ChatContentLimits.answer(answer);
-            return citations.validate(answer, sources);
+            return citations.validate(answer, tools == null ? sources : tools.evidence());
         } catch (GptApiException failure) {
             throw failure;
         } catch (Exception failure) {
