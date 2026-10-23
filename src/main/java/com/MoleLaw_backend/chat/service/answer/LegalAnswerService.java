@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import com.MoleLaw_backend.law.dto.retrieval.QuestionRetrievalPlan;
 
 /** Answer workflow only; collection and snapshot reads precede generation, persistence follows validation. */
 @Service
@@ -45,8 +46,9 @@ public class LegalAnswerService {
 
     public PreparedLegalAnswer prepareInitialAnswer(String question) {
         ChatContentLimits.question(question);
-        var sources = collector.collect(question);
-        String answer = generate(initialAnswers, question, sources, null);
+        var collected = collector.collectForAnswer(question);
+        var sources = collected.evidence();
+        String answer = generate(initialAnswers, question, sources, null, collected.plan());
         try {
             return new PreparedLegalAnswer(new LegalAnswerResponse(answer, renderer.render(sources)), sources);
         } catch (RuntimeException failure) {
@@ -69,8 +71,13 @@ public class LegalAnswerService {
     }
 
     private String generate(ChatClient client, String question, List<EvidenceItem> sources, String conversationId) {
+        return generate(client, question, sources, conversationId, null);
+    }
+
+    private String generate(ChatClient client, String question, List<EvidenceItem> sources, String conversationId,
+            QuestionRetrievalPlan plan) {
         try {
-            var request = client.prompt().messages(List.of(new UserMessage(prompts.build(question, sources))));
+            var request = client.prompt().messages(List.of(new UserMessage(prompts.build(question, sources, plan))));
             if (conversationId != null) {
                 request.advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId));
             }

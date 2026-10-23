@@ -45,6 +45,25 @@ class LawSearchServiceTest {
     }
 
     @Test
+    void datedDetailUsesEffectiveLawEndpointAndPreservesTheSelectedDate() {
+        enqueue("{\"법령\":{\"기본정보\":{\"법령명_한글\":\"검증법\",\"시행일자\":\"20270309\"}}}");
+        var detail = service.getLawDetailByMst("289515", "20270309");
+        assertEquals("20270309", detail.path("기본정보").path("시행일자").asText());
+        var parameters = UriComponentsBuilder.fromUri(requests.get(0).url()).build().getQueryParams();
+        assertEquals("eflaw", parameters.getFirst("target"));
+        assertEquals("289515", parameters.getFirst("MST"));
+        assertEquals("20270309", parameters.getFirst("efYd"));
+    }
+
+    @Test
+    void rejectsMalformedOrImpossibleEffectiveDatesBeforeHttp() {
+        for (String date : List.of("20260230", "2026-01-01", "20260101&target=law")) {
+            assertThrows(IllegalArgumentException.class, () -> service.getLawDetailByMst("123", date));
+        }
+        assertTrue(requests.isEmpty());
+    }
+
+    @Test
     void stopsWhenMinistryTitleSearchFindsResults() {
         enqueue(FOUND);
 

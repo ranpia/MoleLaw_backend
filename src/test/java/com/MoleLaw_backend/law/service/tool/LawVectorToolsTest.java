@@ -28,11 +28,58 @@ class LawVectorToolsTest {
 
     @BeforeEach
     void configure() {
+        when(client.embeddingCallLimit()).thenReturn(properties.getEmbeddingMaxCalls());
+        when(client.indexingCallLimit()).thenReturn(properties.getIndexingMaxCalls());
+        var session = mock(LawVectorClient.EmbeddingSession.class);
+        when(client.newEmbeddingSession()).thenReturn(session);
+        when(session.embed(anyList(), any(), any())).thenAnswer(call ->
+                client.embed(call.getArgument(0), call.getArgument(1), call.getArgument(2)));
         when(client.identity()).thenReturn(Map.of("model", "model", "revision", "revision", "dimensions", 1));
         when(client.fingerprint()).thenReturn("f".repeat(64));
         when(client.collectionName()).thenReturn(properties.getCollectionName());
+        when(client.embeddingTimeout()).thenReturn(java.time.Duration.ofSeconds(properties.getEmbeddingTimeoutSeconds()));
         when(client.collectionAvailable(any(), any())).thenReturn(true);
+        when(client.verifyIndex(anyMap(), anyMap(), any(), any())).thenReturn(true);
         when(client.embed(anyList(), any(), any())).thenReturn(List.of(List.of(1.0)));
+    }
+
+    @Test
+    void failedReadBackCannotPublishAnIndexAndNextInvocationRebuildsIt() {
+        var context = context(false);
+        var source = source(context);
+        when(client.verifyIndex(anyMap(), anyMap(), any(), any())).thenReturn(false, true);
+        assertThatThrownBy(() -> writer.vectorizeLaw(context, source.getId())).hasMessage("INDEX_VERIFICATION_FAILED");
+        assertThat(indexes.searchable(client.fingerprint())).isEmpty();
+        writer.vectorizeLaw(context, source.getId());
+        assertThat(indexes.searchable(client.fingerprint())).hasSize(1);
+        verify(client, times(2)).embed(anyList(), any(), any());
+    }
+
+    @Test
+    void cachedIndexWithMissingPointsIsRebuiltAsANewGeneration() {
+        var context = context(false);
+        var source = source(context);
+        writer.vectorizeLaw(context, source.getId());
+        var first = indexes.searchable(client.fingerprint());
+        when(client.verifyIndex(anyMap(), anyMap(), any(), any())).thenReturn(false, true);
+        writer.vectorizeLaw(context, source.getId());
+        var replacement = indexes.searchable(client.fingerprint());
+        assertThat(replacement).hasSize(1);
+        assertThat(replacement.keySet()).doesNotContainAnyElementsOf(first.keySet());
+        verify(client, times(2)).embed(anyList(), any(), any());
+    }
+
+    @Test
+    void cachedIndexReadBackOutageNeverTriggersReembeddingOrInvalidatesPriorGeneration() {
+        var context = context(false);
+        var source = source(context);
+        writer.vectorizeLaw(context, source.getId());
+        var before = indexes.searchable(client.fingerprint());
+        when(client.verifyIndex(anyMap(), anyMap(), any(), any()))
+                .thenThrow(new LegalToolException(LegalToolException.Reason.API_FAILURE, true));
+        assertThatThrownBy(() -> writer.vectorizeLaw(context, source.getId())).hasMessage("API_FAILURE");
+        assertThat(indexes.searchable(client.fingerprint())).isEqualTo(before);
+        verify(client, times(1)).embed(anyList(), any(), any());
     }
 
     @Test
@@ -51,6 +98,23 @@ class LawVectorToolsTest {
         assertThat(indexes.searchable(client.fingerprint())).isEqualTo(completed);
         verify(client, times(2)).embed(anyList(), any(), any());
         assertThatThrownBy(() -> writer.reindexStoredLaw(context(true), source.getId())).hasMessage("FORBIDDEN");
+    }
+
+    @Test
+    void lateEmbeddingIsFailedBeforeAnyQdrantWriteOrPublication() {
+        var clock = new LegalToolContextEmbeddingTimeTest.MutableClock();
+        var context = new LegalToolContext(LegalToolContext.Purpose.PRECOLLECTION, "embedding-timeout",
+                clock.instant().plusSeconds(60), 128, clock);
+        var source = source(context);
+        properties.setEmbeddingTimeoutSeconds(1);
+        when(client.embed(anyList(), any(), any())).thenAnswer(call -> {
+            clock.advance(2);
+            return List.of(List.of(1.0));
+        });
+        assertThatThrownBy(() -> writer.vectorizeLaw(context, source.getId())).hasMessage("EMBEDDING_TIMEOUT");
+        verify(client, never()).upsert(anyList(), any(), any());
+        assertThat(indexes.searchable(client.fingerprint())).isEmpty();
+        context.checkDeadline();
     }
 
     @Test

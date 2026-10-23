@@ -20,6 +20,21 @@ public class AiConfig {
         return ChatClient.builder(chatModel);
     }
 
+    @Bean
+    public static org.springframework.beans.factory.config.BeanPostProcessor reasoningCompatibleDefaults() {
+        return new org.springframework.beans.factory.config.BeanPostProcessor() {
+            @Override
+            public Object postProcessBeforeInitialization(Object bean, String beanName) {
+                // Clear Spring AI 1.0.x's implicit 0.7 before constructing the model.
+                // An unset role option otherwise inherits this unsupported parameter.
+                if (bean instanceof org.springframework.ai.model.openai.autoconfigure.OpenAiChatProperties properties) {
+                    properties.getOptions().setTemperature(null);
+                }
+                return bean;
+            }
+        };
+    }
+
     /** Compatibility client for existing callers until their role-specific migration. */
     @Bean
     @Primary

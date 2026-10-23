@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -22,12 +23,16 @@ class LawVectorPostmanSimulationTest {
             var properties = new LawVectorProperties();
             properties.setEmbeddingBaseUrl(System.getenv("LAW_VECTOR_SIMULATION_URL"));
             properties.setDimensions(2);
+            properties.setBatchSize(1);
+            properties.setChunkSize(24);
+            properties.setChunkOverlap(4);
             properties.setQdrantBaseUrl("http://" + qdrant.getHost() + ":" + qdrant.getMappedPort(6333));
             properties.setCollectionName("molelaw_service_etl_simulation");
             var mapper = new ObjectMapper();
             var source = new com.MoleLaw_backend.law.entity.LegalSource("LAW", "123", "1", "20260101",
                     "https://www.law.go.kr/법령?lsId=1&lsiSeq=123", "a".repeat(64),
-                    "{\"기본정보\":{\"법령명_한글\":\"검증용 법령\"},\"조문\":{\"조문단위\":{\"조문번호\":\"1\",\"조문내용\":\"이 문장은 ETL 검증용 가상 조문입니다.\"}}}");
+                    "{\"기본정보\":{\"법령명_한글\":\"검증용 법령\"},\"조문\":{\"조문단위\":{\"조문번호\":\"1\",\"조문내용\":\""
+                            + "이 문장은 ETL 검증용 가상 조문입니다. ".repeat(160) + "\"}}}");
             var sources = org.mockito.Mockito.mock(com.MoleLaw_backend.law.service.source.LegalSourceService.class);
             org.mockito.Mockito.when(sources.restore(source.getId())).thenReturn(source);
             var client = new LawVectorClient(properties, mapper);
@@ -36,8 +41,9 @@ class LawVectorPostmanSimulationTest {
             var reader = new LawRagSearchToolService(client, indexes);
             var clock = java.time.Clock.systemUTC();
             var context = new LegalToolContext(LegalToolContext.Purpose.PRECOLLECTION, "etl-simulation",
-                    clock.instant().plusSeconds(60), 100, clock);
+                    clock.instant().plusSeconds(120), 4, clock);
             var result = writer.reindexStoredLaw(context, source.getId());
+            org.junit.jupiter.api.Assertions.assertTrue(result.chunkCount() > 128);
             assertEquals(1, result.articleCount());
             var generation = indexes.searchable(client.fingerprint()).keySet();
             writer.reindexStoredLaw(context, source.getId());
@@ -46,6 +52,19 @@ class LawVectorPostmanSimulationTest {
             assertEquals(1, hits.size());
             assertEquals(source.getId(), hits.get(0).referenceId());
             assertEquals("123:1", hits.get(0).unitId());
+            // Remove a point behind a COMPLETE DB record: read-back must reject the stale cache
+            // and reindex the saved source with a new generation before retrieval resumes.
+            var http = org.springframework.web.client.RestClient.create(properties.getQdrantBaseUrl());
+            http.post().uri("/collections/" + properties.getCollectionName() + "/points/delete?wait=true")
+                    .body(Map.of("filter", Map.of("must", List.of(Map.of("key", "generation", "match",
+                            Map.of("any", List.copyOf(generation))))))).retrieve().toBodilessEntity();
+            writer.reindexStoredLaw(context, source.getId());
+            var repaired = indexes.searchable(client.fingerprint()).keySet();
+            org.junit.jupiter.api.Assertions.assertNotEquals(generation, repaired);
+            assertEquals(1, reader.searchTop15(context, "검증용 조문").size());
+            assertEquals(4, context.callBudgets().get("retrievalUsed"));
+            org.junit.jupiter.api.Assertions.assertTrue((int) context.callBudgets().get("embeddingUsed") > 128);
+            org.junit.jupiter.api.Assertions.assertTrue((int) context.callBudgets().get("indexUsed") > 128);
         }
     }
 

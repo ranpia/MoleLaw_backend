@@ -148,17 +148,29 @@ public class LawSearchService {
     }
 
     public JsonNode getLawDetailByMst(String mst) {
+        return getLawDetailByMst(mst, null);
+    }
+
+    /** Match the effective-date list version, including staged enforcement within the same MST. */
+    public JsonNode getLawDetailByMst(String mst, String effectiveDate) {
+        if (mst == null || !mst.matches("[0-9]{1,20}")) throw new IllegalArgumentException("Invalid law MST");
+        boolean dated = effectiveDate != null && !effectiveDate.isBlank();
+        if (dated) {
+            if (!effectiveDate.matches("[0-9]{8}")) throw new IllegalArgumentException("Invalid effective date");
+            try { java.time.LocalDate.parse(effectiveDate, java.time.format.DateTimeFormatter.BASIC_ISO_DATE); }
+            catch (java.time.DateTimeException invalid) { throw new IllegalArgumentException("Invalid effective date", invalid); }
+        }
         try {
-            URI uri = UriComponentsBuilder.newInstance()
+            var builder = UriComponentsBuilder.newInstance()
                     .scheme("https")
                     .host("www.law.go.kr")
                     .path("/DRF/lawService.do")
                     .queryParam("OC", oc)
-                    .queryParam("target", "law")
+                    .queryParam("target", dated ? "eflaw" : "law")
                     .queryParam("type", "JSON")
-                    .queryParam("MST", mst)
-                    .build(true)
-                    .toUri();
+                    .queryParam("MST", mst);
+            if (dated) builder.queryParam("efYd", effectiveDate);
+            URI uri = builder.build(true).toUri();
 
             JsonNode response = webClientBuilder
                     .codecs(config -> config.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
