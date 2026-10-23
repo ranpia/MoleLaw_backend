@@ -24,7 +24,7 @@ class LawVectorToolsTest {
     private final LawVectorProperties properties = new LawVectorProperties();
     private final LegalSourceIndexService indexes = InMemoryIndexes.create(sources);
     private final LawVectorizationToolService writer = new LawVectorizationToolService(client, properties, mapper, sources, indexes);
-    private final LawRagSearchToolService reader = new LawRagSearchToolService(client, indexes);
+    private final LawRagSearchToolService reader = new LawRagSearchToolService(client, indexes, sources, mapper);
 
     @BeforeEach
     void configure() {

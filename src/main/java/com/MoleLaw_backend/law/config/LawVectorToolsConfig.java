@@ -27,7 +27,8 @@ public class LawVectorToolsConfig {
     }
 
     @Bean
-    public LawRagSearchToolService lawRagSearchToolService(LawVectorClient client, LegalSourceIndexService indexes) {
-        return new LawRagSearchToolService(client, indexes);
+    public LawRagSearchToolService lawRagSearchToolService(LawVectorClient client, LegalSourceIndexService indexes,
+            LegalSourceService sources, ObjectMapper mapper) {
+        return new LawRagSearchToolService(client, indexes, sources, mapper);
     }
 }

@@ -6,6 +6,7 @@ Docker 관련 구성은 이 디렉터리에 모은다. Spring 애플리케이션
 | --- | --- |
 | `app.Dockerfile` | Gradle로 빌드한 Spring Boot JAR의 배포 이미지 |
 | `compose.yml` | 로컬 MySQL·Qdrant·Redis |
+| `compose.app.yml` | 기존 DB·KURE 네트워크를 재사용하는 로컬 백엔드 컨테이너 |
 | `.env.compose.example` | Compose 환경변수 예제 |
 | `compose.insight.yml` | 선택적으로 실행하는 Redis Insight |
 | `verify.ps1` | 실행 중인 DB의 인증·읽기·쓰기 검증 |
@@ -79,6 +80,21 @@ docker compose --env-file docker/.env.compose -f docker/compose.yml -f docker/co
 ```
 
 `http://127.0.0.1:5540`에서 접속한다. 포트는 루프백으로 고정되며 UI 설정은 `redisinsight_data`에 보존된다. UI만 중지하려면 같은 Compose 옵션에 `stop redisinsight`를 사용한다.
+
+## 로컬 백엔드 컨테이너
+
+DB Compose와 `kure/compose.yml`이 실행된 상태에서 루트 `.env`를 사용한다. 기존 DB·Qdrant·모델 볼륨을 재사용하고 백엔드만 추가한다.
+
+```powershell
+.\gradlew.bat bootJar
+docker compose --env-file .env -f docker/compose.app.yml up -d --build
+docker compose --env-file .env -f docker/compose.app.yml ps
+docker compose --env-file .env -f docker/compose.app.yml logs -f backend
+```
+
+API는 `http://localhost:8080`, Swagger는 `http://localhost:8080/swagger-ui.html`이다. 기본 포트는 루프백으로 제한하며 `APP_PORT`로 변경할 수 있다. 개발 전용 `local` 프로필을 사용한다. `.env`는 이미지에 넣지 않고 실행 시 주입한다. 컨테이너의 DB·Redis·Qdrant·KURE 주소는 Docker 서비스 이름으로 지정한다. 기존 `.env`의 DB 이름과 자격증명을 사용하며 시작 시 미적용 Flyway migration이 실행된다.
+
+2026-10-23 현재 컨테이너의 healthy 상태, MySQL 연결 풀·Flyway V5 적용, Redis 인증 PING, Qdrant 인증 조회, KURE 모델 정보·로드 상태를 확인했다. Swagger·CSRF HTTP도 정상이며 실제 임베딩·LLM 상담 요청은 실행하지 않았다.
 
 ## 애플리케이션 배포 이미지
 

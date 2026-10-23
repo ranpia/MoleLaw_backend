@@ -54,7 +54,7 @@ class LegalAnswerFollowUpTest {
         var config = new AnswerChatClientConfig();
         service = new LegalAnswerService(collector, mock(ChatClient.class),
                 config.followUpAnswerChatClient(config.legalAnswerChatClient(builder, "gpt-5.4-mini", "medium", 16384,
-                        mock(com.MoleLaw_backend.common.ai.AiPrompts.class)), memory), evidence,
+                        mock(com.MoleLaw_backend.common.ai.AiPrompts.class)), memory, "gpt-5.4-mini", 16384), evidence,
                 new EvidencePromptBuilder(), new CitationValidator(), new EvidenceRenderer(), new FollowUpCaseToolsFactory(
                         mock(com.MoleLaw_backend.law.service.tool.LegalApiToolService.class),
                         mock(com.MoleLaw_backend.law.service.tool.CaseEvidenceReader.class)));
