@@ -58,7 +58,7 @@ class LawVectorEmbeddingLiveTest {
             var client = new LawVectorClient(properties, mapper);
             var indexes = InMemoryIndexes.create(sources);
             var writer = new LawVectorizationToolService(client, properties, mapper, sources, indexes);
-            var reader = new LawRagSearchToolService(client, indexes);
+            var reader = new LawRagSearchToolService(client, indexes, sources, mapper);
             var indexed = writer.vectorizeLaw(context, source.getId());
             assertThat(indexed.articleCount()).isEqualTo(20);
             assertThat(indexed.chunkCount()).isGreaterThan(20);

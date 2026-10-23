@@ -29,7 +29,16 @@ public final class EvidenceDecisionInputBuilder {
     /** All read bodies are supplied intact; catalog-only IDs never become admissible citations. */
     public ObjectNode buildRead(String question, EvidenceReading reading, QuestionRetrievalPlan plan,
             List<RetrievalAttempt> attempts, int remainingActions, int totalLimit) {
+        return buildRead(question, reading, plan, attempts, remainingActions, totalLimit, null);
+    }
+
+    public ObjectNode buildRead(String question, EvidenceReading reading, QuestionRetrievalPlan plan,
+            List<RetrievalAttempt> attempts, int remainingActions, int totalLimit, List<String> indexedTitles) {
         var input = build(question, List.of(), plan, attempts, remainingActions);
+        if (indexedTitles != null) {
+            input.set("indexedLawTitles", mapper.valueToTree(indexedTitles.stream().limit(20).toList()));
+            input.put("indexedLawTitlesComplete", indexedTitles.size() <= 20);
+        }
         input.set("candidateCatalog", reading.catalog());
         input.set("readOutcomes", mapper.valueToTree(reading.outcomes()));
         var supplied = (com.fasterxml.jackson.databind.node.ArrayNode) input.path("evidence");

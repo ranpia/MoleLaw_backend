@@ -38,7 +38,7 @@ class LawVectorPostmanSimulationTest {
             var client = new LawVectorClient(properties, mapper);
             var indexes = InMemoryIndexes.create(sources);
             var writer = new LawVectorizationToolService(client, properties, mapper, sources, indexes);
-            var reader = new LawRagSearchToolService(client, indexes);
+            var reader = new LawRagSearchToolService(client, indexes, sources, mapper);
             var clock = java.time.Clock.systemUTC();
             var context = new LegalToolContext(LegalToolContext.Purpose.PRECOLLECTION, "etl-simulation",
                     clock.instant().plusSeconds(120), 4, clock);
@@ -52,6 +52,10 @@ class LawVectorPostmanSimulationTest {
             assertEquals(1, hits.size());
             assertEquals(source.getId(), hits.get(0).referenceId());
             assertEquals("123:1", hits.get(0).unitId());
+            var exactContext = new LegalToolContext(LegalToolContext.Purpose.PRECOLLECTION, "exact-article-simulation",
+                    clock.instant().plusSeconds(120), 4, clock);
+            assertEquals("123:1", reader.searchTop15(exactContext, "검증용 법령 제1조").get(0).unitId());
+            assertEquals(0, reader.searchTop15(exactContext, "검증용 법령 제999조").size());
             // Remove a point behind a COMPLETE DB record: read-back must reject the stale cache
             // and reindex the saved source with a new generation before retrieval resumes.
             var http = org.springframework.web.client.RestClient.create(properties.getQdrantBaseUrl());

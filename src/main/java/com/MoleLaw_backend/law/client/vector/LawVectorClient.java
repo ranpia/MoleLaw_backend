@@ -186,6 +186,10 @@ public class LawVectorClient {
     }
 
     public JsonNode query(List<Double> vector, List<String> generations, Runnable before, Runnable after) {
+        return query(vector, generations, List.of(), before, after);
+    }
+
+    public JsonNode query(List<Double> vector, List<String> generations, List<String> unitIds, Runnable before, Runnable after) {
         if (vector == null || vector.size() != properties.getDimensions()
                 || vector.stream().anyMatch(value -> value == null || !Double.isFinite(value))) throw invalid();
         Map<String, Object> body = new java.util.LinkedHashMap<>();
@@ -200,6 +204,11 @@ public class LawVectorClient {
         if (generations == null || generations.isEmpty()) throw invalid();
         conditions.add(Map.of("key", "generation", "match", Map.of("any", List.copyOf(generations))));
         conditions.add(Map.of("key", "config_fingerprint", "match", Map.of("value", fingerprint())));
+        if (!unitIds.isEmpty()) {
+            if (unitIds.size() > 15 || unitIds.stream().anyMatch(id -> id == null || !id.matches("[0-9]{1,20}:[0-9]{1,8}(-[0-9]{1,8})?")))
+                throw invalid();
+            conditions.add(Map.of("key", "unit_id", "match", Map.of("any", List.copyOf(unitIds))));
+        }
         body.put("filter", Map.of("must", conditions));
         JsonNode result = request(qdrant, "POST", path() + "/points/query/groups", body, before, after);
         JsonNode groups = result.path("result").path("groups");
