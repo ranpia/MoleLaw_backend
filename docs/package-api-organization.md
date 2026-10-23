@@ -6,7 +6,7 @@
 
 - auth/controller: 가입·로그인·로그아웃·Refresh·CSRF. user/controller: 내 정보·계정 삭제·비밀번호·닉네임.
 - law/controller: 법령·판례·키워드 API. chat/controller: 상담방·메시지와 방을 저장하지 않는 법률 답변 API.
-- law/service/tool: 서버가 호출하는 세 도구와 실행 권한·예산 컨텍스트. 원문·벡터 HTTP 구현을 이 폴더에 섞지 않는다.
+- law/service/tool: 서버가 호출하는 도구와 실행 권한·예산 컨텍스트. 원문·벡터 HTTP 구현을 이 폴더에 섞지 않는다.
 - law/service/source, retrieval, search, analysis: 각각 원문/색인 기록, 근거 수집/판단, 검색, 키워드 추출.
 - law/util: 외부 I/O·트랜잭션이 없는 JSON 파싱, 부처 코드 매핑, 조문 청킹, 로컬 임베딩 부하 제한. 보조 클래스는 서비스에 섞지 않고 한곳에 둔다.
 - law/client/openlaw, vector: 외부 HTTP 경계. CaseSearchService는 단일 구현에 불필요한 인터페이스를 두지 않는다.
@@ -50,3 +50,5 @@ HTTP 입력·출력은 각 도메인의 dto/request·response에 둔다. LawDto/
 일반 테스트 283개(실패 0, 선택 Postman 실행 1개 건너뜀)와 bootJar를 통과했다. OpenApiDocumentationTest는 새 경로·HTTP 메서드 20개, 인증/CSRF 요구·응답 예시·schema를 확인한다. 법령 AI 검색은 옛 content 본문을 거절하고 query 본문을 처리하는 HTTP 회귀를 추가했다. 사용자 ID·방 소유권·Refresh 회전과 실제 CSRF 쿠키 부트스트랩 회귀도 포함된다. 패키지 이동 후 HTTP 임베딩 클라이언트는 별도 로컬 Postman simulation에서 검증한다. 실제 OpenLaw/OAuth/유료 LLM은 호출하지 않았다.
 
 최종 추가 검증: Swagger 문구 갱신 후 OpenAPI 테스트와 선택 Postman 테스트 총 5 개를 통과했다. simulation 로그에서 실제 클라이언트의 GET /api/tags·POST /api/embed 및 HTTP 200을 확인했고 테스트 서버를 종료했다.
+
+2026-10-23: local 전용 POST /api/local/law-retrieval/ai-search·/compare가 추가됐습니다. 기존 공개 20개 경로와 분리된 진단 경로이며 인증·CSRF를 유지합니다. [AI Search 비교](ai-search-comparison.md)를 따릅니다.

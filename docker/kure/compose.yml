@@ -1,0 +1,27 @@
+name: molelaw-kure-service
+services:
+  kure:
+    image: molelaw/kure-service:threaded-v1
+    build:
+      context: .
+    ports:
+      - "127.0.0.1:${KURE_SERVICE_PORT:-11437}:11434"
+    environment:
+      HF_HOME: /models
+      EMBEDDING_QUEUE_CAPACITY: "4"
+      EMBEDDING_QUEUE_WAIT_SECONDS: "5"
+    volumes:
+      - kure_models:/models
+    cpus: 6.0
+    mem_limit: 8g
+    memswap_limit: 8g
+    restart: "no"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  kure_models:
+    external: true
+    name: ${KURE_MODEL_VOLUME:-molelaw-kure-lab_kure_models}

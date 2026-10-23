@@ -1,59 +1,37 @@
-# API 기능 개발 인수인계
+# 개발 인수인계
 
-> 최신 상태(2026-10-14): Access는 모든 프로필에서 5분 stateless JWT이며 Redis 등록·조회·폐기를 제거했다. issuer/audience·버전 3을 검증하고 Refresh 회전은 유지한다. 이전 단계의 Redis Access·local 15시간·미구현 표기는 이력으로 읽는다. 현재 계약은 [Access stateless 구현](stateless-access.md)을 따른다.
+기준일: 2026-10-23. 작업 브랜치는 dev이며 미커밋 구현·문서 변경이 있다. main 통합·push·배포 완료를 의미하지 않는다.
 
-기준일: 2026-10-21. 완료한 dev 구현·별도 실험·미완료 항목은 [개발 완료 현황](development-status.md)을 따른다. 아래 API 검증 수치는 당시 이력이며 이번 정리에서 재실행하지 않았다.
+## 인수 순서
 
-## 현재 개발 기준
+1. [개발 현황](development-status.md)에서 구현·제한을 확인한다.
+2. [확정 결정](decisions/confirmed.md)과 [사용자 판단](decisions/README.md)을 구분한다.
+3. [작업 계획](plans/README.md)의 P01부터 순서와 의존성을 확인한다.
+4. 실제 실행 전 [최초 상담](initial-consultation.md), [Docker](../docker/README.md), [환경 예제](../.env.example)를 확인한다.
 
-2026-10-21: 서비스는 `ChatService`(조정·권한) → `LegalAnswerService`(생성·검증) → `ChatTurnService`(원자적 저장)로 정리했다. 근거 수집·프롬프트·출처 표시는 별도 책임으로 유지한다. 최초 Client는 메모리가 없고 후속 Client만 `MessageChatMemoryAdvisor`로 DB 대화를 복원한다. 키워드 추출과 미연결 근거 수집 Client에는 메모리를 붙이지 않는다. [역할별 Client·저장·권한 계약](role-chat-clients.md)을 따른다.
+## 코드 진입점
 
-패키지는 `auth`, `user`, `chat`, `law`, `common`으로 구성하며 [도메인 구조 스킬](../.agents/skills/domain-structure/SKILL.md)을 따른다. 법령 Tool 구현은 `law.service.tool`, 인증 구현은 `auth.security`와 `auth.oauth`에 있다.
+| 영역 | 주요 클래스 |
+| --- | --- |
+| 상담 조정·저장 | ChatService, LegalAnswerService, ChatTurnService |
+| 질문·수집·판단 | QuestionRetrievalPlanner, LegalEvidenceCollector, EvidenceDecisionPlanner |
+| 법령 후보 리랭크 | LawCandidateSelector, LawCandidateSelection |
+| 원문·ETL | LegalApiToolService, LawSourceDocumentReader, LawArticleDocumentTransformer, LawQdrantDocumentWriter |
+| 벡터화·검색 | LawVectorizationToolService, LawRagSearchToolService, LawVectorClient |
+| 모델·메모리 | AiConfig, EvidenceChatClientConfig, AnswerChatClientConfig, PersistedChatMemory |
+| 별도 조문 검색 | OpenLawAiSearchClient, LawAiSearchToolService, AiSearchEvidenceCollector |
 
-현재 Access는 모든 프로필에서 5분 stateless JWT이며 issuer/audience·버전 3을 검증한다. Redis는 Refresh 해시·원자 회전·재사용 탐지·폐기만 담당한다. Refresh는 HttpOnly 쿠키 전용이고 family 절대 7일이다. 현재 계약은 [Access 구현](stateless-access.md)과 [Refresh 구현](refresh-rotation.md)을 따른다.
+## 바로 주의할 점
 
-후속 기능은 기능 브랜치에서 개발하고 `dev`에서 통합·테스트한 뒤 검증한 변경을 `main`에 반영한다. CI·수동 배포 조건과 실행 환경은 [프로젝트 안내](../README.md)와 [Docker 가이드](../docker/README.md)를 따른다. 과거 브랜치 생성·병합 이력은 Git 이력에서 확인한다.
+- 새 모델은 역할별로 지정했으나 실 API 접근·응답 품질은 미검증이다. 재시작 전 이미 실행 중인 서버에 새 설정이 적용됐다고 가정하지 않는다.
+- 일반 법령 검색은 전체 페이지 검토 후 선별한다. 예산이 먼저 끝나면 해당 조건의 부분 결과를 색인하지 않는다. AI Search·로컬 수동 ETL 계약은 별도다.
+- Qdrant 적재 후 검증을 통과해야 COMPLETE다. 실패 세대·구세대 물리 정리와 영속 작업 복구는 미구현이다.
+- 서비스용 컬렉션 정리는 완료했지만 실험용 evaluation 자료·컬렉션은 보존한다. 정리 기록을 매번 실행하는 초기화 절차로 사용하지 않는다.
+- Flyway 적용 버전은 V1~V4이며 적용된 SQL을 수정하지 않는다. 사용자·원문·상담 DB를 재초기화하지 않는다.
+- 후속 상담에 새 수집을 연결하거나 모델에 실행 권한·예산·인용 ID 생성을 맡기지 않는다.
 
-## 구현된 법령 Tool 범위
+## 검증과 전달
 
-- `LawVectorizationToolService`·`LawRagSearchToolService`: 원문 벡터화와 상위 15개 조문 검색을 분리한 기본 비활성 내부 Tool. [사용·설정·검증](law-vector-tools.md)을 따른다. 기존 상담 연결과 색인 버전 관리는 미완료다.
-- `LegalApiToolService`: 법령·판례 목록/상세 네 내부 Tool. 공개 HTTP API·MCP·자동 tool-calling은 추가하지 않았다.
-- `SearchRequest`·`LawSearchFilters`: 제목/본문·부처·페이지·법령ID·종류·상태·정확명·정렬·시행일/공포일 범위. 기존 생성자와 법령 fallback 유지.
-- `LegalToolContext`: 실행별 호출/시간 예산, 중복 페이지·후보 소진, 상세 ID 허용 목록, 후속 Tool 실행 거부. 서버가 인증·소유권 확인 후 생성해야 한다.
-- `LegalSource`·Repository·Service: UUID·JSON 원문·해시·조회 시점·출처·MST/판례ID 스냅샷 저장/복원. 상담방별 근거 연결과는 별개다.
-- `openLawLiveTest`: 실제 법령·판례 API 계약 검사. 일반 테스트와 분리하고 키/원문을 출력하지 않는다.
+일반 회귀는 `.\gradlew.bat test`, JAR은 `.\gradlew.bat bootJar`다. 실행 중인 JAR과 경로가 겹치면 별도 출력 경로를 사용한다. 실제 저장소·임베딩·유료 모델은 별도 선택 검증이다. 최신 결과는 [검증 현황](validation-status.md)을 따른다.
 
-상세 입력/반환/오류 계약과 예제는 [API Tool 개발 문서](legal-api-tools.md)를 참고한다. 정확명은 API 문자열 검색과 서버 제목 검사를 함께 적용하므로 `민법` 요청에 `난민법`을 채택하지 않는다.
-
-## 실행과 스키마 적용
-
-1. Java 17과 Gradle Wrapper를 사용하고 `OC_KEY`는 환경변수 또는 Git 제외 `.env`로 제공한다.
-2. 기존 데이터 이관 없이 빈 MySQL DB로 시작한다. Flyway V1·V2 자동 적용 후 JPA validate로 검사한다. V2는 상담방 최초 근거 스냅샷이며 기존 방의 근거를 자동 생성하지 않는다. 이전 수동 SQL은 실행하지 않는다. 이력 없는 비어 있지 않은 DB는 자동 전환하지 않는다.
-3. `LegalApiToolService`를 서버 내부에서 주입해 사용한다. 사용자/모델이 실행 목적·예산·소유권 문맥을 만들게 하지 않는다.
-
-```powershell
-.\gradlew.bat test
-.\gradlew.bat bootJar
-.\gradlew.bat mysqlIntegrationTest
-.\gradlew.bat openLawLiveTest
-```
-
-일반 테스트는 H2·모킹을 사용하며 실제 모델/API 키가 필요 없다. 실호출 테스트는 외부 API 5회를 사용하고 원문은 테스트 메모리에만 저장한다. 별도 `mysqlIntegrationTest`는 임시 MySQL 8.4에서 스키마 생성·JPA 매핑·원문/암호문 저장·제약·재시작을 검증한다.
-
-## 검증 결과와 제한
-
-2026-10-13 법령 Tool 개발 당시 일반 테스트 56개 및 실제 API 테스트를 통과했고 `test bootJar`로 패키징을 확인했다. 이는 이후 인증·구조 변경 전체의 최신 검증 결과가 아니다. 실호출에서 현행·부처·종류 조건의 API 후보 2건을 정확명으로 걸러 민법 1건, 법령ID 001706·MST 284415·시행일 20260317을 확인했다. 검색 결과와 버전은 시점에 따라 바뀐다.
-
-이 결과는 법률 적용·검색 품질 평가나 상담 통합 완료를 의미하지 않는다. `contentAvailable`도 본문 존재 여부만 나타낸다. 기존 상담 서비스는 아직 새 Tool을 호출하지 않는다.
-
-## 다음 담당 작업
-
-2026-10-14 Access subject와 principal·조회·권한을 기존 `User.id` IDENTITY PK로 통일했다. 이어서 JWT Refresh를 난수 Refresh로 대체하고 Redis 회전·재사용·family 폐기와 JSON 제거를 구현했다. 구형 JWT Refresh는 재로그인한다. 일반 테스트 148개·실제 Redis 11개·MySQL 2개·JAR를 검증했으며 기존 개발 DB/Redis를 초기화하지 않았다. [인증 계획](plans/auth-security.md)과 [회전 구현](refresh-rotation.md)을 따른다.
-
-1. 구현된 stateless Access·Redis Refresh의 동시 배포 전환, 운영 Refresh 영속화·복구·호출 제한을 준비한다. MySQL 인증 세션/Refresh migration은 추가하지 않는다.
-2. MySQL 원문 Reader → 구조 보존 Transformer → Qdrant writer는 2026-10-22 연결했다. 저장 원문 수동 재색인과 local 검증 API는 [ETL 실행 계약](law-etl-local.md)을 따른다. 임베딩 품질 평가·선정과 영속 복구는 후속이다.
-3. 실행 중단·페이지 재개 이력 영속화, 전역 동시성·남은 deadline에 맞춘 HTTP 제한.
-4. 인증/방 소유권·최초 질문 오케스트레이터 연결, 상담방 근거 스냅샷과 Advisor 성공 턴 저장.
-5. 근거 관련성·시행일/사건 기준일·후속 검색 금지 평가. SerpApi는 [검토안](plans/search-fallback.md)이며 미도입.
-
-CPU Ollama 테스트 이미지는 [별도 실행 가이드](../docker/ollama/README.md)를 따른다. 이미지 구동과 Spring 임베딩 전환을 혼동하지 않는다.
+개발은 dev에서 계속한다. main 반영과 EC2 수동 배포는 테스트·설정·복구 준비 후 별도 요청 범위에서 진행한다.

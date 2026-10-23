@@ -15,6 +15,8 @@ public class LawVectorProperties {
     private int dimensions = 1024;
     private int threads = 6;
     private int batchSize = 16;
+    private int embeddingMaxCalls = 1024;
+    private int indexingMaxCalls = 1024;
     private String qdrantBaseUrl = "http://localhost:6333";
     private String collectionName = "molelaw_service_law_kure_v1";
     private String apiKey = "";
@@ -23,4 +25,6 @@ public class LawVectorProperties {
     private int embeddingConcurrency = 1;
     private int embeddingQueueCapacity = 4;
     private long embeddingWaitMillis = 5000;
+    private long embeddingTimeoutSeconds = 900;
+    private int embeddingReadTimeoutMillis = 120_000;
 }

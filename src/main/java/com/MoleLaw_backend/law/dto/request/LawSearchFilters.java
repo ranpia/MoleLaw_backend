@@ -6,13 +6,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record LawSearchFilters(
         @Schema(description = "법령 ID. 1~20자리 숫자", example = "001823", pattern = "[0-9]{1,20}") String lawId,
         @Schema(description = "법령 종류 코드. A와 숫자 4자리", example = "A0002", pattern = "A[0-9]{4}") String kind,
-        @Schema(description = "외부 API 법령 상태 구분. 생략 시 전체 버전 검색", example = "2", minimum = "1", maximum = "3") Integer status,
+        @Schema(description = "법령 상태(nw): 1 연혁, 2 시행예정, 3 현행. 생략 시 전체 버전 검색", example = "3", minimum = "1", maximum = "3") Integer status,
         @Schema(description = "법령명 완전 일치 검색 여부", example = "false") boolean exactName,
         @Schema(description = "정렬 코드. 생략 시 lasc", example = "lasc", defaultValue = "lasc",
                 allowableValues = {"lasc", "ldes", "dasc", "ddes", "nasc", "ndes", "efasc", "efdes"}) String sort,
         @Schema(description = "시행일 범위. 시작일은 종료일 이하여야 합니다.", example = "20240101~20241231", pattern = "[0-9]{8}~[0-9]{8}") String effectiveDateRange,
         @Schema(description = "공포일 범위. 시작일은 종료일 이하여야 합니다.", example = "20240101~20241231", pattern = "[0-9]{8}~[0-9]{8}") String promulgationDateRange) {
     public static final LawSearchFilters NONE = new LawSearchFilters(null, null, null, false);
+    public static final int CURRENT = 3;
 
     public LawSearchFilters(String lawId, String kind, Integer status, boolean exactName) {
         this(lawId, kind, status, exactName, "lasc", null, null);

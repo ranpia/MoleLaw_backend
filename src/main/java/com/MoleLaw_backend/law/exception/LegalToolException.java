@@ -1,7 +1,7 @@
 package com.MoleLaw_backend.law.exception;
 
 public class LegalToolException extends RuntimeException {
-    public enum Reason { FORBIDDEN, UNKNOWN_ID, DUPLICATE, BUDGET_EXHAUSTED, INVALID_RESPONSE, API_FAILURE, BUSY }
+    public enum Reason { FORBIDDEN, UNKNOWN_ID, DUPLICATE, BUDGET_EXHAUSTED, EMBEDDING_TIMEOUT, INDEX_VERIFICATION_FAILED, INVALID_RESPONSE, API_FAILURE, BUSY }
     private final Reason reason;
     private final boolean retryable;
 

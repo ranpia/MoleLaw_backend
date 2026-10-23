@@ -36,3 +36,5 @@ DB 메시지는 `USER/BOT`만 저장합니다. API의 기존 `INFO` 응답은 �
 `EncryptUtilTest`, `ChatContentLimitsTest`, `ChatStorageServiceTest`, `RoomEvidenceIntegrationTest`는 변조·난수 nonce·큰 한글 암호문·경계·INFO 재구성·페이지 전달·H2 삭제 cascade를 검증합니다. 실제 MySQL 타입·FK·한도 검증은 `mysqlIntegrationTest`에서 별도로 수행합니다.
 
 설정 주입 전환 검증(2026-10-22): 일반 테스트 287 개(실패 0, 선택 실행 1 개 건너뜀)와 bootJar 통과. 임시 .env만으로 실제 YAML·@Value 주입, 빈 키 기동 실패, 서로 다른 인스턴스 키 격리, 기존 암호문 envelope·변조 검사·큰 본문 복원을 확인했다. 로컬 .env는 Git 제외 상태다.
+
+운영 키 교체·보존 정책은 [사용자 판단 D09](decisions/README.md), 동시 턴·중단 복구는 [작업 계획 P05](plans/README.md)에서 관리합니다.

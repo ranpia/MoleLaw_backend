@@ -17,6 +17,8 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 
 import java.util.List;
+import com.MoleLaw_backend.law.dto.retrieval.CollectedLegalEvidence;
+import com.MoleLaw_backend.law.dto.retrieval.QuestionRetrievalPlan;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,7 +38,10 @@ class LegalAnswerInitialTest {
 
     @BeforeEach
     void setUp() {
-        when(collector.collect("질문 {literal}")).thenReturn(List.of(item));
+        when(collector.collectForAnswer("질문 {literal}")).thenReturn(new CollectedLegalEvidence(
+                new QuestionRetrievalPlan(QuestionRetrievalPlan.Type.LAW_DISCOVERY,
+                        QuestionRetrievalPlan.ResponseScope.GENERAL_GUIDANCE,
+                        List.of("법령 검색"), List.of(), List.of("부지 위치")), List.of(item)));
     }
 
     @Test
@@ -49,6 +54,8 @@ class LegalAnswerInitialTest {
         assertTrue(text.contains("질문 {literal}"));
         assertTrue(text.contains("[[" + ID + "]]"));
         assertTrue(text.contains(item.content()));
+        assertTrue(text.contains("GENERAL_GUIDANCE"));
+        assertTrue(text.contains("부지 위치"));
         assertFalse(text.contains(item.sourceUrl()));
         assertEquals(List.of(item), result.evidence());
         assertTrue(result.response().getInfo().contains(java.net.URI.create(item.sourceUrl()).toASCIIString()));
@@ -64,7 +71,7 @@ class LegalAnswerInitialTest {
 
     @Test
     void retrievalFailurePreventsProviderCall() {
-        when(collector.collect("질문 {literal}")).thenThrow(new GptApiException(ErrorCode.GPT_API_FAILURE));
+        when(collector.collectForAnswer("질문 {literal}")).thenThrow(new GptApiException(ErrorCode.GPT_API_FAILURE));
         assertThrows(GptApiException.class, () -> service.prepareInitialAnswer("질문 {literal}"));
         verify(model, never()).call(any(Prompt.class));
     }

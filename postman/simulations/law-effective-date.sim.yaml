@@ -1,0 +1,6 @@
+simulation: Effective-date detail regression
+routing: path
+mocks:
+  - name: Effective-date law detail
+    routeKey: DRF
+    path: ../mocks/law-effective-date/config.yaml
