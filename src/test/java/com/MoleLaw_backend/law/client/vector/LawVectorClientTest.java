@@ -223,6 +223,19 @@ class LawVectorClientTest {
     }
 
     @Test
+    void explicitArticleFilterKeepsGenerationAndFingerprintConstraints() {
+        responder = request -> json(Map.of("result", Map.of("groups", List.of())));
+        assertTrue(client.query(List.of(0.6, 0.8), List.of("committed"), List.of("123:575", "123:43-2"),
+                before::incrementAndGet, after::incrementAndGet).isEmpty());
+        var conditions = requests.get(0).body().path("filter").path("must");
+        assertEquals(4, conditions.size());
+        assertEquals("generation", conditions.get(1).path("key").asText());
+        assertEquals("config_fingerprint", conditions.get(2).path("key").asText());
+        assertEquals("unit_id", conditions.get(3).path("key").asText());
+        assertEquals("123:575", conditions.get(3).path("match").path("any").get(0).asText());
+    }
+
+    @Test
     void mapsProviderErrorsWithoutLeakingBodyAndAccountsForFailedCalls() {
         responder = request -> new Response(503, "{\"secret\":\"provider-sensitive-body\"}");
         LegalToolException failure = assertThrows(LegalToolException.class,

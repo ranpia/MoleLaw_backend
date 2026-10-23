@@ -37,11 +37,13 @@ public class EvidenceDecisionPlanner {
     private final EvidenceDecisionInputBuilder inputs;
     private final EvidenceReadPlanner reading;
     private final int decisionInputLimit;
+    private final org.springframework.beans.factory.ObjectProvider<com.MoleLaw_backend.law.service.tool.LawRagSearchToolService> ragSearch;
 
     public EvidenceDecisionPlanner(@Qualifier("evidenceCollectionChatClient") ChatClient client, ObjectMapper mapper,
                                    @Value("${app.ai.evidence.max-input-tokens:2500}") int maxInputTokens,
                                    EvidenceReadPlanner reading,
-                                   @Value("${app.ai.evidence.decision-max-input-tokens:20000}") int decisionInputLimit) {
+                                   @Value("${app.ai.evidence.decision-max-input-tokens:20000}") int decisionInputLimit,
+                                   org.springframework.beans.factory.ObjectProvider<com.MoleLaw_backend.law.service.tool.LawRagSearchToolService> ragSearch) {
         if (decisionInputLimit < maxInputTokens || decisionInputLimit > 128000)
             throw new IllegalArgumentException("Invalid combined decision input limit");
         this.client = client;
@@ -49,6 +51,7 @@ public class EvidenceDecisionPlanner {
         this.inputs = new EvidenceDecisionInputBuilder(mapper, maxInputTokens);
         this.reading = reading;
         this.decisionInputLimit = decisionInputLimit;
+        this.ragSearch = ragSearch;
     }
 
     public EvidenceDecision decide(String question, List<EvidenceItem> evidence) {
@@ -85,7 +88,10 @@ public class EvidenceDecisionPlanner {
             stage = "INPUT_BUILD";
             ObjectNode input;
             try {
-                input = inputs.buildRead(question, read, plan, attempts, remainingActions, decisionInputLimit);
+                var rag = ragSearch.getIfAvailable();
+                var titles = rag == null || attempts.stream().anyMatch(attempt -> attempt.kind() == RetrievalAttempt.Kind.AI_SEARCH)
+                        ? null : rag.indexedLawTitles();
+                input = inputs.buildRead(question, read, plan, attempts, remainingActions, decisionInputLimit, titles);
             } catch (IllegalArgumentException oversized) {
                 throw new MolelawException(ErrorCode.EVIDENCE_INSUFFICIENT);
             }

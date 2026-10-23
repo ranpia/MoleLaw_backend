@@ -45,7 +45,7 @@ class EvidenceDecisionPlannerTest {
                 .doesNotContain("private-reason", "private-issue", "private-law", "private-ministry", "private-question");
     }
     private final ChatModel model = mock(ChatModel.class);
-    private final EvidenceDecisionPlanner planner = new EvidenceDecisionPlanner(ChatClient.builder(model).build(), new ObjectMapper(), 2500, reading, 20000);
+    private final EvidenceDecisionPlanner planner = new EvidenceDecisionPlanner(ChatClient.builder(model).build(), new ObjectMapper(), 2500, reading, 20000, mock(org.springframework.beans.factory.ObjectProvider.class));
     private final List<EvidenceItem> evidence = List.of(new EvidenceItem("known-id", "LAW_CHUNK", "chunk:1",
             "민법", "https://www.law.go.kr", "확보한 본문"));
 
@@ -67,7 +67,7 @@ class EvidenceDecisionPlannerTest {
 
     @Test
     void omittedIdsCannotBeApprovedAndTheirBodiesAreNeverSent() throws Exception {
-        var planner = new EvidenceDecisionPlanner(ChatClient.builder(model).build(), new ObjectMapper(), 256, reading, 20000);
+        var planner = new EvidenceDecisionPlanner(ChatClient.builder(model).build(), new ObjectMapper(), 256, reading, 20000, mock(org.springframework.beans.factory.ObjectProvider.class));
         var hidden = new EvidenceItem("hidden-id", "LAW_CHUNK", "chunk:2", "긴 조문",
                 "https://www.law.go.kr", "법령 본문 ".repeat(1000));
         when(reading.read(anyString(), anyList(), any())).thenReturn(

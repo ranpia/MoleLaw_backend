@@ -37,6 +37,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ActiveProfiles("test")
 @Import({ChatCaseEvidenceService.class, com.MoleLaw_backend.law.service.source.LegalSourceService.class, com.MoleLaw_backend.law.service.tool.CaseEvidenceReader.class, EncryptUtil.class, ChatEvidenceService.class, ChatTurnService.class, RoomEvidenceIntegrationTest.JsonConfiguration.class})
 class RoomEvidenceIntegrationTest {
+    @Test
+    void accountDeletedDuringLongCollectionCannotCauseForeignKeyFailureAtSave() {
+        var owner = User.builder().email("deleted@example.test").provider("local").nickname("deleted").password("hash").build();
+        entityManager.persist(owner);
+        entityManager.flush();
+        entityManager.remove(owner);
+        entityManager.flush();
+        entityManager.clear();
+        assertThatThrownBy(() -> initialTurns.saveInitialTurn(owner, "title", "question",
+                new PreparedLegalAnswer(new LegalAnswerResponse("answer", ""), evidence())))
+                .isInstanceOfSatisfying(MolelawException.class, failure ->
+                        assertThat(failure.getErrorCode()).isEqualTo(com.MoleLaw_backend.common.exception.ErrorCode.USER_NOT_AUTHENTICATED));
+        assertThat(rooms.count()).isZero();
+        assertThat(messages.count()).isZero();
+    }
     @Autowired private EncryptUtil encryptor;
     @Autowired private ChatEvidenceService service;
     @Autowired private ChatEvidenceSnapshotRepository snapshots;

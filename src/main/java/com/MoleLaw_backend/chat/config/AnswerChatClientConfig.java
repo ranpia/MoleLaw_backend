@@ -42,7 +42,11 @@ public class AnswerChatClientConfig {
 
     @Bean
     public ChatClient followUpAnswerChatClient(@Qualifier("legalAnswerChatClient") ChatClient initialAnswers,
-                                               @Qualifier("persistedChatMemory") ChatMemory memory) {
-        return initialAnswers.mutate().defaultAdvisors(MessageChatMemoryAdvisor.builder(memory).build()).build();
+                                               @Qualifier("persistedChatMemory") ChatMemory memory,
+                                               @Value("${app.ai.answer.model:gpt-5.4-mini}") String model,
+                                               @Value("${app.ai.answer.max-completion-tokens:16384}") int maxTokens) {
+        // Chat Completions rejects function tools combined with reasoning effort on this model.
+        return initialAnswers.mutate().defaultOptions(ReasoningOptions.create(model, "none", maxTokens))
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(memory).build()).build();
     }
 }

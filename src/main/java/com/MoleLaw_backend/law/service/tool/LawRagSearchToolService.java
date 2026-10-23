@@ -18,10 +18,25 @@ import static com.MoleLaw_backend.law.exception.LegalToolException.Reason.INVALI
 public class LawRagSearchToolService {
     private final LawVectorClient client;
     private final LegalSourceIndexService indexes;
+    private final com.MoleLaw_backend.law.service.source.LegalSourceService sources;
+    private final com.fasterxml.jackson.databind.ObjectMapper mapper;
 
-    public LawRagSearchToolService(LawVectorClient client, LegalSourceIndexService indexes) {
+    public LawRagSearchToolService(LawVectorClient client, LegalSourceIndexService indexes,
+            com.MoleLaw_backend.law.service.source.LegalSourceService sources, com.fasterxml.jackson.databind.ObjectMapper mapper) {
         this.client = client;
         this.indexes = indexes;
+        this.sources = sources;
+        this.mapper = mapper;
+    }
+
+    public List<String> indexedLawTitles() {
+        return indexes.searchable(client.fingerprint()).values().stream()
+                .map(index -> title(index.getSourceId())).filter(title -> !title.isBlank()).distinct().sorted().toList();
+    }
+
+    private String title(String sourceId) {
+        try { return mapper.readTree(sources.restore(sourceId).getRawJson()).path("기본정보").path("법령명_한글").asText(); }
+        catch (com.fasterxml.jackson.core.JsonProcessingException malformed) { throw invalid(); }
     }
 
     public List<LawSearchEvidence> searchTop15(LegalToolContext context, String question) {
@@ -35,11 +50,19 @@ public class LawRagSearchToolService {
             if (!client.collectionAvailable(context::reserve, context::checkDeadline)) return List.of();
             var published = indexes.searchable(client.fingerprint());
             if (published.isEmpty()) return List.of();
+            var exactUnits = new java.util.ArrayList<String>();
+            for (var index : published.values()) {
+                var source = sources.restore(index.getSourceId());
+                for (String path : com.MoleLaw_backend.law.util.LawArticleQuery.paths(question, title(source.getId())))
+                    if (exactUnits.size() < 15) exactUnits.add(source.getExternalId() + ":" + path);
+            }
             List<Double> vector;
             try (var budget = context.embeddingTime(client.embeddingTimeout())) {
                 vector = client.embed(List.of(question.strip()), context::reserveEmbedding, context::checkDeadline).get(0);
             }
-            JsonNode groups = client.query(vector, List.copyOf(published.keySet()), context::reserve, context::checkDeadline);
+            JsonNode groups = exactUnits.isEmpty()
+                    ? client.query(vector, List.copyOf(published.keySet()), context::reserve, context::checkDeadline)
+                    : client.query(vector, List.copyOf(published.keySet()), exactUnits, context::reserve, context::checkDeadline);
             if (!groups.isArray() || groups.size() > 15) throw invalid();
             List<LawSearchEvidence> result = new ArrayList<>();
             Set<String> units = new HashSet<>();
@@ -51,6 +74,7 @@ public class LawRagSearchToolService {
                 double score = hit.path("score").asDouble(Double.NaN);
                 String unit = required(payload, "unit_id");
                 String generation = required(payload, "generation");
+                if (!exactUnits.isEmpty() && !exactUnits.contains(unit)) throw invalid();
                 var index = published.get(generation);
                 if (index == null || !index.getSourceId().equals(required(payload, "reference_id"))
                         || !index.getContentHash().equals(required(payload, "content_hash"))
