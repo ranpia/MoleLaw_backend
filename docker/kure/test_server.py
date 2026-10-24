@@ -3,6 +3,7 @@ import concurrent.futures
 import json
 import threading
 import unittest
+from unittest.mock import patch
 import urllib.error
 import urllib.request
 import server
@@ -29,6 +30,61 @@ class Encoder:
 
 
 class ConcurrencyTest(unittest.TestCase):
+    def test_cuda_oom_returns_503_and_releases_inference_permit(self):
+        encoder = Encoder()
+        encoder.release.set()
+        with patch.object(server, "model", encoder), \
+                patch.object(server, "ADMISSION", threading.BoundedSemaphore(1)), \
+                patch.object(server.torch.cuda, "empty_cache") as empty_cache:
+            http = server.ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
+            threading.Thread(target=http.serve_forever, daemon=True).start()
+            body = json.dumps({"model": server.TAG, "input": ["test"], "truncate": False,
+                               "options": {"num_thread": server.THREADS, "num_gpu": 0}}).encode()
+            request = urllib.request.Request(f"http://127.0.0.1:{http.server_port}/api/embed", data=body)
+            try:
+                with patch.object(encoder, "encode", side_effect=server.torch.cuda.OutOfMemoryError()):
+                    with self.assertRaises(urllib.error.HTTPError) as rejected:
+                        urllib.request.urlopen(request, timeout=2)
+                    self.assertEqual(rejected.exception.code, 503)
+                empty_cache.assert_called_once()
+                with urllib.request.urlopen(request, timeout=2) as response:
+                    self.assertEqual(response.status, 200)
+            finally:
+                http.shutdown()
+                http.server_close()
+
+    def test_cuda_unavailable_does_not_fall_back_or_publish_model(self):
+        with patch.object(server, "model", None), patch.object(server, "DEVICE", "cuda"), \
+                patch.object(server.torch.cuda, "is_available", return_value=False), \
+                patch.object(server, "SentenceTransformer") as constructor:
+            with self.assertRaisesRegex(RuntimeError, "CUDA was requested"):
+                server.load_model()
+            constructor.assert_not_called()
+            self.assertIsNone(server.model)
+
+    def test_wrong_device_request_is_rejected_and_next_request_can_run(self):
+        encoder = Encoder()
+        encoder.release.set()
+        with patch.object(server, "model", encoder), patch.object(server, "DEVICE", "cuda"), \
+                patch.object(server, "ADMISSION", threading.BoundedSemaphore(1)):
+            http = server.ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
+            threading.Thread(target=http.serve_forever, daemon=True).start()
+            def request(gpus):
+                body = json.dumps({"model": server.TAG, "input": ["test"], "truncate": False,
+                                   "options": {"num_thread": server.THREADS, "num_gpu": gpus}}).encode()
+                return urllib.request.urlopen(urllib.request.Request(
+                    f"http://127.0.0.1:{http.server_port}/api/embed", data=body), timeout=2)
+            try:
+                with self.assertRaises(urllib.error.HTTPError) as rejected:
+                    request(0)
+                self.assertEqual(rejected.exception.code, 400)
+                self.assertFalse(encoder.started.is_set())
+                with request(1) as response:
+                    self.assertEqual(response.status, 200)
+            finally:
+                http.shutdown()
+                http.server_close()
+
     def test_queue_timeout_releases_admission_and_does_not_start_inference(self):
         encoder = Encoder()
         encoder.release.set()

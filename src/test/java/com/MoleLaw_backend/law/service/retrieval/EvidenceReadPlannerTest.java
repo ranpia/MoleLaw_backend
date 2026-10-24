@@ -50,6 +50,16 @@ class EvidenceReadPlannerTest {
                 assertThat(prompt.getUserMessage().getText()).contains("candidateCatalog").doesNotContain("본문 비공개"));
         var second = mapper.readTree(prompts.getAllValues().get(1).getUserMessage().getText());
         assertThat(second.path("candidateCatalog").toString()).doesNotContain("id-14", "\"id-0\"");
+        var options = (org.springframework.ai.openai.OpenAiChatOptions) prompts.getAllValues().get(0).getOptions();
+        assertThat(options.getResponseFormat().getType()).isEqualTo(org.springframework.ai.openai.api.ResponseFormat.Type.JSON_SCHEMA);
+        assertThat(options.getResponseFormat().getJsonSchema().getStrict()).isTrue();
+        var schema = mapper.valueToTree(options.getResponseFormat().getJsonSchema().getSchema());
+        assertThat(schema.path("properties").path("evidenceIds").path("maxItems").asInt()).isEqualTo(8);
+        assertThat(schema.path("properties").path("evidenceIds").path("items").path("enum")).hasSize(15);
+        var nextOptions = (org.springframework.ai.openai.OpenAiChatOptions) prompts.getAllValues().get(1).getOptions();
+        var nextSchema = mapper.valueToTree(nextOptions.getResponseFormat().getJsonSchema().getSchema());
+        assertThat(nextSchema.path("properties").path("evidenceIds").path("items").path("enum").toString())
+                .doesNotContain("id-14", "\"id-0\"");
     }
 
     @Test void oversizedArticleIsDeferredWholeAndAnotherReadRoundCanChooseASmallerOne() {

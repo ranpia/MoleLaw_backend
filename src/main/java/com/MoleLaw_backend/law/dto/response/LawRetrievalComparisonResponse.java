@@ -31,5 +31,5 @@ public record LawRetrievalComparisonResponse(
             @Schema(description = "응답에 표시된 시행일. 현재 시행 중임을 보장하지 않습니다.", nullable = true, example = "20260101") String effectiveDate,
             @Schema(description = "API 조문 ID 또는 Qdrant 조문 경로", example = "1234567") String articleIdentity,
             @Schema(description = "검색된 조문 본문", example = "이 법은 검증을 목적으로 한다.") String content,
-            @Schema(description = "공식 법령 출처 링크", example = "https://www.law.go.kr/법령?lsiSeq=123456") String sourceUrl) { }
+            @Schema(description = "MST로 지정한 공식 법령 상세 페이지 링크", example = "https://www.law.go.kr/lsInfoP.do?lsiSeq=123456") String sourceUrl) { }
 }

@@ -30,7 +30,7 @@ class LawAiSearchToolServiceTest {
         assertThat(evidence.title()).isEqualTo("검증법 제34조의2(제한)");
         assertThat(evidence.kind()).isEqualTo("LAW_AI_SEARCH");
         assertThat(evidence.sourceId()).isEqualTo("123:999");
-        assertThat(evidence.sourceUrl()).isEqualTo("https://www.law.go.kr/법령?lsiSeq=123");
+        assertThat(evidence.sourceUrl()).isEqualTo("https://www.law.go.kr/lsInfoP.do?lsiSeq=123");
         assertThat(context.callsUsed()).isEqualTo(1);
     }
 

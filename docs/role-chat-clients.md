@@ -12,7 +12,7 @@
 | legalAnswerChatClient | gpt-5.4-mini | medium | 16384 |
 | followUpAnswerChatClient | 최초 답변 Client 설정 복제 | medium | 16384 |
 
-반복되는 분류·법령명 평가와 근거 기반 문장 생성은 mini, 수집 전환·답변 가능 여부 판단은 상위 모델에 배정했다. 이는 현재 배정 이유이며 비교 평가로 입증한 성능 우위가 아니다. 키워드 추출의 기존 Primary chatClient는 OPENAI_CHAT_MODEL을 유지한다.
+반복되는 분류·법령명 평가와 근거 기반 문장 생성은 mini, 수집 전환·답변 가능 여부 판단은 상위 모델에 배정했다. 이는 현재 배정 이유이며 비교 평가로 입증한 성능 우위가 아니다. 키워드 추출의 Primary chatClient는 OPENAI_CHAT_MODEL(기본 gpt-5.4-mini)과 OPENAI_CHAT_REASONING_EFFORT(기본 none)를 사용한다. 키워드 요청의 temperature=0.3과 호환되도록 이 역할의 추론은 비활성화하며, 별도 역할 Client의 low/medium 설정은 유지한다.
 
 공통 prototype Builder는 같은 ChatModel·API 연결·인증을 공유한다. EvidenceChatClientConfig와 AnswerChatClientConfig가 Builder를 clone하고 역할별 OpenAiChatOptions에서 모델·추론 수준을 재정의한다. Bean 생성 시 외부 API를 호출하지 않는다.
 
@@ -22,7 +22,7 @@
 
 완료 토큰 한도는 내부 추론과 실제 출력의 합계다. 예약 비용·고정 사용량·요청 전체 예산이 아니다. APP_AI_EVIDENCE_MAX_INPUT_TOKENS=2500은 질문·검색 이력 등 판단 기본 JSON의 상한이다. 후보 목록·본문·결합 입력은 [본문 읽기](evidence-reading.md)의 별도 예산을 적용한다. usage 기반 비용 정산은 미구현이다.
 
-추론 요청에는 reasoning_effort와 max_completion_tokens를 사용한다. 기존 역할별 temperature·max-tokens는 사용하지 않으며 Spring AI 1.0.9가 암묵적으로 초기화하는 전역 temperature=0.7도 모델 생성 전에 제거한다. JSON 스키마는 프롬프트와 서버 검증 방식이며 API Structured Outputs를 활성화한 것은 아니다.
+추론 요청에는 reasoning_effort와 max_completion_tokens를 사용한다. 기존 역할별 temperature·max-tokens는 사용하지 않으며 Spring AI 1.0.9의 암묵적 전역 temperature=0.7도 모델 생성 전에 제거한다. 본문 읽기 선택은 요청별 JSON Schema Structured Outputs로 미시도 후보 ID enum과 최대 8개를 제한한다. 서버 ID·중복·크기 검증도 유지한다. 다른 역할의 스키마는 프롬프트/서버 검증 방식이다.
 
 APP_AI_READ_TIMEOUT_MS 기본값은 120000이다. 수집기의 전체 시간·호출 한도는 그대로이며 호출 경계에서 확인한다. 진행 중인 모델 HTTP를 전체 deadline에 맞춰 즉시 취소하는 기능은 없다.
 

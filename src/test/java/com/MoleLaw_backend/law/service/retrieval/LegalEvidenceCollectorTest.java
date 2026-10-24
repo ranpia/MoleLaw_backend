@@ -23,6 +23,85 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class LegalEvidenceCollectorTest {
+    @Test void observerPublishesOnlyAdoptedEvidenceAfterDecisionInsteadOfSearchCandidates() {
+        var first = hit();
+        var second = new LawSearchEvidence("123:2", first.referenceId(), first.externalId(), first.lawId(),
+                first.effectiveDate(), "다른 조문", "다른 본문", "다른 전체 본문", first.sourceUrl(), .7,
+                first.modelRevision(), first.configFingerprint(), first.generation());
+        when(rag.searchTop15(any(), anyString())).thenReturn(List.of(first, second));
+        var published = new java.util.ArrayList<List<EvidenceItem>>();
+        var stages = new java.util.ArrayList<String>();
+        var observer = new com.MoleLaw_backend.law.dto.retrieval.RetrievalObserver() {
+            @Override public void progress(String stage) { stages.add(stage); }
+            @Override public void evidence(List<EvidenceItem> confirmed) { published.add(confirmed); }
+        };
+        when(planner.decide(anyString(), anyList(), any(), anyList(), anyInt())).thenAnswer(call -> {
+            assertThat(published).isEmpty();
+            List<EvidenceItem> supplied = call.getArgument(1);
+            return new EvidenceDecision(EvidenceDecision.Action.ANSWER_READY, "한 조문으로 충분",
+                    List.of(), List.of(supplied.get(0).id()), List.of(), List.of());
+        });
+        var result = collector.collectForAnswer("질문", observer);
+        assertThat(stages).containsSubsequence("QUESTION_PLANNING", "INITIAL_SEARCH", "DECIDING");
+        assertThat(published).hasSize(1);
+        assertThat(published.get(0)).isEqualTo(result.evidence()).hasSize(1);
+    }
+
+    @Test void previouslyApprovedIssueCoverageSurvivesNewRankings() {
+        var first = new java.util.ArrayList<LawSearchEvidence>();
+        var fresh = new java.util.ArrayList<LawSearchEvidence>();
+        for (int article = 1; article <= 17; article++) {
+            var value = new LawSearchEvidence("123:" + article, "00000000-0000-0000-0000-000000000001", "123", "1",
+                    "20260101", "법령 제" + article + "조", "조문", "전체 본문", "https://www.law.go.kr", .8,
+                    "revision", "a".repeat(64), "00000000-0000-0000-0000-000000000002");
+            if (article <= 10) first.add(value);
+            if (article >= 3) fresh.add(value);
+        }
+        when(rag.searchTop15(any(), eq("질문"))).thenReturn(first);
+        when(rag.searchTop15(any(), eq("추가 쟁점"))).thenReturn(fresh);
+        when(planner.decide(anyString(), anyList(), any(), anyList(), anyInt()))
+                .thenAnswer(call -> {
+                    List<EvidenceItem> supplied = call.getArgument(1);
+                    return new EvidenceDecision(EvidenceDecision.Action.SEARCH_AGAIN, "추가 쟁점 확인",
+                            List.of("추가 쟁점"), supplied.stream().map(EvidenceItem::id).toList(), List.of("추가 쟁점"), List.of());
+                }).thenAnswer(call -> {
+                    List<EvidenceItem> supplied = call.getArgument(1);
+                    assertThat(supplied).extracting(EvidenceItem::sourceId).contains("123:1", "123:2");
+                    return ready(supplied);
+                });
+        assertThat(collector.collect("질문")).hasSize(15);
+    }
+
+    @Test void partialDecisionReturnsSupportedEvidenceAsGeneralGuidance() {
+        when(questions.plan("질문")).thenReturn(new QuestionRetrievalPlan(QuestionRetrievalPlan.Type.CASE_ASSESSMENT,
+                QuestionRetrievalPlan.ResponseScope.SPECIFIC_ASSESSMENT, List.of("질문"), List.of(), List.of()));
+        when(rag.searchTop15(any(), anyString())).thenReturn(List.of(hit()));
+        when(planner.decide(anyString(), anyList(), any(), anyList(), anyInt())).thenAnswer(call -> {
+            List<EvidenceItem> supplied = call.getArgument(1);
+            return new EvidenceDecision(EvidenceDecision.Action.ANSWER_PARTIAL, "확인된 조문으로 일반 안내 가능",
+                    List.of("별표 미확인"), List.of(supplied.get(0).id()), List.of(), List.of());
+        });
+        var result = collector.collectForAnswer("질문");
+        assertThat(result.plan().responseScope()).isEqualTo(QuestionRetrievalPlan.ResponseScope.GENERAL_GUIDANCE);
+        assertThat(result.unresolvedIssues()).containsExactly("별표 미확인");
+        assertThat(result.evidence()).hasSize(1);
+        verifyNoInteractions(laws, vectors);
+    }
+
+    @Test void punctuationOnlyQueryChangesAreSkippedAndReportedToPlanner() {
+        when(rag.searchTop15(any(), anyString())).thenReturn(List.of(hit()));
+        when(planner.decide(anyString(), anyList(), any(), anyList(), anyInt()))
+                .thenAnswer(call -> new EvidenceDecision(EvidenceDecision.Action.SEARCH_AGAIN, "추가 확인",
+                        List.of("쟁점"), List.of(), List.of("질 문!"), List.of()))
+                .thenAnswer(call -> {
+                    List<RetrievalAttempt> attempts = call.getArgument(3);
+                    assertThat(attempts).anyMatch(a -> a.outcome() == RetrievalAttempt.Outcome.DUPLICATE);
+                    return ready(call.getArgument(1));
+                });
+        assertThat(collector.collect("질문")).hasSize(1);
+        verify(rag, times(1)).searchTop15(any(), anyString());
+    }
+
     @Test void multiQueryBatchKeepsTopArticlesFromAllThreeQueriesInsteadOfOnlyTheLastOne() {
         when(questions.plan("질문")).thenReturn(new QuestionRetrievalPlan(QuestionRetrievalPlan.Type.LAW_EXPLANATION,
                 QuestionRetrievalPlan.ResponseScope.GENERAL_GUIDANCE, List.of("첫 쟁점", "두번째 쟁점", "세번째 쟁점"), List.of(), List.of()));
@@ -45,7 +124,7 @@ class LegalEvidenceCollectorTest {
     private final EvidenceDecisionPlanner planner = mock(EvidenceDecisionPlanner.class);
     private final QuestionRetrievalPlanner questions = mock(QuestionRetrievalPlanner.class);
     private final LawCandidateSelector candidates = mock(LawCandidateSelector.class);
-    private final LegalEvidenceCollector collector = new LegalEvidenceCollector(provider(rag), provider(vectors), laws, planner, questions, candidates, mock(AiSearchEvidenceCollector.class), com.MoleLaw_backend.law.dto.retrieval.RetrievalBackend.QDRANT);
+    private final LegalEvidenceCollector collector = new LegalEvidenceCollector(provider(rag), provider(vectors), laws, planner, questions, candidates, mock(AiSearchEvidenceCollector.class), com.MoleLaw_backend.law.dto.retrieval.RetrievalBackend.QDRANT, new com.MoleLaw_backend.law.config.LawCandidateSelectionProperties());
 
     @BeforeEach void classify() {
         when(candidates.rank(anyString(), any(), any(), anyList())).thenAnswer(call -> ((List<LegalToolContracts.Candidate>) call.getArgument(3)).stream().map(c -> new com.MoleLaw_backend.law.dto.retrieval.LawCandidateSelection.Ranking(c.id(), 95, "관련")).toList());
@@ -366,7 +445,7 @@ class LegalEvidenceCollectorTest {
         verifyNoInteractions(planner, laws, vectors);
     }
     @Test void unavailableVectorConfigurationDoesNotFallBackToLegacyTables() {
-        var disabled = new LegalEvidenceCollector(provider(null), provider(null), laws, planner, questions, candidates, mock(AiSearchEvidenceCollector.class), com.MoleLaw_backend.law.dto.retrieval.RetrievalBackend.QDRANT);
+        var disabled = new LegalEvidenceCollector(provider(null), provider(null), laws, planner, questions, candidates, mock(AiSearchEvidenceCollector.class), com.MoleLaw_backend.law.dto.retrieval.RetrievalBackend.QDRANT, new com.MoleLaw_backend.law.config.LawCandidateSelectionProperties());
         assertThatThrownBy(() -> disabled.collect("질문")).isInstanceOfSatisfying(MolelawException.class,
                 failure -> assertThat(failure.getErrorCode()).isEqualTo(ErrorCode.RETRIEVAL_UNAVAILABLE));
         verifyNoInteractions(planner, laws);

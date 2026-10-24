@@ -9,6 +9,7 @@
 | action | 필수 조건 | 실행 제안 |
 | --- | --- | --- |
 | `ANSWER_READY` | `evidenceIds` 1개 이상, 나머지 목록은 비움 | 답변 생성 가능 |
+| `ANSWER_PARTIAL` | 읽은 `evidenceIds`와 `missingIssues` 각각 1개 이상, 검색 목록은 비움 | Qdrant 경로에서 확인된 근거로 일반 안내만 생성. 미확인 쟁점을 응답에 명시 |
 | `SEARCH_AGAIN` | `missingIssues`·`searchQueries` 필수, `lawSearches` 비움 | 기존 Qdrant 색인 재검색 |
 | `COLLECT_LAW` | `missingIssues`·`lawSearches` 필수, `searchQueries` 비움 | 법령 목록·원문 추가 수집 제안 |
 | `INSUFFICIENT` | `missingIssues` 필수, 검색 목록 둘 다 비움 | 현재 근거 부족·추가 확인 필요 |

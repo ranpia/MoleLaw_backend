@@ -22,6 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final org.springframework.security.web.context.SecurityContextRepository jwtRequestSecurityContextRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -58,7 +59,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                var context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(authentication);
+                SecurityContextHolder.setContext(context);
+                // Keep authentication for ASYNC/ERROR dispatches of this request only, without an HTTP session.
+                jwtRequestSecurityContextRepository.saveContext(context, request, response);
 
             } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
                 SecurityContextHolder.clearContext();

@@ -98,7 +98,7 @@ class OpenApiDocumentationTest {
                 assertTrue(success, context);
             }
         }
-        assertEquals(22, count);
+        assertEquals(27, count);
         assertEquals(Set.of(
                 "get /api/auth/csrf", "post /api/auth/signup", "post /api/auth/login",
                 "post /api/auth/refresh", "post /api/auth/logout",
@@ -107,7 +107,17 @@ class OpenApiDocumentationTest {
                 "get /api/chat-rooms/{roomId}/messages", "post /api/chat-rooms/{roomId}/messages",
                 "get /api/chat-rooms/{roomId}/evidence", "get /api/chat-rooms/{roomId}/evidence/{evidenceId}",
                 "get /api/laws", "post /api/laws/search", "get /api/precedents", "get /api/precedents/{id}",
-                "post /api/law-keywords", "post /api/legal-answers"), actualOperations);
+                "post /api/law-keywords", "post /api/legal-answers",
+                "post /api/legal-answers/stream", "post /api/chat-rooms/stream",
+                "post /api/legal-answers/ndjson", "post /api/chat-rooms/ndjson",
+                "post /api/chat-rooms/{roomId}/messages/ndjson"), actualOperations);
+        for (String path : java.util.List.of("/api/legal-answers/stream", "/api/chat-rooms/stream")) {
+            assertTrue(document.path("paths").path(path).path("post").path("responses").path("200")
+                    .path("content").has("text/event-stream"));
+        }
+        for (String path : java.util.List.of("/api/legal-answers/ndjson", "/api/chat-rooms/ndjson"))
+            assertTrue(document.path("paths").path(path).path("post").path("responses").path("200")
+                    .path("content").has("application/x-ndjson"));
         assertFalse(document.path("paths").has("/api/test/import"));
         JsonNode schemes = document.path("components").path("securitySchemes");
         assertFalse(schemes.has("CsrfToken"));

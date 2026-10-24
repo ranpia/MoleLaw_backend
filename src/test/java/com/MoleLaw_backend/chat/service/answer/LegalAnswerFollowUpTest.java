@@ -38,6 +38,85 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class LegalAnswerFollowUpTest {
+    @Test void preparationDraftAndMachineCodesNeverAppearInAnswerDeltasAndFinalWriterHasNoTools() {
+        ownRoom();
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
+        when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage("중간 검토 초안은 EMPTY")))));
+        when(model.stream(any(Prompt.class))).thenAnswer(call -> {
+            Prompt prompt = call.getArgument(0);
+            assertThat(((org.springframework.ai.model.tool.ToolCallingChatOptions) prompt.getOptions()).getToolCallbacks()).isEmpty();
+            return reactor.core.publisher.Flux.just(new ChatResponse(List.of(new Generation(new AssistantMessage("조회는 EMP")))),
+                    new ChatResponse(List.of(new Generation(new AssistantMessage("TY입니다 [[" + EVIDENCE_ID + "]]")))));
+        });
+        var updates = service.streamFollowUp(1L, 2L, "설명해 주세요", false).collectList().block(java.time.Duration.ofSeconds(5));
+        String shown = updates.stream().filter(u -> "answer_delta".equals(u.type())).map(u -> u.text()).collect(java.util.stream.Collectors.joining());
+        assertThat(shown).doesNotContain("중간 검토 초안", "EMPTY", "EMP").contains("후보를 찾지 못한 상태");
+        assertThat(updates.get(updates.size() - 1).followUp().response().getAnswer()).doesNotContain("EMPTY", "중간 검토 초안");
+    }
+    @Test void newlyReadRankedCaseUpdatesInfoWithoutRawSourceJsonBeforeCompletion() {
+        ownRoom();
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
+        String caseId = "00000000-0000-0000-0000-000000000099";
+        var item = new EvidenceItem(caseId, "CASE_BODY", "101", "임금", "https://www.law.go.kr/precInfoP.do?precSeq=101",
+                "{\"판결요지\":\"휴가 사용 촉진에 관한 판단\",\"판례내용\":\"검증용 판결 본문\"}");
+        var candidate = new com.MoleLaw_backend.law.dto.tool.LegalToolContracts.Candidate("101", null, "임금", null, "사건", "20260101", "대법원");
+        when(casePipeline.search(any(), any(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyInt(), any(), any()))
+                .thenReturn(new com.MoleLaw_backend.law.dto.retrieval.CaseSearchOutcome("AVAILABLE", List.of(candidate), java.util.Map.of("101", item), List.of(), 0, 1, 1, false, false, false));
+        when(model.call(any(Prompt.class))).thenAnswer(call -> {
+            Prompt prompt = call.getArgument(0);
+            var callbacks = ((org.springframework.ai.model.tool.ToolCallingChatOptions) prompt.getOptions()).getToolCallbacks();
+            callbacks.stream().filter(c -> c.getToolDefinition().name().equals("searchRoomCases")).findFirst().orElseThrow()
+                    .call("{\"lawEvidenceId\":\"" + EVIDENCE_ID + "\",\"query\":\"사용 촉진\",\"page\":1}");
+            callbacks.stream().filter(c -> c.getToolDefinition().name().equals("readRoomCase")).findFirst().orElseThrow().call("{\"caseId\":\"101\"}");
+            return new ChatResponse(List.of(new Generation(new AssistantMessage("준비 중간 내용은 보이면 안 됨"))));
+        });
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(new ChatResponse(List.of(new Generation(new AssistantMessage("판례에 따른 설명 [[" + caseId + "]]"))))));
+        var updates = service.streamFollowUp(1L, 2L, "관련 판례를 검색해 주세요", true).collectList().block(java.time.Duration.ofSeconds(5));
+        var infos = updates.stream().filter(u -> "info".equals(u.type())).map(u -> u.text()).toList();
+        assertThat(infos).anyMatch(info -> info.contains("휴가 사용 촉진에 관한 판단") && info.contains("precSeq=101"));
+        assertThat(infos).allMatch(info -> !info.contains("\"판례내용\"") && !info.contains(caseId));
+        assertThat(updates.get(updates.size() - 1).followUp().newEvidence()).containsExactly(item);
+    }
+
+    @Test
+    void streamsFollowUpUsingPersistedAdvisorAndHidesSplitCitationUntilValidatedCompletion() {
+        ownRoom();
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
+                new ChatResponse(List.of(new Generation(new AssistantMessage("확인한 근거 [")))),
+                new ChatResponse(List.of(new Generation(new AssistantMessage("[" + EVIDENCE_ID.substring(0, 14))))),
+                new ChatResponse(List.of(new Generation(new AssistantMessage(EVIDENCE_ID.substring(14) + "]]"))))));
+        var updates = service.streamFollowUp(1L, 2L, "후속 질문", false).collectList().block(java.time.Duration.ofSeconds(5));
+        String shown = updates.stream().filter(u -> "answer_delta".equals(u.type())).map(u -> u.text())
+                .collect(java.util.stream.Collectors.joining());
+        assertThat(shown).isEqualTo("확인한 근거 [근거 1]").doesNotContain(EVIDENCE_ID, "[[");
+        assertThat(updates.stream().filter(u -> "info".equals(u.type())).map(u -> u.text()).toList())
+                .allMatch(info -> !info.contains(EVIDENCE_ID));
+        assertThat(updates.get(updates.size() - 1).followUp().response().getAnswer())
+                .isEqualTo("확인한 근거 [[" + EVIDENCE_ID + "]]");
+        verify(model).call(any(Prompt.class));
+        verifyNoInteractions(collector);
+    }
+
+    @Test
+    void streamingConsentUsesServerGroundedQuestionAndDoesNotGrantSearchConsent() {
+        ownRoom();
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
+        when(model.call(any(Prompt.class))).thenAnswer(call -> {
+            Prompt prompt = call.getArgument(0);
+            var callbacks = ((org.springframework.ai.model.tool.ToolCallingChatOptions) prompt.getOptions()).getToolCallbacks();
+            assertThat(callbacks).noneMatch(callback -> callback.getToolDefinition().name().equals("searchRoomCases"));
+            callbacks.stream().filter(callback -> callback.getToolDefinition().name().equals("requestCaseSearchConsent"))
+                    .findFirst().orElseThrow().call("{\"lawEvidenceId\":\"" + EVIDENCE_ID + "\",\"reason\":\"판례 보강 필요\"}");
+            return new ChatResponse(List.of(new Generation(new AssistantMessage("이 중간 답변은 표시하지 않습니다"))));
+        });
+        var result = service.streamFollowUp(1L, 2L, "판례도 필요한가요?", false).blockLast(java.time.Duration.ofSeconds(5)).followUp();
+        assertThat(result.caseSearchRequested()).isTrue();
+        assertThat(result.caseSearchConsent()).isFalse();
+        assertThat(result.newEvidence()).isEmpty();
+        assertThat(result.response().getAnswer()).contains("[[" + EVIDENCE_ID + "]]", "동의하신 경우에만");
+    }
+
     private static final String EVIDENCE_ID = "00000000-0000-0000-0000-000000000001";
     private static final String CITED_ANSWER = "new answer [[" + EVIDENCE_ID + "]]";
     private final MessageRepository messages = mock(MessageRepository.class);
@@ -45,10 +124,12 @@ class LegalAnswerFollowUpTest {
     private final ChatModel model = mock(ChatModel.class);
     private final ChatEvidenceService evidence = mock(ChatEvidenceService.class);
     private final LegalEvidenceCollector collector = mock(LegalEvidenceCollector.class);
+    private final com.MoleLaw_backend.law.service.retrieval.CaseSearchPipeline casePipeline = mock(com.MoleLaw_backend.law.service.retrieval.CaseSearchPipeline.class);
     private LegalAnswerService service;
 
     @BeforeEach
     void setUp() {
+        when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage("준비 완료")))));
         var memory = new PersistedChatMemory(messages, rooms, 20, TestEncryption.create());
         var builder = new AiConfig().baseAiChatClientBuilder(model);
         var config = new AnswerChatClientConfig();
@@ -57,7 +138,8 @@ class LegalAnswerFollowUpTest {
                         mock(com.MoleLaw_backend.common.ai.AiPrompts.class)), memory, "gpt-5.4-mini", 16384), evidence,
                 new EvidencePromptBuilder(), new CitationValidator(), new EvidenceRenderer(), new FollowUpCaseToolsFactory(
                         mock(com.MoleLaw_backend.law.service.tool.LegalApiToolService.class),
-                        mock(com.MoleLaw_backend.law.service.tool.CaseEvidenceReader.class)));
+                        mock(com.MoleLaw_backend.law.service.tool.CaseEvidenceReader.class),
+                        casePipeline));
         when(evidence.load(1L, 2L)).thenReturn(List.of(new EvidenceItem(EVIDENCE_ID,
                 "LAW_CHUNK", "law-1", "Civil law article", "https://www.law.go.kr/law/1", "original statute text")));
     }

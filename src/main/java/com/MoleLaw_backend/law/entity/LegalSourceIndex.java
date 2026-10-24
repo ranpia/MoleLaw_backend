@@ -24,6 +24,7 @@ public class LegalSourceIndex {
     @Column(nullable = false, updatable = false) private Instant startedAt;
     private Instant completedAt;
     @Column(nullable = false) private int chunkCount;
+    @Column(length = 64, unique = true) private String dedupKey;
 
     public LegalSourceIndex(String sourceId, String contentHash, String fingerprint, String collection,
                             String model, String revision, int dimensions) {
@@ -33,5 +34,10 @@ public class LegalSourceIndex {
         status = "WRITING"; startedAt = Instant.now();
     }
     public void complete(int count) { chunkCount = count; status = "COMPLETE"; completedAt = Instant.now(); }
-    public void fail() { status = "FAILED"; }
+    public void claim(String key) {
+        if (!"WRITING".equals(status) || dedupKey != null || key == null || !key.matches("[a-f0-9]{64}"))
+            throw new IllegalStateException("Invalid index claim");
+        dedupKey = key;
+    }
+    public void fail() { status = "FAILED"; dedupKey = null; }
 }

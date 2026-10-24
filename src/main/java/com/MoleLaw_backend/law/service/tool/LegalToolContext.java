@@ -68,7 +68,7 @@ public final class LegalToolContext {
     }
 
     Instant now() { return clock.instant(); }
-    boolean hasBudget() {
+    public boolean hasBudget() {
         if (calls >= maxCalls) { exhaustedBudget = "RETRIEVAL"; return false; }
         return activeEmbedding == null ? now().isBefore(deadline) : now().isBefore(activeEmbedding.expiresAt);
     }

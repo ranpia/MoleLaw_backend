@@ -63,7 +63,7 @@ public class LawRetrievalComparisonService {
             var result = tool.searchTop15(context(), query);
             List<Hit> hits = new ArrayList<>();
             for (var hit : result) hits.add(new Hit(hits.size() + 1, hit.title(), hit.lawId(), hit.externalId(),
-                    hit.effectiveDate(), hit.unitId(), hit.articleText(), hit.sourceUrl()));
+                    hit.effectiveDate(), hit.unitId(), hit.articleText(), com.MoleLaw_backend.law.util.LawSourceUrl.publicLink(hit.sourceUrl())));
             return new BackendResult(RetrievalBackend.QDRANT, hits.isEmpty() ? Status.EMPTY : Status.AVAILABLE,
                     elapsed(start), hits.size(), null, null, null, List.copyOf(hits));
         } catch (LegalToolException failure) { return failed(RetrievalBackend.QDRANT, start, failure); }

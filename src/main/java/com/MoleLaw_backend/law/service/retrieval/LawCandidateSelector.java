@@ -2,6 +2,7 @@ package com.MoleLaw_backend.law.service.retrieval;
 
 import com.MoleLaw_backend.common.ai.exception.GptApiException;
 import com.MoleLaw_backend.common.exception.ErrorCode;
+import com.MoleLaw_backend.law.config.LawCandidateSelectionProperties;
 import com.MoleLaw_backend.law.dto.retrieval.LawCandidateSelection;
 import com.MoleLaw_backend.law.dto.retrieval.QuestionRetrievalPlan;
 import com.MoleLaw_backend.law.dto.retrieval.EvidenceDecision;
@@ -22,17 +23,20 @@ import java.util.stream.Collectors;
 public class LawCandidateSelector {
     private final ChatClient client;
     private final ObjectMapper mapper;
+    private final LawCandidateSelectionProperties selection;
 
-    public LawCandidateSelector(@Qualifier("lawCandidateChatClient") ChatClient client, ObjectMapper mapper) {
+    public LawCandidateSelector(@Qualifier("lawCandidateChatClient") ChatClient client, ObjectMapper mapper,
+            LawCandidateSelectionProperties selection) {
         this.client = client;
         this.mapper = mapper;
+        this.selection = selection;
     }
 
     public List<Candidate> select(String question, QuestionRetrievalPlan plan,
                                   EvidenceDecision.LawSearch condition, List<Candidate> candidates) {
         var rankings = rank(question, plan, condition, candidates);
-        return rankings.stream().filter(item -> item.score() >= 70)
-                .sorted(Comparator.comparingInt(LawCandidateSelection.Ranking::score).reversed()).limit(2)
+        return rankings.stream().filter(item -> item.score() >= selection.getMinimumScore())
+                .sorted(Comparator.comparingInt(LawCandidateSelection.Ranking::score).reversed()).limit(selection.getMaxCandidates())
                 .map(item -> candidates.stream().filter(c -> c.id().equals(item.candidateId())).findFirst().orElseThrow()).toList();
     }
 
@@ -44,6 +48,8 @@ public class LawCandidateSelector {
             input.set("plan", mapper.valueToTree(plan));
             input.set("condition", mapper.valueToTree(condition));
             input.set("candidates", mapper.valueToTree(candidates));
+            input.putObject("selectionPolicy").put("minimumScore", selection.getMinimumScore())
+                    .put("maxCandidates", selection.getMaxCandidates());
             String output = client.prompt().user(mapper.writeValueAsString(input)).call().content();
             if (output == null || output.length() > 16384) throw new IllegalArgumentException();
             LawCandidateSelection selection = mapper.readerFor(LawCandidateSelection.class)

@@ -38,24 +38,33 @@ public class AiSearchEvidenceCollector {
     private final EvidenceDecisionPlanner planner;
 
     public CollectedLegalEvidence collect(String question) {
+        return collect(question, com.MoleLaw_backend.law.dto.retrieval.RetrievalObserver.NONE);
+    }
+
+    public CollectedLegalEvidence collect(String question, com.MoleLaw_backend.law.dto.retrieval.RetrievalObserver observer) {
         if (question == null || question.isBlank() || question.codePointCount(0, question.length()) > 2000)
             throw new MolelawException(ErrorCode.INVALID_REQUEST);
         var clock = Clock.systemUTC();
-        var context = new LegalToolContext(LegalToolContext.Purpose.FIRST_QUESTION, UUID.randomUUID().toString(),
+        var context = new LegalToolContext(LegalToolContext.Purpose.FIRST_QUESTION, observer.traceId() == null ? UUID.randomUUID().toString() : observer.traceId(),
                 clock.instant().plus(Duration.ofMinutes(3)), 24, clock);
         try {
+            observer.progress("QUESTION_PLANNING");
             var plan = questions.plan(question);
             context.checkDeadline();
             if (plan.type() == QuestionRetrievalPlan.Type.OUT_OF_SCOPE) throw insufficient();
             List<EvidenceItem> evidence = List.of();
             List<RetrievalAttempt> attempts = new ArrayList<>();
             Map<String, Integer> pages = new HashMap<>();
+            observer.progress("INITIAL_SEARCH");
             for (String query : plan.searchQueries()) evidence = retrieve(context, query, pages, attempts, evidence);
             for (int round = 0; round <= 4; round++) {
                 context.checkDeadline();
+                observer.progress("DECIDING");
                 var decision = planner.decide(question, evidence, plan, List.copyOf(attempts), 4 - round);
                 context.checkDeadline();
                 decision.validateAgainst(evidence.stream().map(EvidenceItem::id).toList());
+                var confirmedIds = Set.copyOf(decision.evidenceIds());
+                observer.evidence(evidence.stream().filter(e -> confirmedIds.contains(e.id())).toList());
                 if (decision.action() == EvidenceDecision.Action.COLLECT_LAW) {
                     log.warn("Legal collection executionId={} backend=AI_SEARCH unsupportedAction=COLLECT_LAW", context.executionId());
                     throw new GptApiException(ErrorCode.GPT_API_FAILURE);
@@ -67,6 +76,7 @@ public class AiSearchEvidenceCollector {
                     return new CollectedLegalEvidence(plan, evidence.stream().filter(e -> ids.contains(e.id())).toList());
                 }
                 if (round == 4 || decision.action() != EvidenceDecision.Action.SEARCH_AGAIN) throw insufficient();
+                observer.progress("SEARCH_AGAIN");
                 for (String query : decision.searchQueries())
                     evidence = retrieve(context, query, pages, attempts, evidence);
             }
