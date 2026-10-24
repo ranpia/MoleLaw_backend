@@ -21,15 +21,16 @@ services:
       QDRANT_GRPC_PORT: "6334"
       APP_LAW_VECTOR_QDRANT_BASE_URL: http://qdrant:6333
       APP_LAW_VECTOR_EMBEDDING_BASE_URL: http://kure:11434
+      APP_LAW_RERANKER_BASE_URL: http://kure:11434
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080}
-      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70.0
+      JAVA_TOOL_OPTIONS: ${APP_JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=70.0}
     ports:
       - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}:8080"
     networks:
       - infrastructure
       - embeddings
-    cpus: 2.0
-    mem_limit: 2g
+    cpus: ${APP_CPUS:-2.0}
+    mem_limit: ${APP_MEMORY_LIMIT:-2g}
     healthcheck:
       test:
         - CMD-SHELL

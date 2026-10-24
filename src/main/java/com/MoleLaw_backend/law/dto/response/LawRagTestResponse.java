@@ -12,14 +12,14 @@ public record LawRagTestResponse(
         @Schema(description = "법령명과 조문 제목", example = "민법 제1조(법원)") String title,
         @Schema(description = "매칭된 청크 본문", example = "민사에 관하여 법률에 규정이 없으면 관습법에 의하고") String text,
         @Schema(description = "답변 근거로 사용할 전체 조문", example = "민사에 관하여 법률에 규정이 없으면 관습법에 의하고 관습법이 없으면 조리에 의한다.") String articleText,
-        @Schema(description = "공식 법령 링크", example = "https://www.law.go.kr/법령?lsId=001823&lsiSeq=123") String sourceUrl,
+        @Schema(description = "MST로 지정한 공식 법령 상세 페이지 링크", example = "https://www.law.go.kr/lsInfoP.do?lsiSeq=123") String sourceUrl,
         @Schema(description = "코사인 유사도. 법률적 정확도 확률이 아닙니다.", example = "0.82") double score,
         @Schema(description = "임베딩 모델 고정 리비전", example = "revision-1") String modelRevision,
         @Schema(description = "모델·청킹·컬렉션 설정 해시", example = "0123456789abcdef") String configFingerprint,
         @Schema(description = "공개 완료 색인 세대 UUID", example = "22222222-2222-2222-2222-222222222222") String generation) {
     public static LawRagTestResponse from(LawSearchEvidence hit) {
         return new LawRagTestResponse(hit.unitId(), hit.referenceId(), hit.externalId(), hit.lawId(),
-                hit.effectiveDate(), hit.title(), hit.text(), hit.articleText(), hit.sourceUrl(), hit.score(),
+                hit.effectiveDate(), hit.title(), hit.text(), hit.articleText(), com.MoleLaw_backend.law.util.LawSourceUrl.publicLink(hit.sourceUrl()), hit.score(),
                 hit.modelRevision(), hit.configFingerprint(), hit.generation());
     }
 }

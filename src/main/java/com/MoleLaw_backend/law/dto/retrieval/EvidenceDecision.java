@@ -15,7 +15,7 @@ import java.util.List;
 public record EvidenceDecision(Action action, String reason, List<String> missingIssues,
                                List<String> evidenceIds, List<String> searchQueries,
                                List<LawSearch> lawSearches) {
-    public enum Action { ANSWER_READY, SEARCH_AGAIN, COLLECT_LAW, INSUFFICIENT }
+    public enum Action { ANSWER_READY, ANSWER_PARTIAL, SEARCH_AGAIN, COLLECT_LAW, INSUFFICIENT }
     public enum SearchField { TITLE, BODY }
 
     /** Search intent only: paging, source IDs, credentials and execution limits are server-owned. */
@@ -40,6 +40,8 @@ public record EvidenceDecision(Action action, String reason, List<String> missin
         if (new HashSet<>(lawSearches).size() != lawSearches.size()) throw invalid();
         boolean valid = switch (action) {
             case ANSWER_READY -> !evidenceIds.isEmpty() && missingIssues.isEmpty()
+                    && searchQueries.isEmpty() && lawSearches.isEmpty();
+            case ANSWER_PARTIAL -> !evidenceIds.isEmpty() && !missingIssues.isEmpty()
                     && searchQueries.isEmpty() && lawSearches.isEmpty();
             case SEARCH_AGAIN -> !missingIssues.isEmpty() && !searchQueries.isEmpty() && lawSearches.isEmpty();
             case COLLECT_LAW -> !missingIssues.isEmpty() && !lawSearches.isEmpty() && searchQueries.isEmpty();

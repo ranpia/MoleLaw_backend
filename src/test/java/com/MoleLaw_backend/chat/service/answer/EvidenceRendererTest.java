@@ -10,6 +10,16 @@ import static org.assertj.core.api.Assertions.*;
 class EvidenceRendererTest {
     private final EvidenceRenderer renderer = new EvidenceRenderer();
 
+    @Test void streamingCaseInfoShowsJudgmentSummaryInsteadOfRawJsonKeysOrCitationIds() {
+        String raw = "{\"판결요지\":\"휴가 사용 촉진에 관한 판단\",\"판례내용\":\"판결 전체 본문\",\"internalKey\":\"not-for-display\"}";
+        var item = new EvidenceItem("internal-citation-uuid", "CASE_BODY", "101", "임금",
+                "https://www.law.go.kr/precInfoP.do?precSeq=101", raw);
+        String shown = renderer.renderForStream(List.of(item), id -> "[근거 1]");
+        assertThat(shown).contains("[근거 1]", "휴가 사용 촉진에 관한 판단", "precSeq=101")
+                .doesNotContain("internalKey", "internal-citation-uuid", "not-for-display", "판결 전체 본문");
+        assertThat(item.content()).isEqualTo(raw);
+    }
+
     @Test
     void rendersOnlyServerEvidenceAndEscapesExternalTitle() {
         EvidenceItem item = item("민법](https://attacker.example)\n[제1조]", "https://www.law.go.kr/law(a)");
@@ -26,6 +36,16 @@ class EvidenceRendererTest {
     void encodesUnicodeUrlWithoutDoubleEncodingExistingEscapes() {
         assertThat(renderer.render(List.of(item("민법", "https://www.law.go.kr/법령/민법?q=%20"))))
                 .contains("https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95?q=%20");
+    }
+
+    @Test
+    void convertsLegacyMstLinksToPublicLawViewerWithoutChangingEvidence() {
+        for (String path : List.of("법령", "%EB%B2%95%EB%A0%B9")) {
+            EvidenceItem saved = item("근로기준법", "https://www.law.go.kr/" + path + "?lsId=001872&lsiSeq=270551");
+            assertThat(renderer.render(List.of(saved)))
+                    .contains("](https://www.law.go.kr/lsInfoP.do?lsiSeq=270551)");
+            assertThat(saved.sourceUrl()).contains(path);
+        }
     }
 
     @Test

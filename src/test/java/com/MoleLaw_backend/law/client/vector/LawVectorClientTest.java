@@ -134,6 +134,57 @@ class LawVectorClientTest {
     }
 
     @Test
+    void expandedCandidateQueryKeepsPublicationAndExplicitUnitFilters() {
+        responder = request -> json(Map.of("result", Map.of("groups", List.of())));
+        client.query(List.of(0.6, 0.8), List.of("committed"), List.of("123:1"), 50,
+                before::incrementAndGet, after::incrementAndGet);
+        assertEquals(50, requests.get(0).body().path("limit").asInt());
+        String filter = requests.get(0).body().path("filter").toString();
+        assertTrue(filter.contains("committed"));
+        assertTrue(filter.contains("config_fingerprint"));
+        assertTrue(filter.contains("123:1"));
+        assertThrows(LegalToolException.class, () -> client.query(List.of(0.6, 0.8), List.of("committed"),
+                List.of(), 101, () -> {}, () -> {}));
+    }
+
+    @Test
+    void reusesOnlyNormalizedVectorsWhoseSourceAndExactInputMatch() {
+        String id = "11111111-1111-1111-1111-111111111111";
+        String hash = com.MoleLaw_backend.law.util.LawEmbeddingInputHash.of("title", "text");
+        var payload = new java.util.HashMap<String, Object>(Map.of("generation", "complete", "title", "title", "text", "text"));
+        responder = request -> json(Map.of("result", List.of(Map.of("id", id, "payload", payload, "vector", List.of(.6, .8)))));
+        assertEquals(Map.of(hash, List.of(.6, .8)), client.reusableVectors(Map.of(id, hash), Map.of("generation", "complete"), () -> {}, () -> {}));
+        payload.put("text", "changed");
+        assertTrue(client.reusableVectors(Map.of(id, hash), Map.of("generation", "complete"), () -> {}, () -> {}).isEmpty());
+        payload.put("text", "text");
+        payload.put("generation", "writing");
+        assertTrue(client.reusableVectors(Map.of(id, hash), Map.of("generation", "complete"), () -> {}, () -> {}).isEmpty());
+    }
+
+    @Test
+    void sendsConfiguredGpuAndThreadsWithoutChangingIndexIdentity() {
+        String baselineFingerprint = client.fingerprint();
+        properties.setGpuCount(1);
+        properties.setThreads(4);
+        client = new LawVectorClient(properties, mapper);
+        responder = request -> request.path().equals("/api/tags") ? tags(properties.getRevision())
+                : json(Map.of("model", properties.getModel(), "embeddings", List.of(List.of(0.6, 0.8))));
+        client.embed(List.of("민법"), before::incrementAndGet, after::incrementAndGet);
+        assertEquals(1, requests.get(1).body().path("options").path("num_gpu").asInt());
+        assertEquals(4, requests.get(1).body().path("options").path("num_thread").asInt());
+        assertEquals(baselineFingerprint, client.fingerprint());
+    }
+
+    @Test
+    void rejectsUnsupportedGpuCountBeforeAnyHttpCall() {
+        for (int count : List.of(-1, 2)) {
+            properties.setGpuCount(count);
+            assertThrows(IllegalArgumentException.class, () -> new LawVectorClient(properties, mapper));
+        }
+        assertTrue(requests.isEmpty());
+    }
+
+    @Test
     void indexingSessionChecksRevisionOnceAndRechecksAfterAFailedBatch() {
         responder = request -> request.path().equals("/api/tags") ? tags(properties.getRevision())
                 : json(Map.of("model", properties.getModel(), "embeddings", List.of(List.of(0.6, 0.8))));

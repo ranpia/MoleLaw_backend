@@ -69,6 +69,7 @@ public final class EvidenceDecisionInputBuilder {
         if (remainingActions < 0 || remainingActions > 4) throw new IllegalArgumentException("Invalid remaining actions");
         ObjectNode input = mapper.createObjectNode().put("question", question);
         boolean aiSearch = attempts.stream().anyMatch(a -> a.kind() == RetrievalAttempt.Kind.AI_SEARCH);
+        boolean reviseQuery = !attempts.isEmpty() && attempts.get(attempts.size() - 1).outcome() != RetrievalAttempt.Outcome.AVAILABLE;
         input.putObject("executionState").put("remainingActions", remainingActions)
                 .put("vectorSearchCount", attempts.stream().filter(a -> a.kind() == RetrievalAttempt.Kind.VECTOR_SEARCH
                         && a.outcome() != RetrievalAttempt.Outcome.DUPLICATE).count())
@@ -80,6 +81,10 @@ public final class EvidenceDecisionInputBuilder {
                         && a.outcome() != RetrievalAttempt.Outcome.EXHAUSTED).count())
                 .put("retrievalBackend", aiSearch ? "AI_SEARCH" : "QDRANT")
                 .put("vectorSearchScope", aiSearch ? "NOT_USED" : "EXISTING_INDEX_ONLY")
+                .put("vectorAnnexTextIndexed", false)
+                .put("queryRevisionRequired", reviseQuery)
+                .put("nonProductiveSearchCount", attempts.stream()
+                        .filter(a -> a.outcome() != RetrievalAttempt.Outcome.AVAILABLE).count())
                 .put("availabilityIsRelevance", false);
         if (plan != null) input.set("retrievalPlan", mapper.valueToTree(plan));
         input.set("searchAttempts", mapper.valueToTree(attempts.subList(Math.max(0, attempts.size() - 8), attempts.size())));

@@ -30,7 +30,7 @@ public class LawAiSearchToolService {
                         article.lawName() + " 제" + article.articleNumber() + "조"
                                 + (article.articleBranchNumber() == null ? "" : "의" + article.articleBranchNumber())
                                 + (article.articleTitle() == null ? "" : "(" + article.articleTitle() + ")"),
-                        "https://www.law.go.kr/법령?lsiSeq=" + article.mst(), article.content(),
+                        com.MoleLaw_backend.law.util.LawSourceUrl.detail(article.mst()), article.content(),
                         new EvidenceProvenance(null, article.mst(), article.lawId(), article.effectiveDate(),
                                 article.articleId(), null, null, null));
             }).toList();

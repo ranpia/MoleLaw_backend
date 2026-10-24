@@ -66,7 +66,7 @@ Spring은 IDE 또는 Gradle로 실행하고, 루트 `.env`에 다음 연결 정�
 | `REDIS_PASSWORD` | Compose의 `REDIS_PASSWORD` |
 | `REDIS_SSL_ENABLED` | `false` |
 
-빈 MySQL DB는 애플리케이션 시작 시 Flyway V1~V5가 순서대로 초기화하고 기본/mysql·local 모두 JPA `validate`로 검사한다. 기존 데이터는 이관하지 않는다. 이력 없는 비어 있지 않은 DB는 자동 baseline 없이 거절한다. 수동 `001-legal-source.sql`과 Hibernate `update`를 함께 사용하지 않는다. `JPA_DDL_AUTO`를 설정했다면 `validate`로 맞춘다. [MySQL 실행 가이드](../docs/mysql-setup.md)를 따른다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
+빈 MySQL DB는 애플리케이션 시작 시 Flyway V1~V7로 초기화하고 기본/mysql·local 모두 JPA `validate`로 검사한다. 기존 Flyway 관리 DB에는 미적용 migration만 추가한다. 이력 없는 비어 있지 않은 DB는 자동 baseline 없이 거절한다. 수동 `001-legal-source.sql`과 Hibernate `update`를 함께 사용하지 않는다. `JPA_DDL_AUTO`를 설정했다면 `validate`로 맞춘다. V6/V7은 중복 색인 예약과 본문 없는 조문 메타데이터를 추가한다. [MySQL 실행 가이드](../docs/mysql-setup.md)를 따른다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
 
 다른 PC에서 연결할 때는 DB PC의 LAN IP를 `DB_BIND_ADDRESS`와 애플리케이션 호스트에 설정하고 방화벽에서 개발 PC의 접근만 허용한다. MySQL·Qdrant 볼륨은 Compose 파일을 복사해도 이동하지 않는다. 데이터 이동에는 별도 백업·복원이 필요하다.
 
@@ -94,6 +94,8 @@ docker compose --env-file .env -f docker/compose.app.yml logs -f backend
 
 API는 `http://localhost:8080`, Swagger는 `http://localhost:8080/swagger-ui.html`이다. 기본 포트는 루프백으로 제한하며 `APP_PORT`로 변경할 수 있다. 개발 전용 `local` 프로필을 사용한다. `.env`는 이미지에 넣지 않고 실행 시 주입한다. 컨테이너의 DB·Redis·Qdrant·KURE 주소는 Docker 서비스 이름으로 지정한다. 기존 `.env`의 DB 이름과 자격증명을 사용하며 시작 시 미적용 Flyway migration이 실행된다.
 
+백엔드 자원은 루트 `.env`의 `APP_CPUS`(기본 2.0), `APP_MEMORY_LIMIT`(기본 2g), `APP_JAVA_TOOL_OPTIONS`(기본 `-XX:MaxRAMPercentage=70.0`)로 조정한다. KURE 자원 제한과 별개이며 특정 PC 사양에 종속되지 않는다.
+
 2026-10-23 현재 컨테이너의 healthy 상태, MySQL 연결 풀·Flyway V5 적용, Redis 인증 PING, Qdrant 인증 조회, KURE 모델 정보·로드 상태를 확인했다. Swagger·CSRF HTTP도 정상이며 실제 임베딩·LLM 상담 요청은 실행하지 않았다.
 
 ## 애플리케이션 배포 이미지
@@ -109,7 +111,7 @@ docker build -f docker/app.Dockerfile -t molelaw-app:local .
 
 수동 배포 workflow는 [deploy.yml](../.github/workflows/deploy.yml)에서 같은 Dockerfile을 사용한다. 운영에는 `local`·`test` 프로필을 지정하지 않는다.
 
-동시 상태 조회와 제한된 CPU 추론 대기열을 사용하는 [KURE 서비스](kure/README.md)는 기존 실험 서버와 분리한 11437 포트로 실행한다.
+동시 상태 조회와 제한된 추론 대기열을 사용하는 [KURE 서비스](kure/README.md)는 기본 11437 포트로 실행한다. CPU 기본 구성에 선택적 CUDA override를 제공하며 GPU·배치·자원 한도는 환경 설정으로 지정한다.
 
 ## 문서와 정책 구분
 

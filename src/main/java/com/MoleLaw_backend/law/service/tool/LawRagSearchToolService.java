@@ -20,13 +20,21 @@ public class LawRagSearchToolService {
     private final LegalSourceIndexService indexes;
     private final com.MoleLaw_backend.law.service.source.LegalSourceService sources;
     private final com.fasterxml.jackson.databind.ObjectMapper mapper;
+    private final com.MoleLaw_backend.law.client.vector.LawRerankerClient reranker;
 
     public LawRagSearchToolService(LawVectorClient client, LegalSourceIndexService indexes,
             com.MoleLaw_backend.law.service.source.LegalSourceService sources, com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        this(client, indexes, sources, mapper, null);
+    }
+
+    public LawRagSearchToolService(LawVectorClient client, LegalSourceIndexService indexes,
+            com.MoleLaw_backend.law.service.source.LegalSourceService sources, com.fasterxml.jackson.databind.ObjectMapper mapper,
+            com.MoleLaw_backend.law.client.vector.LawRerankerClient reranker) {
         this.client = client;
         this.indexes = indexes;
         this.sources = sources;
         this.mapper = mapper;
+        this.reranker = reranker;
     }
 
     public List<String> indexedLawTitles() {
@@ -60,10 +68,15 @@ public class LawRagSearchToolService {
             try (var budget = context.embeddingTime(client.embeddingTimeout())) {
                 vector = client.embed(List.of(question.strip()), context::reserveEmbedding, context::checkDeadline).get(0);
             }
-            JsonNode groups = exactUnits.isEmpty()
+            boolean rerank = reranker != null && reranker.enabled();
+            int candidateLimit = rerank ? reranker.candidateLimit() : 15;
+            JsonNode groups = rerank
+                    ? client.query(vector, List.copyOf(published.keySet()), exactUnits, candidateLimit,
+                            context::reserve, context::checkDeadline)
+                    : exactUnits.isEmpty()
                     ? client.query(vector, List.copyOf(published.keySet()), context::reserve, context::checkDeadline)
                     : client.query(vector, List.copyOf(published.keySet()), exactUnits, context::reserve, context::checkDeadline);
-            if (!groups.isArray() || groups.size() > 15) throw invalid();
+            if (!groups.isArray() || groups.size() > candidateLimit) throw invalid();
             List<LawSearchEvidence> result = new ArrayList<>();
             Set<String> units = new HashSet<>();
             double previous = Double.POSITIVE_INFINITY;
@@ -91,7 +104,8 @@ public class LawRagSearchToolService {
                         required(payload, "title"), required(payload, "text"), required(payload, "article_text"),
                         required(payload, "source_url"), score, index.getModelRevision(), index.getConfigFingerprint(), generation));
             }
-            return List.copyOf(result);
+            return rerank ? reranker.rerank(question.strip(), List.copyOf(result),
+                    context::reserve, context::checkDeadline) : List.copyOf(result);
         }
     }
 

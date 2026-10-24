@@ -20,9 +20,11 @@ class EvidencePromptBuilderTest {
 
         String result = builder.build("계약 해제가 가능한가요?", evidence);
 
-        assertThat(result).isEqualTo("서버가 상담방에 고정한 근거 자료:\n"
+        assertThat(result).endsWith("서버가 상담방에 고정한 근거 자료:\n"
                 + "[[evidence-id]] LAW_CHUNK 민법 {title}\n제1조 {content} [[literal]]\n\n"
                 + "현재 사용자 질문:\n계약 해제가 가능한가요?");
+        assertThat(result).containsOnlyOnce("계약 해제가 가능한가요?")
+                .contains("확보된 본문을 아직 확인하지 않은 것처럼 표현하지 마세요");
         assertThat(result).doesNotContain(item.sourceUrl());
         assertThat(evidence).containsExactly(item);
     }

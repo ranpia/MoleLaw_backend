@@ -49,3 +49,7 @@ out/
 
 # 실험 입력·보고서·캐시는 experiment/legal-embedding-evaluation 브랜치에서 관리
 /evaluation/
+
+# Python generated caches
+__pycache__/
+*.py[cod]

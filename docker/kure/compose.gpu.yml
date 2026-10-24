@@ -1,0 +1,21 @@
+# Use together with compose.yml. Requires Docker Desktop's WSL2 NVIDIA GPU support.
+services:
+  kure:
+    image: molelaw/kure-service:single-vector-cu128-v2
+    build:
+      args:
+        TORCH_INDEX_URL: https://download.pytorch.org/whl/cu128
+    environment:
+      EMBEDDING_DEVICE: cuda
+      # Keep float32 to compare with the existing KURE single-vector baseline.
+      EMBEDDING_BATCH_SIZE: ${KURE_BATCH_SIZE:-4}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${KURE_GPU_DEVICE_ID:-0}"]
+              capabilities: [gpu]
+    cpus: ${KURE_CPUS:-4.0}
+    mem_limit: ${KURE_MEMORY_LIMIT:-4g}
+    memswap_limit: ${KURE_MEMORY_LIMIT:-4g}

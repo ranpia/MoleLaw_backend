@@ -20,21 +20,38 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public record LawQdrantDocumentWriter(LawVectorClient client, LawVectorProperties properties,
         LegalSource source, LegalSourceIndex attempt, Runnable before, Runnable after,
-        Supplier<LegalToolContext.EmbeddingTime> embeddingTime, Runnable beforeEmbedding) implements DocumentWriter {
+        Supplier<LegalToolContext.EmbeddingTime> embeddingTime, Runnable beforeEmbedding,
+        Map<String, List<Double>> reusableVectors) implements DocumentWriter {
+    public LawQdrantDocumentWriter(LawVectorClient client, LawVectorProperties properties,
+            LegalSource source, LegalSourceIndex attempt, Runnable before, Runnable after,
+            Supplier<LegalToolContext.EmbeddingTime> embeddingTime, Runnable beforeEmbedding) {
+        this(client, properties, source, attempt, before, after, embeddingTime, beforeEmbedding, Map.of());
+    }
     @Override
     public void accept(List<Document> documents) {
         if (documents == null || documents.isEmpty()) throw new IllegalArgumentException("No law documents");
         // Embed everything before writing anything. Never feed precomputed vectors to VectorStore.add().
-        List<List<Double>> vectors = new ArrayList<>();
+        List<List<Double>> vectors = new ArrayList<>(java.util.Collections.nCopies(documents.size(), null));
+        List<Integer> missing = new ArrayList<>();
+        for (int i = 0; i < documents.size(); i++) {
+            var document = documents.get(i);
+            var vector = reusableVectors.get(com.MoleLaw_backend.law.util.LawEmbeddingInputHash.of(
+                    document.getMetadata().get("title").toString(), document.getText()));
+            if (vector == null) missing.add(i); else vectors.set(i, vector);
+        }
         var session = client.newEmbeddingSession();
-        for (int start = 0; start < documents.size(); start += properties.getBatchSize()) {
-            var batch = documents.subList(start, Math.min(start + properties.getBatchSize(), documents.size()));
+        for (int start = 0; start < missing.size(); start += properties.getBatchSize()) {
+            var positions = missing.subList(start, Math.min(start + properties.getBatchSize(), missing.size()));
+            var batch = positions.stream().map(documents::get).toList();
             try (var budget = embeddingTime.get()) {
-                vectors.addAll(session.embed(batch.stream()
+                var embedded = session.embed(batch.stream()
                         .map(c -> c.getMetadata().get("title") + "\n" + c.getText()).toList(),
-                        beforeEmbedding, after));
+                        beforeEmbedding, after);
+                for (int i = 0; i < positions.size(); i++) vectors.set(positions.get(i), embedded.get(i));
             }
         }
+        log.info("Law incremental vectors chunks={} reused={} embedded={}",
+                documents.size(), documents.size() - missing.size(), missing.size());
         client.ensureCollection(before, after);
         List<Map<String, Object>> points = new ArrayList<>();
         for (int i = 0; i < documents.size(); i++) {
@@ -83,7 +100,19 @@ public record LawQdrantDocumentWriter(LawVectorClient client, LawVectorPropertie
     }
 
     private String pointId(Document chunk) {
-        return UUID.nameUUIDFromBytes((attempt.getGeneration() + ":" + chunk.getMetadata().get("article_id")
+        return pointId(attempt.getGeneration(), chunk);
+    }
+
+    public static List<com.MoleLaw_backend.law.entity.LawChunkIndex> references(String generation, List<Document> documents) {
+        return documents.stream().map(document -> new com.MoleLaw_backend.law.entity.LawChunkIndex(
+                pointId(generation, document), generation, document.getMetadata().get("article_id").toString(),
+                ((Number) document.getMetadata().get("chunk_index")).intValue(),
+                com.MoleLaw_backend.law.util.LawEmbeddingInputHash.of(
+                        document.getMetadata().get("title").toString(), document.getText()))).toList();
+    }
+
+    public static String pointId(String generation, Document chunk) {
+        return UUID.nameUUIDFromBytes((generation + ":" + chunk.getMetadata().get("article_id")
                 + ":" + chunk.getMetadata().get("chunk_index")).getBytes(StandardCharsets.UTF_8)).toString();
     }
 }

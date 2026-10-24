@@ -20,12 +20,16 @@
 | 영역 | 문서 |
 | --- | --- |
 | 최초 질문부터 답변·저장까지 | [최초 상담](initial-consultation.md) |
+| 최초·후속 상담 진행 상태·근거·답변 SSE/NDJSON | [스트림 API·클라이언트 예시](initial-answer-stream.md) |
+| 법령·사건 판례 병합·본문 리랭크·최초/후속 로그 구분 | [판례 검색 흐름](case-retrieval-reranking.md) |
 | 분류·검색·전체 페이지 리랭크 | [질문 라우팅](question-routing.md) |
 | 후보 목록·본문 읽기·분리 입력 예산 | [근거 본문 읽기](evidence-reading.md) | [판단 계약](evidence-decision.md) |
 | 모델·추론 수준·Builder·Advisor | [역할별 Client](role-chat-clients.md) |
 | 법령·판례 검색·상세 Tool | [API Tool](legal-api-tools.md) |
 | 벡터화·상위 15개 조문 검색 | [벡터 Tool](law-vector-tools.md) |
 | ETL·저장 검증·수동 재색인 | [ETL 로컬 가이드](law-etl-local.md) |
+| Qdrant 조문 후보·로컬 cross-encoder | [조문 리랭커](article-reranking.md) |
+| 변경 조문 임베딩·ID/해시 관계·중복 방지 | [증분 색인](incremental-law-indexing.md) |
 | 보류된 조문 API·비교 경로 | [AI Search 비교](ai-search-comparison.md) |
 | 최초 근거·후속 인용 | [상담방 근거](room-evidence.md) |
 | 동의 기반 후속 판례·근거 목록/본문 API | [후속 상담](follow-up-consultation.md) |

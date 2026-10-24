@@ -33,6 +33,7 @@ import java.util.List;
 
 @Tag(name = "Chat", description = "채팅 관련 API")
 @RestController
+@lombok.extern.slf4j.Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/chat-rooms")
 public class ChatRoomController {
@@ -62,7 +63,7 @@ public class ChatRoomController {
     }
 
     @PostMapping("/{roomId}/messages")
-    @Operation(summary = "기존 채팅방에 질문 추가", description = "본인 소유 채팅방의 대화를 Advisor로 복원하고 최초 근거 스냅샷과 함께 전달합니다. 답변의 [[UUID]] 인용을 해당 방 근거 ID와 검증한 후 질문·답변을 함께 저장합니다. 스냅샷 누락·잘못된 인용은 GPT_API_FAILURE로 실패하며 기록을 저장하지 않습니다. 후속 법령 수집·임베딩은 실행하지 않습니다. 판례 보강이 필요하면 먼저 동의를 묻고 caseSearchRequested=true를 반환합니다. 사용자가 승인한 다음 요청의 allowCaseSearch=true일 때만 외부 판례 검색·본문 수집 도구를 제공합니다. 동의는 이번 요청에만 적용되며 기본값은 false입니다. 기존 방 판례는 동의 없이 로컬 읽기가 가능합니다. 승인 후에는 방의 법령 근거 ID로 참조법령 필터를 지정해 판례 목록을 검색합니다. 목록만으로 인용할 수 없으며 실제 읽고 인용한 새 판례를 질문·답변과 함께 원자적으로 저장합니다. 판례 API 장애는 빈 결과와 구분해 모델에 전달합니다. 근거 목록·본문은 /api/chat-rooms/{roomId}/evidence 및 /{evidenceId}에서 별도로 조회합니다. JSON content(Unicode 최대 2000자·UTF-8 최대 32KiB)와 CSRF 토큰 헤더를 전달합니다.")
+    @Operation(summary = "기존 채팅방에 질문 추가", description = "본인 소유 채팅방의 대화를 Advisor로 복원하고 최초 근거 스냅샷과 함께 전달합니다. 답변의 [[UUID]] 인용을 해당 방 근거 ID와 검증한 후 질문·답변을 함께 저장합니다. 스냅샷 누락·잘못된 인용은 GPT_API_FAILURE로 실패하며 기록을 저장하지 않습니다. 후속 법령 수집·임베딩은 실행하지 않습니다. 판례 보강이 필요하면 먼저 동의를 묻고 caseSearchRequested=true를 반환합니다. 사용자가 승인한 다음 요청의 allowCaseSearch=true일 때만 외부 판례 검색·본문 수집 도구를 제공합니다. 동의는 이번 요청에만 적용되며 기본값은 false입니다. 기존 방 판례는 동의 없이 로컬 읽기가 가능합니다. 승인 후에는 기본 본문 검색을 사용하고 LLM이 필요에 따라 사건명 또는 참조법령 필터 범위를 선택합니다. 법률용어 변환 모델의 질의별로 선택 범위의 전체 페이지를 예산 안에서 수집하고 중복 후보를 제거하며 수집 미완료를 별도 표시합니다. 기본 회차당 최대 4개 판결 본문 발췌를 관련성 리랭크해 상위 2개를 읽기 후보로 제공합니다. 목록만으로 인용할 수 없으며 실제 읽고 인용한 새 판례를 질문·답변과 함께 원자적으로 저장합니다. 판례 API 장애는 빈 결과와 구분해 모델에 전달합니다. 근거 목록·본문은 /api/chat-rooms/{roomId}/evidence 및 /{evidenceId}에서 별도로 조회합니다. JSON content(Unicode 최대 2000자·UTF-8 최대 32KiB)와 CSRF 토큰 헤더를 전달합니다.")
     @ApiResponses({@ApiResponse(responseCode = "400", description = "공백 질문·2000자 초과 등 유효하지 않은 요청", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"))),
             @ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageResponse.class), examples = @ExampleObject(value = "{\"sender\":\"BOT\",\"content\":\"계약서와 지급 내역을 확인해 주세요.\",\"timestamp\":\"2026-10-13T10:00:00\"}"))),
             @ApiResponse(responseCode = "403", description = "본인의 채팅방이 아닙니다.", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":403,\"code\":\"UNAUTHORIZED_CHATROOM_ACCESS\",\"message\":\"본인의 채팅방이 아닙니다.\"}}"))),
@@ -89,7 +90,10 @@ public class ChatRoomController {
 }))})
     public ResponseEntity<ChatRoomCreationResponse> createAndAsk(@Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
                                                              @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "사용자 질문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CreateChatRoomRequest.class), examples = @ExampleObject(value = "{\"content\":\"보증금을 돌려받지 못했습니다.\"}"))) @Valid @RequestBody CreateChatRoomRequest request) {
-        return ResponseEntity.ok(chatService.createRoomAndAsk(userDetails.getUser(), request));
+        log.info("Initial answer request path=/api/chat-rooms format=JSON state=STARTED");
+        var room = chatService.createRoomAndAsk(userDetails.getUser(), request);
+        log.info("Initial answer request path=/api/chat-rooms format=JSON state=COMPLETED");
+        return ResponseEntity.ok(room);
     }
 
     @DeleteMapping("/{roomId}")

@@ -73,7 +73,7 @@ public class LawVectorClient {
         }
         JsonNode result = request(embedding, "POST", "/api/embed", Map.of(
                 "model", properties.getModel(), "input", inputs, "truncate", false,
-                "options", Map.of("num_thread", properties.getThreads(), "num_gpu", 0)), before, after);
+                "options", Map.of("num_thread", properties.getThreads(), "num_gpu", properties.getGpuCount())), before, after);
         JsonNode vectors = result.path("embeddings");
         if (!properties.getModel().equals(result.path("model").asText()) || !vectors.isArray() || vectors.size() != inputs.size()) throw invalid();
         List<List<Double>> output = new ArrayList<>();
@@ -180,6 +180,44 @@ public class LawVectorClient {
         return true;
     }
 
+    /** Reuse only exact inputs from a server-authorized COMPLETE snapshot. Missing/corrupt points are reembedded. */
+    public Map<String, List<Double>> reusableVectors(Map<String, String> expectedInputs, Map<String, Object> expectedPayload,
+            Runnable before, Runnable after) {
+        if (expectedInputs.isEmpty() || !expectedPayload.containsKey("generation")) throw invalid();
+        Map<String, List<Double>> result = new java.util.HashMap<>();
+        var ids = new ArrayList<>(expectedInputs.keySet());
+        var fields = new ArrayList<>(expectedPayload.keySet());
+        fields.add("title"); fields.add("text");
+        var seen = new java.util.HashSet<String>();
+        for (int start = 0; start < ids.size(); start += 256) {
+            var batch = ids.subList(start, Math.min(start + 256, ids.size()));
+            JsonNode points = request(qdrant, "POST", path() + "/points",
+                    Map.of("ids", batch, "with_payload", fields, "with_vector", true), before, after).path("result");
+            if (!points.isArray()) throw invalid();
+            for (JsonNode point : points) {
+                String id = point.path("id").asText();
+                if (!batch.contains(id) || !seen.add(id)) throw invalid();
+                JsonNode payload = point.path("payload"), vector = point.path("vector");
+                boolean matches = expectedPayload.entrySet().stream()
+                        .allMatch(entry -> mapper.valueToTree(entry.getValue()).equals(payload.path(entry.getKey())));
+                if (!matches || !payload.path("title").isTextual() || !payload.path("text").isTextual()
+                        || !expectedInputs.get(id).equals(com.MoleLaw_backend.law.util.LawEmbeddingInputHash.of(
+                                payload.path("title").asText(), payload.path("text").asText()))
+                        || !vector.isArray() || vector.size() != properties.getDimensions()) continue;
+                List<Double> values = new ArrayList<>();
+                double norm = 0;
+                for (JsonNode component : vector) {
+                    double value = component.asDouble(Double.NaN);
+                    if (!component.isNumber() || !Double.isFinite(value)) { values.clear(); break; }
+                    values.add(value); norm += value * value;
+                }
+                if (values.size() == properties.getDimensions() && Math.abs(Math.sqrt(norm) - 1.0) <= 0.01)
+                    result.put(expectedInputs.get(id), List.copyOf(values));
+            }
+        }
+        return Map.copyOf(result);
+    }
+
     public JsonNode query(List<Double> vector, Runnable before, Runnable after) {
         // Legacy direct callers cannot make uncommitted points visible.
         return query(vector, List.of("unpublished"), before, after);
@@ -190,12 +228,18 @@ public class LawVectorClient {
     }
 
     public JsonNode query(List<Double> vector, List<String> generations, List<String> unitIds, Runnable before, Runnable after) {
+        return query(vector, generations, unitIds, 15, before, after);
+    }
+
+    public JsonNode query(List<Double> vector, List<String> generations, List<String> unitIds, int limit,
+            Runnable before, Runnable after) {
+        if (limit < 1 || limit > 100) throw invalid();
         if (vector == null || vector.size() != properties.getDimensions()
                 || vector.stream().anyMatch(value -> value == null || !Double.isFinite(value))) throw invalid();
         Map<String, Object> body = new java.util.LinkedHashMap<>();
         body.put("query", vector);
         body.put("group_by", "unit_id");
-        body.put("limit", 15);
+        body.put("limit", limit);
         body.put("group_size", 1);
         body.put("with_payload", true);
         body.put("with_vector", false);
@@ -212,7 +256,7 @@ public class LawVectorClient {
         body.put("filter", Map.of("must", conditions));
         JsonNode result = request(qdrant, "POST", path() + "/points/query/groups", body, before, after);
         JsonNode groups = result.path("result").path("groups");
-        if (!groups.isArray() || groups.size() > 15) throw invalid();
+        if (!groups.isArray() || groups.size() > limit) throw invalid();
         return groups;
     }
 
@@ -278,6 +322,8 @@ public class LawVectorClient {
     }
 
     private void validateConfiguration() {
+        if (properties.getGpuCount() < 0 || properties.getGpuCount() > 1)
+            throw new IllegalArgumentException("Embedding GPU count must be 0 or 1");
         if (properties.getEmbeddingMaxCalls() < 1 || properties.getEmbeddingMaxCalls() > 100000
                 || properties.getIndexingMaxCalls() < 1 || properties.getIndexingMaxCalls() > 100000)
             throw new IllegalArgumentException("Invalid vector call limits");

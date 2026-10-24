@@ -1,6 +1,7 @@
 package com.MoleLaw_backend.law.service.retrieval;
 
 import com.MoleLaw_backend.law.dto.vector.LawSearchEvidence;
+import com.MoleLaw_backend.law.config.LawCandidateSelectionProperties;
 import com.MoleLaw_backend.law.dto.tool.LegalToolContracts;
 import com.MoleLaw_backend.law.exception.LegalToolException;
 
@@ -48,12 +49,14 @@ public class LegalEvidenceCollector {
     private final LawCandidateSelector candidates;
     private final AiSearchEvidenceCollector aiSearch;
     private final RetrievalBackend backend;
+    private final LawCandidateSelectionProperties selection;
 
     public LegalEvidenceCollector(ObjectProvider<LawRagSearchToolService> searches,
             ObjectProvider<LawVectorizationToolService> vectors, LegalApiToolService laws,
             EvidenceDecisionPlanner planner, QuestionRetrievalPlanner questions, LawCandidateSelector candidates,
             AiSearchEvidenceCollector aiSearch,
-            @Value("${app.law-retrieval.backend:QDRANT}") RetrievalBackend backend) {
+            @Value("${app.law-retrieval.backend:QDRANT}") RetrievalBackend backend,
+            LawCandidateSelectionProperties selection) {
         this.searches = searches;
         this.vectors = vectors;
         this.laws = laws;
@@ -62,6 +65,7 @@ public class LegalEvidenceCollector {
         this.candidates = candidates;
         this.aiSearch = aiSearch;
         this.backend = backend;
+        this.selection = selection;
     }
 
     public List<EvidenceItem> collect(String question) {
@@ -69,24 +73,29 @@ public class LegalEvidenceCollector {
     }
 
     public CollectedLegalEvidence collectForAnswer(String question) {
+        return collectForAnswer(question, com.MoleLaw_backend.law.dto.retrieval.RetrievalObserver.NONE);
+    }
+
+    public CollectedLegalEvidence collectForAnswer(String question, com.MoleLaw_backend.law.dto.retrieval.RetrievalObserver observer) {
         if (question == null || question.isBlank() || question.codePointCount(0, question.length()) > 2000)
             throw new MolelawException(ErrorCode.INVALID_REQUEST);
-        if (backend == RetrievalBackend.AI_SEARCH) return aiSearch.collect(question);
+        if (backend == RetrievalBackend.AI_SEARCH) return aiSearch.collect(question, observer);
         var search = searches.getIfAvailable();
         var vector = vectors.getIfAvailable();
         if (search == null || vector == null) throw new MolelawException(ErrorCode.RETRIEVAL_UNAVAILABLE);
         Clock clock = Clock.systemUTC();
         var deadline = clock.instant().plus(Duration.ofMinutes(3));
         var context = new LegalToolContext(LegalToolContext.Purpose.FIRST_QUESTION,
-                UUID.randomUUID().toString(), deadline, 128, clock);
+                observer.traceId() == null ? UUID.randomUUID().toString() : observer.traceId(), deadline, 128, clock);
         Map<String, String> ids = new HashMap<>();
-        Map<EvidenceDecision.LawSearch, PageCursor> pages = new HashMap<>();
+        Map<String, PageCursor> pages = new HashMap<>();
         Set<String> details = new HashSet<>(), queries = new HashSet<>();
         Set<String> observedLaws = new HashSet<>();
         Set<String> retained = new java.util.LinkedHashSet<>();
         List<RetrievalAttempt> attempts = new ArrayList<>();
         String stage = "QUESTION_PLANNING";
         try {
+            observer.progress(stage);
             log.info("Legal collection executionId={} stage={}", context.executionId(), stage);
             var plan = questions.plan(question);
             context.checkDeadline();
@@ -94,15 +103,17 @@ public class LegalEvidenceCollector {
                     context.executionId(), plan.type(), plan.responseScope());
             if (plan.type() == QuestionRetrievalPlan.Type.OUT_OF_SCOPE) throw insufficient();
             stage = "INITIAL_SEARCH";
+            observer.progress(stage);
             log.info("Legal collection executionId={} stage={} queryCount={}",
                     context.executionId(), stage, plan.searchQueries().size());
             List<EvidenceItem> evidence = searchBatch(plan.searchQueries(), List.of(), ids, context, search, attempts, retained);
-            queries.addAll(plan.searchQueries());
+            plan.searchQueries().stream().map(com.MoleLaw_backend.law.util.LawSearchQueryKey::of).forEach(queries::add);
             for (int round = 0; round <= 4; round++) {
                 evidence.stream().map(EvidenceItem::provenance).filter(java.util.Objects::nonNull)
                         .map(EvidenceProvenance::mst).forEach(observedLaws::add);
                 context.checkDeadline();
                 stage = "DECIDING";
+                observer.progress(stage);
                 log.info("Legal collection executionId={} stage={} round={} evidenceCount={}",
                         context.executionId(), stage, round, evidence.size());
                 var decision = planner.decide(question, evidence, plan, List.copyOf(attempts), 4 - round);
@@ -118,7 +129,9 @@ public class LegalEvidenceCollector {
                 context.checkDeadline();
                 decision.validateAgainst(evidence.stream().map(EvidenceItem::id).toList());
                 retained.addAll(decision.evidenceIds());
-                if (round == 4 && decision.action() != EvidenceDecision.Action.ANSWER_READY) throw insufficient();
+                observer.evidence(evidence.stream().filter(item -> retained.contains(item.id())).toList());
+                if (round == 4 && decision.action() != EvidenceDecision.Action.ANSWER_READY
+                        && decision.action() != EvidenceDecision.Action.ANSWER_PARTIAL) throw insufficient();
                 switch (decision.action()) {
                     case ANSWER_READY -> {
                         Set<String> selected = Set.copyOf(decision.evidenceIds());
@@ -126,11 +139,19 @@ public class LegalEvidenceCollector {
                                 evidence.stream().filter(item -> selected.contains(item.id())).toList());
                     }
                     case INSUFFICIENT -> throw insufficient();
+                    case ANSWER_PARTIAL -> {
+                        Set<String> selected = Set.copyOf(decision.evidenceIds());
+                        var guidance = new QuestionRetrievalPlan(plan.type(), QuestionRetrievalPlan.ResponseScope.GENERAL_GUIDANCE,
+                                plan.searchQueries(), plan.lawSearches(), plan.missingFacts());
+                        return new CollectedLegalEvidence(guidance,
+                                evidence.stream().filter(item -> selected.contains(item.id())).toList(), decision.missingIssues());
+                    }
                     case SEARCH_AGAIN -> {
                         stage = "SEARCH_AGAIN";
+                        observer.progress(stage);
                         List<String> freshQueries = new ArrayList<>();
                         for (String query : decision.searchQueries()) {
-                            if (!queries.add(query)) {
+                            if (!queries.add(com.MoleLaw_backend.law.util.LawSearchQueryKey.of(query))) {
                                 attempts.add(new RetrievalAttempt(RetrievalAttempt.Kind.VECTOR_SEARCH, query,
                                         null, null, RetrievalAttempt.Outcome.DUPLICATE, 0, false));
                                 log.info("Legal collection executionId={} stage=SEARCH_SKIPPED reason=DUPLICATE_QUERY", context.executionId());
@@ -146,7 +167,9 @@ public class LegalEvidenceCollector {
                         boolean indexed = false;
                         for (var condition : decision.lawSearches()) {
                             if (indexed) break;
-                            PageCursor cursor = pages.computeIfAbsent(condition, ignored -> new PageCursor());
+                            String conditionKey = com.MoleLaw_backend.law.util.LawSearchQueryKey.of(condition.query())
+                                    + "|" + condition.field() + "|" + condition.exactName() + "|" + condition.ministry();
+                            PageCursor cursor = pages.computeIfAbsent(conditionKey, ignored -> new PageCursor());
                             while (details.size() < 6 && !indexed) {
                                 if (cursor.offset >= cursor.candidates.size()) {
                                     if (cursor.complete) break;
@@ -155,6 +178,7 @@ public class LegalEvidenceCollector {
                                     while (!cursor.complete) {
                                         var filter = new LawSearchFilters(null, null, LawSearchFilters.CURRENT, condition.exactName());
                                         stage = "LAW_SEARCH";
+                                        observer.progress(stage);
                                         log.info("Legal collection executionId={} stage={} page={}",
                                                 context.executionId(), stage, cursor.nextPage);
                                         var result = laws.searchLaws(context, new LegalToolContracts.SearchRequest(
@@ -169,6 +193,7 @@ public class LegalEvidenceCollector {
                                             throw new LegalToolException(LegalToolException.Reason.BUDGET_EXHAUSTED, false);
                                         cursor.nextPage++;
                                         stage = "CANDIDATE_REVIEW";
+                                        observer.progress(stage);
                                         var unseen = result.candidates().stream()
                                                 .filter(c -> !details.contains(c.id()) && !observedLaws.contains(c.id())
                                                         && !pool.containsKey(c.id())).toList();
@@ -178,16 +203,16 @@ public class LegalEvidenceCollector {
                                         context.checkDeadline();
                                         log.info("Legal collection executionId={} stage={} page={} rankedCount={} hasNext={}",
                                                 context.executionId(), stage, result.page(), rankings.size(), result.hasNext());
-                                        if (!unseen.isEmpty() && rankings.stream().noneMatch(item -> item.score() >= 70))
+                                        if (!unseen.isEmpty() && rankings.stream().noneMatch(item -> item.score() >= selection.getMinimumScore()))
                                             attempts.add(new RetrievalAttempt(RetrievalAttempt.Kind.LAW_SEARCH,
                                                     condition.query(), condition, result.page(),
                                                     RetrievalAttempt.Outcome.NO_RELEVANT_CANDIDATES, 0, result.hasNext()));
                                         }
                                     cursor.candidates = pool.values().stream()
-                                            .filter(c -> scores.getOrDefault(c.id(), 0) >= 70)
+                                            .filter(c -> scores.getOrDefault(c.id(), 0) >= selection.getMinimumScore())
                                             .sorted(java.util.Comparator.comparingInt(
                                                     (LegalToolContracts.Candidate c) -> scores.get(c.id())).reversed())
-                                            .limit(2).toList();
+                                            .limit(selection.getMaxCandidates()).toList();
                                     log.info("Legal collection executionId={} stage=RERANK_COMPLETE pages={} candidateCount={} selectedCount={}",
                                             context.executionId(), cursor.nextPage - 1, pool.size(), cursor.candidates.size());
                                     cursor.offset = 0;
@@ -199,16 +224,19 @@ public class LegalEvidenceCollector {
                                 var published = vector.publishedSource(candidate);
                                 if (published.isPresent()) {
                                     stage = "LAW_INDEX_REUSE";
+                                    observer.progress(stage);
                                     log.info("Legal collection executionId={} stage={}", context.executionId(), stage);
                                     vector.reindexStoredLaw(context, published.get());
                                     indexed = true;
                                     continue;
                                 }
                                 stage = "LAW_DETAIL";
+                                observer.progress(stage);
                                 log.info("Legal collection executionId={} stage={}", context.executionId(), stage);
                                 var detail = laws.getLawDetail(context, candidate.id());
                                 if (detail.contentAvailable()) {
                                     stage = "LAW_INDEX";
+                                    observer.progress(stage);
                                     log.info("Legal collection executionId={} stage={}", context.executionId(), stage);
                                     vector.vectorizeLaw(context, detail.referenceId());
                                     indexed = true;
@@ -218,6 +246,7 @@ public class LegalEvidenceCollector {
                         if (!progressed) throw insufficient();
                         if (indexed) {
                             stage = "SEARCH_AFTER_INDEX";
+                            observer.progress(stage);
                             log.info("Legal collection executionId={} stage={}", context.executionId(), stage);
                             evidence = searchBatch(plan.searchQueries(), evidence, ids, context, search, attempts, retained);
                         }
@@ -308,7 +337,16 @@ public class LegalEvidenceCollector {
             }
             merged.putIfAbsent(item.sourceId(), item);
         }
-        var preferred = merged.values().stream().filter(item -> retained.contains(item.id())).limit(8).toList();
+        // Preserve previously approved coverage before promoting fresh hits from the same laws.
+        var retainedOrder = new LinkedHashMap<String, EvidenceItem>();
+        for (var item : previous) {
+            var current = merged.get(item.sourceId());
+            if (retained.contains(item.id()) && current != null && current.id().equals(item.id()))
+                retainedOrder.put(item.id(), current);
+        }
+        merged.values().stream().filter(item -> retained.contains(item.id()))
+                .forEach(item -> retainedOrder.putIfAbsent(item.id(), item));
+        var preferred = retainedOrder.values().stream().limit(8).toList();
         var ranked = new ArrayList<>(preferred);
         merged.values().stream().filter(item -> !preferred.contains(item)).forEach(ranked::add);
         List<EvidenceItem> bounded = new ArrayList<>();

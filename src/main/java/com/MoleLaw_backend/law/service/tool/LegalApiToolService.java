@@ -193,7 +193,7 @@ public class LegalApiToolService {
             List<String> articleNumbers = law ? rows(content.path("조문").path("조문단위")).stream()
                     .limit(100).map(article -> shortText(article, "조문번호")).toList() : List.of();
             boolean available = law ? articleCount > 0 : !content.path("판례내용").asText().isBlank();
-            String url = law ? "https://www.law.go.kr/법령?lsId=" + lawId + "&lsiSeq=" + id
+            String url = law ? com.MoleLaw_backend.law.util.LawSourceUrl.detail(id)
                     : "https://www.law.go.kr/precInfoP.do?precSeq=" + id;
             LegalSource source = sources.save(law ? "LAW" : "CASE", id, lawId, effectiveDate, url, content);
             DetailResult result = new DetailResult(source.getId(), id, lawId, effectiveDate, title,

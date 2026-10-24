@@ -14,6 +14,8 @@ class EvidenceDecisionTest {
 
     @Test
     void acceptsEachActionWithOnlyItsOwnExecutionIntent() {
+        assertThat(decision(ANSWER_PARTIAL, List.of("확인하지 못한 별표"), List.of("source-1"), List.of(), List.of()).action())
+                .isEqualTo(ANSWER_PARTIAL);
         assertThat(decision(ANSWER_READY, List.of(), List.of("source-1"), List.of(), List.of()).action()).isEqualTo(ANSWER_READY);
         assertThat(decision(SEARCH_AGAIN, List.of("원상회복 의무"), List.of(), List.of("계약 해제 원상회복"), List.of()).action())
                 .isEqualTo(SEARCH_AGAIN);
@@ -23,6 +25,8 @@ class EvidenceDecisionTest {
 
     @Test
     void rejectsContradictoryOrIncompleteActions() {
+        assertThatThrownBy(() -> decision(ANSWER_PARTIAL, List.of("누락"), List.of(), List.of(), List.of())).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> decision(ANSWER_PARTIAL, List.of(), List.of("source-1"), List.of(), List.of())).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> decision(ANSWER_READY, List.of(), List.of(), List.of(), List.of())).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> decision(ANSWER_READY, List.of("누락"), List.of("source-1"), List.of(), List.of())).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> decision(SEARCH_AGAIN, List.of("누락"), List.of(), List.of(), List.of())).isInstanceOf(IllegalArgumentException.class);

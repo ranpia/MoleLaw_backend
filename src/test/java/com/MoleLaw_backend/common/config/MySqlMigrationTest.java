@@ -51,7 +51,7 @@ class MySqlMigrationTest {
             runner(db).run(context -> {
                 assertThat(context).hasNotFailed();
                 var flyway = context.getBean(Flyway.class);
-                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("5");
+                assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("7");
                 assertThat(flyway.migrate().migrationsExecuted).isZero();
                 assertThat(flyway.getConfiguration().isCleanDisabled()).isTrue();
                 assertThat(flyway.getConfiguration().isBaselineOnMigrate()).isFalse();
@@ -74,8 +74,11 @@ class MySqlMigrationTest {
                     em.persist(source);
                     var index = new LegalSourceIndex(source.getId(), source.getContentHash(), "b".repeat(64),
                             "molelaw_service_test", "test-model", "test-revision", 2);
+                    index.claim("d".repeat(64));
                     index.complete(1);
                     em.persist(index);
+                    em.persist(new com.MoleLaw_backend.law.entity.LawChunkIndex(java.util.UUID.randomUUID().toString(),
+                            index.getGeneration(), "1", 0, "e".repeat(64)));
                     var precedent = new LegalSource("CASE", "901", null, null,
                             "https://www.law.go.kr/precInfoP.do?precSeq=901", "c".repeat(64), "{\"판례내용\":\"검증 본문\"}");
                     em.persist(precedent);
@@ -88,6 +91,11 @@ class MySqlMigrationTest {
                 }
                 var jdbc = new JdbcTemplate(context.getBean(DataSource.class));
                 assertAccountConstraints(jdbc);
+                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='law_chunk_index'", Integer.class)).isEqualTo(5);
+                assertThatThrownBy(() -> jdbc.update("INSERT INTO legal_source_index (generation,source_id,content_hash,config_fingerprint,collection_name,model_name,model_revision,dimensions,status,started_at,chunk_count,dedup_key) SELECT UUID(),source_id,content_hash,config_fingerprint,collection_name,model_name,model_revision,dimensions,'WRITING',NOW(),0,dedup_key FROM legal_source_index LIMIT 1"))
+                        .isInstanceOf(DataIntegrityViolationException.class).hasMessageContaining("uk_source_index_dedup");
+                assertThatThrownBy(() -> jdbc.update("INSERT INTO law_chunk_index VALUES (UUID(),UUID(),'1',0,?)", "f".repeat(64)))
+                        .isInstanceOf(DataIntegrityViolationException.class);
                 assertThatThrownBy(() -> jdbc.update("INSERT INTO chat_room (title,user_id,created_at) VALUES ('',1,NOW())"))
                         .isInstanceOf(DataAccessException.class);
                 assertThatThrownBy(() -> jdbc.update("INSERT INTO message (chat_room_id,sender,content,timestamp) VALUES (1,'INFO','x',NOW())"))
@@ -98,7 +106,7 @@ class MySqlMigrationTest {
                 assertThat(context).hasNotFailed();
                 var jdbc = new JdbcTemplate(context.getBean(DataSource.class));
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM message", Integer.class)).isEqualTo(1);
-                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success=1", Integer.class)).isEqualTo(5);
+                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success=1", Integer.class)).isEqualTo(7);
                 assertThat(context.getBean(Flyway.class).migrate().migrationsExecuted).isZero();
                 jdbc.update("DELETE FROM `user` WHERE email='mysql-test@example.com'");
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM chat_room", Integer.class)).isZero();
@@ -107,6 +115,7 @@ class MySqlMigrationTest {
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM chat_case_evidence", Integer.class)).isZero();
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM legal_source", Integer.class)).isEqualTo(2);
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM legal_source_index", Integer.class)).isEqualTo(1);
+                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM law_chunk_index", Integer.class)).isEqualTo(1);
             });
         }
     }

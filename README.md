@@ -61,7 +61,7 @@ flowchart LR
 
 역할별 환경변수와 완료 토큰 한도를 분리했습니다. 실제 모델 접근·옵션·법률 품질·비용 평가는 아직 남아 있습니다. 키워드 추출의 기존 OPENAI_CHAT_MODEL과 로컬 임베딩 모델은 별도입니다. [모델 설정](docs/role-chat-clients.md)을 따릅니다.
 
-임베딩은 현재 KURE-v1·고정 revision·1024차원, 서비스용 threaded HTTP 서버를 사용합니다. Ollama 모델 비교 환경은 별도 실험이며 현재 서비스가 Ollama 모델을 직접 호출하는 것으로 해석하지 않습니다. [KURE 실행](docker/README.md), [Ollama 실험](docker/ollama/README.md)을 구분하세요.
+임베딩은 현재 KURE-v1·고정 revision·1024차원·float32, 서비스용 threaded HTTP 서버를 사용합니다. 실행 환경은 CPU 기본 구성과 선택적 CUDA override로 분리하고 장치·배치·자원 한도는 환경변수로 조정합니다. Ollama 모델 비교는 별도 실험입니다. [KURE 실행](docker/kure/README.md), [Ollama 실험](docker/ollama/README.md)을 구분하세요.
 
 ## 기술 구성과 구조
 
@@ -101,7 +101,7 @@ docker compose -f docker/compose.yml --env-file docker/.env.compose up -d
 
 Qdrant RAG는 APP_LAW_VECTOR_ENABLED=true와 별도 임베딩 서버가 필요합니다. 서비스 KURE 실행은 [Docker 가이드](docker/README.md)를 따르세요. 코드 기본 포트 11436과 서비스 컨테이너 11437을 혼동하지 않도록 APP_LAW_VECTOR_EMBEDDING_BASE_URL을 지정합니다. 모델·.env 변경 후 서버를 재시작합니다.
 
-local 주소는 API :8080, Swagger /swagger-ui.html, MySQL :3307, Qdrant HTTP/gRPC :6333/:6334, Redis :6379입니다. 기본 mysql 프로필은 MySQL·JPA validate, local은 mysql+qdrant·Swagger, test는 H2·모킹입니다. 운영에 local/test 프로필을 사용하지 않습니다. Flyway V1~V5 적용·오류 대응은 [MySQL 실행](docs/mysql-setup.md)을 따릅니다.
+local 주소는 API :8080, Swagger /swagger-ui.html, MySQL :3307, Qdrant HTTP/gRPC :6333/:6334, Redis :6379입니다. 기본 mysql 프로필은 MySQL·JPA validate, local은 mysql+qdrant·Swagger, test는 H2·모킹입니다. 운영에 local/test 프로필을 사용하지 않습니다. Flyway V1~V7 적용·오류 대응은 [MySQL 실행](docs/mysql-setup.md)을 따릅니다.
 
 ## 인증·API 사용
 
