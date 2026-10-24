@@ -14,6 +14,7 @@ public class LawVectorProperties {
     private String revision = "8b418a58414668e75532ed045c22d9ca018ae2b2";
     private int dimensions = 1024;
     private int threads = 6;
+    private int gpuCount = 0;
     private int batchSize = 16;
     private int embeddingMaxCalls = 1024;
     private int indexingMaxCalls = 1024;

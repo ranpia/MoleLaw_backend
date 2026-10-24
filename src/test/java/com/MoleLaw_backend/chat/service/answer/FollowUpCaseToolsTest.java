@@ -15,6 +15,35 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class FollowUpCaseToolsTest {
+    @Test void selectedPrefetchedBodiesAreReadWithoutAnotherApiCall() {
+        var item = new EvidenceItem(UUID.randomUUID().toString(), "CASE_BODY", "901", "임금", "https://www.law.go.kr", "검증된 판결 본문");
+        var candidate = new LegalToolContracts.Candidate("901", null, "임금", null, "2026다1", "20260101", "대법원");
+        when(pipeline.search(any(), any(), anyString(), anyInt(), any(), any())).thenReturn(new com.MoleLaw_backend.law.dto.retrieval.CaseSearchOutcome(
+                "AVAILABLE", List.of(candidate), java.util.Map.of("901", item), List.of(), 1, 1, 1, false, false, false));
+        var session = factory.create(List.of(law), true);
+        session.search(law.id(), "쟁점", 1);
+        assertThat(session.evidence()).containsExactly(law);
+        assertThat(session.read("901")).containsEntry("evidence", item);
+        assertThat(session.citedAdditions("[[" + item.id() + "]]")).containsExactly(item);
+        verifyNoInteractions(api, reader);
+    }
+    @Test void casePipelineUsesTheParentStreamTraceIdAndDoesNotPublishUnrankedEvidence() {
+        var stages = new java.util.ArrayList<String>();
+        var session = factory.create(List.of(law), true, "shared-stream-trace", 5L, stages::add);
+        when(pipeline.search(any(), any(), anyString(), anyInt(), any(), any())).thenAnswer(call -> {
+            com.MoleLaw_backend.law.service.tool.LegalToolContext context = call.getArgument(0);
+            assertThat(context.executionId()).isEqualTo("shared-stream-trace");
+            com.MoleLaw_backend.law.service.retrieval.CaseSearchPipeline.State state = call.getArgument(4);
+            assertThat(state.roomId()).isEqualTo(5L);
+            java.util.function.Consumer<String> progress = call.getArgument(5);
+            progress.accept("CASE_RERANK");
+            return new com.MoleLaw_backend.law.dto.retrieval.CaseSearchOutcome("NO_RELEVANT_CASES", List.of(), java.util.Map.of(), List.of(), 3, 5, 6, false, false, false);
+        });
+        var result = session.search(law.id(), "쟁점", 1);
+        assertThat(result).containsEntry("status", "NO_RELEVANT_CASES").containsEntry("queryRevisionRequired", true);
+        assertThat(stages).containsExactly("CASE_RERANK");
+        assertThat(session.evidence()).containsExactly(law);
+    }
     @Test void defaultConsentGateProposesButNeverSearches() {
         var session = factory.create(List.of(law));
         assertThat(session.requestConsent(law.id(), "판례로 쟁점을 보강")).containsEntry("status", "CONSENT_REQUIRED");
@@ -25,11 +54,15 @@ class FollowUpCaseToolsTest {
     }
     private final LegalApiToolService api = mock(LegalApiToolService.class);
     private final CaseEvidenceReader reader = mock(CaseEvidenceReader.class);
-    private final FollowUpCaseToolsFactory factory = new FollowUpCaseToolsFactory(api, reader);
+    private final com.MoleLaw_backend.law.service.retrieval.CaseSearchPipeline pipeline = mock(com.MoleLaw_backend.law.service.retrieval.CaseSearchPipeline.class);
+    private final FollowUpCaseToolsFactory factory = new FollowUpCaseToolsFactory(api, reader, pipeline);
     private final EvidenceItem law = new EvidenceItem(UUID.randomUUID().toString(), "LAW_CHUNK", "law:1",
             "검증법 제1조(목적)", "https://www.law.go.kr", "검증 조문");
 
     private void searchResult() {
+        var candidate = new LegalToolContracts.Candidate("901", null, "사건", null, "2026다1", "20260101", "검증법원");
+        when(pipeline.search(any(), any(), anyString(), anyInt(), any(), any())).thenReturn(
+                new com.MoleLaw_backend.law.dto.retrieval.CaseSearchOutcome("AVAILABLE", List.of(candidate), java.util.Map.of(), List.of(), 1, 0, 1, false, false, false));
         when(api.searchCasesForLaw(any(), any(), eq("검증법"))).thenReturn(new LegalToolContracts.SearchResult(
                 LegalToolContracts.Status.AVAILABLE, List.of(new LegalToolContracts.Candidate("901", null,
                 "사건", null, "2026다1", "20260101", "검증법원")), 1, 10, 1, false, Instant.now(), "https://www.law.go.kr"));
@@ -48,7 +81,7 @@ class FollowUpCaseToolsTest {
         assertThat(session.search(law.id(), "쟁점", 1)).containsEntry("referenceLaw", "검증법");
         assertThat(session.evidence()).containsExactly(law);
         assertThat(session.citedAdditions("판례 [[901]]")).isEmpty();
-        verify(api).searchCasesForLaw(any(), argThat(request -> request.search() == 2 && request.page() == 1), eq("검증법"));
+        verify(pipeline).search(any(), eq(law), eq("쟁점"), eq(1), any(), any());
     }
 
     @Test void storedCasesAreReadLocallyAndKeepTheirCitationIds() {

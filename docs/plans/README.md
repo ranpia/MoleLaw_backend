@@ -17,9 +17,13 @@
 
 ## 주제별 상세
 
+2026-10-24 별도 환경은 `environment/alternate-development` 브랜치의 [실행 환경·리랭커 검토](alternate-environment.md)에 기록한다. 단일 벡터를 유지하고 법령 목록·조문 검색 두 단계의 리랭커를 검토한다.
+
 | 문서 | 담당 범위 |
 | --- | --- |
 | [모델·오케스트레이션](orchestration-models.md) | P01·P02·P03, 역할 경계와 모델 평가 |
+| [최초 상담 예산 검토](retrieval-budgets.md) | P03·P05, 전체 deadline·실제 usage·반복 판단·GPU 리랭크 예산 |
+| [응답·검색·링크 보완](retrieval-response-fixes.md) | 부분 일반 안내, 질의 중복·실패 피드백, 실제 법령 상세 URL |
 | [추가 수집·리랭크](adaptive-law-retrieval.md) | P02·P04, 검색 전환·전체 페이지 후보·충분성 |
 | [RAG·ETL](rag-etl.md) | P04·P05·P06, 색인·복구·대화 입력 |
 | [MySQL](mysql-schema.md) | P05·P08, 작업·턴 상태와 마이그레이션 |

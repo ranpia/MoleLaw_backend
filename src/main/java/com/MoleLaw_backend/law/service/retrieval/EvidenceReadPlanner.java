@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.knuddels.jtokkit.api.EncodingType;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Two bounded catalog-selection rounds, with local full-article reads and no new collection or embeddings.
@@ -64,6 +67,7 @@ public class EvidenceReadPlanner {
         var suppliedIds = candidates.stream().map(EvidenceItem::id).collect(java.util.stream.Collectors.toSet());
         int used = 0;
         String stage = "CATALOG_INPUT";
+        String contractIssue = "NONE";
         try {
             for (int round = 0; round < 2 && attempted.size() < candidates.size(); round++) {
                 var input = mapper.createObjectNode().put("question", question).put("remainingBodyTokens", bodyLimit - used);
@@ -78,17 +82,35 @@ public class EvidenceReadPlanner {
                     break; // Keep already-read evidence without exceeding the second catalog call's budget.
                 }
                 stage = "MODEL_SELECTION";
-                String output = client.prompt().user(input.toString()).call().content();
+                var availableIds = new ArrayList<String>();
+                remaining.forEach(item -> availableIds.add(item.path("id").asText()));
+                var schema = Map.<String, Object>of("type", "object", "additionalProperties", false,
+                        "required", List.of("evidenceIds"), "properties", Map.of("evidenceIds",
+                                Map.of("type", "array", "maxItems", Math.min(8, availableIds.size()),
+                                        "items", Map.of("type", "string", "enum", availableIds))));
+                var format = ResponseFormat.builder().type(ResponseFormat.Type.JSON_SCHEMA)
+                        .jsonSchema(ResponseFormat.JsonSchema.builder().name("evidence_read_selection")
+                                .strict(true).schema(schema).build()).build();
+                String output = client.prompt().user(input.toString())
+                        .options(OpenAiChatOptions.builder().responseFormat(format).build()).call().content();
                 if (output == null || output.length() > 4096)
                     throw new IllegalArgumentException("Invalid evidence read selection");
                 stage = "SELECTION_CONTRACT";
+                contractIssue = "INVALID_STRUCTURE";
                 EvidenceReading.Selection selection = mapper.readerFor(EvidenceReading.Selection.class)
                         .with(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
                         .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                         .with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
                         .with(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES).readValue(output);
-                if (selection == null || !suppliedIds.containsAll(selection.evidenceIds()))
+                if (selection == null) {
+                    contractIssue = "NULL_SELECTION";
+                    throw new IllegalArgumentException("Null evidence reading selection");
+                }
+                if (!suppliedIds.containsAll(selection.evidenceIds())) {
+                    contractIssue = "UNKNOWN_ID";
                     throw new IllegalArgumentException("Unknown evidence read ID");
+                }
+                contractIssue = "NONE";
                 var newIds = selection.evidenceIds().stream().filter(id -> !attempted.contains(id)).toList();
                 if (newIds.isEmpty()) break;
                 stage = "SOURCE_READ";
@@ -110,8 +132,8 @@ public class EvidenceReadPlanner {
         } catch (MolelawException failure) {
             throw failure;
         } catch (Exception failure) {
-            log.warn("Evidence reading failed stage={} errorType={} candidateCount={} readCount={}",
-                    stage, failure.getClass().getSimpleName(), candidates.size(), read.size());
+            log.warn("Evidence reading failed stage={} contractIssue={} errorType={} candidateCount={} readCount={}",
+                    stage, contractIssue, failure.getClass().getSimpleName(), candidates.size(), read.size());
             throw new GptApiException(ErrorCode.GPT_API_FAILURE);
         }
     }

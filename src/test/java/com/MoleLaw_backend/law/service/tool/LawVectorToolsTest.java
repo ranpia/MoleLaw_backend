@@ -168,6 +168,34 @@ class LawVectorToolsTest {
     }
 
     @Test
+    void amendmentEmbedsOnlyChangedArticleAndStoresMetadataForBothArticles() {
+        String prefix = "{\"기본정보\":{\"법령명_한글\":\"검증법\"},\"조문\":{\"조문단위\":[";
+        String unchanged = "{\"조문번호\":\"1\",\"조문내용\":\"유지되는 조문입니다.\"}";
+        var oldSource = new LegalSource("LAW", "123", "1", "20260101", "https://www.law.go.kr/old", "a".repeat(64),
+                prefix + unchanged + ",{\"조문번호\":\"2\",\"조문내용\":\"이전 규정입니다.\"}]}}");
+        var amended = new LegalSource("LAW", "124", "1", "20260201", "https://www.law.go.kr/new", "b".repeat(64),
+                prefix + unchanged + ",{\"조문번호\":\"2\",\"조문내용\":\"수정된 새 규정입니다.\"}]}}");
+        when(sources.restore(oldSource.getId())).thenReturn(oldSource);
+        when(sources.restore(amended.getId())).thenReturn(amended);
+        when(client.embed(anyList(), any(), any())).thenAnswer(call -> ((List<String>) call.getArgument(0))
+                .stream().map(input -> List.of(1.0)).toList());
+        writer.reindexStoredLaw(context(false), oldSource.getId());
+        var oldIndex = indexes.searchable(client.fingerprint()).values().iterator().next();
+        var reuse = indexes.chunkReferences(oldIndex.getGeneration()).stream().collect(java.util.stream.Collectors.toMap(
+                com.MoleLaw_backend.law.entity.LawChunkIndex::getInputHash, row -> List.of(1.0)));
+        when(client.reusableVectors(anyMap(), anyMap(), any(), any())).thenReturn(reuse);
+        writer.reindexStoredLaw(context(false), amended.getId());
+        var requests = org.mockito.ArgumentCaptor.forClass(List.class);
+        verify(client, times(2)).embed(requests.capture(), any(), any());
+        assertThat(requests.getAllValues().get(0)).hasSize(2);
+        assertThat(requests.getAllValues().get(1)).hasSize(1);
+        assertThat(requests.getAllValues().get(1).get(0).toString()).contains("수정된 새 규정");
+        var latest = indexes.searchable(client.fingerprint()).values().stream()
+                .filter(index -> index.getSourceId().equals(amended.getId())).findFirst().orElseThrow();
+        assertThat(indexes.chunkReferences(latest.getGeneration())).hasSize(2);
+    }
+
+    @Test
     void retrievalChecksCommittedGenerationAndReturnsImmutableArticles() {
         var context = context(false);
         var source = source(context);
@@ -189,9 +217,23 @@ class LawVectorToolsTest {
         assertThat(result.get(0).generation()).isEqualTo(index.getGeneration());
         assertThatThrownBy(result::clear).isInstanceOf(UnsupportedOperationException.class);
         verify(client).query(anyList(), eq(List.of(index.getGeneration())), any(), any());
+        var reranker = mock(com.MoleLaw_backend.law.client.vector.LawRerankerClient.class);
+        when(reranker.enabled()).thenReturn(true);
+        when(reranker.candidateLimit()).thenReturn(50);
+        when(reranker.rerank(anyString(), anyList(), any(), any())).thenAnswer(call -> call.getArgument(1));
+        var rerankedReader = new LawRagSearchToolService(client, indexes, sources, mapper, reranker);
+        when(client.query(anyList(), anyList(), anyList(), eq(50), any(), any()))
+                .thenReturn(mapper.valueToTree(List.of(group)));
+        assertThat(rerankedReader.searchTop15(context, "question")).hasSize(1);
+        verify(reranker).rerank(eq("question"), argThat(hits -> hits.size() == 1
+                && hits.get(0).generation().equals(index.getGeneration())), any(), any());
         payload.put("generation", UUID.randomUUID().toString());
         when(client.query(anyList(), anyList(), any(), any())).thenReturn(mapper.valueToTree(List.of(group)));
         assertThatThrownBy(() -> reader.searchTop15(context, "권리의 행사")).hasMessage("INVALID_RESPONSE");
+        when(client.query(anyList(), anyList(), anyList(), eq(50), any(), any()))
+                .thenReturn(mapper.valueToTree(List.of(group)));
+        assertThatThrownBy(() -> rerankedReader.searchTop15(context, "question")).hasMessage("INVALID_RESPONSE");
+        verify(reranker, times(1)).rerank(anyString(), anyList(), any(), any());
     }
 
     @Test

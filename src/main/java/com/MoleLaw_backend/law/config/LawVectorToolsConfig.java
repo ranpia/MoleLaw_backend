@@ -27,8 +27,15 @@ public class LawVectorToolsConfig {
     }
 
     @Bean
+    public com.MoleLaw_backend.law.client.vector.LawRerankerClient lawRerankerClient(
+            LawRerankerProperties properties, ObjectMapper mapper) {
+        return new com.MoleLaw_backend.law.client.vector.LawRerankerClient(properties, mapper);
+    }
+
+    @Bean
     public LawRagSearchToolService lawRagSearchToolService(LawVectorClient client, LegalSourceIndexService indexes,
-            LegalSourceService sources, ObjectMapper mapper) {
-        return new LawRagSearchToolService(client, indexes, sources, mapper);
+            LegalSourceService sources, ObjectMapper mapper,
+            com.MoleLaw_backend.law.client.vector.LawRerankerClient reranker) {
+        return new LawRagSearchToolService(client, indexes, sources, mapper, reranker);
     }
 }

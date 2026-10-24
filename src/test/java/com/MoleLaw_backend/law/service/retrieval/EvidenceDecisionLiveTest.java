@@ -33,7 +33,7 @@ class EvidenceDecisionLiveTest {
     void configuredModelProducesFourValidatedDecisionsAndActualUsage() throws Exception {
         String key = setting("OPENAI_API_KEY", "");
         assertFalse(key.isBlank(), "OPENAI_API_KEY must be configured");
-        String modelName = setting("OPENAI_CHAT_MODEL", "gpt-4");
+        String modelName = setting("OPENAI_CHAT_MODEL", "gpt-5.4");
         var factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(5000);
         factory.setReadTimeout(60000);

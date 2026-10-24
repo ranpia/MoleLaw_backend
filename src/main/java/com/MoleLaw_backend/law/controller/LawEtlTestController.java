@@ -74,7 +74,7 @@ public class LawEtlTestController {
     @ApiResponse(responseCode = "200", description = "검색 결과. 완료 색인이 없으면 빈 배열",
         content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = LawRagTestResponse.class)),
             examples = {
-                @ExampleObject(name = "검색 성공", value = "[{\"unitId\":\"123:2\",\"referenceId\":\"11111111-1111-1111-1111-111111111111\",\"externalId\":\"123\",\"lawId\":\"001706\",\"effectiveDate\":\"20260101\",\"title\":\"민법 제2조(신의성실)\",\"text\":\"권리의 행사와 의무의 이행은 신의에 좇아 성실히 하여야 한다.\",\"articleText\":\"권리의 행사와 의무의 이행은 신의에 좇아 성실히 하여야 한다. 권리는 남용하지 못한다.\",\"sourceUrl\":\"https://www.law.go.kr/법령?lsId=001706&lsiSeq=123\",\"score\":0.82,\"modelRevision\":\"example-revision\",\"configFingerprint\":\"example-fingerprint\",\"generation\":\"22222222-2222-2222-2222-222222222222\"}]"),
+                @ExampleObject(name = "검색 성공", value = "[{\"unitId\":\"123:2\",\"referenceId\":\"11111111-1111-1111-1111-111111111111\",\"externalId\":\"123\",\"lawId\":\"001706\",\"effectiveDate\":\"20260101\",\"title\":\"민법 제2조(신의성실)\",\"text\":\"권리의 행사와 의무의 이행은 신의에 좇아 성실히 하여야 한다.\",\"articleText\":\"권리의 행사와 의무의 이행은 신의에 좇아 성실히 하여야 한다. 권리는 남용하지 못한다.\",\"sourceUrl\":\"https://www.law.go.kr/lsInfoP.do?lsiSeq=123\",\"score\":0.82,\"modelRevision\":\"example-revision\",\"configFingerprint\":\"example-fingerprint\",\"generation\":\"22222222-2222-2222-2222-222222222222\"}]"),
                 @ExampleObject(name = "검색 결과 없음", value = "[]")
             }))
     public List<LawRagTestResponse> search(

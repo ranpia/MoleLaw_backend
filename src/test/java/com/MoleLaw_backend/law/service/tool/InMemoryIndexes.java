@@ -19,11 +19,21 @@ final class InMemoryIndexes {
             LegalSourceIndex record = call.getArgument(0); records.put(record.getGeneration(), record); return record;
         });
         when(repository.findById(anyString())).thenAnswer(call -> Optional.ofNullable(records.get(call.getArgument(0))));
+        when(repository.lockGeneration(anyString())).thenAnswer(call -> Optional.ofNullable(records.get(call.getArgument(0))));
         when(repository.findByConfigFingerprintAndStatusOrderByCompletedAtDescGenerationDesc(anyString(), anyString()))
                 .thenAnswer(call -> records.values().stream()
                         .filter(r -> r.getConfigFingerprint().equals(call.getArgument(0)) && r.getStatus().equals(call.getArgument(1)))
                         .sorted(Comparator.comparing(LegalSourceIndex::getCompletedAt).reversed()).toList());
         when(sourceRepository.findById(anyString())).thenAnswer(call -> Optional.of(sources.restore(call.getArgument(0))));
-        return new LegalSourceIndexService(repository, sourceRepository);
+        var chunks = mock(com.MoleLaw_backend.law.repository.LawChunkIndexRepository.class);
+        var references = new LinkedHashMap<String, com.MoleLaw_backend.law.entity.LawChunkIndex>();
+        when(chunks.findByGeneration(anyString())).thenAnswer(call -> references.values().stream()
+                .filter(row -> row.getGeneration().equals(call.getArgument(0))).toList());
+        when(chunks.saveAllAndFlush(any())).thenAnswer(call -> {
+            List<com.MoleLaw_backend.law.entity.LawChunkIndex> rows = call.getArgument(0);
+            rows.forEach(row -> references.put(row.getPointId(), row));
+            return rows;
+        });
+        return new LegalSourceIndexService(repository, sourceRepository, chunks);
     }
 }

@@ -54,6 +54,9 @@ class EvidenceDecisionInputBuilderTest {
         assertThat(input.path("searchAttempts").size()).isBetween(1, 8);
         assertThat(input.path("executionState").path("vectorSearchCount").asInt()).isEqualTo(20);
         assertThat(input.path("executionState").path("lawSearchCount").asInt()).isZero();
+        assertThat(input.path("executionState").path("queryRevisionRequired").asBoolean()).isTrue();
+        assertThat(input.path("executionState").path("nonProductiveSearchCount").asInt()).isEqualTo(20);
+        assertThat(input.path("executionState").path("vectorAnnexTextIndexed").asBoolean()).isFalse();
         var latest = input.path("searchAttempts").get(input.path("searchAttempts").size() - 1);
         assertThat(latest.path("query").asText()).startsWith("검색 질의 19");
         assertThat(input.path("evidence").get(0).path("content").asText()).isEqualTo("완전한 조문");

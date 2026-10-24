@@ -20,13 +20,27 @@ import java.util.Optional;
 public class LegalSourceIndexService {
     private final LegalSourceIndexRepository repository;
     private final LegalSourceRepository sources;
+    private final com.MoleLaw_backend.law.repository.LawChunkIndexRepository chunks;
 
     @Transactional
     public LegalSourceIndex begin(LegalSource source, LawVectorClient client) {
         var identity = client.identity();
-        return repository.saveAndFlush(new LegalSourceIndex(source.getId(), source.getContentHash(), client.fingerprint(),
+        var record = new LegalSourceIndex(source.getId(), source.getContentHash(), client.fingerprint(),
                 client.collectionName(), identity.get("model").toString(), identity.get("revision").toString(),
-                (Integer) identity.get("dimensions")));
+                (Integer) identity.get("dimensions"));
+        record.claim(com.MoleLaw_backend.law.util.LawEmbeddingInputHash.of(source.getExternalId(),
+                source.getContentHash() + "\n" + client.fingerprint()));
+        try {
+            return repository.saveAndFlush(record);
+        } catch (org.springframework.dao.DataIntegrityViolationException conflict) {
+            for (Throwable cause = conflict; cause != null; cause = cause.getCause()) {
+                if (cause instanceof java.sql.SQLException sql
+                        && (sql.getErrorCode() == 1062 || "23505".equals(sql.getSQLState())))
+                    throw new com.MoleLaw_backend.law.exception.LegalToolException(
+                            com.MoleLaw_backend.law.exception.LegalToolException.Reason.BUSY, true);
+            }
+            throw conflict;
+        }
     }
 
     @Transactional
@@ -34,6 +48,32 @@ public class LegalSourceIndexService {
         var record = repository.findById(generation).orElseThrow();
         if (!"WRITING".equals(record.getStatus()) || count < 1) throw new IllegalStateException("Invalid index completion");
         record.complete(count);
+    }
+
+    @Transactional
+    public void rememberChunks(String generation, java.util.List<com.MoleLaw_backend.law.entity.LawChunkIndex> references) {
+        var record = repository.lockGeneration(generation).orElseThrow();
+        if (!java.util.Set.of("WRITING", "COMPLETE").contains(record.getStatus())
+                || references.isEmpty() || references.stream().anyMatch(row -> !generation.equals(row.getGeneration()))
+                || references.stream().map(com.MoleLaw_backend.law.entity.LawChunkIndex::getPointId).distinct().count() != references.size())
+            throw new IllegalArgumentException("Invalid chunk membership");
+        var existing = chunks.findByGeneration(generation);
+        if (existing.isEmpty()) {
+            chunks.saveAllAndFlush(references);
+        } else {
+            var expected = references.stream().collect(java.util.stream.Collectors.toMap(
+                    com.MoleLaw_backend.law.entity.LawChunkIndex::getPointId, row -> row));
+            if (existing.size() != expected.size() || existing.stream().anyMatch(row -> {
+                var target = expected.get(row.getPointId());
+                return target == null || !target.getInputHash().equals(row.getInputHash())
+                        || !target.getArticlePath().equals(row.getArticlePath()) || target.getChunkIndex() != row.getChunkIndex();
+            })) throw new IllegalStateException("Chunk membership mismatch");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<com.MoleLaw_backend.law.entity.LawChunkIndex> chunkReferences(String generation) {
+        return java.util.List.copyOf(chunks.findByGeneration(generation));
     }
 
     @Transactional

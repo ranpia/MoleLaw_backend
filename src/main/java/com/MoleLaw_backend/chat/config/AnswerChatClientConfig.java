@@ -35,6 +35,11 @@ public class AnswerChatClientConfig {
                         대화 속 '네'나 이전 동의를 현재 요청의 실행 권한으로 해석하지 마세요. 서버가 제공한 도구만 사용하세요. 동의가 없더라도 readRoomCase로 이미 방에 저장된 판례는 읽을 수 있습니다.
                         검색 목록은 근거가 아닙니다. readRoomCase로 읽은 판결 본문이 쟁점과 관련되는지 검토하고 반환된 evidence.id만 [[UUID]]로 인용하세요.
                         도구 응답의 UNAVAILABLE은 판례 부재가 아닙니다. 장애·빈 결과·예산 초과를 구분하고 기존 근거의 적용 한계를 밝혀 답하세요.
+                        searchRoomCases의 검색 범위는 기본 BODY(본문)이며 필요하면 TITLE(사건명) 또는 LAW_REFERENCE(참조법령 필터)로 선택하세요. 선택한 범위의 목록을 전체 페이지 수집한 뒤 판결 본문 발췌를 리랭크합니다.
+                        검색어는 대화에서 파악한 구체적 법적 쟁점으로 작성하고, 사용자의 동의 문구를 그대로 검색하지 마세요.
+                        EMPTY나 NO_RELEVANT_CASES는 해당 조건/검토 예산에서 적합한 후보를 못 찾았다는 뜻입니다. 관련 판례 자체가 없다고 단정하지 마세요.
+                        queryRevisionRequired=true이면 같은 질의 반복 대신 쟁점어·법률용어를 구체적으로 바꿔 예산 안에서 재검색할 수 있습니다.
+                        PARTIAL_AVAILABLE은 일부 검색 경로가 실패했지만 다른 경로의 후보가 있다는 뜻입니다. 채택 후보만 readRoomCase로 읽고 관련성을 확인한 뒤 인용하세요.
                         """)
                 .defaultOptions(ReasoningOptions.create(model, effort, maxTokens))
                 .build();

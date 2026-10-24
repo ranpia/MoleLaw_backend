@@ -85,6 +85,7 @@ public class LawVectorizationToolService {
             if (client.collectionAvailable(context::reserveIndex, context::checkDeadline)
                     && record.getChunkCount() == documents.size()
                     && writer(context, sources.restore(record.getSourceId()), record).verify(documents)) {
+                indexes.rememberChunks(record.getGeneration(), LawQdrantDocumentWriter.references(record.getGeneration(), documents));
                 return new LawIndexResult(record.getSourceId(), properties.getCollectionName(),
                         (int) documents.stream().map(d -> d.getMetadata().get("article_id")).distinct().count(), record.getChunkCount());
             }
@@ -93,9 +94,15 @@ public class LawVectorizationToolService {
             context.checkDeadline();
             indexes.fail(record.getGeneration());
         }
+        var reused = reusableVectors(context, source, title);
         var attempt = indexes.begin(source, client);
         try {
-            writer(context, source, attempt).write(documents);
+            new LawQdrantDocumentWriter(client, properties, source, attempt,
+                    context::reserveIndex, context::checkDeadline,
+                    () -> context.embeddingTime(java.time.Duration.ofSeconds(properties.getEmbeddingTimeoutSeconds())),
+                    context::reserveEmbedding, reused).write(documents);
+            indexes.rememberChunks(attempt.getGeneration(),
+                    LawQdrantDocumentWriter.references(attempt.getGeneration(), documents));
             context.checkDeadline();
             indexes.complete(attempt.getGeneration(), documents.size());
             return new LawIndexResult(source.getId(), properties.getCollectionName(),
@@ -105,6 +112,36 @@ public class LawVectorizationToolService {
             catch (RuntimeException bookkeeping) { failure.addSuppressed(bookkeeping); }
             throw failure;
         }
+    }
+
+    private java.util.Map<String, java.util.List<Double>> reusableVectors(LegalToolContext context, LegalSource source, String title) {
+        var prior = indexes.searchable(client.fingerprint()).values().stream()
+                .filter(index -> {
+                    var previous = sources.restore(index.getSourceId());
+                    return source.getExternalId().equals(previous.getExternalId())
+                            || (source.getLawId() != null && source.getLawId().equals(previous.getLawId()));
+                }).max(java.util.Comparator.comparing(com.MoleLaw_backend.law.entity.LegalSourceIndex::getCompletedAt));
+        if (prior.isEmpty() || !client.collectionAvailable(context::reserveIndex, context::checkDeadline))
+            return java.util.Map.of();
+        var index = prior.get();
+        var previous = sources.restore(index.getSourceId());
+        var references = indexes.chunkReferences(index.getGeneration());
+        if (references.isEmpty()) {
+            // Legacy completed generations acquire metadata lazily, without embedding/API calls.
+            var oldDocuments = new LawArticleDocumentTransformer(mapper, properties.getChunkSize(), properties.getChunkOverlap())
+                    .transform(new LawSourceDocumentReader(previous, title).read());
+            references = LawQdrantDocumentWriter.references(index.getGeneration(), oldDocuments);
+        }
+        var inputs = references.stream().collect(java.util.stream.Collectors.toMap(
+                com.MoleLaw_backend.law.entity.LawChunkIndex::getPointId,
+                com.MoleLaw_backend.law.entity.LawChunkIndex::getInputHash));
+        return client.reusableVectors(inputs, java.util.Map.of("generation", index.getGeneration(),
+                "reference_id", previous.getId(), "content_hash", previous.getContentHash(),
+                "config_fingerprint", index.getConfigFingerprint(), "model_revision", index.getModelRevision(),
+                "external_id", previous.getExternalId(), "source_type", "LAW",
+                "law_id", previous.getLawId() == null ? "" : previous.getLawId(),
+                "effective_date", previous.getEffectiveDate() == null ? "" : previous.getEffectiveDate(),
+                "source_url", previous.getSourceUrl()), context::reserveIndex, context::checkDeadline);
     }
 
     private LawQdrantDocumentWriter writer(LegalToolContext context, LegalSource source,

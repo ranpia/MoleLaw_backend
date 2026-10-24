@@ -22,6 +22,7 @@ import jakarta.validation.Valid;
 
 @Tag(name = "Legal answer", description = "상담방 저장 없이 법령 근거로 답변 생성")
 @RestController
+@lombok.extern.slf4j.Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/legal-answers")
 public class LegalAnswerController {
@@ -37,7 +38,10 @@ public class LegalAnswerController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))})
     public ResponseEntity<LegalAnswerResponse> getAnswer(@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "분석할 법률 질문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LegalAnswerRequest.class), examples = @ExampleObject(value = "{\"query\":\"보증금을 돌려받지 못했습니다.\"}"))) @Valid @RequestBody LegalAnswerRequest request) {
         ChatContentLimits.question(request.getQuery());
-        return ResponseEntity.ok(initialAnswers.getAnswer(request.getQuery()));
+        log.info("Initial answer request path=/api/legal-answers format=JSON state=STARTED");
+        var answer = initialAnswers.getAnswer(request.getQuery());
+        log.info("Initial answer request path=/api/legal-answers format=JSON state=COMPLETED");
+        return ResponseEntity.ok(answer);
     }
 
 }

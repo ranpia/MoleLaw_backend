@@ -18,7 +18,9 @@ import static org.mockito.ArgumentMatchers.any;
 
 class LawCandidateSelectorTest {
     private final ChatModel model = mock(ChatModel.class);
-    private final LawCandidateSelector selector = new LawCandidateSelector(ChatClient.builder(model).build(), new ObjectMapper());
+    private final com.MoleLaw_backend.law.config.LawCandidateSelectionProperties selection =
+            new com.MoleLaw_backend.law.config.LawCandidateSelectionProperties();
+    private final LawCandidateSelector selector = new LawCandidateSelector(ChatClient.builder(model).build(), new ObjectMapper(), selection);
     private final EvidenceDecision.LawSearch condition = new EvidenceDecision.LawSearch("공항", EvidenceDecision.SearchField.BODY, false, null);
     private final List<Candidate> candidates = List.of(
             new Candidate("1", "1", "행사 지원법", "20260101", null, null, null),
@@ -51,6 +53,23 @@ class LawCandidateSelectorTest {
     @Test void emptyPageDoesNotCallTheModel() {
         assertThat(selector.select("질문", null, condition, List.of())).isEmpty();
         verify(model, never()).call(any(Prompt.class));
+    }
+
+    @Test void relaxedPolicyIncludesBoundaryAndThirdCandidateButRejectsBelowThreshold() {
+        selection.setMinimumScore(60);
+        selection.setMaxCandidates(3);
+        var pool = java.util.stream.IntStream.rangeClosed(1, 5)
+                .mapToObj(i -> new Candidate("" + i, "" + i, "law " + i, "20260101", null, null, null)).toList();
+        respond("{\"rankings\":[{\"candidateId\":\"1\",\"score\":60,\"reason\":\"boundary\"},"
+                + "{\"candidateId\":\"2\",\"score\":95,\"reason\":\"direct\"},"
+                + "{\"candidateId\":\"3\",\"score\":65,\"reason\":\"possible\"},"
+                + "{\"candidateId\":\"4\",\"score\":59,\"reason\":\"below\"},"
+                + "{\"candidateId\":\"5\",\"score\":60,\"reason\":\"tie\"}]}");
+        assertThat(selector.select("question", null, condition, pool))
+                .containsExactly(pool.get(1), pool.get(2), pool.get(0));
+        var prompt = org.mockito.ArgumentCaptor.forClass(Prompt.class);
+        verify(model).call(prompt.capture());
+        assertThat(prompt.getValue().getContents()).contains("\"minimumScore\":60", "\"maxCandidates\":3");
     }
 
     @Test void sortsScoresInsteadOfModelOrProviderOrder() {

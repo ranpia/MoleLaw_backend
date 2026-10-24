@@ -66,6 +66,20 @@ class LawVectorQdrantIntegrationTest {
                     "payload", Map.of("source_type", "LAW", "unit_id", "different-configuration",
                             "generation", "committed", "config_fingerprint", "different-configuration")));
             client.upsert(points, NOOP, NOOP);
+            client.upsert(points, NOOP, NOOP);
+            var count = org.springframework.web.client.RestClient.create(properties.getQdrantBaseUrl()).post()
+                    .uri("/collections/" + properties.getCollectionName() + "/points/count")
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON).body(Map.of("exact", true))
+                    .retrieve().body(JsonNode.class);
+            assertThat(count.path("result").path("count").asInt()).isEqualTo(points.size());
+            String reuseId = UUID.randomUUID().toString();
+            client.upsert(List.of(Map.of("id", reuseId, "vector", List.of(.6, .8),
+                    "payload", Map.of("generation", "reuse-fixture", "title", "Title", "text", "Exact text"))), NOOP, NOOP);
+            String inputHash = com.MoleLaw_backend.law.util.LawEmbeddingInputHash.of("Title", "Exact text");
+            assertThat(client.reusableVectors(Map.of(reuseId, inputHash), Map.of("generation", "reuse-fixture"), NOOP, NOOP))
+                    .containsKey(inputHash);
+            assertThat(client.reusableVectors(Map.of(reuseId, inputHash), Map.of("generation", "wrong-generation"), NOOP, NOOP))
+                    .isEmpty();
             JsonNode groups = client.query(List.of(1.0, 0.0), List.of("committed"), NOOP, NOOP);
             assertThat(groups).hasSize(15);
             var uniqueArticles = new HashSet<String>();

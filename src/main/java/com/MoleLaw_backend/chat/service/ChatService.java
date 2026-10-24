@@ -93,6 +93,18 @@ public class ChatService {
         }
     }
 
+    public void validateFollowUpAccess(User user, Long roomId, String question) {
+        requireOwnedRoom(user, roomId);
+        ChatContentLimits.question(question);
+    }
+
+    public MessageResponse saveStreamedFollowUp(User user, Long roomId, String question,
+            com.MoleLaw_backend.chat.dto.answer.PreparedFollowUpAnswer prepared) {
+        var room = requireOwnedRoom(user, roomId);
+        var bot = turns.savePreparedFollowUpTurn(room, question, prepared);
+        return MessageResponse.from(bot, encryptor.decrypt(bot.getContent()));
+    }
+
     public ChatRoomCreationResponse createRoomAndAsk(User user, CreateChatRoomRequest request) {
         requireAuthenticated(user);
         ChatContentLimits.question(request == null ? null : request.getContent());
@@ -119,6 +131,17 @@ public class ChatService {
                 .id(chatRoom.getId())
                 .messages(getMessages(user, chatRoom.getId()))
                 .build();
+    }
+
+    /** Only called after streamed answer validation; all writes remain in ChatTurnService. */
+    public ChatRoomCreationResponse saveStreamedInitialAnswer(User user, String question,
+            com.MoleLaw_backend.chat.dto.answer.PreparedLegalAnswer prepared) {
+        requireAuthenticated(user);
+        ChatContentLimits.question(question);
+        var title = extractKeyword.extractKeywords(question).getSummary();
+        ChatContentLimits.title(title);
+        var room = turns.saveInitialTurn(user, title, question, prepared);
+        return ChatRoomCreationResponse.builder().id(room.getId()).messages(getMessages(user, room.getId())).build();
     }
 
     @Transactional
