@@ -171,6 +171,16 @@ tasks.register('followUpConsultationSimulationTest', Test) {
     outputs.upToDateWhen { false }
 }
 
+tasks.register('initialQuestionSuggestionSimulationTest', Test) {
+    description = 'Checks recommendation ChatClient options and errors over HTTP against a synthetic model provider.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.chat.service.answer.InitialQuestionSuggestionSimulationTest' }
+    outputs.upToDateWhen { false }
+}
+
 tasks.register('qdrantIntegrationTest', Test) {
     description = 'Validates isolated Qdrant collection metadata, vector upserts and distinct-article top-15 retrieval.'
     group = 'verification'

@@ -114,6 +114,7 @@ Access는 모든 프로필에서 최대 5분 stateless JWT입니다. Refresh는 
 | CSRF·가입·로그인·재발급·로그아웃 | /api/auth/{csrf,signup,login,refresh,logout} |
 | 내 정보·탈퇴·비밀번호·닉네임 | /api/users/me, /api/users/me/password, /api/users/me/nickname |
 | 상담방 목록·최초 질문 | GET·POST /api/chat-rooms |
+| 최초 상담 전 추천 질문 | POST /api/legal-answers/suggestions |
 | 메시지 조회·후속 질문 | GET·POST /api/chat-rooms/{roomId}/messages |
 | 방 삭제 | DELETE /api/chat-rooms/{roomId} |
 | 방 제목 변경 | PATCH /api/chat-rooms/{roomId}/title |

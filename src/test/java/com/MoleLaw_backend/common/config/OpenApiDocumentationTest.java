@@ -32,6 +32,8 @@ class OpenApiDocumentationTest {
         assertTrue(required.toString().contains("newPassword"));
         assertTrue(document.path("paths").path("/api/chat-rooms/{roomId}/title").path("patch")
                 .path("responses").has("204"));
+        var suggestion = document.path("components").path("schemas").path("SuggestedInitialQuestion").path("required").toString();
+        for (String field : java.util.List.of("id", "label", "question")) assertTrue(suggestion.contains(field));
     }
     @MockitoBean ChatModel chatModel;
     @MockitoBean EmbeddingModel embeddingModel;
@@ -108,7 +110,7 @@ class OpenApiDocumentationTest {
                 assertTrue(success, context);
             }
         }
-        assertEquals(28, count);
+        assertEquals(29, count);
         assertEquals(Set.of(
                 "get /api/auth/csrf", "post /api/auth/signup", "post /api/auth/login",
                 "post /api/auth/refresh", "post /api/auth/logout",
@@ -117,7 +119,7 @@ class OpenApiDocumentationTest {
                 "get /api/chat-rooms/{roomId}/messages", "post /api/chat-rooms/{roomId}/messages",
                 "get /api/chat-rooms/{roomId}/evidence", "get /api/chat-rooms/{roomId}/evidence/{evidenceId}",
                 "get /api/laws", "post /api/laws/search", "get /api/precedents", "get /api/precedents/{id}",
-                "post /api/law-keywords", "post /api/legal-answers",
+                "post /api/law-keywords", "post /api/legal-answers", "post /api/legal-answers/suggestions",
                 "post /api/legal-answers/stream", "post /api/chat-rooms/stream",
                 "post /api/legal-answers/ndjson", "post /api/chat-rooms/ndjson",
                 "post /api/chat-rooms/{roomId}/messages/ndjson"), actualOperations);

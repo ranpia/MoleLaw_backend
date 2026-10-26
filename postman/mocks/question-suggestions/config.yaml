@@ -1,0 +1,10 @@
+version: 1
+name: Initial question suggestion model contract
+slug: question-suggestions
+protocol: http
+interceptRequests: true
+port: 14040
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

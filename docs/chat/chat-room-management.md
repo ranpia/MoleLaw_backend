@@ -2,6 +2,8 @@
 
 ## 채팅방 생성
 
+작성한 초안으로 질문 방향을 선택하려면 [최초 상담 추천 질문](initial-question-suggestions.md)을 먼저 사용할 수 있다. 추천만 생성한 단계에서는 방이 만들어지지 않는다.
+
 ```mermaid
 flowchart LR
     A[첫 질문] --> B[인증·CSRF·입력 검증]

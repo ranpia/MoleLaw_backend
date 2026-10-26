@@ -14,6 +14,19 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class AnswerChatClientConfig {
     @Bean
+    public ChatClient initialQuestionSuggestionChatClient(
+            @Qualifier("baseAiChatClientBuilder") ChatClient.Builder builder,
+            @Value("${app.ai.question-suggestion.model:gpt-5.4-mini}") String model,
+            @Value("${app.ai.question-suggestion.reasoning-effort:low}") String effort,
+            @Value("${app.ai.question-suggestion.max-completion-tokens:2048}") int maxTokens,
+            @Value("classpath:prompts/initial-question-suggestions.txt") org.springframework.core.io.Resource prompt) throws java.io.IOException {
+        var options = ReasoningOptions.create(model, effort, maxTokens);
+        options.setResponseFormat(com.MoleLaw_backend.chat.dto.answer.InitialQuestionSuggestionDraft.responseFormat());
+        return builder.clone().defaultSystem(prompt.getContentAsString(java.nio.charset.StandardCharsets.UTF_8))
+                .defaultOptions(options).build();
+    }
+
+    @Bean
     public ChatClient followUpCasePlanningChatClient(
             @Qualifier("baseAiChatClientBuilder") ChatClient.Builder builder,
             @Value("${app.ai.follow-up-plan.model:gpt-5.4-mini}") String model,

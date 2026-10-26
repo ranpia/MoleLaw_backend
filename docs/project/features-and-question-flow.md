@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | 인증·사용자 | 이메일 가입·로그인, Google OAuth, 프로필·비밀번호·탈퇴, 입력 검증, CSRF, 5분 Access JWT, Redis Refresh 회전·재사용 탐지 | [인증](../auth/refresh-rotation.md), [사용자](../auth/user-account-validation.md) |
 | 상담방 | 사용자별 목록·대화 조회·제목 변경·삭제, 소유권 검사, 질문·답변 암호화 저장 | [생성·관리](../chat/chat-room-management.md), [저장](../chat/chat-storage.md) |
+| 최초 질문 보조 | 초안 원문을 보존하는 추천 질문 최대 3개. 선택한 문장을 기존 상담 API로 전송 | [추천 질문](../chat/initial-question-suggestions.md) |
 | 질문 분석 | 목적·사실·복수 쟁점·명시 대상·후보 법령·쟁점 관계 구분, 원문 인용 검증, 쟁점별 질의 생성 | [질문 라우팅](../law/question-routing.md) |
 | 법령 검색·수집 | 검색 필드·정확한 명칭·소관부처 옵션, 전체 페이지 후보 평가, 점수·선정 사유, 중복 수집 방지·진행 이력 | [법령 도구](../law/legal-api-tools.md) |
 | ETL·색인 | Reader → Transformer → Writer, 조문 청킹, KURE 임베딩, Qdrant 적재·재조회 검증, 완료 세대 재사용·증분 색인 | [ETL](../law/law-etl-local.md), [증분 색인](../law/incremental-law-indexing.md) |
