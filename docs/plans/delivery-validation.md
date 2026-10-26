@@ -1,6 +1,6 @@
 # 검증·전달 계획
 
-작업 순서는 [P01~P08](README.md), 최근 결과는 [검증 현황](../validation-status.md)을 따른다. 이 문서는 검증 방법과 완료 보고 기준만 정의한다.
+작업 순서는 [P01~P08](README.md), 최근 결과는 [검증 현황](../validation/validation-status.md)을 따른다. 이 문서는 검증 방법과 완료 보고 기준만 정의한다.
 
 ## 검증 층위
 

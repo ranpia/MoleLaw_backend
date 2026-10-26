@@ -8,6 +8,13 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.*;
 
 class EvidenceRendererTest {
+    @Test void regularAndStreamInfoUseTheSamePlainCaseSummaryWithoutChangingRawSource() {
+        String raw = "{\"판결요지\":\"&lt;b&gt;요지&lt;/b&gt;&lt;br&gt;판단&nbsp;내용\",\"판례내용\":\"전체 본문\"}";
+        var item = new EvidenceItem("id", "CASE_BODY", "101", "<b>사건</b>", "https://www.law.go.kr", raw);
+        for (String shown : List.of(renderer.render(List.of(item)), renderer.renderForStream(List.of(item), id -> "근거 1")))
+            assertThat(shown).contains("요지\n판단 내용", "사건").doesNotContain("<b>", "&lt;", "&nbsp;", "판례내용", "전체 본문");
+        assertThat(item.content()).isEqualTo(raw);
+    }
     private final EvidenceRenderer renderer = new EvidenceRenderer();
 
     @Test void streamingCaseInfoShowsJudgmentSummaryInsteadOfRawJsonKeysOrCitationIds() {

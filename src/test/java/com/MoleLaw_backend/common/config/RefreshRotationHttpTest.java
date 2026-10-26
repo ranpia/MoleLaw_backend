@@ -83,7 +83,7 @@ class RefreshRotationHttpTest {
         var first = signup("refresh-password@example.com");
         var second = login("refresh-password@example.com");
         mvc.perform(patch("/api/users/me/password").with(csrf()).cookie(first.getCookie("accessToken"))
-                        .contentType("application/json").content("{\"newPassword\":\"Changed-password-123!\"}"))
+                        .contentType("application/json").content("{\"currentPassword\":\"Example-password-123!\",\"newPassword\":\"Changed-password-123!\"}"))
                 .andExpect(status().isOk());
         for (var session : new MockHttpServletResponse[]{first, second}) {
             mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(refresh(session)))
@@ -96,12 +96,24 @@ class RefreshRotationHttpTest {
     }
 
     @Test
+    void incorrectCurrentPasswordDoesNotChangePasswordOrRevokeRefresh() throws Exception {
+        var session = signup("password-mismatch@example.com");
+        mvc.perform(patch("/api/users/me/password").with(csrf()).cookie(session.getCookie("accessToken"))
+                        .contentType("application/json").content("{\"currentPassword\":\"Incorrect-password!\",\"newPassword\":\"Changed-password-123!\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("PASSWORD_FAIL"));
+        var user = users.findByEmailAndProvider("password-mismatch@example.com", "local").orElseThrow();
+        assertThat(passwords.matches("Example-password-123!", user.getPassword())).isTrue();
+        reissue(refresh(session));
+        login("password-mismatch@example.com");
+    }
+
+    @Test
     void failedUserWideRevocationRollsBackPasswordAndAccountDeletion() throws Exception {
         var signup = signup("refresh-failure@example.com");
         var user = users.findByEmailAndProvider("refresh-failure@example.com", "local").orElseThrow();
         doThrow(new MolelawException(ErrorCode.AUTH_STORE_UNAVAILABLE)).when(store).revokeAll(user.getId());
         mvc.perform(patch("/api/users/me/password").with(csrf()).cookie(signup.getCookie("accessToken"))
-                        .contentType("application/json").content("{\"newPassword\":\"Should-not-commit!\"}"))
+                        .contentType("application/json").content("{\"currentPassword\":\"Example-password-123!\",\"newPassword\":\"Should-not-commit!\"}"))
                 .andExpect(status().isServiceUnavailable()).andExpect(jsonPath("error.code").value("AUTH_STORE_UNAVAILABLE"));
         var unchanged = users.findById(user.getId()).orElseThrow();
         assertThat(passwords.matches("Example-password-123!", unchanged.getPassword())).isTrue();

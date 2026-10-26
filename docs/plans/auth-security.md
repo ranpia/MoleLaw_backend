@@ -1,6 +1,6 @@
 # 인증·운영 보안 후속 계획
 
-연결 작업: [P08](README.md). 현재 계약은 [Access](../stateless-access.md), [Refresh](../refresh-rotation.md), [사용자 검증](../user-account-validation.md)이다. 과거 Redis Access·JWT Refresh·local 15시간 설계는 현재 목표가 아니다.
+연결 작업: [P08](README.md). 현재 계약은 [Access](../auth/stateless-access.md), [Refresh](../auth/refresh-rotation.md), [사용자 검증](../auth/user-account-validation.md)이다. 과거 Redis Access·JWT Refresh·local 15시간 설계는 현재 목표가 아니다.
 
 ## 현재 보장
 

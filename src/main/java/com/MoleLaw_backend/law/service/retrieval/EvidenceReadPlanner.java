@@ -7,6 +7,7 @@ import com.MoleLaw_backend.law.dto.evidence.EvidenceItem;
 import com.MoleLaw_backend.law.dto.retrieval.EvidenceReading;
 import com.MoleLaw_backend.law.dto.retrieval.QuestionRetrievalPlan;
 import com.MoleLaw_backend.law.service.tool.EvidenceReadToolService;
+import com.MoleLaw_backend.law.util.QuestionPlanInput;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,7 +40,7 @@ public class EvidenceReadPlanner {
     private final JTokkitTokenCountEstimator tokens = new JTokkitTokenCountEstimator(EncodingType.CL100K_BASE);
 
     public EvidenceReadPlanner(@Qualifier("evidenceReadChatClient") ChatClient client, ObjectMapper mapper,
-                               EvidenceReadToolService reader, @Value("${app.ai.evidence.catalog-max-input-tokens:4000}") int catalogLimit,
+                               EvidenceReadToolService reader, @Value("${app.ai.evidence.catalog-max-input-tokens:8000}") int catalogLimit,
                                @Value("${app.ai.evidence.body-max-input-tokens:12000}") int bodyLimit) {
         if (catalogLimit < 128 || catalogLimit > 16000 || bodyLimit < 128 || bodyLimit > 64000)
             throw new IllegalArgumentException("Invalid evidence read budgets");
@@ -71,7 +72,8 @@ public class EvidenceReadPlanner {
         try {
             for (int round = 0; round < 2 && attempted.size() < candidates.size(); round++) {
                 var input = mapper.createObjectNode().put("question", question).put("remainingBodyTokens", bodyLimit - used);
-                input.set("retrievalPlan", mapper.valueToTree(plan));
+                input.set("retrievalPlan", plan == null ? mapper.nullNode()
+                        : QuestionPlanInput.view(plan, mapper));
                 var remaining = catalog.deepCopy();
                 for (int i = remaining.size() - 1; i >= 0; i--)
                     if (attempted.contains(remaining.get(i).path("id").asText())) remaining.remove(i);

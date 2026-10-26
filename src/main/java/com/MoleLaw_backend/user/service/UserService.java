@@ -106,6 +106,9 @@ public class UserService {
             throw new MolelawException(ErrorCode.INVALID_PROVIDER, "비밀번호 변경은 소셜로그인 대상자에게 제공하지 않습니다.");
         }
 
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new MolelawException(ErrorCode.PASSWORD_FAIL);
+        }
         refreshTokens.revokeAll(userId);
         user.changePassword(passwordEncoder.encode(request.getNewPassword()));
     }

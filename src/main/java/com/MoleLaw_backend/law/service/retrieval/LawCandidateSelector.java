@@ -7,6 +7,7 @@ import com.MoleLaw_backend.law.dto.retrieval.LawCandidateSelection;
 import com.MoleLaw_backend.law.dto.retrieval.QuestionRetrievalPlan;
 import com.MoleLaw_backend.law.dto.retrieval.EvidenceDecision;
 import com.MoleLaw_backend.law.dto.tool.LegalToolContracts.Candidate;
+import com.MoleLaw_backend.law.util.QuestionPlanInput;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,7 +46,8 @@ public class LawCandidateSelector {
         if (candidates.isEmpty()) return List.of();
         try {
             var input = mapper.createObjectNode().put("question", question);
-            input.set("plan", mapper.valueToTree(plan));
+            input.set("plan", plan == null ? mapper.nullNode()
+                    : QuestionPlanInput.view(plan, mapper));
             input.set("condition", mapper.valueToTree(condition));
             input.set("candidates", mapper.valueToTree(candidates));
             input.putObject("selectionPolicy").put("minimumScore", selection.getMinimumScore())

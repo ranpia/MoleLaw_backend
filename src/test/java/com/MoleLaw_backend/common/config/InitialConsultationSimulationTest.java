@@ -106,6 +106,14 @@ class InitialConsultationSimulationTest {
             } else if (prompt.getSystemMessage().getText().contains("검색 계획을 분류")) {
                 stages.add("QUESTION_PLAN");
                 output = "{\"type\":\"LAW_EXPLANATION\",\"responseScope\":\"GENERAL_GUIDANCE\",\"searchQueries\":[\"검증법 근거\"],\"lawSearches\":[],\"missingFacts\":[]}";
+                var analysis = mapper.createObjectNode().put("title", "검증 상담").put("purpose", "근거 설명");
+                analysis.putArray("facts");
+                var issue = analysis.putArray("issues").addObject().put("id", "Q1")
+                        .put("request", "근거 설명").put("sourceQuote", userText);
+                issue.putArray("searchTerms").add("검증법 근거");
+                issue.putArray("mentionedTargets"); issue.putArray("candidateTargets"); issue.putArray("missingFacts");
+                analysis.putArray("relations"); analysis.putArray("ambiguities");
+                output = ((com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(output)).set("analysis", analysis).toString();
             } else if (prompt.getSystemMessage().getText().contains("근거 본문 읽기 계획자")) {
                 stages.add("EVIDENCE_READ");
                 var input = mapper.readTree(userText);
@@ -149,7 +157,7 @@ class InitialConsultationSimulationTest {
                 .andExpect(jsonPath("$.messages[1].sender").value("BOT"))
                 .andExpect(jsonPath("$.messages[2].sender").value("INFO")).andReturn();
         long roomId = mapper.readTree(response.getResponse().getContentAsString()).path("id").asLong();
-        assertThat(stages).containsExactly("ANALYSIS", "QUESTION_PLAN", "COLLECT_LAW", "REPLAN_LAW", "CANDIDATE_REVIEW", "EVIDENCE_READ", "ANSWER_READY", "ANSWER");
+        assertThat(stages).containsExactly("QUESTION_PLAN", "COLLECT_LAW", "REPLAN_LAW", "CANDIDATE_REVIEW", "EVIDENCE_READ", "ANSWER_READY", "ANSWER");
         assertThat(rooms.count()).isEqualTo(1);
         assertThat(messages.count()).isEqualTo(2);
         assertThat(snapshots.count()).isEqualTo(1);

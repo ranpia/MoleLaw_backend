@@ -58,7 +58,12 @@ class InitialAnswerStreamIntegrationTest {
     private final String id = "00000000-0000-0000-0000-000000000001";
 
     @BeforeEach void fixture() {
-        when(model.call(any(Prompt.class))).thenReturn(response("준비 완료"));
+        when(model.call(any(Prompt.class))).thenAnswer(call -> {
+            Prompt prompt = call.getArgument(0);
+            return response(prompt.getSystemMessage().getText().contains("후속판례실행계획자")
+                    ? "{\"action\":\"ANSWER_FROM_ROOM\",\"lawEvidenceId\":null,\"query\":\"\",\"reason\":\"기존 근거 설명\"}"
+                    : "준비 완료");
+        });
         principal = new CustomUserDetails(users.saveAndFlush(User.builder().email(UUID.randomUUID() + "@example.test")
                 .nickname("검증자").password("hash").provider("local").build()));
         var evidence = new EvidenceItem(id, "LAW_CHUNK", "270551:1", "검증 조문",
@@ -183,6 +188,23 @@ class InitialAnswerStreamIntegrationTest {
         mvc.perform(asyncDispatch(result)).andExpect(status().isOk());
         assertThat(result.getResponse().getContentAsString()).contains("completed");
         assertThat(result.getRequest().getSession(false)).isNull();
+    }
+
+    @Test void explicitCaseSearchEmitsConsentInsteadOfGenericLawAdviceInNdjson() throws Exception {
+        Long roomId = seedRoom(); long before = messages.count();
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"action\":\"SEARCH_CASES\",\"lawEvidenceId\":\""
+                + id + "\",\"query\":\"삼풍백화점 판결\",\"reason\":\"사용자가 지정한 판결의 새 검색 요청\"}"));
+        var result = mvc.perform(post("/api/chat-rooms/" + roomId + "/messages/ndjson").accept("application/x-ndjson")
+                .cookie(new jakarta.servlet.http.Cookie("accessToken", jwt.generateAccessToken(principal.getUserId())))
+                .with(csrf()).contentType("application/json").content("{\"content\":\"삼풍백화점 판결을 새로 찾아줘\",\"allowCaseSearch\":false}"))
+                .andExpect(request().asyncStarted()).andReturn();
+        result.getAsyncResult(10000);
+        mvc.perform(asyncDispatch(result)).andExpect(status().isOk());
+        String body = result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(body).contains("FOLLOW_UP_ROUTING", "검색을 진행할까요?", "\"caseSearchRequested\":true")
+                .doesNotContain("설계변경이 있었는지", "확인해야 합니다");
+        assertThat(messages.count()).isEqualTo(before + 2);
+        verify(model, never()).stream(any(Prompt.class));
     }
 
     @Test void followUpNdjsonStreamsNumberedCitationsAndSavesOnlyTheValidatedMessage() throws Exception {

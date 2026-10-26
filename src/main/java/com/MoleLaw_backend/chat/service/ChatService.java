@@ -1,6 +1,7 @@
 package com.MoleLaw_backend.chat.service;
 
 import com.MoleLaw_backend.chat.entity.ChatRoom;
+import com.MoleLaw_backend.chat.dto.answer.PreparedLegalAnswer;
 import com.MoleLaw_backend.chat.entity.Message;
 import com.MoleLaw_backend.user.entity.User;
 import com.MoleLaw_backend.chat.repository.ChatRoomRepository;
@@ -10,7 +11,6 @@ import com.MoleLaw_backend.chat.dto.request.CreateMessageRequest;
 import com.MoleLaw_backend.chat.dto.response.ChatRoomResponse;
 import com.MoleLaw_backend.chat.dto.response.ChatRoomCreationResponse;
 import com.MoleLaw_backend.chat.dto.response.LegalAnswerResponse;
-import com.MoleLaw_backend.law.dto.response.KeywordExtractionResponse;
 import com.MoleLaw_backend.chat.dto.response.MessageResponse;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.common.exception.MolelawException;
@@ -109,18 +109,11 @@ public class ChatService {
         requireAuthenticated(user);
         ChatContentLimits.question(request == null ? null : request.getContent());
 
-        KeywordExtractionResponse keywordAndTitle;
-        try {
-            keywordAndTitle = extractKeyword.extractKeywords(request.getContent());
-        } catch (Exception e) {
-            throw new MolelawException(ErrorCode.KEYWORD_EXTRACTION_FAILED, "질문 분석 실패", e);
-        }
-        ChatContentLimits.title(keywordAndTitle.getSummary());
-
         ChatRoom chatRoom;
         try {
             var prepared = answers.prepareInitialAnswer(request.getContent());
-            chatRoom = turns.saveInitialTurn(user, keywordAndTitle.getSummary(), request.getContent(), prepared);
+            String title = initialTitle(request.getContent(), prepared);
+            chatRoom = turns.saveInitialTurn(user, title, request.getContent(), prepared);
 
         } catch (Exception e) {
             if (e instanceof MolelawException failure) throw failure;
@@ -135,18 +128,31 @@ public class ChatService {
 
     /** Only called after streamed answer validation; all writes remain in ChatTurnService. */
     public ChatRoomCreationResponse saveStreamedInitialAnswer(User user, String question,
-            com.MoleLaw_backend.chat.dto.answer.PreparedLegalAnswer prepared) {
+            PreparedLegalAnswer prepared) {
         requireAuthenticated(user);
         ChatContentLimits.question(question);
-        var title = extractKeyword.extractKeywords(question).getSummary();
-        ChatContentLimits.title(title);
+        var title = initialTitle(question, prepared);
         var room = turns.saveInitialTurn(user, title, question, prepared);
         return ChatRoomCreationResponse.builder().id(room.getId()).messages(getMessages(user, room.getId())).build();
+    }
+
+    private String initialTitle(String question, PreparedLegalAnswer prepared) {
+        String title = prepared.title() == null ? extractKeyword.extractKeywords(question).getSummary() : prepared.title();
+        ChatContentLimits.title(title);
+        return title;
     }
 
     @Transactional
     public void deleteChatRoom(User user, Long chatRoomId) {
         chatRoomRepository.delete(requireOwnedRoom(user, chatRoomId));
+    }
+
+    @Transactional
+    public void changeRoomTitle(User user, Long roomId, String title) {
+        String normalized = title == null ? "" : title.strip();
+        if (normalized.isBlank() || normalized.codePointCount(0, normalized.length()) > 255)
+            throw new MolelawException(ErrorCode.INVALID_REQUEST);
+        requireOwnedRoom(user, roomId).changeTitle(normalized);
     }
 
     private ChatRoom requireOwnedRoom(User user, Long roomId) {

@@ -40,9 +40,9 @@ public class EvidenceDecisionPlanner {
     private final org.springframework.beans.factory.ObjectProvider<com.MoleLaw_backend.law.service.tool.LawRagSearchToolService> ragSearch;
 
     public EvidenceDecisionPlanner(@Qualifier("evidenceCollectionChatClient") ChatClient client, ObjectMapper mapper,
-                                   @Value("${app.ai.evidence.max-input-tokens:2500}") int maxInputTokens,
+                                   @Value("${app.ai.evidence.max-input-tokens:8000}") int maxInputTokens,
                                    EvidenceReadPlanner reading,
-                                   @Value("${app.ai.evidence.decision-max-input-tokens:20000}") int decisionInputLimit,
+                                   @Value("${app.ai.evidence.decision-max-input-tokens:32000}") int decisionInputLimit,
                                    org.springframework.beans.factory.ObjectProvider<com.MoleLaw_backend.law.service.tool.LawRagSearchToolService> ragSearch) {
         if (decisionInputLimit < maxInputTokens || decisionInputLimit > 128000)
             throw new IllegalArgumentException("Invalid combined decision input limit");

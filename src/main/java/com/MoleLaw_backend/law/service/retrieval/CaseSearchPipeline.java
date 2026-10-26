@@ -31,6 +31,10 @@ public class CaseSearchPipeline {
         public State() { this(null); }
         public State(Long roomId) { this.roomId = roomId; }
         public Long roomId() { return roomId; }
+        private String userQuestion;
+        private com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan searchPlan;
+        public void userQuestion(String value) { userQuestion = value; }
+        public com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan searchPlan() { return searchPlan; }
         private com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope scope = com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope.BODY;
         public void scope(com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope value) { scope = value == null ? com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope.BODY : value; }
         boolean currentSearchComplete = true;
@@ -50,25 +54,30 @@ public class CaseSearchPipeline {
         context.checkDeadline();
         progress.accept("CASE_QUERY_PLANNING");
         com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan plan;
-        try { plan = queryPlanner.plan(query, law); }
+        try { plan = state.userQuestion == null ? queryPlanner.plan(query, law)
+                : queryPlanner.plan(query, law, state.userQuestion, state.scope); }
         catch (com.MoleLaw_backend.common.ai.exception.GptApiException failure) {
             log.warn("판례처리 traceId={} 유형=후속 방={} 단계=검색어변환실패", context.executionId(), state.roomId);
             return empty("UNAVAILABLE", 0, 0, false, false, false).withSearchComplete(false);
         }
         context.checkDeadline();
+        state.searchPlan = plan;
+        if (plan.scope() != null) state.scope(plan.scope());
+        log.info("판례처리 traceId={} 유형=후속 방={} 단계=의도판단 목적={} 대상수={} 검색범위={}",
+                context.executionId(), state.roomId, plan.intent(), plan.targets().size(), state.scope);
         log.info("판례처리 traceId={} 유형=후속 방={} 단계=법률용어변환 생성질의={}", context.executionId(), state.roomId, plan.queries().size());
         CaseSearchOutcome outcome = empty("EMPTY", 0, 0, false, false, false);
         for (int i = 0; i < plan.queries().size(); i++) {
             log.info("판례처리 traceId={} 유형=후속 방={} 단계=법률용어검색 시도={}/{}", context.executionId(), state.roomId, i + 1, plan.queries().size());
             state.currentSearchComplete = true; state.currentRouteFailed = false;
-            outcome = searchQuery(context, law, plan.queries().get(i), 1, state, progress).withSearchComplete(state.currentSearchComplete);
+            outcome = searchQuery(context, law, plan.queries().get(i), 1, state, progress, plan).withSearchComplete(state.currentSearchComplete);
             if (!outcome.candidates().isEmpty() || java.util.Set.of("UNAVAILABLE", "BUDGET_EXHAUSTED").contains(outcome.status())) return outcome;
         }
         return outcome;
     }
 
     private CaseSearchOutcome searchQuery(LegalToolContext context, EvidenceItem law, String query, int page,
-            State state, Consumer<String> progress) {
+            State state, Consumer<String> progress, com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan plan) {
         String lawName = law.title().replaceFirst("\\s+제[0-9]+조.*$", "").strip();
         String key = com.MoleLaw_backend.law.util.LawSearchQueryKey.of(query) + "|" + lawName + "|" + state.scope;
         if (!state.searches.add(key)) {
@@ -105,9 +114,26 @@ public class CaseSearchPipeline {
             log.info("판례처리 traceId={} 유형=후속 방={} 단계=검색완료 상태={} 최종채택=0", context.executionId(), state.roomId, status);
             return empty(status, lawItems.size(), factItems.size(), unavailableLaw, unavailableFact, hasNext);
         }
-        progress.accept("CASE_BODY_REVIEW");
-        var ordered = merged.values().stream().sorted(Comparator.comparingInt((LegalToolContracts.Candidate candidate) ->
+        List<LegalToolContracts.Candidate> ordered = merged.values().stream().sorted(Comparator.comparingInt((LegalToolContracts.Candidate candidate) ->
                 com.MoleLaw_backend.law.util.LawSearchQueryKey.of(candidate.title()).contains(com.MoleLaw_backend.law.util.LawSearchQueryKey.of(query)) ? 1 : 0).reversed()).toList();
+        if (plan.intent() == com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan.Intent.SPECIFIC_CASE) {
+            progress.accept("CASE_CANDIDATE_SELECTION");
+            if (ordered.size() > 100) state.currentSearchComplete = false;
+            context.checkDeadline();
+            List<String> chosen;
+            try { chosen = reranker.selectForReading(plan, law, ordered.stream().limit(100).toList(), properties.getDetailsPerSearch()); }
+            catch (com.MoleLaw_backend.common.ai.exception.GptApiException failure) {
+                state.currentSearchComplete = false;
+                log.warn("판례처리 traceId={} 유형=후속 방={} 단계=후보선정실패 사유={}",
+                        context.executionId(), state.roomId, failure.getErrorCode());
+                return empty("UNAVAILABLE", lawItems.size(), factItems.size(), false, false, hasNext).withSearchComplete(false);
+            }
+            context.checkDeadline();
+            log.info("판례처리 traceId={} 유형=후속 방={} 단계=읽기후보선정 목록후보={} 본문후보={}",
+                    context.executionId(), state.roomId, merged.size(), chosen.size());
+            ordered = chosen.stream().map(merged::get).toList();
+        }
+        progress.accept("CASE_BODY_REVIEW");
         var bodies = new ArrayList<EvidenceItem>();
         int fetched = 0;
         boolean bodyFailure = false;
@@ -141,7 +167,8 @@ public class CaseSearchPipeline {
         progress.accept("CASE_RERANK");
         state.rerankCalls++;
         List<LawCandidateSelection.Ranking> rankings;
-        try { rankings = reranker.rank(query, law, bodies); }
+        try { rankings = plan.scope() != null || plan.intent() == com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan.Intent.SPECIFIC_CASE
+                ? reranker.rank(query, law, bodies, plan) : reranker.rank(query, law, bodies); }
         catch (com.MoleLaw_backend.common.ai.exception.GptApiException failure) {
             log.warn("판례처리 traceId={} 유형=후속 방={} 단계=리랭크실패 사유={}", context.executionId(), state.roomId, failure.getErrorCode());
             return new CaseSearchOutcome("UNAVAILABLE", List.of(), Map.of(), List.of(), lawItems.size(), factItems.size(), merged.size(), unavailableLaw, unavailableFact, hasNext);

@@ -1,0 +1,13 @@
+﻿name: backend-service
+services:
+  backend:
+    extends:
+      file: compose.app.yml
+      service: backend
+networks:
+  infrastructure:
+    external: true
+    name: database-service_default
+  embeddings:
+    external: true
+    name: ai-service_default

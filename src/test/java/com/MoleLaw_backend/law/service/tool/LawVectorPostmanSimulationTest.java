@@ -4,6 +4,7 @@ import com.MoleLaw_backend.law.client.vector.LawVectorClient;
 import com.MoleLaw_backend.law.config.LawVectorProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** Opt-in: actual HTTP against the local Postman embedding simulation, no live model. */
 @EnabledIfEnvironmentVariable(named = "LAW_VECTOR_SIMULATION_URL", matches = "http://127\\.0\\.0\\.1:[0-9]+")
+@Tag("postman-simulation")
 class LawVectorPostmanSimulationTest {
     @Test
     void readerTransformerWriterAndRetrievalRunAgainstHttpEmbeddingAndIsolatedQdrant() {

@@ -1,0 +1,101 @@
+[
+    {
+        "id":  "143703",
+        "lawId":  null,
+        "title":  "손해배상(기)",
+        "effectiveDate":  null,
+        "caseNumber":  "2008다3619",
+        "decisionDate":  "2009.12.24",
+        "courtName":  "대법원"
+    },
+    {
+        "id":  "128259",
+        "lawId":  null,
+        "title":  "뇌물수수·제3자뇌물수수·직권남용권리행사방해·업무방해·사문서위조·위조사문서행사·업무상횡령·횡령·개인채무자회생법위반·특정범죄가중처벌등에관한법률위반(알선수재)",
+        "effectiveDate":  null,
+        "caseNumber":  "2008노422",
+        "decisionDate":  "2008.07.22",
+        "courtName":  "서울서부지방법원"
+    },
+    {
+        "id":  "69845",
+        "lawId":  null,
+        "title":  "손해배상(기)",
+        "effectiveDate":  null,
+        "caseNumber":  "2002가합14742",
+        "decisionDate":  "2004.08.17",
+        "courtName":  "서울중앙지방법원"
+    },
+    {
+        "id":  "77315",
+        "lawId":  null,
+        "title":  "부당이득금반환",
+        "effectiveDate":  null,
+        "caseNumber":  "2003가합7031",
+        "decisionDate":  "2003.10.21",
+        "courtName":  "서울지방법원"
+    },
+    {
+        "id":  "192615",
+        "lawId":  null,
+        "title":  "거절사정(상)",
+        "effectiveDate":  null,
+        "caseNumber":  "99후2655",
+        "decisionDate":  "2001.09.28",
+        "courtName":  "대법원"
+    },
+    {
+        "id":  "79152",
+        "lawId":  null,
+        "title":  "손해배상(기)",
+        "effectiveDate":  null,
+        "caseNumber":  "98다29797",
+        "decisionDate":  "1999.12.21",
+        "courtName":  "대법원"
+    },
+    {
+        "id":  "129708",
+        "lawId":  null,
+        "title":  "손해배상(기)",
+        "effectiveDate":  null,
+        "caseNumber":  "96가합11612",
+        "decisionDate":  "1997.02.11",
+        "courtName":  "서울지방법원"
+    },
+    {
+        "id":  "114109",
+        "lawId":  null,
+        "title":  "특정경제범죄가중처벌등에관한법률위반(업무상횡령)·업무상과실치사·업무상과실치상·수뢰후부정처사·뇌물수수·부정처사후수뢰·특정범죄가중처벌등에관한법률위반(뇌물)·뇌물공여·허위공문서작성·허위작성공문서행사",
+        "effectiveDate":  null,
+        "caseNumber":  "96도1231",
+        "decisionDate":  "1996.08.23",
+        "courtName":  "대법원"
+    },
+    {
+        "id":  "110400",
+        "lawId":  null,
+        "title":  "등록세등부과처분취소",
+        "effectiveDate":  null,
+        "caseNumber":  "92누15796",
+        "decisionDate":  "1994.06.14",
+        "courtName":  "대법원"
+    },
+    {
+        "id":  "223117",
+        "lawId":  null,
+        "title":  "특정범죄가중처벌등에관한법률위반(도주차량)피고사건",
+        "effectiveDate":  null,
+        "caseNumber":  "93고합2043",
+        "decisionDate":  "1994.02.22",
+        "courtName":  "서울형사지방법원"
+    },
+    {
+        "id":  "279862",
+        "lawId":  null,
+        "title":  "아파트분양은 예약매출에 해당되고, 그 귀속시기는 공사진행기준에 의함",
+        "effectiveDate":  null,
+        "caseNumber":  "대법원-92-누-2936",
+        "decisionDate":  "1992.10.23",
+        "courtName":  ""
+    }
+]

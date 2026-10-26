@@ -44,7 +44,7 @@ public class ChatEvidenceController {
     }
 
     @GetMapping("/{evidenceId}")
-    @Operation(summary = "상담방 근거 본문", description = "목록 또는 답변에서 받은 근거 UUID로 해당 방의 불변 원문을 조회합니다. 다른 방의 근거 ID는 사용할 수 없습니다. 수집이나 최신 원문으로의 교체는 수행하지 않습니다.")
+    @Operation(summary = "상담방 근거 본문", description = "근거 UUID로 해당 방의 보존된 원문을 표시용 일반 텍스트로 조회합니다. 본문·판례 요지의 HTML 태그를 제거하고 엔티티와 줄바꿈을 변환합니다. 원문 저장값·출처 ID는 유지합니다. 다른 방의 근거 ID는 사용할 수 없으며 수집이나 원문 교체는 수행하지 않습니다.")
     @ApiResponse(responseCode = "200", description = "근거 메타데이터와 본문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = EvidenceDetailResponse.class), examples = @ExampleObject(value = "{\"evidence\":{\"id\":\"00000000-0000-0000-0000-000000000001\",\"kind\":\"CASE_BODY\",\"sourceId\":\"12345\",\"title\":\"손해배상(기)\",\"sourceUrl\":\"https://www.law.go.kr/precInfoP.do?precSeq=12345\",\"lawId\":null,\"effectiveDate\":null},\"content\":\"판결 원문 본문\"}")))
     public EvidenceDetailResponse detail(@Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails user,
             @Parameter(description = "본인 소유 방 ID", example = "42", required = true) @PathVariable Long roomId,

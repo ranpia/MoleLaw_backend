@@ -23,6 +23,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestRefreshTokenStoreConfig.class)
 @ActiveProfiles("test")
 class OpenApiDocumentationTest {
+    @Test
+    void documentsTitleUpdateAndBothRequiredPasswordFields() throws Exception {
+        var document = mapper.readTree(mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        var required = document.path("components").path("schemas").path("ChangePasswordRequest").path("required");
+        assertTrue(required.toString().contains("currentPassword"));
+        assertTrue(required.toString().contains("newPassword"));
+        assertTrue(document.path("paths").path("/api/chat-rooms/{roomId}/title").path("patch")
+                .path("responses").has("204"));
+    }
     @MockitoBean ChatModel chatModel;
     @MockitoBean EmbeddingModel embeddingModel;
     @Autowired MockMvc mvc;
@@ -98,12 +108,12 @@ class OpenApiDocumentationTest {
                 assertTrue(success, context);
             }
         }
-        assertEquals(27, count);
+        assertEquals(28, count);
         assertEquals(Set.of(
                 "get /api/auth/csrf", "post /api/auth/signup", "post /api/auth/login",
                 "post /api/auth/refresh", "post /api/auth/logout",
                 "get /api/users/me", "delete /api/users/me", "patch /api/users/me/password", "patch /api/users/me/nickname",
-                "get /api/chat-rooms", "post /api/chat-rooms", "delete /api/chat-rooms/{roomId}",
+                "get /api/chat-rooms", "post /api/chat-rooms", "delete /api/chat-rooms/{roomId}", "patch /api/chat-rooms/{roomId}/title",
                 "get /api/chat-rooms/{roomId}/messages", "post /api/chat-rooms/{roomId}/messages",
                 "get /api/chat-rooms/{roomId}/evidence", "get /api/chat-rooms/{roomId}/evidence/{evidenceId}",
                 "get /api/laws", "post /api/laws/search", "get /api/precedents", "get /api/precedents/{id}",

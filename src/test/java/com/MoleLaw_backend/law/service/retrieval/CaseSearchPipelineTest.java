@@ -15,6 +15,26 @@ import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.*;
 
 class CaseSearchPipelineTest {
+    @Test void modelSelectsLaterNamedCaseBeforeDetailAndOverridesSuggestedScope() {
+        var plan = new com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan(List.of("삼풍백화점"),
+                com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan.Intent.SPECIFIC_CASE, List.of("삼풍백화점"),
+                com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope.BODY);
+        state.scope(com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope.LAW_REFERENCE);
+        state.userQuestion("삼풍백화점 판결을 찾아줘");
+        when(queryPlanner.plan(anyString(), any(), anyString(), any())).thenReturn(plan);
+        var rows = java.util.stream.IntStream.rangeClosed(1, 11).mapToObj(i ->
+                new Candidate("" + (100 + i), null, "공식 사건명" + i, null, "사건번호" + i, "19960823", "대법원")).toList();
+        when(api.searchCases(any(), any())).thenReturn(new SearchResult(Status.AVAILABLE, rows, 1, 100, 11, false,
+                Instant.now(), "https://www.law.go.kr"));
+        when(reranker.selectForReading(eq(plan), eq(law), anyList(), eq(4))).thenReturn(List.of("108"));
+        when(reranker.rank(anyString(), any(), anyList(), eq(plan))).thenReturn(List.of(new LawCandidateSelection.Ranking("108", 95, "지정 사건 본문")));
+        var outcome = pipeline.search(context, law, "일반 구조안전 쟁점", 1, state, s -> {});
+        assertThat(outcome.candidates()).extracting(Candidate::id).containsExactly("108");
+        verify(api).getCaseDetail(any(), eq("108"));
+        verify(api, never()).getCaseDetail(any(), eq("101"));
+        verify(api, never()).searchCasesForLaw(any(), any(), anyString());
+        verify(reranker).rank(eq("삼풍백화점"), eq(law), anyList(), eq(plan));
+    }
     @Test void titleAndLawReferenceAreExplicitToolChoicesRatherThanAutomaticBranches() {
         when(api.searchCases(any(), any())).thenReturn(result("101"));
         state.scope(com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope.TITLE);

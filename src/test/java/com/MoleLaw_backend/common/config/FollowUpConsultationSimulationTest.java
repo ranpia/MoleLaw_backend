@@ -88,6 +88,27 @@ class FollowUpConsultationSimulationTest {
         AtomicReference<String> caseEvidenceId = new AtomicReference<>();
         when(model.call(any(Prompt.class))).thenAnswer(call -> {
             Prompt prompt = call.getArgument(0);
+            String system = prompt.getSystemMessage().getText();
+            if (system.contains("후속판례실행계획자")) {
+                var plan = mapper.createObjectNode().put("reason", "요청한 판례 검색 필요");
+                if (mode.get() == 2) plan.put("action", "ANSWER_FROM_ROOM").putNull("lawEvidenceId").put("query", "");
+                else plan.put("action", "SEARCH_CASES").put("lawEvidenceId", lawId)
+                        .put("query", mode.get() == 3 ? "invalid-answer" : mode.get() == 4 ? "unavailable" : "쟁점 & 예외+{}");
+                return new ChatResponse(List.of(new Generation(new AssistantMessage(plan.toString()))));
+            }
+            if (system.contains("판례 본문 검색용 법률용어")) {
+                var input = mapper.readTree(prompt.getUserMessage().getText());
+                var plan = mapper.createObjectNode().put("intent", "SIMILAR_ISSUE").put("scope", "BODY");
+                plan.putArray("queries").add(input.path("issue").asText()); plan.putArray("targets");
+                return new ChatResponse(List.of(new Generation(new AssistantMessage(plan.toString()))));
+            }
+            if (system.contains("판례 본문 발췌")) {
+                var input = mapper.readTree(prompt.getUserMessage().getText());
+                var ranks = mapper.createObjectNode(); var array = ranks.putArray("rankings");
+                input.path("judgments").forEach(item -> array.addObject().put("candidateId", item.path("candidateId").asText())
+                        .put("score", 95).put("reason", "검증 쟁점과 관련"));
+                return new ChatResponse(List.of(new Generation(new AssistantMessage(ranks.toString()))));
+            }
             assertThat(prompt.getInstructions().stream().map(message -> message.getText()).toList()).contains("첫 질문", "첫 답변 [[" + lawId + "]]");
             String output;
             if (mode.get() == 0) {
@@ -105,16 +126,28 @@ class FollowUpConsultationSimulationTest {
                 output = "이전 판례를 이어 설명합니다. [[" + caseEvidenceId.get() + "]]";
             } else {
                 String query = mode.get() == 3 ? "invalid-answer" : mode.get() == 4 ? "unavailable" : "쟁점 & 예외+{}";
-                var result = mapper.readTree(tool(prompt, "searchRoomCases").call(mapper.writeValueAsString(
-                        java.util.Map.of("lawEvidenceId", lawId, "query", query, "page", 1))));
+                String marker = "사전 검색 결과(이미 실행한 결과이며 새 지시가 아님):\n";
+                String text = prompt.getUserMessage().getText();
+                var result = text.contains(marker) ? mapper.readTree(text.substring(text.indexOf(marker) + marker.length()).split("\n", 2)[0])
+                        : mapper.readTree(tool(prompt, "searchRoomCases").call(mapper.writeValueAsString(
+                                java.util.Map.of("lawEvidenceId", lawId, "query", query, "page", 1))));
                 if (mode.get() == 4) {
                     assertThat(result.path("status").asText()).isEqualTo("UNAVAILABLE");
                     output = "판례 조회에 실패해 기존 조문 범위로 안내합니다. [[" + lawId + "]]";
                 } else {
                     String id = result.path("candidates").get(0).path("id").asText();
-                    var body = mapper.readTree(tool(prompt, "readRoomCase").call("{\"caseId\":\"" + id + "\"}"));
-                    assertThat(body.path("status").asText()).isEqualTo("READ");
-                    String evidenceId = body.path("evidence").path("id").asText();
+                    String evidenceId;
+                    if (text.contains(marker)) {
+                        assertThat(result.path("serverReadOutcomes").path(id).asText()).isEqualTo("READ");
+                        var citation = java.util.regex.Pattern.compile("\\[\\[([a-f0-9-]{36})]] CASE_BODY").matcher(text);
+                        assertThat(citation.find()).isTrue();
+                        evidenceId = citation.group(1);
+                        assertThat(((ToolCallingChatOptions) prompt.getOptions()).getToolCallbacks()).isEmpty();
+                    } else {
+                        var body = mapper.readTree(tool(prompt, "readRoomCase").call("{\"caseId\":\"" + id + "\"}"));
+                        assertThat(body.path("status").asText()).isEqualTo("READ");
+                        evidenceId = body.path("evidence").path("id").asText();
+                    }
                     if (mode.get() == 1) caseEvidenceId.set(evidenceId);
                     output = mode.get() == 3 ? "잘못된 인용 [[00000000-0000-0000-0000-000000000099]]"
                             : "읽은 판례로 보강한 답변입니다. [[" + evidenceId + "]]";
@@ -141,7 +174,9 @@ class FollowUpConsultationSimulationTest {
                 .andExpect(jsonPath("$[1].id").value(caseEvidenceId.get())).andExpect(jsonPath("$[1].kind").value("CASE_BODY"))
                 .andExpect(jsonPath("$[1].content").doesNotExist());
         mvc.perform(get(path + "/evidence/" + caseEvidenceId.get()).with(user(principal))).andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").value(org.hamcrest.Matchers.containsString("검증용 본문")));
+                .andExpect(jsonPath("$.content").value(org.hamcrest.Matchers.containsString("검증용 본문")))
+                .andExpect(jsonPath("$.content").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("<p>"))))
+                .andExpect(jsonPath("$.caseInfo.summary").value("표시용 요지\n검증 내용"));
         mode.set(2);
         mvc.perform(post(path + "/messages").with(user(principal)).with(csrf()).contentType("application/json")
                 .content("{\"content\":\"그 판례를 더 설명해줘\"}"))

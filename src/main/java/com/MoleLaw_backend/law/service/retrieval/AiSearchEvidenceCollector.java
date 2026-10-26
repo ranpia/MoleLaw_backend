@@ -56,7 +56,7 @@ public class AiSearchEvidenceCollector {
             List<RetrievalAttempt> attempts = new ArrayList<>();
             Map<String, Integer> pages = new HashMap<>();
             observer.progress("INITIAL_SEARCH");
-            for (String query : plan.searchQueries()) evidence = retrieve(context, query, pages, attempts, evidence);
+            for (String query : plan.initialSearchQueries()) evidence = retrieve(context, query, pages, attempts, evidence);
             for (int round = 0; round <= 4; round++) {
                 context.checkDeadline();
                 observer.progress("DECIDING");

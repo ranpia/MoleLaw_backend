@@ -1,6 +1,6 @@
 # MySQL 후속 계획
 
-연결 작업: [P05·P08](README.md). 현재 테이블·제약은 [스키마 현황](../schema-rebuild-status.md), 실제 적용 절차는 [MySQL 실행](../mysql-setup.md)을 따른다.
+연결 작업: [P05·P08](README.md). 현재 테이블·제약은 [스키마 현황](../database/schema-rebuild-status.md), 실제 적용 절차는 [MySQL 실행](../database/mysql-setup.md)을 따른다.
 
 ## 완료된 기반
 

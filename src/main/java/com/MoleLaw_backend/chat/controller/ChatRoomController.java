@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import com.MoleLaw_backend.chat.dto.request.ChangeChatRoomTitleRequest;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -94,6 +96,22 @@ public class ChatRoomController {
         var room = chatService.createRoomAndAsk(userDetails.getUser(), request);
         log.info("Initial answer request path=/api/chat-rooms format=JSON state=COMPLETED");
         return ResponseEntity.ok(room);
+    }
+
+    @PatchMapping("/{roomId}/title")
+    @Operation(summary = "내 채팅방 제목 변경", description = "본인 소유 방의 제목만 변경합니다. 앞뒤 공백 제거 후 Unicode 1~255자입니다. 메시지·근거·생성 시각은 유지합니다. Access 쿠키 또는 Bearer 인증과 X-XSRF-TOKEN 헤더가 필요합니다. 성공은 204이며 본문이 없습니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "제목 변경 완료; 응답 본문 없음", content = @Content),
+            @ApiResponse(responseCode = "400", description = "누락·빈 제목·길이 초과·잘못된 JSON", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"))),
+            @ApiResponse(responseCode = "401", description = "인증 필요; Security 오류 응답", content = @Content(mediaType = "application/json", schema = @Schema(type = "object"), examples = @ExampleObject(value = "{\"error\":\"Unauthorized\"}"))),
+            @ApiResponse(responseCode = "403", description = "타인 방 접근 차단. CSRF·Origin 검사 실패는 필터 응답이며 본문 형식이 다를 수 있습니다.", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":403,\"code\":\"UNAUTHORIZED_CHATROOM_ACCESS\",\"message\":\"본인의 채팅방이 아닙니다.\"}}"))),
+            @ApiResponse(responseCode = "404", description = "채팅방 없음", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":404,\"code\":\"CHATROOM_NOT_FOUND\",\"message\":\"채팅방을 찾을 수 없습니다.\"}}")))})
+    public ResponseEntity<Void> changeTitle(@Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails user,
+            @Parameter(description = "본인 소유 방 ID", required = true, example = "42") @PathVariable Long roomId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = ChangeChatRoomTitleRequest.class), examples = @ExampleObject(value = "{\"title\":\"보증금 반환 상담\"}")))
+            @Valid @RequestBody ChangeChatRoomTitleRequest request) {
+        chatService.changeRoomTitle(user.getUser(), roomId, request.getTitle());
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{roomId}")

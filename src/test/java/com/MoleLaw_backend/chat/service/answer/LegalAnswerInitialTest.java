@@ -32,7 +32,7 @@ class LegalAnswerInitialTest {
     private final ChatEvidenceService roomEvidence = mock(ChatEvidenceService.class);
     private final LegalAnswerService service = new LegalAnswerService(collector, ChatClient.builder(model).build(),
             followUp, roomEvidence, new EvidencePromptBuilder(),
-            new CitationValidator(), new EvidenceRenderer(), mock(FollowUpCaseToolsFactory.class));
+            new CitationValidator(), new EvidenceRenderer(), mock(FollowUpCaseToolsFactory.class), mock(FollowUpCasePlanner.class));
     private final EvidenceItem item = new EvidenceItem(ID, "LAW_CHUNK", "law-chunk:12", "민법 제548조",
             "https://www.law.go.kr/법령/민법", "원상회복 의무가 있다.");
 

@@ -2,7 +2,7 @@ package com.MoleLaw_backend.chat.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "공식 판례 원문에서 관측한 메타데이터. 원문에 없으면 null이며 모델이 보충하지 않습니다.")
+@Schema(description = "공식 판례에서 관측한 표시용 메타데이터. HTML 태그·엔티티를 일반 텍스트로 변환합니다. 원문에 없으면 null이며 모델이 보충하지 않습니다.")
 public record CaseSourceResponse(
         @Schema(description = "사건번호", example = "2026다0001", nullable = true) String caseNumber,
         @Schema(description = "법원명", example = "대법원", nullable = true) String courtName,

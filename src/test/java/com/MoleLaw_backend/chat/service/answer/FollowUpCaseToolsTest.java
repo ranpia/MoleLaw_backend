@@ -15,6 +15,15 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class FollowUpCaseToolsTest {
+    @Test void roomAnswerPlanBlocksConsentAndSearchEvenIfCalledDirectly() {
+        var session = factory.create(List.of(law), true);
+        session.prepare(new com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan(
+                com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.ANSWER_FROM_ROOM, null, "", "정리 요청"));
+        assertThatThrownBy(() -> session.requestConsent(law.id(), "추가 검색")).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> session.search(law.id(), "검색", 1)).isInstanceOf(IllegalStateException.class);
+        assertThat(session.consentRequested()).isFalse();
+        verify(pipeline, never()).search(any(), any(), anyString(), anyInt(), any(), any());
+    }
     @Test void selectedPrefetchedBodiesAreReadWithoutAnotherApiCall() {
         var item = new EvidenceItem(UUID.randomUUID().toString(), "CASE_BODY", "901", "임금", "https://www.law.go.kr", "검증된 판결 본문");
         var candidate = new LegalToolContracts.Candidate("901", null, "임금", null, "2026다1", "20260101", "대법원");

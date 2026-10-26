@@ -38,6 +38,83 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class LegalAnswerFollowUpTest {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void summaryCannotReopenSearchOrConsentAfterRoomAnswerPlan(boolean consent) {
+        ownRoom();
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of(
+                message(1L, Message.Sender.USER, "이전 사건 판례를 찾아줘"),
+                message(2L, Message.Sender.BOT, "이전 판례 검색을 진행할까요?")));
+        when(model.call(any(Prompt.class))).thenAnswer(call -> {
+            var options = (org.springframework.ai.model.tool.ToolCallingChatOptions) ((Prompt) call.getArgument(0)).getOptions();
+            assertThat(options.getToolCallbacks()).extracting(c -> c.getToolDefinition().name()).containsExactly("readRoomCase");
+            return new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER))));
+        });
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
+                new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER))))));
+        assertThat(service.prepareFollowUp(1L, 2L, "정리해줘", consent).caseSearchRequested()).isFalse();
+        assertThat(service.streamFollowUp(1L, 2L, "정리해줘", consent).blockLast().followUp().caseSearchRequested()).isFalse();
+        verify(casePipeline, never()).search(any(), any(), anyString(), anyInt(), any(), any());
+    }
+
+    private void routeSearch() {
+        when(routing.plan(anyString(), any(), anyString())).thenReturn(new com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan(
+                com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.SEARCH_CASES, EVIDENCE_ID, "판례 검색", "최신 요청의 명시적 판례 검색"));
+    }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints = {1, 1200, 10000})
+    void consentedSearchExecutesAndFeedsRankedCaseBodyToFinalWriterWithoutOptionalToolPreparation(int repetitions) {
+        ownRoom(); when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
+        String caseUuid = "00000000-0000-0000-0000-000000000098";
+        var body = new EvidenceItem(caseUuid, "CASE_BODY", "114109", "검증용 지정 사건",
+                "https://www.law.go.kr", "지정 사건의 검증용 실제 본문".repeat(repetitions));
+        boolean oversized = repetitions == 10000;
+        var candidate = new com.MoleLaw_backend.law.dto.tool.LegalToolContracts.Candidate("114109", null, body.title(), null,
+                "검증 사건번호", "20260101", "검증법원");
+        when(casePipeline.search(any(), any(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyInt(), any(), any()))
+                .thenReturn(new com.MoleLaw_backend.law.dto.retrieval.CaseSearchOutcome("AVAILABLE", List.of(candidate),
+                        java.util.Map.of(candidate.id(), body), List.of(), 0, 1, 1, false, false, false));
+        when(routing.plan(org.mockito.ArgumentMatchers.anyString(), any(), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(new com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan(
+                        com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.SEARCH_CASES,
+                        EVIDENCE_ID, "지정 사건 판결", "사용자가 요청한 새 판결 검색"));
+        when(model.stream(any(Prompt.class))).thenAnswer(call -> {
+            Prompt prompt = call.getArgument(0);
+            assertThat(prompt.getUserMessage().getText()).contains("SEARCH_CASES");
+            if (oversized) assertThat(prompt.getUserMessage().getText()).contains("읽기 한도").doesNotContain(body.content());
+            else assertThat(prompt.getUserMessage().getText()).contains(body.content());
+            return reactor.core.publisher.Flux.just(new ChatResponse(List.of(new Generation(new AssistantMessage(
+                    oversized ? "판결 검색은 실행했지만 본문 읽기 한도를 초과했습니다. 상담 맥락입니다 [[" + EVIDENCE_ID + "]]"
+                            : "찾은 판결입니다 [[" + caseUuid + "]]")))));
+        });
+        var updates = service.streamFollowUp(1L, 2L, "지정 사건 찾아줘", true).collectList().block(java.time.Duration.ofSeconds(5));
+        var answer = updates.get(updates.size() - 1).followUp();
+        if (oversized) assertThat(answer.newEvidence()).isEmpty();
+        else assertThat(answer.newEvidence()).containsExactly(body);
+        assertThat(answer.caseSearchRequested()).isFalse();
+        verify(casePipeline).search(any(), any(), eq("지정 사건 판결"), eq(1), any(), any());
+        verify(model, never()).call(any(Prompt.class));
+    }
+    @Test void newCaseSearchWithoutConsentRoutesToConsentInsteadOfReadingOldCaseOrGeneratingAdvice() {
+        ownRoom();
+        var law = new EvidenceItem(EVIDENCE_ID, "LAW_CHUNK", "law-1", "건축법", "https://www.law.go.kr", "구조안전 기준");
+        var oldCase = new EvidenceItem("00000000-0000-0000-0000-000000000099", "CASE_BODY", "176175", "옹벽 사건",
+                "https://www.law.go.kr", "{\"사건번호\":\"2013노433\",\"판결요지\":\"옹벽 하중조건 검토\"}");
+        when(evidence.load(1L, 2L)).thenReturn(List.of(law, oldCase));
+        when(routing.plan(org.mockito.ArgumentMatchers.anyString(), any(), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(new com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan(
+                        com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.SEARCH_CASES,
+                        EVIDENCE_ID, "삼풍백화점 판결", "지정한 사건의 직접 판결을 새로 찾아야 함"));
+        var sync = service.prepareFollowUp(1L, 2L, "삼풍백화점 판례를 찾아줘", false);
+        assertThat(sync.caseSearchRequested()).isTrue();
+        assertThat(sync.response().getAnswer()).contains("삼풍백화점 판결", "검색을 진행할까요?")
+                .doesNotContain("설계변경", "확인해야 합니다");
+        var updates = service.streamFollowUp(1L, 2L, "삼풍백화점 판결", false).collectList().block(java.time.Duration.ofSeconds(5));
+        assertThat(updates.get(updates.size() - 1).followUp().caseSearchRequested()).isTrue();
+        verify(model, never()).call(any(Prompt.class));
+        verify(model, never()).stream(any(Prompt.class));
+        verify(casePipeline, never()).search(any(), any(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyInt(), any(), any());
+    }
     @Test void preparationDraftAndMachineCodesNeverAppearInAnswerDeltasAndFinalWriterHasNoTools() {
         ownRoom();
         when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
@@ -54,6 +131,7 @@ class LegalAnswerFollowUpTest {
         assertThat(updates.get(updates.size() - 1).followUp().response().getAnswer()).doesNotContain("EMPTY", "중간 검토 초안");
     }
     @Test void newlyReadRankedCaseUpdatesInfoWithoutRawSourceJsonBeforeCompletion() {
+        routeSearch();
         ownRoom();
         when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
         String caseId = "00000000-0000-0000-0000-000000000099";
@@ -100,6 +178,7 @@ class LegalAnswerFollowUpTest {
 
     @Test
     void streamingConsentUsesServerGroundedQuestionAndDoesNotGrantSearchConsent() {
+        routeSearch();
         ownRoom();
         when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
         when(model.call(any(Prompt.class))).thenAnswer(call -> {
@@ -126,9 +205,13 @@ class LegalAnswerFollowUpTest {
     private final LegalEvidenceCollector collector = mock(LegalEvidenceCollector.class);
     private final com.MoleLaw_backend.law.service.retrieval.CaseSearchPipeline casePipeline = mock(com.MoleLaw_backend.law.service.retrieval.CaseSearchPipeline.class);
     private LegalAnswerService service;
+    private final FollowUpCasePlanner routing = mock(FollowUpCasePlanner.class);
 
     @BeforeEach
     void setUp() {
+        when(routing.plan(org.mockito.ArgumentMatchers.anyString(), any(), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(new com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan(
+                        com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.ANSWER_FROM_ROOM, null, "", "기존 근거 설명"));
         when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage("준비 완료")))));
         var memory = new PersistedChatMemory(messages, rooms, 20, TestEncryption.create());
         var builder = new AiConfig().baseAiChatClientBuilder(model);
@@ -139,13 +222,14 @@ class LegalAnswerFollowUpTest {
                 new EvidencePromptBuilder(), new CitationValidator(), new EvidenceRenderer(), new FollowUpCaseToolsFactory(
                         mock(com.MoleLaw_backend.law.service.tool.LegalApiToolService.class),
                         mock(com.MoleLaw_backend.law.service.tool.CaseEvidenceReader.class),
-                        casePipeline));
+                        casePipeline), routing);
         when(evidence.load(1L, 2L)).thenReturn(List.of(new EvidenceItem(EVIDENCE_ID,
                 "LAW_CHUNK", "law-1", "Civil law article", "https://www.law.go.kr/law/1", "original statute text")));
     }
 
     @Test
     void consentRequestUsesGroundedServerQuestionWithoutRequiringAnUncitedModelAnswer() {
+        routeSearch();
         ownRoom();
         when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
         when(model.call(any(Prompt.class))).thenAnswer(call -> {

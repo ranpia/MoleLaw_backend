@@ -1,6 +1,6 @@
 # RAG·ETL 후속 작업
 
-연결 작업: [P04·P05·P06](README.md). 실행 계약은 [벡터 Tool](../law-vector-tools.md)과 [ETL](../law-etl-local.md)을 따른다.
+연결 작업: [P04·P05·P06](README.md). 실행 계약은 [벡터 Tool](../law/law-vector-tools.md)과 [ETL](../law/law-etl-local.md)을 따른다.
 
 ## 구현된 기준선
 

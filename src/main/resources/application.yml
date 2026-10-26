@@ -29,6 +29,10 @@ spring:
         enabled: ${REDIS_SSL_ENABLED:false}
 
   ai:
+    follow-up-plan:
+      model: ${APP_AI_FOLLOW_UP_PLAN_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_FOLLOW_UP_PLAN_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_FOLLOW_UP_PLAN_MAX_COMPLETION_TOKENS:2048}
     openai:
       api-key: ${OPENAI_API_KEY:}
       chat:
@@ -107,6 +111,7 @@ jwt:
 
 app:
   case-search:
+    body-max-input-tokens: ${APP_CASE_SEARCH_BODY_MAX_INPUT_TOKENS:32000}
     max-api-calls: ${APP_CASE_SEARCH_MAX_API_CALLS:64}
     max-candidates: ${APP_CASE_SEARCH_MAX_CANDIDATES:5000}
     max-details: ${APP_CASE_SEARCH_MAX_DETAILS:6}
@@ -131,6 +136,7 @@ app:
     max-candidates: ${APP_LAW_CANDIDATE_MAX_CANDIDATES:2}
   law-retrieval:
     backend: ${APP_LAW_RETRIEVAL_BACKEND:QDRANT}
+    processing-timeout: ${APP_LAW_RETRIEVAL_PROCESSING_TIMEOUT:3m}
   law-ai-search:
     base-url: ${APP_LAW_AI_SEARCH_BASE_URL:https://www.law.go.kr/DRF}
   ai:
@@ -156,13 +162,13 @@ app:
       reasoning-effort: ${APP_AI_CANDIDATE_REASONING_EFFORT:low}
       max-completion-tokens: ${APP_AI_CANDIDATE_MAX_COMPLETION_TOKENS:8192}
     evidence:
-      catalog-max-input-tokens: ${APP_AI_EVIDENCE_CATALOG_MAX_INPUT_TOKENS:4000}
+      catalog-max-input-tokens: ${APP_AI_EVIDENCE_CATALOG_MAX_INPUT_TOKENS:8000}
       body-max-input-tokens: ${APP_AI_EVIDENCE_BODY_MAX_INPUT_TOKENS:12000}
-      decision-max-input-tokens: ${APP_AI_EVIDENCE_DECISION_MAX_INPUT_TOKENS:20000}
+      decision-max-input-tokens: ${APP_AI_EVIDENCE_DECISION_MAX_INPUT_TOKENS:32000}
       model: ${APP_AI_EVIDENCE_MODEL:gpt-5.4}
       reasoning-effort: ${APP_AI_EVIDENCE_REASONING_EFFORT:medium}
       max-completion-tokens: ${APP_AI_EVIDENCE_MAX_COMPLETION_TOKENS:12288}
-      max-input-tokens: ${APP_AI_EVIDENCE_MAX_INPUT_TOKENS:2500}
+      max-input-tokens: ${APP_AI_EVIDENCE_MAX_INPUT_TOKENS:8000}
     answer:
       model: ${APP_AI_ANSWER_MODEL:gpt-5.4-mini}
       reasoning-effort: ${APP_AI_ANSWER_REASONING_EFFORT:medium}

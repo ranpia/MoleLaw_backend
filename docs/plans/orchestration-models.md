@@ -1,6 +1,6 @@
 # 모델·오케스트레이션 작업 상세
 
-상태·순서의 기준은 [P01·P02·P03](README.md), 모델의 현재 값은 [역할별 Client](../role-chat-clients.md)다. 사용자 선택은 [D01·D02](../decisions/README.md)에 둔다.
+상태·순서의 기준은 [P01·P02·P03](README.md), 모델의 현재 값은 [역할별 Client](../architecture/role-chat-clients.md)다. 사용자 선택은 [D01·D02](../decisions/README.md)에 둔다.
 
 ## 이미 구현한 경계
 

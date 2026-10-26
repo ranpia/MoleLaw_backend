@@ -1,46 +1,34 @@
 # 문서 안내
 
-기준일: **2026-10-23**, 법령·후속 상담 PR의 병합 내용을 통합한 `dev` 기준이다. `main` 반영·배포 완료와는 다르다.
+기준일: **2026-10-26**, 현재 dev 작업 코드 기준. 기능 구현과 실제 법률 품질·운영 검증은 구분한다.
 
-## 먼저 읽을 문서
+## 먼저 읽기
 
-| 목적 | 문서 |
-| --- | --- |
-| 프로젝트 소개·로컬 실행 | [프로젝트 README](../README.md), [Docker](../docker/README.md) |
-| 현재 구현과 제한 | [개발 현황](development-status.md) |
-| 사용자가 정할 항목 | [사용자 판단 대기](decisions/README.md) |
-| 이미 확정한 방향 | [확정 결정](decisions/confirmed.md) |
-| 앞으로 할 일과 순서 | [작업 계획](plans/README.md) |
-| 검증 완료·미검증 구분 | [검증 현황](validation-status.md) |
-| 담당자 인수인계 | [인수인계](development-handoff.md) |
-| 브랜치·추적 파일·실험 워크트리 | [브랜치 작업 가이드](branch-workflow.md) |
+1. [구현 기능과 질문 처리 다이어그램](project/features-and-question-flow.md)
+   - [로그인](auth/login-flow.md) · [채팅방 생성·제목 변경](chat/chat-room-management.md)
+2. [현재 개발 현황](project/development-status.md) · [검증 현황](validation/validation-status.md)
+3. [다음 작업](plans/README.md) · [사용자 판단 대기](decisions/README.md) · [확정 결정](decisions/confirmed.md)
+4. [프로젝트 소개·실행](../README.md) · [Docker 실행](../docker/README.md)
 
-## 현재 동작·운영 계약
+## 기능별 문서
 
-| 영역 | 문서 |
-| --- | --- |
-| 최초 질문부터 답변·저장까지 | [최초 상담](initial-consultation.md) |
-| 최초·후속 상담 진행 상태·근거·답변 SSE/NDJSON | [스트림 API·클라이언트 예시](initial-answer-stream.md) |
-| 법령·사건 판례 병합·본문 리랭크·최초/후속 로그 구분 | [판례 검색 흐름](case-retrieval-reranking.md) |
-| 분류·검색·전체 페이지 리랭크 | [질문 라우팅](question-routing.md) |
-| 후보 목록·본문 읽기·분리 입력 예산 | [근거 본문 읽기](evidence-reading.md) | [판단 계약](evidence-decision.md) |
-| 모델·추론 수준·Builder·Advisor | [역할별 Client](role-chat-clients.md) |
-| 법령·판례 검색·상세 Tool | [API Tool](legal-api-tools.md) |
-| 벡터화·상위 15개 조문 검색 | [벡터 Tool](law-vector-tools.md) |
-| ETL·저장 검증·수동 재색인 | [ETL 로컬 가이드](law-etl-local.md) |
-| Qdrant 조문 후보·로컬 cross-encoder | [조문 리랭커](article-reranking.md) |
-| 변경 조문 임베딩·ID/해시 관계·중복 방지 | [증분 색인](incremental-law-indexing.md) |
-| 보류된 조문 API·비교 경로 | [AI Search 비교](ai-search-comparison.md) |
-| 최초 근거·후속 인용 | [상담방 근거](room-evidence.md) |
-| 동의 기반 후속 판례·근거 목록/본문 API | [후속 상담](follow-up-consultation.md) |
-| 암호화·저장·조회 | [상담 저장](chat-storage.md) |
-| Access·Refresh | [Access](stateless-access.md), [Refresh](refresh-rotation.md) |
-| 사용자 검증·계정 모델 | [사용자 계정](user-account-validation.md) |
-| 현재 테이블·마이그레이션 | [스키마 현황](schema-rebuild-status.md), [MySQL 실행](mysql-setup.md) |
-| 패키지·DTO·API·폴더 | [패키지와 API](package-api-organization.md), [폴더](folder-structure.md) |
+| 분류 | 내용 | 주요 문서 |
+| --- | --- | --- |
+| [프로젝트](project/README.md) | 기능 현황·인수인계·브랜치 | [기능·다이어그램](project/features-and-question-flow.md), [인수인계](project/development-handoff.md) |
+| [인증·사용자](auth/README.md) | JWT·Refresh·계정 | [Access](auth/stateless-access.md), [Refresh](auth/refresh-rotation.md), [사용자 검증](auth/user-account-validation.md) |
+| [상담·대화](chat/README.md) | 질문 처리·기록·스트림·근거 | [최초 상담](chat/initial-consultation.md), [후속 상담](chat/follow-up-consultation.md), [스트리밍](chat/initial-answer-stream.md), [근거](chat/room-evidence.md) |
+| [법령·판례·RAG](law/README.md) | 질문 분석·수집·검색·ETL | [라우팅](law/question-routing.md), [ETL](law/law-etl-local.md), [조문 리랭크](law/article-reranking.md), [판례 검색](law/case-retrieval-reranking.md) |
+| [데이터베이스](database/README.md) | MySQL·스키마 | [실행](database/mysql-setup.md), [스키마](database/schema-rebuild-status.md) |
+| [코드·모델 구조](architecture/README.md) | 패키지·API·역할별 Client | [패키지·API](architecture/package-api-organization.md), [모델](architecture/role-chat-clients.md) |
+| [검증](validation/README.md) | 검증 기록·제한 | [검증 현황](validation/validation-status.md) |
+| [작업 계획](plans/README.md) | 미완료 작업·순서 | [모델·오케스트레이션](plans/orchestration-models.md), [RAG·ETL](plans/rag-etl.md) |
+| [사용자 결정](decisions/README.md) | 판단 대기·확정 방향 | [확정 결정](decisions/confirmed.md) |
+| [과거 기록](archive/README.md) | 폐기·변경된 기준과 SQL | 현재 동작의 근거로 사용하지 않음 |
 
-## 계획과 과거 자료
+## 문서 배치 원칙
 
-주제별 미완료 작업은 [계획 목록](plans/README.md), 과거 정책·기준선은 [보관 안내](archive/README.md)를 따른다. [재구축 요약](backend-rebuild-plan.md)은 방향을 설명하는 짧은 진입점이다.
-
-현재 문서는 실제 동작만 설명하고, 미완료 작업은 계획에, 정책 선택은 사용자 판단 문서에 둔다. 과거 테스트 수치와 실험 결과를 최신 검증으로 승격하지 않는다. 구현 변경 시 해당 계약·개발 현황·관련 계획을 함께 갱신하며 확정한 결정을 다시 미결정으로 올리지 않는다.
+- 현재 기능은 해당 기능 폴더에 두고, 추가 작업은 plans/, 정책 선택은 decisions/, 과거 기록은 archive/에 둔다.
+- 각 폴더의 README에서 상세 문서를 선택한다. 새 문서를 추가하면 해당 목차도 갱신한다.
+- 문서를 이동할 때 상대 링크·코드·스크립트의 경로를 함께 바꾼다.
+- 코드 예시는 [examples/initial-answer-stream.js](examples/initial-answer-stream.js), 실행 환경은 [Docker](../docker/README.md)를 따른다.
+- 문서 정리는 외부 API·법률 품질 재검증이나 원격 배포 완료를 의미하지 않는다.

@@ -69,6 +69,14 @@ class AiSearchConsultationSimulationTest {
             } else if (system.contains("검색 계획을 분류")) {
                 output = "{\"type\":\"LAW_DISCOVERY\",\"responseScope\":\"GENERAL_GUIDANCE\",\"searchQueries\":[\""
                         + (user.contains("denied") ? "denied" : "공항") + "\"],\"lawSearches\":[],\"missingFacts\":[]}";
+                var analysis = mapper.createObjectNode().put("title", "공항 상담").put("purpose", "관련 근거 안내");
+                analysis.putArray("facts");
+                var issue = analysis.putArray("issues").addObject().put("id", "Q1")
+                        .put("request", "관련 근거 안내").put("sourceQuote", user);
+                issue.putArray("searchTerms").add(user.contains("denied") ? "denied" : "공항");
+                issue.putArray("mentionedTargets"); issue.putArray("candidateTargets"); issue.putArray("missingFacts");
+                analysis.putArray("relations"); analysis.putArray("ambiguities");
+                output = ((com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(output)).set("analysis", analysis).toString();
             } else if (system.contains("근거 본문 읽기 계획자")) {
                 var input = mapper.readTree(user);
                 output = "{\"evidenceIds\":[\"" + input.path("candidateCatalog").get(0).path("id").asText() + "\"]}";

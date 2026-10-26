@@ -118,13 +118,62 @@ class LegalEvidenceCollectorTest {
         when(planner.decide(anyString(), anyList(), any(), anyList(), anyInt())).thenAnswer(call -> ready(call.getArgument(1)));
         assertThat(collector.collect("질문")).hasSize(15).extracting(EvidenceItem::sourceId).contains("123:1", "123:16", "123:31");
     }
+
+    @Test void fourthQuestionIsSearchedEvenWhenSummaryHasOnlyOneQuery() {
+        var issues = java.util.stream.IntStream.rangeClosed(1, 4).mapToObj(i ->
+                new com.MoleLaw_backend.law.dto.retrieval.QuestionAnalysis.Issue("Q" + i,
+                        "질문" + i, "질문", List.of("독립 검색" + i), List.of(), List.of(), List.of())).toList();
+        var analysis = new com.MoleLaw_backend.law.dto.retrieval.QuestionAnalysis("제목", "네 질문 설명",
+                List.of(), issues, List.of(), List.of());
+        when(questions.plan("질문")).thenReturn(new QuestionRetrievalPlan(QuestionRetrievalPlan.Type.LAW_EXPLANATION,
+                QuestionRetrievalPlan.ResponseScope.GENERAL_GUIDANCE, List.of("전체 요약"), List.of(), List.of(), analysis));
+        when(rag.searchTop15(any(), anyString())).thenReturn(List.of(hit()));
+        when(planner.decide(anyString(), anyList(), any(), anyList(), anyInt())).thenAnswer(call -> ready(call.getArgument(1)));
+        collector.collect("질문");
+        for (int i = 1; i <= 4; i++) verify(rag).searchTop15(any(), eq("독립 검색" + i));
+        verify(rag, never()).searchTop15(any(), eq("전체 요약"));
+    }
+
+    @Test void allApprovedLawConditionsAreCollectedAndResearchedBeforeTheNextDecision() {
+        var requested = List.of(new EvidenceDecision.LawSearch("첫 법령", EvidenceDecision.SearchField.TITLE, true, null),
+                new EvidenceDecision.LawSearch("둘째 법령", EvidenceDecision.SearchField.TITLE, true, null),
+                new EvidenceDecision.LawSearch("셋째 법령", EvidenceDecision.SearchField.TITLE, true, null));
+        var first = hit();
+        var second = new LawSearchEvidence("456:1", UUID.randomUUID().toString(), "456", "2", "20260101", "둘째 법령 제1조",
+                "조문", "둘째 본문", "https://www.law.go.kr", .8, "revision", "a".repeat(64), UUID.randomUUID().toString());
+        var third = new LawSearchEvidence("789:1", UUID.randomUUID().toString(), "789", "3", "20260101", "셋째 법령 제1조",
+                "조문", "셋째 본문", "https://www.law.go.kr", .8, "revision", "a".repeat(64), UUID.randomUUID().toString());
+        when(rag.searchTop15(any(), anyString())).thenReturn(List.of(), List.of(first), List.of(first, second), List.of(first, second, third));
+        var targets = List.of(new LegalToolContracts.Candidate("123", "1", "첫 법령", "20260101", null, null, null),
+                new LegalToolContracts.Candidate("456", "2", "둘째 법령", "20260101", null, null, null),
+                new LegalToolContracts.Candidate("789", "3", "셋째 법령", "20260101", null, null, null));
+        when(laws.searchLaws(any(), any())).thenAnswer(call -> {
+            LegalToolContracts.SearchRequest request = call.getArgument(1);
+            var target = targets.stream().filter(candidate -> candidate.title().equals(request.query())).findFirst().orElseThrow();
+            return new LegalToolContracts.SearchResult(LegalToolContracts.Status.AVAILABLE, List.of(target), 1, 20, 1, false,
+                    Instant.now(), "https://www.law.go.kr");
+        });
+        when(vectors.publishedSource(any())).thenAnswer(call -> java.util.Optional.of("source-" + ((LegalToolContracts.Candidate) call.getArgument(0)).id()));
+        when(planner.decide(anyString(), anyList(), any(), anyList(), anyInt()))
+                .thenReturn(new EvidenceDecision(EvidenceDecision.Action.COLLECT_LAW, "서로 다른 근거 필요", List.of("세 쟁점"), List.of(), List.of(), requested))
+                .thenAnswer(call -> {
+                    for (var target : targets) verify(vectors).reindexStoredLaw(any(), eq("source-" + target.id()));
+                    List<RetrievalAttempt> feedback = call.getArgument(3);
+                    assertThat(feedback.stream().filter(attempt -> attempt.kind() == RetrievalAttempt.Kind.LAW_COLLECTION
+                            && attempt.outcome() == RetrievalAttempt.Outcome.INDEXED)).hasSize(3);
+                    return ready(call.getArgument(1));
+                });
+        assertThat(collector.collect("질문")).extracting(EvidenceItem::sourceId).containsExactlyInAnyOrder("123:1", "456:1", "789:1");
+        verify(rag, times(4)).searchTop15(any(), eq("질문"));
+        verify(planner, times(2)).decide(anyString(), anyList(), any(), anyList(), anyInt());
+    }
     private final LawRagSearchToolService rag = mock(LawRagSearchToolService.class);
     private final LawVectorizationToolService vectors = mock(LawVectorizationToolService.class);
     private final LegalApiToolService laws = mock(LegalApiToolService.class);
     private final EvidenceDecisionPlanner planner = mock(EvidenceDecisionPlanner.class);
     private final QuestionRetrievalPlanner questions = mock(QuestionRetrievalPlanner.class);
     private final LawCandidateSelector candidates = mock(LawCandidateSelector.class);
-    private final LegalEvidenceCollector collector = new LegalEvidenceCollector(provider(rag), provider(vectors), laws, planner, questions, candidates, mock(AiSearchEvidenceCollector.class), com.MoleLaw_backend.law.dto.retrieval.RetrievalBackend.QDRANT, new com.MoleLaw_backend.law.config.LawCandidateSelectionProperties());
+    private final LegalEvidenceCollector collector = new LegalEvidenceCollector(provider(rag), provider(vectors), laws, planner, questions, candidates, mock(AiSearchEvidenceCollector.class), com.MoleLaw_backend.law.dto.retrieval.RetrievalBackend.QDRANT, new com.MoleLaw_backend.law.config.LawCandidateSelectionProperties(), java.time.Duration.ofMinutes(3));
 
     @BeforeEach void classify() {
         when(candidates.rank(anyString(), any(), any(), anyList())).thenAnswer(call -> ((List<LegalToolContracts.Candidate>) call.getArgument(3)).stream().map(c -> new com.MoleLaw_backend.law.dto.retrieval.LawCandidateSelection.Ranking(c.id(), 95, "관련")).toList());
@@ -445,7 +494,7 @@ class LegalEvidenceCollectorTest {
         verifyNoInteractions(planner, laws, vectors);
     }
     @Test void unavailableVectorConfigurationDoesNotFallBackToLegacyTables() {
-        var disabled = new LegalEvidenceCollector(provider(null), provider(null), laws, planner, questions, candidates, mock(AiSearchEvidenceCollector.class), com.MoleLaw_backend.law.dto.retrieval.RetrievalBackend.QDRANT, new com.MoleLaw_backend.law.config.LawCandidateSelectionProperties());
+        var disabled = new LegalEvidenceCollector(provider(null), provider(null), laws, planner, questions, candidates, mock(AiSearchEvidenceCollector.class), com.MoleLaw_backend.law.dto.retrieval.RetrievalBackend.QDRANT, new com.MoleLaw_backend.law.config.LawCandidateSelectionProperties(), java.time.Duration.ofMinutes(3));
         assertThatThrownBy(() -> disabled.collect("질문")).isInstanceOfSatisfying(MolelawException.class,
                 failure -> assertThat(failure.getErrorCode()).isEqualTo(ErrorCode.RETRIEVAL_UNAVAILABLE));
         verifyNoInteractions(planner, laws);

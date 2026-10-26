@@ -58,7 +58,7 @@ Get-Content -Raw docker/kure/check_live.py | docker compose -f docker/kure/compo
 KURE와 추론 잠금·대기열·캐시를 공유하며 CUDA에서는 리랭커만 FP16을 사용한다.
 모델·revision·배치·토큰 한도는 `.env.example`을 따른다.
 Spring의 `APP_LAW_RERANKER_ENABLED=true`와 모델/revision도 맞춘다.
-상세 HTTP 계약·실패/길이 제한·예산은 [조문 리랭커](../../docs/article-reranking.md)를 따른다.
+상세 HTTP 계약·실패/길이 제한·예산은 [조문 리랭커](../../docs/law/article-reranking.md)를 따른다.
 
 추가 모델을 다운로드하지 않는 회귀:
 

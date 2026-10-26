@@ -21,7 +21,10 @@ public class QuestionRetrievalPlanner {
     public QuestionRetrievalPlan plan(String question) {
         try {
             String result = client.prompt().messages(List.of(new UserMessage(question))).call().content();
-            return QuestionRetrievalPlan.parse(result, mapper);
+            var plan = QuestionRetrievalPlan.parse(result, mapper);
+            if (plan.analysis() == null) throw new IllegalArgumentException("Question analysis is required");
+            plan.analysis().validateAgainst(question, plan.type() == QuestionRetrievalPlan.Type.OUT_OF_SCOPE);
+            return plan;
         } catch (RuntimeException invalid) {
             throw new GptApiException(ErrorCode.GPT_API_FAILURE);
         }

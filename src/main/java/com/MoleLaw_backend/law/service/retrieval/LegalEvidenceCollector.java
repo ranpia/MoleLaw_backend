@@ -11,7 +11,11 @@ import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.law.dto.request.LawSearchFilters;
 import com.MoleLaw_backend.law.dto.retrieval.EvidenceDecision;
-import com.MoleLaw_backend.law.service.retrieval.EvidenceDecisionPlanner;
+import com.MoleLaw_backend.law.util.EvidenceCandidateBalancer;
+import com.MoleLaw_backend.law.util.EvidenceSearchProgress;
+import com.MoleLaw_backend.law.util.LawCollectionQueue;
+import com.MoleLaw_backend.law.util.LawSearchQueryKey;
+import com.MoleLaw_backend.law.util.LawSearchResultFusion;
 import com.MoleLaw_backend.law.service.tool.LawRagSearchToolService;
 import com.MoleLaw_backend.law.service.tool.LawVectorizationToolService;
 import com.MoleLaw_backend.law.service.tool.LegalApiToolService;
@@ -50,13 +54,17 @@ public class LegalEvidenceCollector {
     private final AiSearchEvidenceCollector aiSearch;
     private final RetrievalBackend backend;
     private final LawCandidateSelectionProperties selection;
+    private final Duration processingTimeout;
 
     public LegalEvidenceCollector(ObjectProvider<LawRagSearchToolService> searches,
             ObjectProvider<LawVectorizationToolService> vectors, LegalApiToolService laws,
             EvidenceDecisionPlanner planner, QuestionRetrievalPlanner questions, LawCandidateSelector candidates,
             AiSearchEvidenceCollector aiSearch,
             @Value("${app.law-retrieval.backend:QDRANT}") RetrievalBackend backend,
-            LawCandidateSelectionProperties selection) {
+            LawCandidateSelectionProperties selection,
+            @Value("${app.law-retrieval.processing-timeout:3m}") Duration processingTimeout) {
+        if (processingTimeout == null || processingTimeout.isZero() || processingTimeout.isNegative()
+                || processingTimeout.compareTo(Duration.ofHours(1)) > 0) throw new IllegalArgumentException("Invalid processing timeout");
         this.searches = searches;
         this.vectors = vectors;
         this.laws = laws;
@@ -66,6 +74,7 @@ public class LegalEvidenceCollector {
         this.aiSearch = aiSearch;
         this.backend = backend;
         this.selection = selection;
+        this.processingTimeout = processingTimeout;
     }
 
     public List<EvidenceItem> collect(String question) {
@@ -84,7 +93,7 @@ public class LegalEvidenceCollector {
         var vector = vectors.getIfAvailable();
         if (search == null || vector == null) throw new MolelawException(ErrorCode.RETRIEVAL_UNAVAILABLE);
         Clock clock = Clock.systemUTC();
-        var deadline = clock.instant().plus(Duration.ofMinutes(3));
+        var deadline = clock.instant().plus(processingTimeout);
         var context = new LegalToolContext(LegalToolContext.Purpose.FIRST_QUESTION,
                 observer.traceId() == null ? UUID.randomUUID().toString() : observer.traceId(), deadline, 128, clock);
         Map<String, String> ids = new HashMap<>();
@@ -93,6 +102,7 @@ public class LegalEvidenceCollector {
         Set<String> observedLaws = new HashSet<>();
         Set<String> retained = new java.util.LinkedHashSet<>();
         List<RetrievalAttempt> attempts = new ArrayList<>();
+        var collectionQueue = new LawCollectionQueue();
         String stage = "QUESTION_PLANNING";
         try {
             observer.progress(stage);
@@ -102,12 +112,13 @@ public class LegalEvidenceCollector {
             log.info("Legal collection executionId={} questionType={} responseScope={}",
                     context.executionId(), plan.type(), plan.responseScope());
             if (plan.type() == QuestionRetrievalPlan.Type.OUT_OF_SCOPE) throw insufficient();
+            var searchProgress = new EvidenceSearchProgress(plan.initialSearchQueries());
             stage = "INITIAL_SEARCH";
             observer.progress(stage);
             log.info("Legal collection executionId={} stage={} queryCount={}",
-                    context.executionId(), stage, plan.searchQueries().size());
-            List<EvidenceItem> evidence = searchBatch(plan.searchQueries(), List.of(), ids, context, search, attempts, retained);
-            plan.searchQueries().stream().map(com.MoleLaw_backend.law.util.LawSearchQueryKey::of).forEach(queries::add);
+                    context.executionId(), stage, plan.initialSearchQueries().size());
+            List<EvidenceItem> evidence = searchBatch(plan.initialSearchQueries(), List.of(), ids, context, search, attempts, retained, searchProgress);
+            plan.initialSearchQueries().stream().map(LawSearchQueryKey::of).forEach(queries::add);
             for (int round = 0; round <= 4; round++) {
                 evidence.stream().map(EvidenceItem::provenance).filter(java.util.Objects::nonNull)
                         .map(EvidenceProvenance::mst).forEach(observedLaws::add);
@@ -142,7 +153,7 @@ public class LegalEvidenceCollector {
                     case ANSWER_PARTIAL -> {
                         Set<String> selected = Set.copyOf(decision.evidenceIds());
                         var guidance = new QuestionRetrievalPlan(plan.type(), QuestionRetrievalPlan.ResponseScope.GENERAL_GUIDANCE,
-                                plan.searchQueries(), plan.lawSearches(), plan.missingFacts());
+                                plan.searchQueries(), plan.lawSearches(), plan.missingFacts(), plan.analysis());
                         return new CollectedLegalEvidence(guidance,
                                 evidence.stream().filter(item -> selected.contains(item.id())).toList(), decision.missingIssues());
                     }
@@ -151,7 +162,7 @@ public class LegalEvidenceCollector {
                         observer.progress(stage);
                         List<String> freshQueries = new ArrayList<>();
                         for (String query : decision.searchQueries()) {
-                            if (!queries.add(com.MoleLaw_backend.law.util.LawSearchQueryKey.of(query))) {
+                            if (!queries.add(LawSearchQueryKey.of(query))) {
                                 attempts.add(new RetrievalAttempt(RetrievalAttempt.Kind.VECTOR_SEARCH, query,
                                         null, null, RetrievalAttempt.Outcome.DUPLICATE, 0, false));
                                 log.info("Legal collection executionId={} stage=SEARCH_SKIPPED reason=DUPLICATE_QUERY", context.executionId());
@@ -160,15 +171,19 @@ public class LegalEvidenceCollector {
                             freshQueries.add(query);
                         }
                         if (!freshQueries.isEmpty())
-                            evidence = searchBatch(freshQueries, evidence, ids, context, search, attempts, retained);
+                            evidence = searchBatch(freshQueries, evidence, ids, context, search, attempts, retained, searchProgress);
                     }
                     case COLLECT_LAW -> {
                         boolean progressed = false;
-                        boolean indexed = false;
-                        for (var condition : decision.lawSearches()) {
-                            if (indexed) break;
-                            String conditionKey = com.MoleLaw_backend.law.util.LawSearchQueryKey.of(condition.query())
-                                    + "|" + condition.field() + "|" + condition.exactName() + "|" + condition.ministry();
+                        collectionQueue.offer(decision.lawSearches(), attempts);
+                        for (var condition : collectionQueue.pending()) {
+                            if (details.size() >= 6) {
+                                collectionQueue.record(condition, RetrievalAttempt.Outcome.DEFERRED_LIMIT, attempts);
+                                progressed = true;
+                                continue;
+                            }
+                            boolean indexed = false;
+                            String conditionKey = LawCollectionQueue.key(condition);
                             PageCursor cursor = pages.computeIfAbsent(conditionKey, ignored -> new PageCursor());
                             while (details.size() < 6 && !indexed) {
                                 if (cursor.offset >= cursor.candidates.size()) {
@@ -242,14 +257,17 @@ public class LegalEvidenceCollector {
                                     indexed = true;
                                 }
                             }
+                            collectionQueue.record(condition, indexed ? RetrievalAttempt.Outcome.INDEXED
+                                    : RetrievalAttempt.Outcome.EXHAUSTED, attempts);
+                            if (indexed) {
+                                stage = "SEARCH_AFTER_INDEX";
+                                observer.progress(stage);
+                                log.info("Legal collection executionId={} stage={}", context.executionId(), stage);
+                                evidence = searchBatch(plan.initialSearchQueries(), evidence, ids, context, search,
+                                        attempts, retained, searchProgress);
+                            }
                         }
                         if (!progressed) throw insufficient();
-                        if (indexed) {
-                            stage = "SEARCH_AFTER_INDEX";
-                            observer.progress(stage);
-                            log.info("Legal collection executionId={} stage={}", context.executionId(), stage);
-                            evidence = searchBatch(plan.searchQueries(), evidence, ids, context, search, attempts, retained);
-                        }
                     }
                 }
             }
@@ -270,24 +288,21 @@ public class LegalEvidenceCollector {
     }
 
     private List<EvidenceItem> searchBatch(List<String> queries, List<EvidenceItem> before, Map<String, String> ids,
-            LegalToolContext context, LawRagSearchToolService search, List<RetrievalAttempt> attempts, Set<String> retained) {
+            LegalToolContext context, LawRagSearchToolService search, List<RetrievalAttempt> attempts, Set<String> retained,
+            EvidenceSearchProgress progress) {
         List<List<LawSearchEvidence>> rankings = new ArrayList<>();
-        Set<String> explicitUnits = new HashSet<>();
         for (String query : queries) {
             var hits = search.searchTop15(context, query);
             rankings.add(hits);
-            for (var hit : hits) {
-                String lawTitle = hit.title().replaceFirst("\\s+제[0-9]+조.*$", "");
-                if (com.MoleLaw_backend.law.util.LawArticleQuery.paths(query, lawTitle)
-                        .contains(hit.unitId().substring(hit.unitId().indexOf(':') + 1))) explicitUnits.add(hit.unitId());
-            }
+            progress.record(query, hits);
             var after = merge(hits, before, ids, Set.of());
             var outcome = hits.isEmpty() ? RetrievalAttempt.Outcome.NO_RESULTS : changed(before, after)
                     ? RetrievalAttempt.Outcome.AVAILABLE : RetrievalAttempt.Outcome.NO_NEW_EVIDENCE;
             attempts.add(new RetrievalAttempt(RetrievalAttempt.Kind.VECTOR_SEARCH, query, null, null,
                     outcome, hits.size(), false));
         }
-        return merge(com.MoleLaw_backend.law.util.LawSearchResultFusion.fuse(rankings, explicitUnits), before, ids, retained);
+        return merge(LawSearchResultFusion.fuse(rankings, progress.explicitUnits()), before,
+                ids, retained, progress);
     }
 
     private RetrievalAttempt lawAttempt(EvidenceDecision.LawSearch condition, int page,
@@ -306,6 +321,12 @@ public class LegalEvidenceCollector {
 
     private List<EvidenceItem> merge(List<LawSearchEvidence> hits,
             List<EvidenceItem> previous, Map<String, String> ids, Set<String> retained) {
+        return merge(hits, previous, ids, retained, null);
+    }
+
+    private List<EvidenceItem> merge(List<LawSearchEvidence> hits,
+            List<EvidenceItem> previous, Map<String, String> ids, Set<String> retained,
+            EvidenceSearchProgress progress) {
         Map<String, EvidenceItem> merged = new LinkedHashMap<>();
         Map<String, String> observedVersions = new HashMap<>();
         for (var hit : hits) {
@@ -337,6 +358,9 @@ public class LegalEvidenceCollector {
             }
             merged.putIfAbsent(item.sourceId(), item);
         }
+        if (progress != null)
+            return EvidenceCandidateBalancer.select(List.copyOf(merged.values()),
+                    progress.groups(), progress.explicitUnits(), retained, 15, 1024 * 1024);
         // Preserve previously approved coverage before promoting fresh hits from the same laws.
         var retainedOrder = new LinkedHashMap<String, EvidenceItem>();
         for (var item : previous) {

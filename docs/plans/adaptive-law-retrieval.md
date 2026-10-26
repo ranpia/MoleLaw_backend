@@ -1,6 +1,6 @@
 # 법령 추가 수집·리랭크 개선
 
-연결 작업: [P02·P04](README.md). 현재 동작은 [질문 라우팅](../question-routing.md), 판단 필드는 [판단 계약](../evidence-decision.md)을 따른다.
+연결 작업: [P02·P04](README.md). 현재 동작은 [질문 라우팅](../law/question-routing.md), 판단 필드는 [판단 계약](../law/evidence-decision.md)을 따른다.
 
 ## 구현된 기준선
 

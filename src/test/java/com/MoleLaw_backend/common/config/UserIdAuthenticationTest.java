@@ -75,7 +75,7 @@ class UserIdAuthenticationTest {
                 .andExpect(jsonPath("data.email").value("id-flow@example.com"))
                 .andExpect(jsonPath("data.nickname").value("ID로 변경"));
         mvc.perform(patch("/api/users/me/password").with(csrf()).cookie(access).contentType("application/json")
-                        .content("{\"newPassword\":\"Changed-password-123!\"}"))
+                        .content("{\"currentPassword\":\"Example-password-123!\",\"newPassword\":\"Changed-password-123!\"}"))
                 .andExpect(status().isOk());
         mvc.perform(post("/api/auth/login").with(csrf()).contentType("application/json")
                         .content("{\"email\":\"id-flow@example.com\",\"password\":\"Changed-password-123!\"}"))

@@ -52,8 +52,11 @@ class UserValidationTest {
         invalid(post("/api/auth/login"), Map.of("email", "user@example.com", "password", "한".repeat(25)));
         invalid(post("/api/auth/login"), Map.of());
         for (String password : new String[]{"", " ", "short", "x".repeat(73), "한".repeat(25)}) {
-            invalid(patch("/api/users/me/password"), Map.of("newPassword", password));
+            invalid(patch("/api/users/me/password"), Map.of("currentPassword", "CurrentPassword!234", "newPassword", password));
         }
+        for (String password : new String[]{"", " ", "x".repeat(73), "한".repeat(25)})
+            invalid(patch("/api/users/me/password"), Map.of("currentPassword", password, "newPassword", "NewPassword!234"));
+        invalid(patch("/api/users/me/password"), Map.of("newPassword", "NewPassword!234"));
         invalid(patch("/api/users/me/password"), Map.of());
         for (String nickname : new String[]{"", " ", "a", "x".repeat(51)}) {
             invalid(patch("/api/users/me/nickname"), Map.of("newNickname", nickname));

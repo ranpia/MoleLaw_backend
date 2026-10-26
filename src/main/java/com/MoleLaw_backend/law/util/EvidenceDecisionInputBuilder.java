@@ -69,7 +69,8 @@ public final class EvidenceDecisionInputBuilder {
         if (remainingActions < 0 || remainingActions > 4) throw new IllegalArgumentException("Invalid remaining actions");
         ObjectNode input = mapper.createObjectNode().put("question", question);
         boolean aiSearch = attempts.stream().anyMatch(a -> a.kind() == RetrievalAttempt.Kind.AI_SEARCH);
-        boolean reviseQuery = !attempts.isEmpty() && attempts.get(attempts.size() - 1).outcome() != RetrievalAttempt.Outcome.AVAILABLE;
+        var searches = attempts.stream().filter(attempt -> attempt.kind() != RetrievalAttempt.Kind.LAW_COLLECTION).toList();
+        boolean reviseQuery = !searches.isEmpty() && searches.get(searches.size() - 1).outcome() != RetrievalAttempt.Outcome.AVAILABLE;
         input.putObject("executionState").put("remainingActions", remainingActions)
                 .put("vectorSearchCount", attempts.stream().filter(a -> a.kind() == RetrievalAttempt.Kind.VECTOR_SEARCH
                         && a.outcome() != RetrievalAttempt.Outcome.DUPLICATE).count())
@@ -83,11 +84,12 @@ public final class EvidenceDecisionInputBuilder {
                 .put("vectorSearchScope", aiSearch ? "NOT_USED" : "EXISTING_INDEX_ONLY")
                 .put("vectorAnnexTextIndexed", false)
                 .put("queryRevisionRequired", reviseQuery)
-                .put("nonProductiveSearchCount", attempts.stream()
+                .put("nonProductiveSearchCount", searches.stream()
                         .filter(a -> a.outcome() != RetrievalAttempt.Outcome.AVAILABLE).count())
                 .put("availabilityIsRelevance", false);
-        if (plan != null) input.set("retrievalPlan", mapper.valueToTree(plan));
-        input.set("searchAttempts", mapper.valueToTree(attempts.subList(Math.max(0, attempts.size() - 8), attempts.size())));
+        if (plan != null) input.set("retrievalPlan", QuestionPlanInput.view(plan, mapper));
+        input.set("retrievalProgress", RetrievalProgressInput.build(plan, attempts, mapper));
+        input.set("searchAttempts", mapper.valueToTree(searches.subList(Math.max(0, searches.size() - 8), searches.size())));
         var feedback = (com.fasterxml.jackson.databind.node.ArrayNode) input.path("searchAttempts");
         // Retain the latest observation and reserve space for actual legal evidence.
         while (feedback.size() > 1 && tokens.estimate(input.toString()) > maxTokens / 2) feedback.remove(0);

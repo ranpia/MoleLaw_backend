@@ -41,4 +41,10 @@ public class ChatRoom {
         }
     }
 
+    public void changeTitle(String title) {
+        if (title == null || title.isBlank() || title.codePointCount(0, title.length()) > 255)
+            throw new IllegalArgumentException("Invalid chat room title");
+        this.title = title;
+    }
+
 }

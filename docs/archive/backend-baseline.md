@@ -15,7 +15,7 @@
 
 메시지 객체는 `sender`, `content`, `timestamp`를 제공한다. 최초 응답에는 USER·BOT·INFO 메시지가 포함되며 INFO는 법령·판례 안내 마크다운이다. 후속 응답은 BOT 메시지 하나다. 내부 `GptAnswerResponse`의 `answer`·`info`는 HTTP 응답 DTO와 구분한다.
 
-최초 질문은 키워드 추출·상담방 생성·법령 검색·답변을 수행한다. 2026-10-21 후속 상담은 `MessageChatMemoryAdvisor`가 최초 USER/BOT과 최근 기록을 기본 최대 20개 복원하고 현재 질문을 한 번 전달하도록 변경했다. INFO는 제외하며 후속 법령 검색은 실행하지 않는다. 후속 질문·답변은 모델 성공 후 함께 저장한다. 외부 응답 형식은 유지하며 검증된 원문 근거 스냅샷·동시 요청 제어는 후속 과제다. [역할별 Client와 Advisor 계약](../role-chat-clients.md)을 따른다.
+최초 질문은 키워드 추출·상담방 생성·법령 검색·답변을 수행한다. 2026-10-21 후속 상담은 `MessageChatMemoryAdvisor`가 최초 USER/BOT과 최근 기록을 기본 최대 20개 복원하고 현재 질문을 한 번 전달하도록 변경했다. INFO는 제외하며 후속 법령 검색은 실행하지 않는다. 후속 질문·답변은 모델 성공 후 함께 저장한다. 외부 응답 형식은 유지하며 검증된 원문 근거 스냅샷·동시 요청 제어는 후속 과제다. [역할별 Client와 Advisor 계약](../architecture/role-chat-clients.md)을 따른다.
 
 ## 법령 API와 수집 회귀 테스트
 
