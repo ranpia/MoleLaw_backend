@@ -1,5 +1,14 @@
 # 검증 현황
 
+## 2026-10-28 전용 최소 환경 실 기동·지표 연결
+
+- 사용자 승인으로 기존 개발 컨테이너 6개를 중지하고 데이터 볼륨은 보존했다. 전용 무작위 비밀값은 Git 제외된 `docker/loadtest/.env`에 생성했으며 출력하지 않았다. 최소 테스트 환경 6개 서비스(백엔드·MySQL·Redis·Prometheus·Grafana·게이트웨이)를 실행 중이다. RAG·Locust는 실행하지 않았다.
+- 실 기동에서 internal 네트워크의 호스트 포트 미공개 문제를 확인해 고정 TCP 경로의 HAProxy 게이트웨이를 추가했다. 백엔드는 internal 네트워크에만 연결되고 기본 외부 라우트가 없으며 관리 9091은 게이트웨이에서도 노출하지 않는다. HAProxy 설정 검사·Compose 검증을 통과했다.
+- 기존 CookieUtil의 비보안 쿠키 보호 정책에 맞춰 local,loadtest 프로필을 사용하고 local 그룹을 mysql로 재정의했다. Swagger·Swagger CSRF 자동 처리는 명시적으로 비활성화하고 CSRF 쿠키 HttpOnly를 유지했다. 인증 코드는 변경하지 않았다.
+- 전용 MySQL Flyway V8 성공·테이블 10개, backend/DB/Redis healthy, CSRF 200·익명 방 조회/공개 경로 scrape/문서 401·CSRF 없는 login 403을 확인했다. 소규모 조회용 [반복 점검 스크립트](../../scripts/load-testing/check-minimal.ps1)가 통과했다.
+- Prometheus backend UP, JVM 메모리·Hikari active·HTTP histogram 실제 수집, Grafana API의 대시보드 8개 패널 등록·데이터소스 health OK를 확인했다. 브라우저 화면 조작이나 처리 용량 측정 결과가 아니다.
+- 부하·실 AI/OpenLaw·실 RAG·사용자 데이터 생성은 수행하지 않았다. 변경은 Compose·스크립트·문서이며 앞선 JUnit 546개 검증 이후 Java 변경은 없다. 백엔드 이미지 ID는 `sha256:f2e83da769b7135e5e162e771dc8485182d97eb5fffe0814c70e2b9aa1cdbde5`다.
+
 ## 2026-10-28 부하 테스트 전용 환경·백엔드 기본 계측
 
 - `mysql,loadtest` 전용 Compose·빈 비밀값 env 예제, 독립 DB/Redis/Qdrant/모델 캐시/관측 볼륨을 작성했다. 기본 실행은 백엔드·MySQL·Redis·Prometheus·Grafana, `rag`는 선택 실행이다. 백엔드는 internal 네트워크에만 연결하고 더미 외부 인증값을 사용한다. 관리 포트 9091은 호스트에 공개하지 않는다.

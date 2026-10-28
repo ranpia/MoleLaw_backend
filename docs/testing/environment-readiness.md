@@ -81,6 +81,13 @@ docker run --rm locustio/locust:2.47.0 --version
 
 ## 다음 실습
 
-첫 실습은 전용 데이터와 백엔드의 준비부터 진행한다. 기존 개발 서비스의 한계 측정은 하지 않는다.
-계측 추가 후에는 외부 AI를 호출하지 않는 조회 API를 사용자 1명으로 실행해 응답·지표를 함께 확인한다.
+이후 전용 최소 환경(백엔드·MySQL·Redis·Prometheus·Grafana·게이트웨이)을 기동하고 지표 연결을 확인했다.
+사용자 요청으로 기존 개발 컨테이너 6개는 중지했으며 기존 볼륨은 보존했다. 개발 Redis는 휘발성이므로 개발 재개 시 재로그인이 필요하다.
+테스트용 무작위 비밀값은 Git 제외된 `docker/loadtest/.env`에만 저장했다.
+전용 MySQL의 V8 마이그레이션·테이블 10개, backend healthy, Prometheus backend UP,
+Grafana 대시보드와 데이터소스 health OK, 실제 JVM/Hikari/HTTP histogram 수집을 확인했다.
+관리 포트 미공개·백엔드 internal 네트워크만 연결·기본 경로 인증/CSRF 차단·CSRF HttpOnly도 확인했다.
+
+다음 실습은 합성 사용자·조회용 데이터를 준비하고 외부 AI를 호출하지 않는 조회 API를 사용자 1명으로 실행하는 것이다.
+RAG용 Qdrant·KURE는 아직 기동하지 않았다. 기존 개발 서비스의 한계 측정은 하지 않는다.
 진행 상태는 [LT01~LT08 계획](../plans/load-testing.md)에서 관리한다.

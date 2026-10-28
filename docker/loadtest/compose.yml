@@ -16,7 +16,6 @@ services:
       MYSQL_ROOT_PASSWORD: ${LT_MYSQL_ROOT_PASSWORD:?Set LT_MYSQL_ROOT_PASSWORD}
       TZ: Asia/Seoul
     command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_0900_ai_ci, --innodb-buffer-pool-size=512M, --max-connections=60]
-    ports: ["127.0.0.1:${LT_MYSQL_PORT:-13307}:3306"]
     volumes: [mysql_data:/var/lib/mysql]
     cpus: ${LT_MYSQL_CPUS:-1.0}
     mem_limit: ${LT_MYSQL_MEMORY:-1536m}
@@ -58,7 +57,14 @@ services:
       context: ../..
       dockerfile: docker/app.Dockerfile
     environment:
-      SPRING_PROFILES_ACTIVE: mysql,loadtest
+      # Existing cookie policy allows local HTTP only under local/test.
+      # Override local's group to mysql so minimal startup does not require Qdrant.
+      SPRING_PROFILES_ACTIVE: local,loadtest
+      SPRING_PROFILES_GROUP_LOCAL: mysql
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_CSRF_ENABLED: "false"
+      COOKIE_CSRF_HTTP_ONLY: "true"
       SPRING_CONFIG_IMPORT: ""
       MYSQL_HOST: mysql
       MYSQL_PORT: "3306"
@@ -96,7 +102,6 @@ services:
     depends_on:
       mysql: {condition: service_healthy}
       redis: {condition: service_healthy}
-    ports: ["127.0.0.1:${LT_BACKEND_PORT:-18080}:8080"]
     # Management port 9091 is intentionally not published to the host.
     expose: ["9091"]
     cpus: ${LT_BACKEND_CPUS:-2.0}
@@ -114,9 +119,6 @@ services:
     image: qdrant/qdrant:v1.19.1
     environment:
       QDRANT__SERVICE__API_KEY: ${LT_QDRANT_API_KEY:?Set LT_QDRANT_API_KEY}
-    ports:
-      - "127.0.0.1:${LT_QDRANT_HTTP_PORT:-16333}:6333"
-      - "127.0.0.1:${LT_QDRANT_GRPC_PORT:-16334}:6334"
     volumes: [qdrant_data:/qdrant/storage, qdrant_snapshots:/qdrant/snapshots]
     cpus: ${LT_QDRANT_CPUS:-2.0}
     mem_limit: ${LT_QDRANT_MEMORY:-2g}
@@ -153,7 +155,6 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-    ports: ["127.0.0.1:${LT_PROMETHEUS_PORT:-19090}:9090"]
     cpus: 0.5
     mem_limit: 512m
     logging: *logging
@@ -171,9 +172,29 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-    ports: ["127.0.0.1:${LT_GRAFANA_PORT:-13000}:3000"]
     cpus: 0.5
     mem_limit: 512m
+    logging: *logging
+
+  gateway:
+    image: haproxy:3.2.4-alpine
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks: [default, ingress]
+    ports:
+      - "127.0.0.1:${LT_BACKEND_PORT:-18080}:8080"
+      - "127.0.0.1:${LT_MYSQL_PORT:-13307}:3306"
+      - "127.0.0.1:${LT_GRAFANA_PORT:-13000}:3000"
+      - "127.0.0.1:${LT_PROMETHEUS_PORT:-19090}:9090"
+      - "127.0.0.1:${LT_QDRANT_HTTP_PORT:-16333}:6333"
+      - "127.0.0.1:${LT_QDRANT_GRPC_PORT:-16334}:6334"
+    depends_on:
+      backend: {condition: service_started}
+      mysql: {condition: service_healthy}
+      prometheus: {condition: service_started}
+      grafana: {condition: service_started}
+    cpus: 0.25
+    mem_limit: 128m
     logging: *logging
 
   locust:
@@ -189,6 +210,7 @@ networks:
   default:
     internal: true
   model_download: {}
+  ingress: {}
 
 # Project-scoped volumes only: no external volumes, development mounts or explicit shared names.
 volumes:
