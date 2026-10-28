@@ -29,6 +29,7 @@
 | [MySQL](mysql-schema.md) | P05·P08, 작업·턴 상태와 마이그레이션 |
 | [인증·운영 보안](auth-security.md) | P08, 실제 브라우저·복구·호출 제한 |
 | [검증 절차](delivery-validation.md) | 공통 검증 모드·완료 보고 기준 |
+| [백엔드·DB·RAG 부하 테스트](load-testing.md) | LT01~LT08, 도구 준비·단계별 계측·격리 부하·결과 판정 |
 | [SerpApi 검토](search-fallback.md) | P07, 미확정 제안과 채택 조건 |
 
 ## 실행 원칙

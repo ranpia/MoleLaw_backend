@@ -21,6 +21,7 @@
 | [데이터베이스](database/README.md) | MySQL·스키마 | [실행](database/mysql-setup.md), [스키마](database/schema-rebuild-status.md) |
 | [코드·모델 구조](architecture/README.md) | 패키지·API·역할별 Client | [패키지·API](architecture/package-api-organization.md), [모델](architecture/role-chat-clients.md) |
 | [검증](validation/README.md) | 검증 기록·제한 | [검증 현황](validation/validation-status.md) |
+| [테스트 도구](testing/README.md) | 부하 테스트 입문·도구 역할 | [백엔드·DB·RAG 부하 계획](plans/load-testing.md) |
 | [작업 계획](plans/README.md) | 미완료 작업·순서 | [모델·오케스트레이션](plans/orchestration-models.md), [RAG·ETL](plans/rag-etl.md) |
 | [사용자 결정](decisions/README.md) | 판단 대기·확정 방향 | [확정 결정](decisions/confirmed.md) |
 | [과거 기록](archive/README.md) | 폐기·변경된 기준과 SQL | 현재 동작의 근거로 사용하지 않음 |
