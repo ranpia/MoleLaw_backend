@@ -165,6 +165,7 @@ services:
       GF_SECURITY_ADMIN_USER: loadtest
       GF_SECURITY_ADMIN_PASSWORD: ${LT_GRAFANA_PASSWORD:?Set LT_GRAFANA_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_DEFAULT_LANGUAGE: ko-KR
       GF_AUTH_ANONYMOUS_ENABLED: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
@@ -204,6 +205,24 @@ services:
     command: [--version]
     cpus: 1.0
     mem_limit: 512m
+    logging: *logging
+
+  seed-data:
+    profiles: [data]
+    image: molelaw/loadtest-data:v1
+    build:
+      context: ./data
+    environment:
+      LT_SEED_CONFIRM: molelaw_loadtest
+      LT_MYSQL_PASSWORD: ${LT_MYSQL_PASSWORD:?Set LT_MYSQL_PASSWORD}
+      LT_CHAT_ENCRYPTION_KEY: ${LT_CHAT_ENCRYPTION_KEY:?Set LT_CHAT_ENCRYPTION_KEY}
+      LT_DATA_PASSWORD: ${LT_DATA_PASSWORD:-}
+    volumes:
+      - ../../build/loadtest-data:/results
+    depends_on:
+      mysql: {condition: service_healthy}
+    cpus: 1.0
+    mem_limit: 256m
     logging: *logging
 
 networks:

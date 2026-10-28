@@ -1,7 +1,7 @@
 # 부하 테스트 전용 Docker 환경
 
 개발 환경과 별도인 `molelaw-loadtest` 프로젝트다. DB·Qdrant·모델 캐시·관측 데이터는 모두 새 전용 볼륨을 사용한다.
-루트 `.env`·개발용 Compose·외부 볼륨을 가져오지 않는다. 최소 환경 실 기동·지표 연결을 확인했으며 부하 시나리오·합성 데이터·외부 API 대역은 미구현이다.
+루트 `.env`·개발용 Compose·외부 볼륨을 가져오지 않는다. 최소 환경 실 기동·지표 연결과 조회용 합성 데이터를 준비했으며 부하 시나리오·외부 API 대역은 미구현이다.
 
 ## 1. 환경변수 준비
 
@@ -65,7 +65,9 @@ docker compose --env-file docker/loadtest/.env -f docker/loadtest/compose.yml ps
 | MySQL | 127.0.0.1:13307 | DB·계정 molelaw_loadtest |
 | 관리 포트 | backend:9091 | Docker 내부 전용. 호스트 포트 매핑 없음 |
 
-Grafana에 `MoleLaw Loadtest - Backend` 대시보드와 Prometheus 데이터소스가 자동 등록된다.
+Grafana에 `MoleLaw 부하 테스트 - 백엔드` 대시보드와 Prometheus 데이터소스가 자동 등록된다.
+기본 UI 언어는 한국어이며 대시보드 제목·패널·설명·범례를 한글화했다. 지표명·API 경로·기존 데이터소스 식별 이름은 유지한다.
+개인 언어 설정은 서버 기본값보다 우선한다. 이미 로그인한 화면은 새로고침하고 필요하면 프로필의 언어를 한국어로 선택한다.
 HTTP RPS·p95/p99·4xx/5xx·JVM 메모리·GC·Hikari active/pending을 표시한다.
 요청 전 또는 표본이 적을 때 No data가 나타날 수 있다. RAG 내부·DB 자체·컨테이너 계측은 후속 작업이다.
 Grafana 비밀번호는 빈 전용 볼륨 최초 시작 때 적용되므로 기존 볼륨의 비밀번호를 env 변경만으로 재설정할 수는 없다.
@@ -85,6 +87,9 @@ CSRF 쿠키는 HttpOnly를 유지하고 JSON의 토큰을 헤더로 전송한다
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/load-testing/check-minimal.ps1
 ```
+
+조회용 합성 사용자 20명·상담방 200개·저장 메시지 4,000개도 준비했다. 생성/재실행과 API 점검은 [합성 데이터 안내](../../docs/testing/test-data.md)를 따른다.
+데이터 적재 도구는 `data` 프로필의 일회성 seed-data 서비스이며 기본 `up`에는 포함되지 않는다.
 
 ## 4. RAG를 추가하는 경우
 

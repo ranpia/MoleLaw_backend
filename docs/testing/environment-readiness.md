@@ -88,6 +88,7 @@ docker run --rm locustio/locust:2.47.0 --version
 Grafana 대시보드와 데이터소스 health OK, 실제 JVM/Hikari/HTTP histogram 수집을 확인했다.
 관리 포트 미공개·백엔드 internal 네트워크만 연결·기본 경로 인증/CSRF 차단·CSRF HttpOnly도 확인했다.
 
-다음 실습은 합성 사용자·조회용 데이터를 준비하고 외부 AI를 호출하지 않는 조회 API를 사용자 1명으로 실행하는 것이다.
+이후 [조회용 합성 데이터](test-data.md) 20명·200방·4,000메시지를 준비하고 로그인·조회·복호화·권한을 검증했다.
+다음 실습은 외부 AI를 호출하지 않는 조회 API를 Locust 사용자 1명으로 실행하는 것이다.
 RAG용 Qdrant·KURE는 아직 기동하지 않았다. 기존 개발 서비스의 한계 측정은 하지 않는다.
 진행 상태는 [LT01~LT08 계획](../plans/load-testing.md)에서 관리한다.
