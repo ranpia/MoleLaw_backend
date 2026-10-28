@@ -29,6 +29,8 @@ DB 메시지는 `USER/BOT`만 저장합니다. API의 기존 `INFO` 응답은 �
 
 방에서 큰 근거·메시지를 역방향으로 로딩하는 JPA 관계를 제거했습니다. 방 삭제는 DB FK `ON DELETE CASCADE`로 메시지와 근거를 삭제합니다. 사용자 삭제도 방·메시지·근거까지 함께 삭제합니다. JPA 자동 DDL을 사용하지 않는 환경에서는 반드시 해당 Flyway migration을 먼저 적용하세요.
 
+개별 저장 근거는 `DELETE /api/chat-rooms/{roomId}/evidence/{evidenceId}`로 제거합니다. V8의 방별 제외 기록으로 최초 스냅샷과 해시는 보존하고, 추가 판례의 해당 방 참조는 삭제합니다. 목록·상세·다음 상담 맥락에서 빠지며 공유 원문은 보존합니다. 검색 중 `evidence` 이벤트는 화면 미리보기일 뿐 저장되지 않으며, 성공한 답변과 인용 근거만 기존 트랜잭션에서 저장합니다. [실시간 이벤트](initial-answer-stream.md)와 [근거 삭제 계약](room-evidence.md)을 따릅니다.
+
 ## 정렬·페이지 조회와 검증
 
 메시지·미리보기는 `(timestamp ASC, id ASC)`를 사용합니다. 방 목록 `GET /api/chat-rooms?page=0&size=20`은 `(created_at DESC, id DESC)`이며 `page >= 0`, `1 <= size <= 100`입니다. 응답 JSON은 기존 방 배열을 유지합니다. `LocalDateTime` 응답의 시간대 의미는 UTC이며 오프셋을 추가하지 않습니다.

@@ -32,6 +32,8 @@ public class CaseSearchPipeline {
         public State(Long roomId) { this.roomId = roomId; }
         public Long roomId() { return roomId; }
         private String userQuestion;
+        private List<EvidenceItem> lawContexts;
+        public void lawContexts(List<EvidenceItem> value) { lawContexts = List.copyOf(value); }
         private com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan searchPlan;
         public void userQuestion(String value) { userQuestion = value; }
         public com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan searchPlan() { return searchPlan; }
@@ -49,12 +51,15 @@ public class CaseSearchPipeline {
     public CaseSearchOutcome search(LegalToolContext context, EvidenceItem law, String query, int page,
             State state, Consumer<String> progress) {
         if (state.rerankCalls >= properties.getMaxRerankCalls()) return empty("BUDGET_EXHAUSTED", 0, 0, false, false, false);
-        String inputKey = com.MoleLaw_backend.law.util.LawSearchQueryKey.of(query) + "|" + law.sourceId() + "|" + state.scope;
+        String inputKey = com.MoleLaw_backend.law.util.LawSearchQueryKey.of(query) + "|"
+                + (state.lawContexts != null ? state.lawContexts.stream().map(EvidenceItem::id).toList()
+                        : law == null ? "" : law.sourceId()) + "|" + state.scope;
         if (!state.plannedInputs.add(inputKey)) return empty("DUPLICATE", 0, 0, false, false, false);
         context.checkDeadline();
         progress.accept("CASE_QUERY_PLANNING");
         com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan plan;
-        try { plan = state.userQuestion == null ? queryPlanner.plan(query, law)
+        try { plan = state.lawContexts != null ? queryPlanner.planWithLawContexts(query, state.lawContexts, state.userQuestion, state.scope)
+                : state.userQuestion == null ? queryPlanner.plan(query, law)
                 : queryPlanner.plan(query, law, state.userQuestion, state.scope); }
         catch (com.MoleLaw_backend.common.ai.exception.GptApiException failure) {
             log.warn("판례처리 traceId={} 유형=후속 방={} 단계=검색어변환실패", context.executionId(), state.roomId);
@@ -78,7 +83,7 @@ public class CaseSearchPipeline {
 
     private CaseSearchOutcome searchQuery(LegalToolContext context, EvidenceItem law, String query, int page,
             State state, Consumer<String> progress, com.MoleLaw_backend.law.dto.retrieval.CaseQueryPlan plan) {
-        String lawName = law.title().replaceFirst("\\s+제[0-9]+조.*$", "").strip();
+        String lawName = law == null ? "" : law.title().replaceFirst("\\s+제[0-9]+조.*$", "").strip();
         String key = com.MoleLaw_backend.law.util.LawSearchQueryKey.of(query) + "|" + lawName + "|" + state.scope;
         if (!state.searches.add(key)) {
             log.info("판례처리 traceId={} 유형=후속 방={} 단계=검색생략 사유=동일조건반복", context.executionId(), state.roomId);

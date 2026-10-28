@@ -1,6 +1,6 @@
 # 빈 MySQL DB 초기화와 검증
 
-기본/mysql·local에서 Flyway V1~V7을 순서대로 적용한 뒤 Hibernate가 validate한다. 적용한 버전은 수정하지 않으며 기존 Flyway 관리 DB에는 미적용 migration만 순서대로 추가한다. V4는 구 법령·청크·벡터 테이블을 삭제하므로 이 저장소의 초기 개발 전환 기준으로만 적용한다. 이전 INFO 행·구 암호문은 자동 변환하지 않는다.
+기본/mysql·local에서 Flyway V1~V8을 순서대로 적용한 뒤 Hibernate가 validate한다. 적용한 버전은 수정하지 않으며 기존 Flyway 관리 DB에는 미적용 migration만 순서대로 추가한다. V4는 구 법령·청크·벡터 테이블을 삭제하므로 이 저장소의 초기 개발 전환 기준으로만 적용한다. 이전 INFO 행·구 암호문은 자동 변환하지 않는다.
 
 2026-10-24 V6은 동일 원문·설정의 동시 색인을 막는 nullable unique `dedup_key`, V7은 [본문 없는 조문 ID/해시 관계](../law/incremental-law-indexing.md)를 추가했다. 기존 원문/벡터는 유지한다. 새 메타데이터는 완료 검증 시 등록하며 기존 데이터의 수동 보강은 `scripts/backfill-law-chunk-index.py`를 사용한다. 별도 개발 DB는 V7과 495개 메타데이터 연결까지 적용했다.
 

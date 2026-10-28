@@ -23,6 +23,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 class ChatServiceAdvisorTest {
+    @Test
+    void selectedLawIsForwardedToAnswerService() throws Exception {
+        String selectedId = "00000000-0000-0000-0000-000000000002";
+        var selectedRequest = new ObjectMapper().readValue("{\"content\":\"네\",\"allowCaseSearch\":true,"
+                + "\"caseSearchLawEvidenceIds\":[\"" + selectedId + "\"]}", CreateMessageRequest.class);
+        when(rooms.findById(2L)).thenReturn(Optional.of(room));
+        when(gpt.prepareFollowUp(1L, 2L, "네", true, java.util.List.of(selectedId))).thenReturn(
+                new com.MoleLaw_backend.chat.dto.answer.PreparedFollowUpAnswer(
+                        new LegalAnswerResponse("답변", ""), java.util.List.of(), false, true));
+        when(turns.savePreparedFollowUpTurn(eq(room), eq("네"), any())).thenReturn(Message.builder()
+                .sender(Message.Sender.BOT).content(TestEncryption.create().encrypt("답변")).build());
+        service.askQuestion(user, 2L, selectedRequest);
+        verify(gpt).prepareFollowUp(1L, 2L, "네", true, java.util.List.of(selectedId));
+    }
+
     private final ChatRoomRepository rooms = mock(ChatRoomRepository.class);
     private final MessageRepository messages = mock(MessageRepository.class);
     private final LegalAnswerService gpt = mock(LegalAnswerService.class);

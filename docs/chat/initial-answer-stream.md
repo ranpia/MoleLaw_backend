@@ -28,10 +28,22 @@
 | --- | --- |
 | `progress` | `stage`, `message`를 진행 상태로 표시. 퍼센트나 내부 추론을 생성하지 않는다. |
 | `info` | `info` 마크다운으로 **이전 근거 전체를 교체**. 실제 읽고 채택한 근거가 생길 때마다 전송한다. 중복 추가하지 않는다. |
+| `evidence` | `evidence.items`로 근거 카드 목록 전체를 교체한다. `id`가 카드 키다. `PREVIEW`는 임시 표시, `SAVED`는 답변 저장 후 실제 방 목록이다. 본문은 포함하지 않는다. |
 | `answer_delta` | `delta`를 임시 답변에 이어 붙인다. 모델이 생성하는 실제 조각이며 완료한 답변을 잘라 보내는 방식이 아니다. |
 | `completed` | `response.answer`와 `response.info`로 최종 교체. 저장형에서는 `room.id`를 사용한다. 여기까지 받아야 확정 답변이다. |
 | `error` | 공개 `code`, `message`를 표시하고 임시 답변을 폐기한다. 이미 확인한 info는 참고 자료로 남길 수 있으나 완료된 상담으로 표시하면 안 된다. |
 | `heartbeat` | 10초마다 연결 유지. 화면에는 표시하지 않는다. |
+
+실시간 카드에는 다음 구조를 사용한다. 기존 `info`는 마크다운 표시용으로 계속 제공한다.
+
+```ndjson
+{"type":"evidence","evidence":{"roomId":16,"state":"PREVIEW","items":[{"id":"00000000-0000-0000-0000-000000000001","kind":"LAW_CHUNK","sourceId":"270551:1","title":"근로기준법 제1조","sourceUrl":"https://www.law.go.kr/lsInfoP.do?lsiSeq=270551","lawId":null,"effectiveDate":null}]}}
+{"type":"evidence","evidence":{"roomId":16,"state":"SAVED","items":[{"id":"00000000-0000-0000-0000-000000000001","kind":"LAW_CHUNK","sourceId":"270551:1","title":"근로기준법 제1조","sourceUrl":"https://www.law.go.kr/lsInfoP.do?lsiSeq=270551","lawId":null,"effectiveDate":null}]}}
+```
+
+`PREVIEW`는 확정된 검색 근거를 즉시 보여주기 위한 미리보기이며 이 이벤트로 DB를 갱신하지 않는다. 새 방은 생성 전이므로 `roomId=null`이다. 기존 방은 해당 ID를 보낸다. 저장형은 답변 검증·트랜잭션 성공 후 `SAVED`를 보내고 이어서 `completed`로 끝낸다. 무저장 API는 `SAVED`를 보내지 않는다. 후속 상담의 미리보기에는 읽고 확인한 새 판례가 나타나지만 성공 후 실제 인용한 판례만 저장되므로 최종 `SAVED.items`가 줄어들 수 있다.
+
+`error` 또는 `completed` 전 연결 종료가 발생하면 이번 `PREVIEW`를 폐기하고 마지막 `SAVED` 목록을 복원한다. `SAVED`를 받지 못했다면 요청 전 저장 목록으로 돌아간다. 이미 커밋된 저장은 연결 종료로 취소되지 않으므로 목록을 재조회해 동기화한다. 기존 방은 `GET /api/chat-rooms/{roomId}/evidence`로 재조회할 수 있다. 미리보기만으로 새 근거가 저장됐다고 표시하지 않는다. 새 미리보기 ID는 저장 전 본문 조회 API에서 404일 수 있다. 구조화된 `evidence`의 UUID는 카드와 삭제 API용이며, 표시용 `info`·`answer_delta`의 숨긴 인용 UUID와 용도가 다르다.
 
 중간 `info`와 `answer_delta`에는 내부 `[[UUID]]` 대신 `[근거 1]` 같은 표시용 번호를 사용한다. 인용 ID가 여러 모델 조각으로 나뉘어도 중간 UUID 일부가 노출되지 않도록 요청별 상태를 유지한다. 알려지지 않은 인용이나 미완성 인용은 중간 화면에 노출하지 않고, 원문을 별도 보존해 최종 인용 검증에서 실패시킨다. 같은 요청 안에서 근거 번호는 유지하며 제외된 번호를 다른 근거에 재사용하지 않는다. `completed.response`는 기존 UUID 인용 계약을 유지하므로 기존 최종 답변 인용 렌더러를 그대로 사용한다.
 
@@ -70,4 +82,8 @@ JWT 필터는 검증한 인증 정보를 `RequestAttributeSecurityContextReposit
 
 프론트에서 사용할 SSE/NDJSON 파서 예시는 [initial-answer-stream.js](../examples/initial-answer-stream.js)를 참고한다. 모델 스트림은 [Spring AI ChatClient의 stream().content()](https://docs.spring.io/spring-ai/reference/api/chatclient.html)를 사용한다. [Spring MVC 비동기 처리](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-async.html)는 두 스트리밍 미디어 형식을 항목 단위로 전송한다.
 
-후속 상담은 준비와 최종 작성 호출을 분리한다. 준비 단계의 모델 텍스트는 보내지 않고 실제 처리 progress와 확인한 info만 전송한다. 도구 없는 최종 작성 단계에서만 answer_delta를 보내므로 도구 호출 전 초안이 사라졌다가 다시 작성되는 현상을 방지한다. 내부 상태 코드는 최종 본문과 스트림 조각에서 자연어로 치환한다.
+후속 상담의 일반 질문은 판례 준비 호출을 건너뛰고 바로 최종 답변을 작성한다. 기존 판결 자체의 검토를 명시적으로 요청한 경우만 판례 읽기 준비를 실행한다. 준비 단계의 모델 텍스트는 보내지 않고 실제 처리 progress와 확인한 info만 전송한다. 도구 없는 최종 작성 단계에서만 answer_delta를 보낸다. 내부 상태 코드는 최종 본문과 스트림 조각에서 자연어로 치환한다.
+
+후속 답변의 최종 인용 검증에서 표기 누락·알 수 없는 ID·잘못된 표식·모델 URL이 발견되면 `progress`의 `stage=ANSWER_REPAIR`로 알리고 이미 읽은 동일 근거와 초안으로 1회 교정한다. 검색·수집·본문 읽기 도구나 대화 메모리는 교정 호출에 제공하지 않는다. 교정 답변은 기존 검증 규칙을 다시 통과해야 저장한다. `completed.response.answer`는 앞서 받은 delta와 달라질 수 있으므로 프론트는 전체 교체해야 한다. 재검증 실패 시 기존처럼 `error`로 끝내고 메시지를 저장하지 않는다. 손상된 근거 목록은 교정으로 우회하지 않는다.
+
+인용 검증 실패 로그는 traceId와 `MISSING_CITATION`, `UNKNOWN_ID`, `MALFORMED_MARKER`, `MODEL_URL` 등 사유 코드만 기록한다. 질문·생성 답변·본문·원시 모델 출력은 기록하지 않는다.

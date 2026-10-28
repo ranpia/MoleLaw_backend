@@ -69,7 +69,7 @@ public class EvidencePromptBuilder {
         if (question == null || question.isBlank()) {
             throw new IllegalArgumentException("Question must not be blank");
         }
-        if (evidence == null || evidence.isEmpty()) {
+        if (evidence == null || !followUp && evidence.isEmpty()) {
             throw new GptApiException(ErrorCode.GPT_API_FAILURE);
         }
         String introduction = followUp
@@ -77,12 +77,13 @@ public class EvidencePromptBuilder {
                 + "지정 사건의 판결 자체를 원하는지 유사 쟁점의 판례를 원하는지는 요청과 대화로 판단하세요. "
                 + "지정 사건의 직접 판결을 확인하지 못했으면 다른 사건을 그 직접 판결처럼 소개하지 마세요. 관련 판례는 별도로 구분하고 관계와 한계를 설명하세요. 실행하지 않은 검색을 했다고 주장하지 마세요. "
                 + "새 검색이 필요하면 제공된 도구로 권한을 확인하고, 동의가 없으면 동의 요청 도구를 사용하세요. "
-                + "실제로 읽고 확인한 근거만 인용하세요.\n서버가 상담방에 고정한 근거 자료:\n"
+                + "실제로 읽고 확인한 근거만 인용하세요. 일부 발췌 표시는 본문 일부를 읽었다는 뜻입니다. 확인한 내용은 설명·인용하되 생략된 내용이나 전체 판결을 확인했다고 주장하지 마세요. 발췌라는 이유만으로 확인한 내용까지 답변에서 제외하지 마세요.\n서버가 상담방에 고정한 근거 자료:\n"
                 : "아래 본문은 서버가 실제로 읽고 검증해 제공한 근거입니다. 확보된 본문을 아직 확인하지 않은 것처럼 표현하지 마세요. "
                 + "답변은 확인한 조문의 규정과 질문에 대한 설명으로 시작하고 해당 근거를 인용하세요. "
                 + "미확인 사항은 그 사항이 영향을 주는 쟁점에만 한정해 뒤에서 설명하세요. "
                 + "자료 부족 안내나 원문을 다시 확인하라는 말만으로 답변을 대신하지 마세요.\n서버가 상담방에 고정한 근거 자료:\n";
         StringBuilder prompt = new StringBuilder(introduction);
+        if (evidence.isEmpty()) prompt.append("현재 답변에 사용할 확인된 근거가 없습니다. 삭제되었거나 이번에 읽지 않은 과거 근거를 인용하지 마세요. 확인되지 않은 판결·조문을 만들지 말고 현재 확인 범위를 설명하세요.\n");
         for (EvidenceItem item : evidence) {
             prompt.append("[[").append(item.id()).append("]] ").append(item.kind()).append(' ')
                     .append(item.title()).append('\n');

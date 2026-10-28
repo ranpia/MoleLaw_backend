@@ -26,9 +26,26 @@ class InitialAnswerStreamServiceTest {
                 InitialAnswerUpdate.info("근거"), InitialAnswerUpdate.delta("임시"), InitialAnswerUpdate.complete(prepared)));
         when(chats.saveStreamedInitialAnswer(owner, "질문", prepared)).thenReturn(room);
         var events = service.stream("질문", owner).collectList().block(Duration.ofSeconds(5));
-        assertThat(events).extracting(e -> e.event()).containsExactly("progress", "info", "answer_delta", "progress", "completed");
+        assertThat(events).extracting(e -> e.event()).containsExactly("progress", "info", "answer_delta", "progress", "evidence", "completed");
+        assertThat(events.get(events.size() - 2).data().evidence().state())
+                .isEqualTo(com.MoleLaw_backend.chat.dto.response.EvidenceUpdateResponse.State.SAVED);
         assertThat(events.get(events.size() - 1).data().room().getId()).isEqualTo(42L);
         verify(chats).saveStreamedInitialAnswer(owner, "질문", prepared);
+    }
+
+    @Test void confirmedEvidenceIsPreviewedBeforeFailureWithoutSavingTheRoom() {
+        var item = new com.MoleLaw_backend.law.dto.evidence.EvidenceItem("source-id", "LAW_CHUNK", "law-1",
+                "확정 법령", "https://www.law.go.kr", "외부에 보내지 않을 원문 본문");
+        when(answers.streamInitialAnswer("질문")).thenReturn(Flux.concat(
+                Flux.just(InitialAnswerUpdate.evidence(List.of(item))), Flux.error(new IllegalStateException("provider failed"))));
+        var events = service.stream("질문", mock(User.class)).collectList().block(Duration.ofSeconds(5));
+        assertThat(events).extracting(e -> e.event()).containsExactly("evidence", "error");
+        assertThat(events.get(0).data().evidence().state())
+                .isEqualTo(com.MoleLaw_backend.chat.dto.response.EvidenceUpdateResponse.State.PREVIEW);
+        assertThat(events.get(0).data().evidence().roomId()).isNull();
+        assertThat(events.get(0).data().evidence().items()).hasSize(1);
+        assertThat(events.get(0).data().evidence().items().get(0).id()).isEqualTo("source-id");
+        verifyNoInteractions(chats);
     }
 
     @Test void providerFailureDiscardsProvisionalAnswerAndSanitizesError() {

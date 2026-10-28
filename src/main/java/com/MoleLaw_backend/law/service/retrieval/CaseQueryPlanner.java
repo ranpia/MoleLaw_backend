@@ -27,10 +27,18 @@ public class CaseQueryPlanner {
 
     public CaseQueryPlan plan(String issue, EvidenceItem law, String userQuestion,
             com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope requestedScope) {
+        return planWithLawContexts(issue, law == null ? List.of() : List.of(law), userQuestion, requestedScope);
+    }
+
+    public CaseQueryPlan planWithLawContexts(String issue, List<EvidenceItem> laws, String userQuestion,
+            com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope requestedScope) {
         String validationCode = "FORMAT";
         for (int attempt = 0; attempt < 2; attempt++) {
             try {
-                var input = mapper.createObjectNode().put("issue", issue).put("roomLawContext", law.title());
+                var input = mapper.createObjectNode().put("issue", issue);
+                input.set("roomLawContexts", mapper.valueToTree(laws.stream().map(item ->
+                        Map.of("id", item.id(), "title", item.title())).toList()));
+                input.put("lawContextContract", "선택된 법령 맥락만 참고하세요. 목록이 비어 있으면 검색 요청만으로 검색하고 법령을 자동 선택하지 마세요. 목록이 복수이면 모든 맥락을 고려하되 단일 참조법령 필터는 적용하지 마세요.");
                 input.put("inputContract", "issue는 대화에서 해소한 현재 검색 요청이며 userQuestion은 최신 발화 원문입니다. 동의 발화는 issue의 검색 목적·대상을 변경하지 않습니다.");
                 input.put("userQuestion", userQuestion).put("requestedScope", requestedScope == null ? "BODY" : requestedScope.name());
                 if (attempt > 0) input.put("repair", "이전 계획 검증 실패: " + validationCode
@@ -41,7 +49,8 @@ public class CaseQueryPlanner {
                         "required", List.of("queries", "intent", "targets", "scope"), "properties", Map.of(
                                 "queries", strings, "targets", strings,
                                 "intent", Map.of("type", "string", "enum", List.of("SPECIFIC_CASE", "SIMILAR_ISSUE")),
-                                "scope", Map.of("type", "string", "enum", List.of("BODY", "TITLE", "LAW_REFERENCE"))));
+                                "scope", Map.of("type", "string", "enum", laws.size() == 1
+                                        ? List.of("BODY", "TITLE", "LAW_REFERENCE") : List.of("BODY", "TITLE"))));
                 var format = ResponseFormat.builder().type(ResponseFormat.Type.JSON_SCHEMA)
                         .jsonSchema(ResponseFormat.JsonSchema.builder().name("case_query_plan").strict(true).schema(schema).build()).build();
                 validationCode = "MODEL_CALL";
@@ -54,6 +63,8 @@ public class CaseQueryPlanner {
                         .with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
                         .with(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES).readValue(output);
                 if (result == null) throw new IllegalArgumentException();
+                if (laws.size() != 1 && result.scope() == com.MoleLaw_backend.law.dto.retrieval.CaseSearchScope.LAW_REFERENCE)
+                    throw new IllegalArgumentException("A reference filter requires one selected law");
                 validationCode = "TARGET_GROUNDING";
                 result.validateAgainst(issue, userQuestion);
                 return result;

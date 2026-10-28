@@ -18,7 +18,7 @@
 | 근거 판단·답변 | 후보 목록과 본문 입력 분리, 읽을 근거 선택, 충분성·추가 행동 판단, 부분 일반 안내, UUID 인용 소속 검증 | [본문 읽기](../law/evidence-reading.md), [판단 계약](../law/evidence-decision.md) |
 | 후속 대화 | Advisor로 기록 복원, 고정 법령 근거 사용, 새 판례 검색 실행계획, 동의 확인 | [후속 상담](../chat/follow-up-consultation.md) |
 | 판례 검색 | 특정 사건·유사 쟁점 구분, 사건명/본문/참조법령 범위 선택, 전체 페이지 수집, 후보 선정·본문 관련성 평가 | [판례 흐름](../law/case-retrieval-reranking.md) |
-| 근거 관리 | 최초 스냅샷, 실제 읽고 인용한 새 판례만 누적, 근거 목록·본문 분리 조회 | [상담방 근거](../chat/room-evidence.md) |
+| 근거 관리 | 최초 스냅샷, 읽고 인용한 새 판례 누적, PREVIEW/SAVED 실시간 카드, 근거 목록·본문 조회와 사용자 삭제 | [상담방 근거](../chat/room-evidence.md) |
 | 진행 상태 | 최초 SSE·NDJSON, 후속 NDJSON, 실제 단계·근거·임시 답변·완료·오류 이벤트 | [스트리밍](../chat/initial-answer-stream.md) |
 | 개발 환경 | local Swagger, ETL 진단, AI Search 비교 코드, DB/AI/백엔드 Compose 분리 | [Docker](../../docker/README.md), [검증](../validation/validation-status.md) |
 

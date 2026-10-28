@@ -56,9 +56,14 @@ export async function streamInitialAnswer({
 }
 
 // Example UI wiring:
+// let savedEvidence = []; // load existing room evidence before starting the request
 // await streamInitialAnswer({ format: "ndjson", body: { content: question }, csrfToken, signal, onEvent: e => {
 //   if (e.type === "progress") setStatus(e.message);
 //   if (e.type === "info") setInfo(e.info); // replace the entire snapshot
+//   if (e.type === "evidence") {
+//     if (e.evidence.state === "SAVED") savedEvidence = e.evidence.items;
+//     setEvidenceCards(e.evidence.items); // full replacement; use item.id as the card key
+//   }
 //   if (e.type === "answer_delta") appendProvisionalAnswer(e.delta);
 //   if (e.type === "completed") {
 //     setAnswer(e.response.answer);
@@ -66,5 +71,6 @@ export async function streamInitialAnswer({
 //     if (e.room) setRoom(e.room);
 //     if (e.messageResult) appendSavedMessage(e.messageResult);
 //   }
-//   if (e.type === "error") { clearProvisionalAnswer(); setError(e.message); }
+//   if (e.type === "error") { clearProvisionalAnswer(); setEvidenceCards(savedEvidence); setError(e.message); }
 // }});
+// Also restore savedEvidence if fetch throws or ends before completed.

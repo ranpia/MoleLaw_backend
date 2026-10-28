@@ -15,12 +15,51 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class FollowUpCaseToolsTest {
+    @Test void twoLongJudgmentsShareBudgetAndPersistOriginalSourcesInsteadOfExcerpts() {
+        org.springframework.test.util.ReflectionTestUtils.setField(factory, "bodyMaxInputTokens", 1024);
+        var first = new EvidenceItem(UUID.randomUUID().toString(), "CASE_BODY", "901", "첫 판결", "https://www.law.go.kr",
+                "게임 채팅 협박에 대한 첫 번째 판결 본문. ".repeat(3000));
+        var second = new EvidenceItem(UUID.randomUUID().toString(), "CASE_BODY", "902", "둘째 판결", "https://www.law.go.kr",
+                "게임 채팅 욕설에 대한 두 번째 판결 본문. ".repeat(3000));
+        var candidates = List.of(
+                new LegalToolContracts.Candidate("901", null, first.title(), null, "2026도1", "20260101", "대법원"),
+                new LegalToolContracts.Candidate("902", null, second.title(), null, "2026도2", "20260101", "대법원"));
+        when(pipeline.search(any(), any(), anyString(), anyInt(), any(), any())).thenReturn(
+                new com.MoleLaw_backend.law.dto.retrieval.CaseSearchOutcome("AVAILABLE", candidates,
+                        java.util.Map.of("901", first, "902", second), List.of(), 0, 2, 2, false, false, false));
+        var session = factory.create(List.of(law), true);
+        session.prepare(new com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan(
+                com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.SEARCH_CASES, law.id(), "게임 채팅 협박 욕설", "검색 요청"));
+        assertThat(session.read("901")).containsEntry("status", "READ").containsEntry("partial", true);
+        assertThat(session.read("902")).containsEntry("status", "READ").containsEntry("partial", true);
+        var visible = session.evidence().stream().filter(item -> "CASE_BODY".equals(item.kind())).toList();
+        assertThat(visible).hasSize(2).allSatisfy(item -> assertThat(item.content()).contains("판결문 일부 발췌"));
+        var tokens = new org.springframework.ai.tokenizer.JTokkitTokenCountEstimator(com.knuddels.jtokkit.api.EncodingType.CL100K_BASE);
+        assertThat(visible.stream().mapToInt(item -> tokens.estimate(item.content())).sum()).isLessThanOrEqualTo(1024);
+        assertThat(session.citedAdditions("[[" + first.id() + "]] [[" + second.id() + "]]"))
+                .containsExactly(first, second);
+        verifyNoInteractions(api, reader);
+    }
+
+    @Test void rereadingAnExistingLongJudgmentDoesNotTurnItsExcerptIntoANewSource() {
+        org.springframework.test.util.ReflectionTestUtils.setField(factory, "bodyMaxInputTokens", 512);
+        var existing = new EvidenceItem(UUID.randomUUID().toString(), "CASE_BODY", "901", "저장된 판결", "https://www.law.go.kr",
+                "저장된 긴 판결 본문. ".repeat(3000));
+        var session = factory.create(List.of(law, existing), false);
+        assertThat(session.read("901")).containsEntry("status", "READ").containsEntry("partial", true);
+        assertThat(session.evidence().get(1).content()).contains("판결문 일부 발췌").isNotEqualTo(existing.content());
+        assertThat(session.citedAdditions("[[" + existing.id() + "]]" )).isEmpty();
+        verifyNoInteractions(api, reader);
+        verify(pipeline, never()).search(any(), any(), anyString(), anyInt(), any(), any());
+    }
+
     @Test void roomAnswerPlanBlocksConsentAndSearchEvenIfCalledDirectly() {
         var session = factory.create(List.of(law), true);
         session.prepare(new com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan(
                 com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.ANSWER_FROM_ROOM, null, "", "정리 요청"));
         assertThatThrownBy(() -> session.requestConsent(law.id(), "추가 검색")).isInstanceOf(IllegalStateException.class);
         assertThatThrownBy(() -> session.search(law.id(), "검색", 1)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> session.read("901")).isInstanceOf(IllegalStateException.class);
         assertThat(session.consentRequested()).isFalse();
         verify(pipeline, never()).search(any(), any(), anyString(), anyInt(), any(), any());
     }

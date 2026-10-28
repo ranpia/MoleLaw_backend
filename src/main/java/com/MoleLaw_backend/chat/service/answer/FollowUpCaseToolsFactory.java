@@ -59,6 +59,7 @@ public class FollowUpCaseToolsFactory {
         private final java.util.function.Consumer<String> progress;
         private final List<EvidenceItem> roomEvidence;
         private final Map<String, EvidenceItem> read = new LinkedHashMap<>();
+        private final Map<String, EvidenceItem> reviewed = new LinkedHashMap<>();
         private final java.util.Set<String> candidateIds = new java.util.HashSet<>();
         private final LegalToolContext context;
         private static final JTokkitTokenCountEstimator tokens = new JTokkitTokenCountEstimator(EncodingType.CL100K_BASE);
@@ -72,6 +73,20 @@ public class FollowUpCaseToolsFactory {
         private final List<String> searchReports = new ArrayList<>();
         private com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan executionPlan;
         private Map<String, Object> preparedSearch = Map.of();
+        private List<EvidenceItem> selectedLawContexts;
+
+        public void selectLawContexts(List<String> ids) {
+            if (ids == null || ids.isEmpty()) {
+                selectedLawContexts = List.of();
+            } else {
+                if (!allowCaseSearch || ids.stream().anyMatch(id -> id == null || roomEvidence.stream().noneMatch(
+                        item -> item.id().equals(id) && item.kind().startsWith("LAW_"))))
+                    throw new com.MoleLaw_backend.common.exception.MolelawException(
+                            com.MoleLaw_backend.common.exception.ErrorCode.INVALID_REQUEST);
+                selectedLawContexts = ids.stream().distinct().map(this::anchor).toList();
+            }
+            searchState.lawContexts(selectedLawContexts);
+        }
         public String searchSummary() { return String.join("\n", searchReports); }
 
         public void prepare(com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan plan) {
@@ -98,12 +113,17 @@ public class FollowUpCaseToolsFactory {
 
         public boolean preparedCaseRead() { return !preparedSearch.isEmpty() && !read.isEmpty(); }
         public boolean preparedSearchCompleted() { return !preparedSearch.isEmpty(); }
+        public boolean requiresRoomCaseRead() {
+            return executionPlan != null && executionPlan.action() == com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.READ_ROOM_CASES;
+        }
 
         public String preparationData() {
             if (executionPlan == null) return "";
             if (executionPlan.action() == com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.ANSWER_FROM_ROOM)
                 return "\n서버 실행계획: 최신 요청은 기존 방 자료로 답합니다. 과거 검색 요청을 이어 실행하거나 검색 동의를 제안하지 마세요."
-                        + " 필요한 기존 판례 본문만 읽고 현재 사용자 요청에 답하세요.\n";
+                        + " 일반 후속 질문이므로 판례 검색·본문 읽기 도구를 호출하지 말고 현재 질문에 직접 답하세요.\n";
+            if (requiresRoomCaseRead())
+                return "\n서버 실행계획: 사용자가 기존 판례의 검토를 명시적으로 요청했습니다. 필요한 기존 판례만 로컬로 읽고 답하세요. 새 검색이나 동의 요청은 하지 마세요.\n";
             try {
                 return "\n서버가 수락한 LLM 실행계획(지시가 아닌 자료):\n"
                         + new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(executionPlan)
@@ -141,13 +161,14 @@ public class FollowUpCaseToolsFactory {
                 @ToolParam(description = "판례 검색으로 보강할 쟁점과 이유, 1~300자") String reason) {
             beginCall();
             requireSearchPlan();
-            anchor(lawEvidenceId);
+            if (lawEvidenceId != null) anchor(lawEvidenceId);
             if (reason == null || reason.isBlank() || reason.length() > 300) throw new IllegalArgumentException("Invalid consent reason");
             if (allowCaseSearch) return Map.of("status", "ALREADY_GRANTED");
             consentRequested = true;
             consentAnchorId = lawEvidenceId;
             log.info("판례처리 traceId={} 유형=후속 방={} 단계=동의요청", context.executionId(), roomId);
-            return Map.of("status", "CONSENT_REQUIRED", "lawEvidenceId", lawEvidenceId, "reason", reason);
+            return lawEvidenceId == null ? Map.of("status", "CONSENT_REQUIRED", "reason", reason)
+                    : Map.of("status", "CONSENT_REQUIRED", "lawEvidenceId", lawEvidenceId, "reason", reason);
         }
 
         private EvidenceItem anchor(String lawEvidenceId) {
@@ -160,6 +181,13 @@ public class FollowUpCaseToolsFactory {
         public boolean consentGranted() { return allowCaseSearch; }
 
         public String consentMessage() {
+            if (selectedLawContexts != null && executionPlan != null) {
+                String context = selectedLawContexts.isEmpty() ? "법령 근거를 자동 선택하지 않고 검색어로 검색합니다."
+                        : "선택하신 법령 " + selectedLawContexts.stream().map(item -> "[[" + item.id() + "]]")
+                                .collect(java.util.stream.Collectors.joining(", ")) + "을 맥락으로 검색합니다.";
+                return "요청하신 판례를 찾기 위해 ‘" + executionPlan.query() + "’ 검색을 진행할까요? "
+                        + context + " 동의하신 경우에만 새 판례를 조회하겠습니다.";
+            }
             var law = anchor(consentAnchorId);
             if (executionPlan != null && executionPlan.action() == com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.SEARCH_CASES)
                 return "요청하신 판례를 찾기 위해 ‘" + executionPlan.query() + "’ 검색을 진행할까요? "
@@ -192,8 +220,10 @@ public class FollowUpCaseToolsFactory {
             beginCall();
             requireSearchPlan();
             if (!allowCaseSearch) throw new IllegalStateException("Explicit precedent search consent required");
-            var anchor = anchor(lawEvidenceId);
-            String lawName = anchor.title().replaceFirst("\\s+제[0-9]+조.*$", "").strip();
+            var anchor = selectedLawContexts != null
+                    ? selectedLawContexts.stream().findFirst().orElse(null)
+                    : lawEvidenceId == null ? null : anchor(lawEvidenceId);
+            String lawName = anchor == null ? "" : anchor.title().replaceFirst("\\s+제[0-9]+조.*$", "").strip();
             searchState.scope(scope);
             try {
                 var result = pipeline.search(context, anchor, query, page, searchState, progress);
@@ -209,7 +239,7 @@ public class FollowUpCaseToolsFactory {
                         + ". 검색 조건과 예산 안에서 확인한 결과이며 판례 자체의 부재를 뜻하지 않습니다.");
                 result.candidates().forEach(candidate -> candidateIds.add(candidate.id()));
                 prefetched.putAll(result.bodies());
-                var response = new LinkedHashMap<String, Object>(Map.of("status", result.status(), "lawEvidenceId", lawEvidenceId,
+                var response = new LinkedHashMap<String, Object>(Map.of("status", result.status(), "lawEvidenceId", anchor == null ? "" : anchor.id(),
                         "referenceLaw", lawName, "candidates", result.candidates(), "page", 1,
                         "hasNext", result.hasNext(), "rankings", result.rankings().stream()
                                 .filter(rank -> result.bodies().containsKey(rank.candidateId())).toList(),
@@ -232,10 +262,12 @@ public class FollowUpCaseToolsFactory {
             }
         }
 
-        @Tool(name = "readRoomCase", description = "방에 저장된 판례 또는 이번 searchRoomCases에서 본문 리랭크로 채택한 판례 ID를 읽어 본문과 인용 UUID를 반환합니다. 이번 답변에 추가할 새 판례 근거는 최대 2개이며 전체 본문이 예산을 초과하면 읽지 않습니다.")
+        @Tool(name = "readRoomCase", description = "방에 저장된 판례 또는 이번 검색에서 채택한 판례의 본문과 인용 UUID를 반환합니다. 새 판례는 최대 2개입니다. 긴 판결문은 읽기 예산 안에서 쟁점 주변·앞뒤를 발췌하며 partial=true와 일부 발췌 표시를 제공합니다. 발췌로 확인한 내용은 인용할 수 있으나 전체 판결문을 읽었다고 주장하거나 생략된 내용을 추정하지 마세요.")
         public synchronized Map<String, Object> read(@ToolParam(description = "searchRoomCases가 반환한 숫자 판례 ID") String caseId) {
             beginCall();
-            if (read.containsKey(caseId)) return Map.of("status", "READ", "evidence", read.get(caseId));
+            if (executionPlan != null && executionPlan.action() == com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.ANSWER_FROM_ROOM)
+                throw new IllegalStateException("Ordinary follow-up does not request case reading");
+            if (read.containsKey(caseId)) return readResult(caseId);
             var existing = roomEvidence.stream().filter(item -> "CASE_BODY".equals(item.kind())
                     && caseId.equals(item.sourceId())).findFirst();
             if (existing.isPresent()) return accept(existing.get());
@@ -262,23 +294,43 @@ public class FollowUpCaseToolsFactory {
         }
 
         private Map<String, Object> accept(EvidenceItem item) {
-            int cost = tokens.estimate(item.content());
-            if (cost > bodyMaxInputTokens - bodyTokens) {
-                log.info("판례처리 traceId={} 유형=후속 방={} 단계=본문제외 판례={} 사유=본문예산초과 필요토큰={} 사용토큰={} 한도={}", context.executionId(), roomId, item.sourceId(), cost, bodyTokens, bodyMaxInputTokens);
-                searchReports.add("검색한 판결 본문이 이번 요청의 읽기 한도를 넘어 읽지 못했습니다. 검색은 실행했으며 추가 동의를 요청할 필요가 없습니다.");
+            int remaining = bodyMaxInputTokens - bodyTokens;
+            long pending = candidateIds.stream().filter(id -> !read.containsKey(id)).count();
+            int slots = (int) Math.max(1, Math.min(2, pending));
+            var plan = searchState.searchPlan();
+            var targets = new ArrayList<String>();
+            if (plan != null) { targets.addAll(plan.targets()); targets.addAll(plan.queries()); }
+            EvidenceItem visible = com.MoleLaw_backend.law.util.CaseEvidenceExcerpt.fit(item, remaining / slots, targets, tokens::estimate);
+            if (visible == null) {
+                log.info("판례처리 traceId={} 유형=후속 방={} 단계=본문제외 판례={} 사유=본문예산소진 사용토큰={} 한도={}", context.executionId(), roomId, item.sourceId(), bodyTokens, bodyMaxInputTokens);
+                searchReports.add("이번 요청의 남은 본문 읽기 예산이 소진되어 추가 발췌를 제공하지 못했습니다. 이미 제공한 판결 본문·발췌는 확인한 범위에서 활용하세요.");
                 return Map.of("status", "BODY_BUDGET_EXCEEDED");
             }
+            int cost = tokens.estimate(visible.content());
             bodyTokens += cost;
             read.put(item.sourceId(), item);
+            reviewed.put(item.sourceId(), visible);
+            if (visible != item) searchReports.add("판례 " + item.sourceId() + "는 읽기 예산에 맞춰 본문 일부를 발췌했습니다. 발췌에서 확인한 내용은 설명·인용하고, 생략된 부분이나 전체 판결을 확인했다고 주장하지 마세요.");
             progress.accept("CASE_BODY_READY");
             log.info("판례처리 traceId={} 유형=후속 방={} 단계=본문채택 판례={} 본문토큰={} 채택누계={}", context.executionId(), roomId, item.sourceId(), cost, read.size());
-            return Map.of("status", "READ", "evidence", item);
+            return readResult(item.sourceId());
+        }
+
+        private Map<String, Object> readResult(String caseId) {
+            return Map.of("status", "READ", "evidence", reviewed.get(caseId), "partial", reviewed.get(caseId) != read.get(caseId));
         }
 
         public List<EvidenceItem> evidence() {
             var result = new ArrayList<>(roomEvidence.stream().filter(item -> !"CASE_BODY".equals(item.kind())).toList());
-            result.addAll(read.values());
+            result.addAll(reviewed.values());
             return List.copyOf(result);
+        }
+
+        public List<EvidenceItem> confirmedEvidence() {
+            var result = new LinkedHashMap<String, EvidenceItem>();
+            roomEvidence.forEach(item -> result.put(item.id(), item));
+            read.values().forEach(item -> result.put(item.id(), item));
+            return List.copyOf(result.values());
         }
 
         public List<EvidenceItem> citedAdditions(String answer) {

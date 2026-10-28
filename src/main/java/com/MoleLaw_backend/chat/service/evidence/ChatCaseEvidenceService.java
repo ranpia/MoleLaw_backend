@@ -19,6 +19,7 @@ public class ChatCaseEvidenceService {
     private final ChatRoomRepository rooms;
     private final LegalSourceService sources;
     private final CaseEvidenceReader reader;
+    private final com.MoleLaw_backend.chat.repository.ChatEvidenceRemovalRepository removals;
 
     /** Caller has checked room ownership through ChatEvidenceService. */
     @Transactional(readOnly = true)
@@ -39,6 +40,8 @@ public class ChatCaseEvidenceService {
         var existing = load(room.getId());
         if (existing.size() + additions.size() > 20) throw new IllegalArgumentException("Room precedent limit exceeded");
         for (var item : additions) {
+            if (removals.existsByRoomIdAndEvidenceId(room.getId(), item.id()))
+                throw new IllegalArgumentException("Removed room evidence cannot be restored by an in-flight answer");
             if (!"CASE_BODY".equals(item.kind()) || item.provenance() == null
                     || !java.util.UUID.fromString(item.id()).toString().equals(item.id())
                     || !reader.read(item.provenance().sourceUuid(), item.id()).equals(item))
@@ -50,5 +53,12 @@ public class ChatCaseEvidenceService {
             }
             repository.saveAndFlush(new ChatCaseEvidence(item.id(), owned, sources.restore(item.provenance().sourceUuid())));
         }
+    }
+
+    /** Called by the owner-checked removal transaction; shared immutable legal_source rows are retained. */
+    @Transactional
+    public void removeReference(Long roomId, String evidenceId) {
+        repository.findByIdAndRoomId(evidenceId, roomId).ifPresent(repository::delete);
+        repository.flush();
     }
 }

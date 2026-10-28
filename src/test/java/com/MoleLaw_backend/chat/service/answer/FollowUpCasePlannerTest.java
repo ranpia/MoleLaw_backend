@@ -17,6 +17,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class FollowUpCasePlannerTest {
+    @Test void explicitlyRequestedExistingCaseReviewHasItsOwnRouteWithoutNewSearch() {
+        respond("{\"action\":\"READ_ROOM_CASES\",\"lawEvidenceId\":null,\"query\":\"\",\"reason\":\"기존 판결의 판단 이유 요청\"}");
+        assertThat(planner.plan("그 판결의 판단 이유를 설명해줘", List.of(law), "1:2").action())
+                .isEqualTo(FollowUpCasePlan.Action.READ_ROOM_CASES);
+    }
+
     @Test void routingClientHasNoHistoryAdvisorAndReceivesOnlyLatestRequestAndLawCatalog() {
         var client = new com.MoleLaw_backend.chat.config.AnswerChatClientConfig().followUpCasePlanningChatClient(
                 ChatClient.builder(model), "gpt-5.4-mini", "low", 2048);
@@ -34,7 +40,7 @@ class FollowUpCasePlannerTest {
     private final EvidenceItem law = new EvidenceItem("law-id", "LAW_CHUNK", "1:48", "건축법", "https://www.law.go.kr", "법령 본문");
 
     @Test void acceptsModelSearchDecisionAndValidatesAnchorMembership() {
-        respond("{\"action\":\"SEARCH_CASES\",\"lawEvidenceId\":\"law-id\",\"query\":\"지정 사건 판결\",\"reason\":\"새 검색 요청\"}");
+        respond("{\"action\":\"SEARCH_CASES\",\"lawEvidenceId\":null,\"query\":\"지정 사건 판결\",\"reason\":\"새 검색 요청\"}");
         assertThat(planner.plan("새 판결 찾아줘", List.of(law), "1:2").action()).isEqualTo(FollowUpCasePlan.Action.SEARCH_CASES);
         respond("{\"action\":\"SEARCH_CASES\",\"lawEvidenceId\":\"other-room\",\"query\":\"지정 사건\",\"reason\":\"검색\"}");
         assertThatThrownBy(() -> planner.plan("찾아줘", List.of(law), "1:2")).isInstanceOf(GptApiException.class);
@@ -42,7 +48,7 @@ class FollowUpCasePlannerTest {
 
     @Test void rejectsMissingFieldsExecutionOverridesAndMixedRoomAnswerSearch() {
         for (String output : List.of("{\"action\":\"ANSWER_FROM_ROOM\",\"lawEvidenceId\":null,\"query\":\"\",\"reason\":\"기존 설명\",\"allowCaseSearch\":true}",
-                "{\"action\":\"ANSWER_FROM_ROOM\",\"lawEvidenceId\":\"law-id\",\"query\":\"검색\",\"reason\":\"설명\"}",
+                "{\"action\":\"ANSWER_FROM_ROOM\",\"lawEvidenceId\":null,\"query\":\"검색\",\"reason\":\"설명\"}",
                 "{\"action\":\"SEARCH_CASES\",\"query\":\"검색\",\"reason\":\"검색\"}")) {
             respond(output);
             assertThatThrownBy(() -> planner.plan("질문", List.of(law), "1:2")).isInstanceOf(GptApiException.class);
