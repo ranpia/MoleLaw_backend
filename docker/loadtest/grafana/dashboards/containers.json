@@ -1,0 +1,235 @@
+{
+  "uid": "molelaw-loadtest-containers",
+  "title": "MoleLaw 부하 테스트 - 컨테이너 자원",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": false,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "CPU 사용 코어 수",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_cpu_usage_seconds_total{job=\"molelaw-containers\"}[1m]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "CPU 상한 대비 사용률",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_cpu_usage_seconds_total{job=\"molelaw-containers\"}[1m])) / sum by (container_label_com_docker_compose_service) (container_spec_cpu_quota{job=\"molelaw-containers\"} / container_spec_cpu_period{job=\"molelaw-containers\"})",
+          "legendFormat": "{{container_label_com_docker_compose_service}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "메모리 사용량 (워킹 셋)",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"molelaw-containers\"})",
+          "legendFormat": "{{container_label_com_docker_compose_service}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "메모리 상한 대비 사용률",
+      "gridPos": {
+        "x": 12,
+        "y": 7,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"molelaw-containers\"}) / sum by (container_label_com_docker_compose_service) (container_spec_memory_limit_bytes{job=\"molelaw-containers\"})",
+          "legendFormat": "{{container_label_com_docker_compose_service}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "네트워크 수신·송신",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_receive_bytes_total{job=\"molelaw-containers\",interface!=\"lo\"}[1m]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} 수신/읽기"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_transmit_bytes_total{job=\"molelaw-containers\",interface!=\"lo\"}[1m]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} 송신/쓰기"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "디스크 읽기·쓰기",
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_blkio_device_usage_total{job=\"molelaw-containers\",operation=\"Read\"}[1m]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} 수신/읽기"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_blkio_device_usage_total{job=\"molelaw-containers\",operation=\"Write\"}[1m]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} 송신/쓰기"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "CPU 한도에 걸린 기간 비율 (CFS)",
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_cpu_cfs_throttled_periods_total{job=\"molelaw-containers\"}[1m])) / sum by (container_label_com_docker_compose_service) (rate(container_cpu_cfs_periods_total{job=\"molelaw-containers\"}[1m]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "text",
+      "title": "관측 범위와 해석",
+      "gridPos": {
+        "x": 12,
+        "y": 21,
+        "w": 12,
+        "h": 7
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "- CPU 1코어는 Docker stats의 약 100%입니다. 상한 대비 사용률은 설정된 CPU quota로 나눕니다.\n- 메모리는 워킹 셋이며 JVM 힙·RSS와 같지 않습니다.\n- molelaw-loadtest 프로젝트의 컨테이너만 표시합니다. 종료한 Locust나 아직 시작하지 않은 RAG는 나타나지 않습니다.\n- 디스크 I/O는 Docker Desktop이 제공하는 장치 지표만 표시합니다. 누락을 0으로 해석하지 마세요.\n- cAdvisor는 부하 시험 종료 후 설치했습니다. 설치 이전의 시험 수치는 Docker 관측 파일에만 있고 이 그래프로 소급 수집되지 않습니다.\n- CFS 비율은 CPU 스케줄링 기간 중 제한된 기간 비율이며 응답 지연 비율이 아닙니다."
+      }
+    }
+  ]
+}

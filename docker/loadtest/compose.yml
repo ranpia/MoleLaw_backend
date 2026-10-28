@@ -159,6 +159,52 @@ services:
     mem_limit: 512m
     logging: *logging
 
+  mysql-exporter:
+    profiles: [monitoring]
+    image: prom/mysqld-exporter:v0.17.2
+    command: [--config.my-cnf=/dev/null, --mysqld.address=mysql:3306, --mysqld.username=loadtest_exporter]
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: ${LT_MYSQL_EXPORTER_PASSWORD:-}
+    depends_on:
+      mysql: {condition: service_healthy}
+    cpus: 0.25
+    mem_limit: 128m
+    logging: *logging
+
+  redis-exporter:
+    profiles: [monitoring]
+    image: oliver006/redis_exporter:v1.74.0
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${LT_REDIS_PASSWORD:?Set LT_REDIS_PASSWORD}
+    depends_on:
+      redis: {condition: service_healthy}
+    cpus: 0.25
+    mem_limit: 128m
+    logging: *logging
+
+  cadvisor:
+    profiles: [monitoring]
+    image: ghcr.io/google/cadvisor:v0.60.6
+    command:
+      - --docker_only=true
+      - --containerd-namespace=moby
+      - --disable_root_cgroup_stats=true
+      - --housekeeping_interval=5s
+      - --allow_dynamic_housekeeping=false
+      - --store_container_labels=false
+      - --whitelisted_container_labels=com.docker.compose.project,com.docker.compose.service
+      - --disable_metrics=percpu,process,sched,tcp,udp,hugetlb,referenced_memory,resctrl
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    cpus: 0.5
+    mem_limit: 512m
+    logging: *logging
+
   grafana:
     image: grafana/grafana:12.1.0
     environment:
@@ -194,8 +240,8 @@ services:
       mysql: {condition: service_healthy}
       prometheus: {condition: service_started}
       grafana: {condition: service_started}
-    cpus: 0.25
-    mem_limit: 128m
+    cpus: 0.5
+    mem_limit: 256m
     logging: *logging
 
   locust:
@@ -209,8 +255,8 @@ services:
       - ./locust:/scenario:ro
       - ../../build/loadtest-data:/fixtures:ro
       - ../../build/loadtest-runs:/results
-    cpus: 1.0
-    mem_limit: 512m
+    cpus: ${LT_LOCUST_CPUS:-3.0}
+    mem_limit: ${LT_LOCUST_MEMORY:-1g}
     logging: *logging
 
   seed-data:

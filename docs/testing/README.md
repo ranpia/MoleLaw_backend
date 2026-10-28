@@ -1,11 +1,14 @@
 # 테스트 도구와 부하 테스트 입문
 
-기준일: 2026-10-28. **전용 환경·합성 데이터로 Locust 사용자 1명·1분 조회 시험을 완료했다. RAG 부하는 아직 실행하지 않았다.**
+기준일: 2026-10-28. **2~2,048명 조회 탐색과 512명 지속 검증을 완료했다. DB·컨테이너 대시보드도 연결했다. RAG 부하는 아직 실행하지 않았다.**
 실행 순서는 [백엔드·DB·RAG 부하 테스트 계획](../plans/load-testing.md)을 따른다.
 현재 장비·서비스 조사와 준비 명령은 [로컬 환경 조사](environment-readiness.md)에 기록한다.
 격리 Compose·환경변수·Grafana 시작 안내는 [전용 Docker 환경](../../docker/loadtest/README.md)을 따른다.
 조회 실습에 사용할 사용자·상담방·암호화 메시지는 [합성 데이터 안내](test-data.md)에 정리한다.
 [첫 Locust 실습과 결과](first-load-test.md)에서 실행 방법·보고서 읽는 법·측정 한계를 확인한다.
+[MySQL·Redis 관측](database-monitoring.md)에서 DB 자체 지표와 UNKNOWN 요청을 설명한다.
+[조회 한계 탐색](read-capacity.md)은 로그인 집중과 인증된 조회를 구분해 단계적으로 증량한다.
+[컨테이너 관측](container-monitoring.md)은 CPU·메모리·네트워크·디스크 I/O 범위를 설명한다.
 
 ## 1. 무엇을 알아보려는가
 

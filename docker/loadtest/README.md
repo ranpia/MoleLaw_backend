@@ -115,10 +115,15 @@ docker compose --env-file docker/loadtest/.env -f docker/loadtest/compose.yml --
 사용자 1명·1분의 조회 부하는 별도로 `scripts/load-testing/run-one-user.ps1`을 실행한다.
 [첫 실습과 결과](../../docs/testing/first-load-test.md)를 먼저 읽는다. 기본 대상은 내부 gateway이며 사용자 수를 자동 확대하지 않는다.
 
+다중 사용자 증량은 별도의 [조회 한계 탐색 안내](../../docs/testing/read-capacity.md)를 따른다.
+MySQL·Redis는 `monitoring` 프로필의 exporter와 별도 한국어 대시보드로 관측한다. [설정·지표 범위](../../docs/testing/database-monitoring.md)를 참고한다.
+cAdvisor도 같은 프로필이며 [컨테이너 자원 대시보드](../../docs/testing/container-monitoring.md)에서 CPU·메모리·네트워크·장치 I/O를 확인한다.
+이번 조회 시험 이후 추가했으므로 과거 시험 구간은 Docker 관측 파일로 확인한다.
+
 ## 5. 종료와 보존
 
 ```powershell
-docker compose --env-file docker/loadtest/.env -f docker/loadtest/compose.yml --profile rag --profile tools down
+docker compose --env-file docker/loadtest/.env -f docker/loadtest/compose.yml --profile rag --profile tools --profile monitoring --profile data down
 ```
 
 `down`은 테스트 컨테이너와 네트워크만 제거하고 전용 볼륨은 보존한다. 데이터 삭제 옵션 `-v`는 기본 절차에 포함하지 않는다.

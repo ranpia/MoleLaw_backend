@@ -91,4 +91,6 @@ Grafana 대시보드와 데이터소스 health OK, 실제 JVM/Hikari/HTTP histog
 이후 [조회용 합성 데이터](test-data.md) 20명·200방·4,000메시지를 준비하고 로그인·조회·복호화·권한을 검증했다.
 이후 외부 AI를 호출하지 않는 [Locust 사용자 1명 조회 실습](first-load-test.md)을 완료했다. 조회 18회·전체 22회·실패 0이며 최대 용량 측정은 아니다.
 RAG용 Qdrant·KURE는 아직 기동하지 않았다. 기존 개발 서비스의 한계 측정은 하지 않는다.
+이후 [조회 한계 탐색](read-capacity.md)으로 2~2,048 VU를 시험하고 512 VU 지속 검증을 완료했다.
+MySQL·Redis exporter를 시험 전에, [cAdvisor 컨테이너 관측](container-monitoring.md)을 시험 후에 연결했다.
 진행 상태는 [LT01~LT08 계획](../plans/load-testing.md)에서 관리한다.

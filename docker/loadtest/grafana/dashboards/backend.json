@@ -2,72 +2,246 @@
   "uid": "molelaw-loadtest-backend",
   "title": "MoleLaw 부하 테스트 - 백엔드",
   "schemaVersion": 41,
-  "version": 2,
+  "version": 3,
   "editable": false,
   "timezone": "browser",
   "refresh": "5s",
-  "time": {"from": "now-15m", "to": "now"},
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
   "panels": [
     {
-      "id": 1, "type": "stat", "title": "백엔드 지표 수집 상태 (1 = 정상)",
-      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 5},
-      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
-      "targets": [{"refId": "A", "expr": "up{job=\"molelaw-backend\"}"}]
+      "id": 1,
+      "type": "stat",
+      "title": "백엔드 지표 수집 상태 (1 = 정상)",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=\"molelaw-backend\"}"
+        }
+      ]
     },
     {
-      "id": 2, "type": "timeseries", "title": "초당 HTTP 요청 수 (지표·상태 확인 제외)",
-      "gridPos": {"x": 6, "y": 0, "w": 18, "h": 5},
-      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
-      "targets": [{"refId": "A", "expr": "sum by (uri, method) (rate(http_server_requests_seconds_count{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m]))", "legendFormat": "{{method}} {{uri}}"}]
+      "id": 2,
+      "type": "timeseries",
+      "title": "초당 HTTP 요청 수 (지표·상태 확인 제외)",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 18,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (uri, method) (rate(http_server_requests_seconds_count{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m]))",
+          "legendFormat": "{{method}} {{uri}}"
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*UNKNOWN.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "경로 미확정(보안 차단 등) · ${__field.name}"
+              }
+            ]
+          }
+        ]
+      }
     },
     {
-      "id": 3, "type": "timeseries", "title": "HTTP 응답 시간 p95 / p99 (초)",
+      "id": 3,
+      "type": "timeseries",
+      "title": "HTTP 응답 시간 p95 / p99 (초)",
       "description": "p95는 요청의 95%, p99는 99%가 이 시간 안에 응답했다는 뜻입니다. 실패 요청도 포함되므로 오류율과 함께 확인하세요.",
-      "gridPos": {"x": 0, "y": 5, "w": 12, "h": 7},
-      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
-      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*UNKNOWN.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "경로 미확정(보안 차단 등) · ${__field.name}"
+              }
+            ]
+          }
+        ]
+      },
       "targets": [
-        {"refId": "A", "expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m])))", "legendFormat": "p95 {{uri}}"},
-        {"refId": "B", "expr": "histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m])))", "legendFormat": "p99 {{uri}}"}
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m])))",
+          "legendFormat": "p95 {{uri}}"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m])))",
+          "legendFormat": "p99 {{uri}}"
+        }
       ]
     },
     {
-      "id": 4, "type": "timeseries", "title": "HTTP 오류 비율 (4xx / 5xx)",
-      "gridPos": {"x": 12, "y": 5, "w": 12, "h": 7},
-      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
-      "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []},
-      "targets": [{"refId": "A", "expr": "sum by (status) (rate(http_server_requests_seconds_count{job=\"molelaw-backend\",status=~\"[45]..\",uri!~\"/actuator.*\"}[1m])) / scalar(sum(rate(http_server_requests_seconds_count{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m])))", "legendFormat": "HTTP {{status}}"}]
-    },
-    {
-      "id": 5, "type": "timeseries", "title": "JVM 메모리 사용량",
-      "gridPos": {"x": 0, "y": 12, "w": 8, "h": 7},
-      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
-      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+      "id": 4,
+      "type": "timeseries",
+      "title": "HTTP 오류 비율 (4xx / 5xx)",
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
       "targets": [
-        {"refId": "A", "expr": "sum(jvm_memory_used_bytes{job=\"molelaw-backend\",area=\"heap\"})", "legendFormat": "힙 메모리"},
-        {"refId": "B", "expr": "sum(jvm_memory_used_bytes{job=\"molelaw-backend\",area=\"nonheap\"})", "legendFormat": "힙 외 메모리"}
+        {
+          "refId": "A",
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{job=\"molelaw-backend\",status=~\"[45]..\",uri!~\"/actuator.*\"}[1m])) / scalar(sum(rate(http_server_requests_seconds_count{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m])))",
+          "legendFormat": "HTTP {{status}}"
+        }
       ]
     },
     {
-      "id": 6, "type": "timeseries", "title": "DB 연결 풀 사용·대기 수 (Hikari)",
+      "id": 5,
+      "type": "timeseries",
+      "title": "JVM 메모리 사용량",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(jvm_memory_used_bytes{job=\"molelaw-backend\",area=\"heap\"})",
+          "legendFormat": "힙 메모리"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(jvm_memory_used_bytes{job=\"molelaw-backend\",area=\"nonheap\"})",
+          "legendFormat": "힙 외 메모리"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "DB 연결 풀 사용·대기 수 (Hikari)",
       "description": "사용 중은 DB 작업에 할당된 연결 수, 대기는 연결을 받지 못해 기다리는 요청 수입니다.",
-      "gridPos": {"x": 8, "y": 12, "w": 8, "h": 7},
-      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
+      "gridPos": {
+        "x": 8,
+        "y": 12,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
       "targets": [
-        {"refId": "A", "expr": "hikaricp_connections_active{job=\"molelaw-backend\"}", "legendFormat": "사용 중 {{pool}}"},
-        {"refId": "B", "expr": "hikaricp_connections_pending{job=\"molelaw-backend\"}", "legendFormat": "대기 {{pool}}"}
+        {
+          "refId": "A",
+          "expr": "hikaricp_connections_active{job=\"molelaw-backend\"}",
+          "legendFormat": "사용 중 {{pool}}"
+        },
+        {
+          "refId": "B",
+          "expr": "hikaricp_connections_pending{job=\"molelaw-backend\"}",
+          "legendFormat": "대기 {{pool}}"
+        }
       ]
     },
     {
-      "id": 7, "type": "timeseries", "title": "JVM 메모리 정리(GC) 중단 시간 (초/초)",
-      "gridPos": {"x": 16, "y": 12, "w": 8, "h": 7},
-      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
-      "targets": [{"refId": "A", "expr": "sum(rate(jvm_gc_pause_seconds_sum{job=\"molelaw-backend\"}[1m]))", "legendFormat": "메모리 정리 중단"}]
+      "id": 7,
+      "type": "timeseries",
+      "title": "JVM 메모리 정리(GC) 중단 시간 (초/초)",
+      "gridPos": {
+        "x": 16,
+        "y": 12,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "loadtest-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(jvm_gc_pause_seconds_sum{job=\"molelaw-backend\"}[1m]))",
+          "legendFormat": "메모리 정리 중단"
+        }
+      ]
     },
     {
-      "id": 8, "type": "text", "title": "측정 범위와 읽는 방법",
-      "gridPos": {"x": 0, "y": 19, "w": 24, "h": 4},
-      "options": {"mode": "markdown", "content": "현재는 백엔드 HTTP·JVM·DB 연결 풀 지표를 보여 줍니다. RAG 내부 단계, MySQL·Redis·Qdrant 자체 지표와 컨테이너 지표는 후속 작업입니다.\n\n- 요청이 적거나 최근 1분 표본이 부족하면 ‘No data’ 또는 ‘NaN’이 나타날 수 있습니다.\n- 응답 시간에는 실패 요청도 포함됩니다. 오류 비율과 성공 처리량을 함께 보세요.\n- SSE·NDJSON은 HTTP 200이어도 실패할 수 있습니다. 실제 상담 성공은 completed/error 이벤트로 판정해야 합니다.\n- 지표 이름·API 경로·단위와 Grafana 기본 UI 일부는 원래 표기를 유지합니다."}
+      "id": 8,
+      "type": "text",
+      "title": "측정 범위와 읽는 방법",
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 24,
+        "h": 4
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "현재 화면은 백엔드 HTTP·JVM·DB 연결 풀 지표입니다. DB 자체 지표는 ‘MoleLaw 부하 테스트 - MySQL·Redis’, CPU·메모리·I/O는 ‘MoleLaw 부하 테스트 - 컨테이너 자원’에서 확인합니다. RAG 내부 단계·Qdrant 관측은 후속 작업입니다.\n\n- 경로 미확정(UNKNOWN)은 보안 필터에서 컨트롤러 매칭 전에 차단된 요청 등입니다. 사전 점검의 익명 401 요청이 포함됩니다. 정상 API 조회 경로와 구분하세요.\n- 요청이 적거나 최근 1분 표본이 부족하면 No data 또는 NaN이 나타날 수 있습니다.\n- 응답 시간에는 실패 요청도 포함됩니다. 오류 비율과 성공 처리량을 함께 보세요.\n- SSE·NDJSON의 실제 성공은 completed/error 이벤트로 판정합니다."
+      }
     }
   ]
 }

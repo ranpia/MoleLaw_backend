@@ -9,3 +9,16 @@ scrape_configs:
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: [backend:9091]
+  - job_name: molelaw-mysql
+    static_configs:
+      - targets: [mysql-exporter:9104]
+  - job_name: molelaw-redis
+    static_configs:
+      - targets: [redis-exporter:9121]
+  - job_name: molelaw-containers
+    static_configs:
+      - targets: [cadvisor:8080]
+    metric_relabel_configs:
+      - source_labels: [container_label_com_docker_compose_project]
+        regex: molelaw-loadtest
+        action: keep
