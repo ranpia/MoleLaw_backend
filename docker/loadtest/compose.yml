@@ -201,8 +201,14 @@ services:
   locust:
     profiles: [tools]
     image: locustio/locust:2.47.0
-    # Preparation only; no HTTP scenario or background load is started.
+    # Default remains harmless; run-one-user.ps1 explicitly starts the bounded scenario.
     command: [--version]
+    environment:
+      LT_DATA_PASSWORD: ${LT_DATA_PASSWORD:-}
+    volumes:
+      - ./locust:/scenario:ro
+      - ../../build/loadtest-data:/fixtures:ro
+      - ../../build/loadtest-runs:/results
     cpus: 1.0
     mem_limit: 512m
     logging: *logging

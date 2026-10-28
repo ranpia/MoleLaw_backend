@@ -1,7 +1,7 @@
 # 부하 테스트 전용 Docker 환경
 
 개발 환경과 별도인 `molelaw-loadtest` 프로젝트다. DB·Qdrant·모델 캐시·관측 데이터는 모두 새 전용 볼륨을 사용한다.
-루트 `.env`·개발용 Compose·외부 볼륨을 가져오지 않는다. 최소 환경 실 기동·지표 연결과 조회용 합성 데이터를 준비했으며 부하 시나리오·외부 API 대역은 미구현이다.
+루트 `.env`·개발용 Compose·외부 볼륨을 가져오지 않는다. 최소 환경·합성 데이터로 사용자 1명 조회 실습을 완료했다. RAG/외부 API 대역과 다중 사용자 시나리오는 후속 작업이다.
 
 ## 1. 환경변수 준비
 
@@ -106,11 +106,14 @@ KURE의 다운로드 네트워크만 인터넷에 연결된다. 백엔드는 int
 컬렉션·합성 원문·사용자·상담 데이터 적재 및 준비 확인은 다음 단계에서 제공한다. 단순 컨테이너 기동은 검색 준비 완료가 아니다.
 Spring AI Qdrant VectorStore 프로필은 활성화하지 않으며 현재 내부 법령 도구의 REST 클라이언트를 사용한다.
 
-Locust는 현재 버전 확인만 실행하고 종료한다. UI·시나리오·자동 부하는 시작하지 않는다.
+Locust 서비스의 기본 명령은 버전 확인이다. 일반 `up`이나 아래 명령은 부하를 시작하지 않는다.
 
 ```powershell
 docker compose --env-file docker/loadtest/.env -f docker/loadtest/compose.yml --profile tools run --rm --no-deps locust
 ```
+
+사용자 1명·1분의 조회 부하는 별도로 `scripts/load-testing/run-one-user.ps1`을 실행한다.
+[첫 실습과 결과](../../docs/testing/first-load-test.md)를 먼저 읽는다. 기본 대상은 내부 gateway이며 사용자 수를 자동 확대하지 않는다.
 
 ## 5. 종료와 보존
 
