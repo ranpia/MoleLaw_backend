@@ -44,7 +44,8 @@
 
 백엔드 `/api/auth/csrf`는 1회 요청에 HTTP 200을 반환했다. 토큰·쿠키는 출력하거나 문서에 저장하지 않았다.
 `/actuator/prometheus`는 인증 없이 401을 반환했다. 이는 endpoint 존재 여부를 증명하지 않는다.
-현재 소스에는 Actuator·Prometheus registry 의존성이 없어 지표 수집 환경을 별도로 구현해야 한다.
+조사 당시 소스에는 Actuator·Prometheus registry 의존성이 없었다. 이후 [전용 Docker 환경](../../docker/loadtest/README.md)에서
+두 의존성과 loadtest 전용 관리 포트·백엔드 기본 대시보드를 추가했다. 실행 중 개발 컨테이너에는 아직 반영하지 않았다.
 MySQL Hikari의 소스 기본 풀 크기는 10이며 실행 중 실효값은 아직 확인하지 않았다.
 
 백엔드 이미지는 2026-10-27에 생성됐다. 현재 소스의 2026-10-28 테스트 통과가 실행 컨테이너의 같은 코드 실행을 증명하지 않는다.
@@ -55,7 +56,7 @@ MySQL Hikari의 소스 기본 풀 크기는 10이며 실행 중 실효값은 아
 - 부하 전용 MySQL DB·Redis 키/인스턴스·Qdrant 컬렉션, 테스트 사용자와 데이터 건수 확인.
 - 로그인 쿠키·CSRF를 안전하게 전달하는 방법과 사용자별 독립 방 데이터.
 - 질문 세트·검색 근거 품질 기준·실행할 API 시나리오.
-- Prometheus/Grafana·exporter·RAG 단계 추적·중단 장치.
+- Prometheus/Grafana 실제 수집 연결 확인·DB exporter·RAG 단계 추적·중단 장치. Compose·백엔드 기본 대시보드 파일은 이후 작성했다.
 - 실제 MySQL 설정·슬로 쿼리 수집 여부, Qdrant 컬렉션 크기와 실제 검색 확인.
 
 기존 named volume과 모델 캐시가 연결돼 있으므로 새 테스트 환경에서 기존 DB 볼륨을 재사용하지 않는다.

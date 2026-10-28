@@ -1,5 +1,7 @@
 # Docker 실행 가이드
 
+부하 테스트용 격리 환경은 [전용 Compose·환경변수·Grafana 안내](loadtest/README.md)를 따른다. 개발용 데이터 볼륨을 공유하지 않는다.
+
 Docker 관련 구성은 이 디렉터리에 모은다. Spring 애플리케이션 환경변수는 루트 `.env.example`, 프로젝트 구조와 실행은 [루트 README](../README.md)를 참고한다.
 
 ## 현재 PC의 세 서비스 그룹

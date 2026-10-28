@@ -1,5 +1,13 @@
 # 검증 현황
 
+## 2026-10-28 부하 테스트 전용 환경·백엔드 기본 계측
+
+- `mysql,loadtest` 전용 Compose·빈 비밀값 env 예제, 독립 DB/Redis/Qdrant/모델 캐시/관측 볼륨을 작성했다. 기본 실행은 백엔드·MySQL·Redis·Prometheus·Grafana, `rag`는 선택 실행이다. 백엔드는 internal 네트워크에만 연결하고 더미 외부 인증값을 사용한다. 관리 포트 9091은 호스트에 공개하지 않는다.
+- Actuator·Prometheus registry를 추가했다. 기본 관리 HTTP/endpoint 접근은 비활성화하고 loadtest에서 별도 포트의 GET health/prometheus만 허용한다. 실제 랜덤 HTTP 포트 테스트로 scrape·JVM/Hikari/HTTP histogram, 일반 포트 인증·CSRF 및 비공개 endpoint 차단을 확인했다.
+- 전체 `test` **546개, 실패 0·오류 0·건너뜀 0**, `bootJar` 성공. 최초 전체 실행은 테스트 JVM 기본 512MiB에서 토큰 사전 로딩 중 heap 부족으로 종료됐다. 일반 test 힙만 1GiB로 명시한 뒤 전체 재실행이 통과했다. 서버 메모리 상한은 변경하지 않았다.
+- Compose 기본/전체 프로필 파싱, loopback 포트·관리 포트 미공개·전용 볼륨·백엔드 네트워크 격리를 검사했다. Prometheus 3.5.0의 promtool로 설정과 Grafana PromQL 9개를 검증했고 Grafana 12.1.0 이미지 태그 존재를 확인했다. 로컬 문서 링크·공백 검사도 통과했다.
+- 테스트 환경 실 기동·Grafana 화면/실 scrape 연결·실 MySQL 통합·모델 다운로드·부하·실 외부 API 호출은 수행하지 않았다. 기존 개발 서비스·볼륨은 변경하지 않았다. RAG 내부 시간/대기열 및 DB exporter·부하 시나리오는 후속 작업이다. 실행 안내는 [전용 Docker 환경](../../docker/loadtest/README.md)을 따른다.
+
 ## 2026-10-27 후속 라우팅·인용 교정·실시간 근거·사용자 삭제
 
 - 전체 JUnit 544개가 실패 없이 통과했고 bootJar를 생성했다. 일반 질문은 판례 준비를 건너뛰며 기존 판례 검토·새 검색을 명시적으로 구분한다.

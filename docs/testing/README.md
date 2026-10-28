@@ -1,8 +1,9 @@
 # 테스트 도구와 부하 테스트 입문
 
-기준일: 2026-10-28. **환경 조사·Locust 이미지 준비까지 완료했으며 계측 구현·부하 실행은 하지 않았다.**
+기준일: 2026-10-28. **환경 조사·전용 Compose·백엔드 기본 계측을 준비했으며 전용 환경 기동·부하 실행은 하지 않았다.**
 실행 순서는 [백엔드·DB·RAG 부하 테스트 계획](../plans/load-testing.md)을 따른다.
 현재 장비·서비스 조사와 준비 명령은 [로컬 환경 조사](environment-readiness.md)에 기록한다.
+격리 Compose·환경변수·Grafana 시작 안내는 [전용 Docker 환경](../../docker/loadtest/README.md)을 따른다.
 
 ## 1. 무엇을 알아보려는가
 
@@ -27,7 +28,7 @@
 | 도구 | 역할 | 도입 시점과 한계 |
 | --- | --- | --- |
 | Locust | Python으로 사용자별 인증·상담·조회 흐름을 실행하고 동시 사용자를 늘린다 | 주 부하 발생기. SSE/NDJSON 완료·오류 이벤트 판독과 별도 시간 측정은 직접 구현해야 한다 |
-| Spring Boot Actuator + Micrometer | HTTP·JVM·커넥션 풀 등 백엔드 지표를 제공한다 | 초기 계측 단계. 현재 build.gradle에 Actuator·Prometheus registry 의존성이 없어 추가 필요 |
+| Spring Boot Actuator + Micrometer | HTTP·JVM·커넥션 풀 등 백엔드 지표를 제공한다 | 의존성·loadtest 전용 관리 포트 구현. 별도 HTTP 테스트에서 지표·인증 경계를 검증 |
 | Prometheus + Grafana | 지표를 일정 간격으로 수집하고 시간별 그래프로 비교한다 | 관측 환경 준비 단계. MySQL·Redis·컨테이너 지표는 별도 exporter/수집 설정 필요 |
 | MySQL Performance Schema·slow query log | 실제 느린 SQL·락 대기를 조사한다 | DB 분석 단계. 수집 설정과 오버헤드를 기록하고 민감한 SQL 값을 공유하지 않는다 |
 | sysbench | MySQL에 직접 읽기·쓰기 부하를 보내 기준 성능을 본다 | API 기준 측정 이후. 기본 OLTP 테이블 결과는 MoleLaw의 실제 쿼리 성능과 다르다 |

@@ -1,6 +1,17 @@
 server:
   forward-headers-strategy: framework
 
+# No management HTTP listener or exposed endpoints in default/deployed profiles.
+management:
+  server:
+    port: -1
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: []
+
 spring:
   application:
     name: MoleLaw_backend

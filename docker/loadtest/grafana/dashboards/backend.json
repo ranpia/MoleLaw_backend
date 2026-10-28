@@ -1,0 +1,68 @@
+{
+  "uid": "molelaw-loadtest-backend",
+  "title": "MoleLaw Loadtest - Backend",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": false,
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": {"from": "now-15m", "to": "now"},
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Backend scrape (1 = UP)",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 5},
+      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
+      "targets": [{"refId": "A", "expr": "up{job=\"molelaw-backend\"}"}]
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "HTTP requests / second (excludes scrape and health)",
+      "gridPos": {"x": 6, "y": 0, "w": 18, "h": 5},
+      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (uri, method) (rate(http_server_requests_seconds_count{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m]))", "legendFormat": "{{method}} {{uri}}"}]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "HTTP p95 / p99 (seconds)",
+      "gridPos": {"x": 0, "y": 5, "w": 12, "h": 7},
+      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "targets": [
+        {"refId": "A", "expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m])))", "legendFormat": "p95 {{uri}}"},
+        {"refId": "B", "expr": "histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m])))", "legendFormat": "p99 {{uri}}"}
+      ]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "HTTP errors (4xx / 5xx share)",
+      "gridPos": {"x": 12, "y": 5, "w": 12, "h": 7},
+      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []},
+      "targets": [{"refId": "A", "expr": "sum by (status) (rate(http_server_requests_seconds_count{job=\"molelaw-backend\",status=~\"[45]..\",uri!~\"/actuator.*\"}[1m])) / scalar(sum(rate(http_server_requests_seconds_count{job=\"molelaw-backend\",uri!~\"/actuator.*\"}[1m])))", "legendFormat": "HTTP {{status}}"}]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "JVM used memory (bytes)",
+      "gridPos": {"x": 0, "y": 12, "w": 8, "h": 7},
+      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+      "targets": [{"refId": "A", "expr": "sum by (area) (jvm_memory_used_bytes{job=\"molelaw-backend\"})", "legendFormat": "{{area}}"}]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Hikari active / pending connections",
+      "gridPos": {"x": 8, "y": 12, "w": 8, "h": 7},
+      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
+      "targets": [
+        {"refId": "A", "expr": "hikaricp_connections_active{job=\"molelaw-backend\"}", "legendFormat": "active {{pool}}"},
+        {"refId": "B", "expr": "hikaricp_connections_pending{job=\"molelaw-backend\"}", "legendFormat": "pending {{pool}}"}
+      ]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "JVM GC pause seconds / second",
+      "gridPos": {"x": 16, "y": 12, "w": 8, "h": 7},
+      "datasource": {"type": "prometheus", "uid": "loadtest-prometheus"},
+      "targets": [{"refId": "A", "expr": "sum(rate(jvm_gc_pause_seconds_sum{job=\"molelaw-backend\"}[1m]))", "legendFormat": "GC pause"}]
+    },
+    {
+      "id": 8, "type": "text", "title": "Measurement scope",
+      "gridPos": {"x": 0, "y": 19, "w": 24, "h": 4},
+      "options": {"mode": "markdown", "content": "Backend HTTP/JVM/Hikari metrics only. RAG stage timing, MySQL/Redis/Qdrant exporters and container metrics are not implemented yet. HTTP 200 does not establish SSE/NDJSON success: Locust must verify completed/error events. Low traffic or less than 1 minute of samples can show No data/NaN. Latency includes failed requests; compare status and successful throughput."}
+    }
+  ]
+}
