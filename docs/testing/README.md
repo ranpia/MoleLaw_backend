@@ -9,6 +9,8 @@
 [MySQL·Redis 관측](database-monitoring.md)에서 DB 자체 지표와 UNKNOWN 요청을 설명한다.
 [조회 한계 탐색](read-capacity.md)은 로그인 집중과 인증된 조회를 구분해 단계적으로 증량한다.
 [컨테이너 관측](container-monitoring.md)은 CPU·메모리·네트워크·디스크 I/O 범위를 설명한다.
+[Redis 시험 계획](redis-performance-plan.md)은 Redis 단독 부하와 후속 Refresh API의 동시 갱신·장애·복구 검증을 다룬다.
+[MySQL 직접 부하](mysql-capacity.md)는 앱 데이터와 분리한 200만 행으로 읽기·쓰기·락 경합을 측정한다.
 
 ## 1. 무엇을 알아보려는가
 

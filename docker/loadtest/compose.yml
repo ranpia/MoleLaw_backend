@@ -277,6 +277,20 @@ services:
     mem_limit: 256m
     logging: *logging
 
+  sysbench:
+    profiles: [dbbench]
+    image: molelaw/sysbench:local-v1
+    build:
+      context: ./sysbench
+    command: [version]
+    environment:
+      LT_SYSBENCH_PASSWORD: ${LT_SYSBENCH_PASSWORD:-}
+    volumes:
+      - ../../build/db-loadtest-runs:/results
+    cpus: 3.0
+    mem_limit: 1g
+    logging: *logging
+
 networks:
   default:
     internal: true

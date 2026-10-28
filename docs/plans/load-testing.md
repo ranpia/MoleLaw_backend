@@ -3,6 +3,10 @@
 기준일: 2026-10-28. 상태: **사용자 1명 조회 실습 완료, 단계별 부하·RAG 계측 준비 진행 중**.
 처음이라면 [테스트 도구와 입문 안내](../testing/README.md)를 먼저 읽는다. 진행 상태는 아래 표 한 곳에서 관리한다.
 
+추가 진행: [MySQL 직접 부하](../testing/mysql-capacity.md)를 실행하고,
+[Redis·Refresh API 시험 계획](../testing/redis-performance-plan.md)에 따라 Redis 단독 성능과 실제 API 오류·복구를 순서대로 검증한다.
+Refresh API는 동일 토큰 경쟁·재사용·응답 유실·Redis 장애 이후 토큰 상태까지 확인한다.
+
 ## 목표와 범위
 
 일반 API와 RAG 상담의 성공 처리량·지연·오류를 측정하고 병목을 구분한다.
