@@ -367,6 +367,8 @@ services:
       - model_cache:/models:ro
     cpus: 1.0
     mem_limit: 512m
+    healthcheck:
+      disable: true
     logging: *logging
 
   sysbench:

@@ -1,6 +1,6 @@
 # 테스트 도구와 부하 테스트 입문
 
-기준일: 2026-10-29. **조회·MySQL 직접 부하와 Redis·Refresh API의 부하 및 장애·복구 검증을 완료했다. RAG 부하는 아직 실행하지 않았다.**
+기준일: 2026-10-29. **조회·DB·Refresh API와 임베딩 단독 동시 부하를 검증했다. 전체 RAG·AI 답변 생성 부하는 아직 실행하지 않았다.**
 실행 순서는 [백엔드·DB·RAG 부하 테스트 계획](../plans/load-testing.md)을 따른다.
 현재 장비·서비스 조사와 준비 명령은 [로컬 환경 조사](environment-readiness.md)에 기록한다.
 격리 Compose·환경변수·Grafana 시작 안내는 [전용 Docker 환경](../../docker/loadtest/README.md)을 따른다.
@@ -15,6 +15,7 @@
 [Qdrant·RAG 관측](rag-monitoring.md)은 임베딩·리랭킹·벡터 DB의 실제 메트릭과 전체 RAG 계측의 남은 범위를 설명한다.
 [임베딩 시험 데이터](rag-dataset.md)는 실제 법령 4종의 고정 원문과 1,000개 코퍼스·질문·길이별 입력을 제공한다.
 [실제 임베딩 생성·적재](rag-generation.md)는 1,032개 생성과 시험용 Qdrant 1,000개 적재·조회 결과를 기록한다.
+[임베딩 동시 처리 한계](embedding-capacity.md)는 짧은 질문과 512토큰 문서의 성공 처리량·대기·503 거부를 구분한다.
 
 ## 1. 무엇을 알아보려는가
 
