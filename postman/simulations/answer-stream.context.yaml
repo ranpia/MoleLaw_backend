@@ -20,7 +20,7 @@ assumptions:
     status: contradicted
     claim: A normal model completion always follows the required double-bracket citation format.
     reason: A separate paid writer diagnostic returned single-bracket UUID references and failed MISSING_CITATION. Synthetic success does not establish real model format compliance.
-    verification: Six paid calls total; the last diagnostic is in build/answer-generation and the results document. No validation relaxation or extra repair model call was introduced.
+    verification: The first six paid calls included citation failures. An unchanged-condition retry added sixteen passing calls (one diagnostic and fifteen staged requests), twenty-two cumulative. This does not erase the counterexample or prove reliable compliance. No validation relaxation or repair call was introduced. See build/answer-generation and the results document.
     source: docs/testing/answer-generation-results.md
     updated_at: '2026-10-29'
 fingerprints:

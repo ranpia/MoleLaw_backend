@@ -1,6 +1,6 @@
 # 테스트 도구와 부하 테스트 입문
 
-기준일: 2026-10-29. **조회·DB·Refresh API와 임베딩·리랭커의 단독/혼합 부하를 검증했다. AI 최종 생성은 소규모 실제 호출 중 인용 실패로 증량을 중단했고, 전체 백엔드 RAG 부하는 미실행이다.**
+기준일: 2026-10-29. **조회·DB·Refresh API와 임베딩·리랭커의 단독/혼합 부하를 검증했다. AI 최종 생성은 동시 1/2개 소규모 재실행을 완료했고 과거 인용 실패를 별도 보존한다. 전체 백엔드 RAG 부하는 미실행이다.**
 실행 순서는 [백엔드·DB·RAG 부하 테스트 계획](../plans/load-testing.md)을 따른다.
 현재 장비·서비스 조사와 준비 명령은 [로컬 환경 조사](environment-readiness.md)에 기록한다.
 격리 Compose·환경변수·Grafana 시작 안내는 [전용 Docker 환경](../../docker/loadtest/README.md)을 따른다.
@@ -18,7 +18,7 @@
 [임베딩 동시 처리 한계](embedding-capacity.md)는 짧은 질문과 512토큰 문서의 성공 처리량·대기·503 거부를 구분한다.
 [리랭커 단독 부하](reranker-capacity.md)는 실제 검색 후보 5/20개를 사용해 동시 요청·대기 만료·회복을 비교한다.
 [임베딩·리랭커 혼합 부하](mixed-rag-capacity.md)는 두 연산의 고정 동시 요청 배분과 공유 잠금에 따른 간섭·503을 확인한다.
-[AI 답변 생성 시험 계획](answer-generation-plan.md)은 대역→최종 생성 단독→전체 RAG→저장형 순서다. [첫 실행 결과](answer-generation-results.md)에서 대역 14건 통과와 실제 6호출 중 인용 실패·증량 중단을 확인한다.
+[AI 답변 생성 시험 계획](answer-generation-plan.md)은 대역→최종 생성 단독→전체 RAG→저장형 순서다. [실행 결과](answer-generation-results.md)에 대역 14건, 최초 인용 실패와 재실행 16호출 통과를 함께 기록한다.
 
 ## 1. 무엇을 알아보려는가
 
