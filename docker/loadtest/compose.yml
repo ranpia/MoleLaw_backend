@@ -351,7 +351,7 @@ services:
     mem_limit: 256m
     logging: *logging
 
-  rag-data:
+  rag-data: &rag-data-runner
     profiles: [ragtools]
     image: molelaw/kure-service:loadtest-cpu
     entrypoint: [python]
@@ -370,6 +370,12 @@ services:
     healthcheck:
       disable: true
     logging: *logging
+
+  rerank-data:
+    <<: *rag-data-runner
+    profiles: [ragtools]
+    command: [/data/prepare_rerank.py]
+    mem_limit: 1g
 
   sysbench:
     profiles: [dbbench]

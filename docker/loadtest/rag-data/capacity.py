@@ -41,8 +41,10 @@ def rows(filename):
     return [json.loads(line) for line in raw.decode().splitlines()]
 
 
-def point():
+def point(operation='embed'):
+    assert operation in ('embed','rerank')
     q = 'up{job="molelaw-kure"} or on(__name__,job,instance,operation) kure_model_ready{operation="embed"} or on(__name__,job,instance,operation) kure_inference_active or on(__name__,job,instance,operation) kure_queue_waiting or on(__name__,job,instance,operation) max(container_memory_working_set_bytes{container_label_com_docker_compose_project="molelaw-loadtest",container_label_com_docker_compose_service="kure"}/container_spec_memory_limit_bytes{container_label_com_docker_compose_project="molelaw-loadtest",container_label_com_docker_compose_service="kure"})'
+    q = q.replace('kure_model_ready{operation="embed"}', 'kure_model_ready{operation="'+operation+'"}')
     with urlopen('http://prometheus:9090/api/v1/query?'+urlencode({'query':q}),timeout=4) as reply:
         vector = json.load(reply)['data']['result']
     out = {'atUtc':utc()}
@@ -51,7 +53,7 @@ def point():
         if item['metric'].get('operation'):
             name += ':'+item['metric']['operation']
         out[name] = float(item['value'][1])
-    assert out.get('up') == 1 and out.get('kure_model_ready:embed') == 1
+    assert out.get('up') == 1 and out.get('kure_model_ready:'+operation) == 1
     assert 0 <= out.get('memoryRatio',1) < .85
     return out
 
@@ -78,8 +80,11 @@ def request(row):
         return error.code,reason
 
 
-def phase(inputs, concurrency, seconds, label):
+def phase(inputs, concurrency, seconds, label, perform=None, observation=None, drain_allowance=45):
     assert concurrency in (1,2,3,4,5,8) and seconds in (10,60,120)
+    assert drain_allowance in (45,135)
+    perform = perform or request
+    observation = observation or point
     stop = threading.Event()
     finished = threading.Event()
     lock = threading.Lock()
@@ -101,7 +106,7 @@ def phase(inputs, concurrency, seconds, label):
         old_cpu, old_time = None, None
         while not finished.is_set():
             try:
-                sample = point()
+                sample = observation()
                 cpu = dict(line.split() for line in Path('/sys/fs/cgroup/cpu.stat').read_text().splitlines())
                 used = int(cpu['usage_usec'])/1e6
                 clock = time.monotonic()
@@ -127,7 +132,7 @@ def phase(inputs, concurrency, seconds, label):
                 counter += 1
             before = time.monotonic()
             try:
-                status, reason = request(row)
+                status, reason = perform(row)
             except Exception as exc:
                 status, reason = 0,type(exc).__name__
             after = time.monotonic()
@@ -136,7 +141,7 @@ def phase(inputs, concurrency, seconds, label):
             with lock:
                 records.append(record)
             if status != 200 and not (status == 503 and reason in ('queue_full','queue_timeout')):
-                fail('unexpected_response_or_invalid_vector')
+                fail('unexpected_response_or_invalid_output')
             if status == 503:
                 # Bound overload traffic instead of spinning on immediate rejection.
                 stop.wait(.25)
@@ -147,7 +152,7 @@ def phase(inputs, concurrency, seconds, label):
         with ThreadPoolExecutor(max_workers=concurrency) as pool:
             jobs = [pool.submit(worker) for _ in range(concurrency)]
             for job in jobs:
-                job.result(timeout=seconds+45)
+                job.result(timeout=seconds+drain_allowance)
     finally:
         finished.set()
         monitor_thread.join(timeout=6)
@@ -175,11 +180,11 @@ def phase(inputs, concurrency, seconds, label):
     return summary
 
 
-def stage(profile, inputs, concurrency, seconds=60):
+def stage(profile, inputs, concurrency, seconds=60, perform=None, observation=None, drain_allowance=45):
     label = f'{profile}-c{concurrency}-s{seconds}'
     # Drain every phase completely before starting the next one.
-    phase(inputs,concurrency,10,label+'-warmup')
-    result = phase(inputs,concurrency,seconds,label)
+    phase(inputs,concurrency,10,label+'-warmup',perform,observation,drain_allowance)
+    result = phase(inputs,concurrency,seconds,label,perform,observation,drain_allowance)
     print(f"{label}: success {result['successRps']:.3f}/s, p95 {result['successP95Seconds']:.3f}s, rejected {result['rejections']}/{result['attemptsStarted']}",flush=True)
     return result
 

@@ -107,6 +107,8 @@ docker compose --env-file docker/loadtest/.env -f docker/loadtest/compose.yml --
 
 전용 Qdrant는 HTTP 16333·gRPC 16334, KURE는 21437이다. 새 캐시에 모델을 다운로드하므로 시간·디스크가 추가로 필요하다.
 모델은 KURE 이미지의 고정 revision을 사용하며 임베딩과 리랭커가 실행 잠금과 대기열을 공유한다.
+리랭커 단독 시험은 기존 벡터·전용 Qdrant 자료를 준비한 뒤 `scripts/load-testing/run-reranker-capacity.ps1`로 실행한다.
+후보 준비 도구는 오프라인 토크나이저용 1GiB, 실제 부하 도구는 512MiB다. 입력·측정·거절 해석은 [리랭커 부하 안내](../../docs/testing/reranker-capacity.md)를 따른다.
 KURE의 다운로드 네트워크만 인터넷에 연결된다. 백엔드는 internal 네트워크에만 연결되어 유료 AI·OpenLaw·OAuth에 직접 나갈 수 없다.
 지금은 외부 호출 대역이 없으므로 전체 최초·후속 상담 성공을 기대하면 안 된다. RAG 구성요소 준비와 전체 상담 대역 연결은 별개다.
 컬렉션·합성 원문·사용자·상담 데이터 적재 및 준비 확인은 다음 단계에서 제공한다. 단순 컨테이너 기동은 검색 준비 완료가 아니다.
