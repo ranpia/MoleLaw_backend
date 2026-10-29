@@ -1,0 +1,14 @@
+{
+  "dataset": "legal-perf-v1",
+  "purpose": "Embedding and vector-search performance fixtures; not current legal advice",
+  "usage_basis": "Korean Copyright Act Article 7(1): statutes; website UI/editorial material excluded",
+  "usage_basis_url": "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1029423769",
+  "model": "nlpai-lab/KURE-v1",
+  "revision": "8b418a58414668e75532ed045c22d9ca018ae2b2",
+  "sources": [
+    {"id": "civil", "name": "민법", "lsiSeq": "246569", "effective_date": "20230628"},
+    {"id": "housing", "name": "주택임대차보호법", "lsiSeq": "249999", "effective_date": "20230719"},
+    {"id": "labor", "name": "근로기준법", "lsiSeq": "285279", "effective_date": "20261008"},
+    {"id": "copyright", "name": "저작권법", "lsiSeq": "260839", "effective_date": "20240828"}
+  ]
+}

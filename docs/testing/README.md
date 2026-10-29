@@ -13,6 +13,7 @@
 [Redis·Refresh API 결과](redis-performance.md)에서 실제 수치와 503·응답 유실 후 재시도의 세션 폐기 동작을 확인한다.
 [MySQL 직접 부하](mysql-capacity.md)는 앱 데이터와 분리한 200만 행으로 읽기·쓰기·락 경합을 측정한다.
 [Qdrant·RAG 관측](rag-monitoring.md)은 임베딩·리랭킹·벡터 DB의 실제 메트릭과 전체 RAG 계측의 남은 범위를 설명한다.
+[임베딩 시험 데이터](rag-dataset.md)는 실제 법령 4종의 고정 원문과 1,000개 코퍼스·질문·길이별 입력을 제공한다.
 
 ## 1. 무엇을 알아보려는가
 

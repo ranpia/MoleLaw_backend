@@ -1,0 +1,124 @@
+{
+  "dataset": "legal-perf-v1",
+  "model": "nlpai-lab/KURE-v1",
+  "revision": "8b418a58414668e75532ed045c22d9ca018ae2b2",
+  "tokenizer_special_tokens": 2,
+  "tokenizer_files": {
+    "tokenizer_config.json": "b87c8703482b0300d3da30e201519aa641f6a450f5eb5bf1e624afbf70c74d80",
+    "tokenizer.json": "fb3c3b93c46fd5a8634e262e1b7de7da11a18b527aa2282b312952b692781dfd",
+    "special_tokens_map.json": "8c785abebea9ae3257b61681b4e6fd8365ceafde980c21970d001e834cf10835"
+  },
+  "libraries": {
+    "transformers": "5.0.0",
+    "tokenizers": "0.22.2"
+  },
+  "articles": 1477,
+  "unique_chunks": 1504,
+  "initial_corpus": 1000,
+  "article_sources": {
+    "civil": 1115,
+    "housing": 41,
+    "labor": 128,
+    "copyright": 193
+  },
+  "corpus_sources": {
+    "civil": 612,
+    "housing": 45,
+    "labor": 135,
+    "copyright": 208
+  },
+  "queries": 32,
+  "length_inputs": 48,
+  "boundary_inputs": 3,
+  "length_groups": {
+    "128": [
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128
+    ],
+    "512": [
+      512,
+      512,
+      512,
+      512,
+      512,
+      512,
+      512,
+      512,
+      511,
+      512,
+      512,
+      512
+    ],
+    "2048": [
+      2048,
+      2048,
+      2048,
+      2048,
+      2048,
+      2048,
+      2048,
+      2048,
+      2048,
+      2048,
+      2048,
+      2048
+    ],
+    "4096": [
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096,
+      4096
+    ]
+  },
+  "corpus_tokens": {
+    "min": 19,
+    "max": 512
+  },
+  "source_snapshot_sha256": "0323bfb94955455346887f71f947daf94ed64b2d13c79f4288741072d9dcc43f",
+  "files": {
+    "chunks.jsonl": {
+      "rows": 1504,
+      "sha256": "78770cac3a178bffcfc423b5a0d12a420ae69f935792b2f99ebfd6e63dcd7b8e"
+    },
+    "corpus-1000.jsonl": {
+      "rows": 1000,
+      "sha256": "bca65b8802895db1a7157ccdda59304984c4a9b25f424c2dd79aa3be4fca2b58"
+    },
+    "length-inputs.jsonl": {
+      "rows": 48,
+      "sha256": "585673188a027cbafd8bb63825a3496e936a5f0dc562aba57511f808f2bd1b09"
+    },
+    "queries.jsonl": {
+      "rows": 32,
+      "sha256": "bfe82035ec6a1629f6b32afad3dc798b4a26f561dc950385ee8dd866ded9f7fc"
+    },
+    "boundary-inputs.jsonl": {
+      "rows": 3,
+      "sha256": "7279e0c915655eae5797dc894c35d7361300caf0a1f037657d6dc75a01bdfd3b"
+    }
+  },
+  "limitations": [
+    "Historical fixed law snapshots; not current legal advice",
+    "Candidate query mappings are not relevance gold labels",
+    "No embedding, Qdrant writes or AI answer generation performed",
+    "10,000 unique real vectors require additional source corpus"
+  ]
+}
