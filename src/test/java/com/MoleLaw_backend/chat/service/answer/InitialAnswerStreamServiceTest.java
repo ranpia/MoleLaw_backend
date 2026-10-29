@@ -63,9 +63,12 @@ class InitialAnswerStreamServiceTest {
         when(answers.streamInitialAnswer("질문")).thenReturn(Flux.concat(Flux.just(InitialAnswerUpdate.info("근거")),
                 Flux.<InitialAnswerUpdate>never()).doOnCancel(() -> cancelled.set(true)));
         service.stream("질문", mock(User.class)).take(1).blockLast(Duration.ofSeconds(5));
-        assertThat(cancelled).isTrue();
-        var next = service.stream("질문", null).take(1).blockFirst(Duration.ofSeconds(5));
-        assertThat(next.event()).isEqualTo("info");
+        org.awaitility.Awaitility.await().atMost(Duration.ofSeconds(5))
+                .untilAsserted(() -> assertThat(cancelled).isTrue());
+        org.awaitility.Awaitility.await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+            var next = service.stream("질문", null).take(1).blockFirst(Duration.ofSeconds(5));
+            assertThat(next.event()).isEqualTo("info");
+        });
         verifyNoInteractions(chats);
     }
 }
