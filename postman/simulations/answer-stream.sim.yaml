@@ -1,0 +1,6 @@
+simulation: Final answer streaming and provider failures
+routing: path
+mocks:
+  - name: Synthetic streaming model
+    routeKey: openai
+    path: ../mocks/answer-stream/config.yaml

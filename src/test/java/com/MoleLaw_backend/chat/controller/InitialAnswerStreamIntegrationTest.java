@@ -123,12 +123,18 @@ class InitialAnswerStreamIntegrationTest {
     @Autowired UserRepository users;
     @Autowired ChatRoomRepository rooms;
     @Autowired MessageRepository messages;
+    @Autowired org.springframework.security.web.FilterChainProxy securityFilters;
     @Autowired com.MoleLaw_backend.auth.security.JwtUtil jwt;
     @Autowired com.MoleLaw_backend.chat.service.ChatTurnService turns;
     private CustomUserDetails principal;
     private final String id = "00000000-0000-0000-0000-000000000001";
 
     @BeforeEach void fixture() {
+        // MockHttpServletResponse header maps are not safe for initial/async concurrent writes.
+        securityFilters.getFilterChains().forEach(chain -> chain.getFilters().stream()
+                .filter(org.springframework.security.web.header.HeaderWriterFilter.class::isInstance)
+                .map(org.springframework.security.web.header.HeaderWriterFilter.class::cast)
+                .forEach(filter -> filter.setShouldWriteHeadersEagerly(true)));
         when(model.call(any(Prompt.class))).thenAnswer(call -> {
             Prompt prompt = call.getArgument(0);
             return response(prompt.getSystemMessage().getText().contains("후속판례실행계획자")

@@ -1,8 +1,8 @@
 # 백엔드·DB·RAG 부하 테스트 계획
 
-기준일: 2026-10-29. 상태: **조회·DB·Refresh API·임베딩/리랭커 단독·혼합 부하 검증 완료, 전체 백엔드 RAG·AI 답변 미실행**.
+기준일: 2026-10-29. 상태: **조회·DB·Refresh API·임베딩/리랭커 부하 검증 완료, 최종 AI 생성 소수 실측 중 인용 실패로 증량 중단, 전체 백엔드 RAG 미실행**.
 
-다음 단계는 [AI 답변 생성 시험 계획](../testing/answer-generation-plan.md)을 따른다. 비용 없는 스트림/장애 검증→고정 근거 최종 생성→고정 색인 RAG→저장형 소수 검증으로 나누며, 실제 유료 호출과 외부 통신은 아직 시작하지 않았다.
+AI 답변은 [단계별 계획](../testing/answer-generation-plan.md)과 [첫 결과](../testing/answer-generation-results.md)를 따른다. 대역 14건 통과 후 실제 최종 생성은 단일 진단 포함 6호출을 수행했고, 인용 실패로 동시 증량을 중단했다. 전체 RAG·실제 저장형은 아직 실행하지 않았다.
 처음이라면 [테스트 도구와 입문 안내](../testing/README.md)를 먼저 읽는다. 진행 상태는 아래 표 한 곳에서 관리한다.
 
 추가 결과: [MySQL 직접 부하](../testing/mysql-capacity.md)와

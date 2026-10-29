@@ -162,7 +162,6 @@ public class LegalAnswerService {
             tools.selectLawContexts(caseSearchLawEvidenceIds);
             sessionRef.set(tools);
             var preparation = Mono.fromCallable(() -> {
-                stages.tryEmitNext(InitialAnswerUpdate.progress("FOLLOW_UP_ROUTING"));
                 tools.prepare(planFollowUp(searchQuestion, sources, userId + ":" + roomId, allowCaseSearch, caseSearchLawEvidenceIds));
                 if (tools.consentRequested()) return true;
                 if (tools.preparedSearchCompleted()) return true;
@@ -232,7 +231,8 @@ public class LegalAnswerService {
             });
             var updates = Flux.concat(Flux.just(InitialAnswerUpdate.progress("FOLLOW_UP_PREPARATION"),
                     InitialAnswerUpdate.evidence(sources),
-                    InitialAnswerUpdate.info(renderer.renderForStream(sources.stream().filter(item -> !"CASE_BODY".equals(item.kind())).toList(), display::label))), answer);
+                    InitialAnswerUpdate.info(renderer.renderForStream(sources.stream().filter(item -> !"CASE_BODY".equals(item.kind())).toList(), display::label)),
+                    InitialAnswerUpdate.progress("FOLLOW_UP_ROUTING")), answer);
             return Flux.merge(updates, stages.asFlux()).takeUntil(update -> update.followUp() != null)
                     .doFinally(signal -> stages.tryEmitComplete());
         }).subscribeOn(Schedulers.boundedElastic());
