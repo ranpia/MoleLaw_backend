@@ -3,6 +3,7 @@ import math
 import os
 import time
 import torch
+import monitoring
 from sentence_transformers import CrossEncoder
 
 ENABLED = os.environ.get("RERANKER_ENABLED", "false").lower() == "true"
@@ -12,6 +13,7 @@ DEVICE = os.environ.get("RERANKER_DEVICE", os.environ.get("EMBEDDING_DEVICE", "c
 DTYPE = os.environ.get("RERANKER_DTYPE", "float16" if DEVICE == "cuda" else "float32")
 BATCH_SIZE = int(os.environ.get("RERANKER_BATCH_SIZE", "2"))
 MAX_TOKENS = int(os.environ.get("RERANKER_MAX_TOKENS", "1024"))
+monitoring.BATCH_SIZE.labels('rerank').set(BATCH_SIZE)
 if DEVICE not in ("cpu", "cuda") or DTYPE not in ("float16", "float32") \
         or (DEVICE == "cpu" and DTYPE != "float32") or not 1 <= BATCH_SIZE <= 16 \
         or not 128 <= MAX_TOKENS <= 8192:
@@ -29,6 +31,7 @@ def load_model():
                               model_kwargs={"torch_dtype": getattr(torch, DTYPE)})
         loaded.model.eval()
         model = loaded
+        monitoring.MODEL_READY.labels('rerank').set(1)
     return model
 
 
@@ -55,11 +58,12 @@ def rerank(payload):
     if any(length > MAX_TOKENS for length in lengths):
         raise ValueError("Reranker pair exceeds token limit; truncation is disabled")
     started = time.monotonic()
-    with torch.inference_mode():
+    with monitoring.INFERENCE_SECONDS.labels('rerank').time(), torch.inference_mode():
         scores = [float(score) for score in encoder.predict(list(zip([query] * len(texts), texts)),
                   batch_size=BATCH_SIZE, show_progress_bar=False)]
     if len(scores) != len(ids) or not all(math.isfinite(score) for score in scores):
         raise RuntimeError("Invalid reranker scores")
+    monitoring.ITEMS.labels('rerank').inc(len(ids))
     print(f"Rerank complete candidates={len(ids)} elapsed_seconds={time.monotonic()-started:.3f}", flush=True)
     return {"model": MODEL_ID, "revision": REVISION,
             "results": [{"id": key, "score": score} for key, score in zip(ids, scores)]}

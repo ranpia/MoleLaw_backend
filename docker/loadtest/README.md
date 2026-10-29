@@ -32,6 +32,12 @@ $loadtestRng.Dispose()
 
 실제 값이 출력되는 `docker compose config` 대신 아래 검증 명령을 사용한다.
 
+Prometheus 시작 전에 Qdrant scrape용 키 파일도 준비한다. RAG 서비스가 아직 꺼져 있어도 설정이 참조하는 파일은 필요하다.
+
+```powershell
+.\scripts\load-testing\prepare-rag-monitoring.ps1
+```
+
 ```powershell
 docker compose --env-file docker/loadtest/.env -f docker/loadtest/compose.yml --profile rag --profile tools config --quiet
 ```
@@ -134,6 +140,7 @@ Redis는 tmpfs이므로 컨테이너 재생성 시 Refresh 상태가 사라져 �
 Redis 직접 부하와 실제 Refresh API 시험은 각각 `redisbench`, `refreshbench` 프로필을 사용한다.
 별도 Redis·시험 백엔드·장애 프록시와 전용 결과 파일을 사용하며 [실행과 결과](../../docs/testing/redis-performance.md)를 따른다.
 추가된 Grafana `MoleLaw 부하 테스트 - Refresh API` 대시보드는 기존 백엔드와 다른 job만 조회한다.
+Qdrant·KURE 계측은 [RAG 구성요소 모니터링](../../docs/testing/rag-monitoring.md)을 따른다.
 
 구성 검증은 Compose 해석·볼륨/네트워크 격리·관리 포트 미공개를 확인한다.
 백엔드 HTTP 테스트는 별도 관리 포트에서 scrape 성공·JVM/Hikari/HTTP histogram 존재와 애플리케이션 포트의 인증·CSRF 유지를 확인한다.

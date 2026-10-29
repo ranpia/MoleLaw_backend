@@ -1,5 +1,13 @@
 # 검증 현황
 
+## 2026-10-29 Qdrant·RAG 구성요소 관측 연결
+
+- Qdrant 1.19.1의 인증 `/metrics`를 Prometheus에 직접 연결했다. 키는 Git 제외 파일에서 읽고 YAML·로그에 노출하지 않는다. 비인증 401/403, 임시 합성 컬렉션의 벡터 삽입·검색·삭제로 실제 REST 카운터와 히스토그램 생성을 검증했다.
+- KURE에 prometheus-client 0.22.1 기반 계측을 추가했다. 모델 로드 전에 Docker 내부 관리 포트 9092를 열어 임베딩/리랭킹 HTTP 상태·전체 지연·잠금 대기·encode/predict 시간·큐 포화·모델 준비·처리 항목 수를 수집한다. 질문/문서/토큰/사용자 ID 레이블은 없다. 기존 추론 큐·HTTP 계약은 유지했다.
+- 실제 고정 모델의 짧은 임베딩 1개(1024차원/unit norm)와 리랭킹 후보 2개(유한 점수)가 성공했다. 공개 캐시는 lab 볼륨을 읽기 전용으로 읽어 테스트 전용 캐시로 복사했다. HF 공통 blobs 링크도 보완했다. AI 답변 생성·RAG 부하는 실행하지 않았다.
+- 모델 다운로드 없는 Python 회귀 9개 통과. 새 검사는 추론 중 scrape 응답·입력 미노출·포화 카운터·active/waiting 해제를 검증했다. Docker 이미지·Prometheus 설정 검증, 타깃 9개 UP·두 모델 준비=1, 한국어 Grafana 19패널 등록·PromQL 18개 실행과 시리즈 존재를 확인했다.
+- 실제 백엔드 RAG는 비활성 상태이며 질문 분석·검색 조립·원문 조회·전체 흐름의 별도 계측은 아직 없다. [검토와 실행 안내](../testing/rag-monitoring.md)에 구성요소 관측과 전체 RAG의 경계를 기록했다. Java/JUnit 변경·재실행은 없다.
+
 ## 2026-10-29 Redis 직접 부하·Refresh API 검증 완료
 
 - 별도 Redis 7.4.11·CPU 0.5개·컨테이너 256MiB·maxmemory 128MiB/noeviction과 전용 exporter를 사용했다. 기존 인증 Redis는 그대로 유지했다. 10월 28일 SET 5개 완료 결과를 출처와 함께 재사용하고 PING/GET/SETEX·값 크기·pipeline·64자 해시 실제 Lua 1/10/50 연결을 완료했다.

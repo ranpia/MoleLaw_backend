@@ -3,3 +3,4 @@
 !requirements.txt
 !server.py
 !reranker.py
+!monitoring.py

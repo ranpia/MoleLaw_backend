@@ -189,6 +189,7 @@ services:
     image: qdrant/qdrant:v1.19.1
     environment:
       QDRANT__SERVICE__API_KEY: ${LT_QDRANT_API_KEY:?Set LT_QDRANT_API_KEY}
+      QDRANT__TELEMETRY_DISABLED: "true"
     volumes: [qdrant_data:/qdrant/storage, qdrant_snapshots:/qdrant/snapshots]
     cpus: ${LT_QDRANT_CPUS:-2.0}
     mem_limit: ${LT_QDRANT_MEMORY:-2g}
@@ -209,6 +210,8 @@ services:
       RERANKER_ENABLED: "true"
       RERANKER_BATCH_SIZE: "2"
       RERANKER_MAX_TOKENS: "1024"
+      METRICS_PORT: "9092"
+    expose: ["9092"]
     ports: ["127.0.0.1:${LT_KURE_PORT:-21437}:11434"]
     volumes: [model_cache:/models]
     # Only the model server can download model weights. The backend has no egress network.
@@ -224,6 +227,7 @@ services:
     command: [--config.file=/etc/prometheus/prometheus.yml, --storage.tsdb.path=/prometheus, --storage.tsdb.retention.time=3d, --storage.tsdb.retention.size=1GB]
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../build/loadtest-secrets:/run/loadtest-secrets:ro
       - prometheus_data:/prometheus
     cpus: 0.5
     mem_limit: 512m
