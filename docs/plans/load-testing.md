@@ -3,6 +3,7 @@
 기준일: 2026-10-29. 상태: **조회·DB·Refresh API·임베딩/리랭커 부하 검증 완료, 최종 AI 생성 동시 1/2개 소수 실측 완료(과거 인용 실패 보존), 전체 백엔드 RAG 미실행**.
 
 AI 답변은 [단계별 계획](../testing/answer-generation-plan.md)과 [결과](../testing/answer-generation-results.md)를 따른다. 대역 14건, 최초 인용 실패 6호출 이후 재실행 16호출(진단 1+정규 15) 통과를 확인했다. 전체 RAG·실제 저장형은 아직 실행하지 않았다.
+[전체 RAG 준비](../testing/full-rag-preparation.md)는 전용 앱/색인과 공통 AI 제한을 구성하고 합성 모델+실제 KURE/Qdrant로 정상 완료·추가 수집 차단을 검증했다. 실제 유료 전체 RAG 성능과는 구분한다.
 처음이라면 [테스트 도구와 입문 안내](../testing/README.md)를 먼저 읽는다. 진행 상태는 아래 표 한 곳에서 관리한다.
 
 추가 결과: [MySQL 직접 부하](../testing/mysql-capacity.md)와

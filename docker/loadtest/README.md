@@ -107,6 +107,7 @@ docker compose --env-file docker/loadtest/.env -f docker/loadtest/compose.yml --
 
 전용 Qdrant는 HTTP 16333·gRPC 16334, KURE는 21437이다. 새 캐시에 모델을 다운로드하므로 시간·디스크가 추가로 필요하다.
 모델은 KURE 이미지의 고정 revision을 사용하며 임베딩과 리랭커가 실행 잠금과 대기열을 공유한다.
+전체 앱 연결 준비는 `scripts/load-testing/prepare-full-rag.ps1`로 실행한다. 별도 앱 18083·20조문/29청크 색인·수집 차단·합성 AI 게이트웨이와 한글 Grafana 준비 대시보드를 구성한다. [전체 RAG 준비](../../docs/testing/full-rag-preparation.md)를 따르며 이 명령은 유료 AI를 호출하지 않는다.
 리랭커 단독 시험은 기존 벡터·전용 Qdrant 자료를 준비한 뒤 `scripts/load-testing/run-reranker-capacity.ps1`로 실행한다.
 두 모델의 혼합 시험은 `scripts/load-testing/run-mixed-rag-capacity.ps1`로 실행하며, 임베딩/리랭킹 worker 수를 고정한 6조건과 회복을 검증한다. [혼합 부하 결과와 해석](../../docs/testing/mixed-rag-capacity.md)을 확인한다.
 후보 준비 도구는 오프라인 토크나이저용 1GiB, 실제 부하 도구는 512MiB다. 입력·측정·거절 해석은 [리랭커 부하 안내](../../docs/testing/reranker-capacity.md)를 따른다.

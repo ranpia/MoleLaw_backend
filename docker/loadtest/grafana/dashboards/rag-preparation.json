@@ -1,0 +1,12 @@
+{
+  "uid":"molelaw-rag-preparation","title":"MoleLaw - 전체 RAG 시험 준비","schemaVersion":41,"version":1,
+  "editable":false,"refresh":"5s","time":{"from":"now-15m","to":"now"},
+  "panels":[
+    {"id":1,"type":"stat","title":"시험 앱·AI 연결 / 모델 모드","gridPos":{"x":0,"y":0,"w":12,"h":5},"datasource":{"type":"prometheus","uid":"loadtest-prometheus"},"targets":[{"refId":"A","expr":"up{job=\"molelaw-rag-prep\"}","legendFormat":"{{component}}"},{"refId":"B","expr":"rag_ai_mode","legendFormat":"모드: {{mode}}"}]},
+    {"id":2,"type":"stat","title":"공통 AI 호출 수·미정산 예약·비용 추정(USD)","gridPos":{"x":12,"y":0,"w":12,"h":5},"datasource":{"type":"prometheus","uid":"loadtest-prometheus"},"targets":[{"refId":"A","expr":"rag_ai_attempts","legendFormat":"호출 수"},{"refId":"B","expr":"rag_ai_reserved_usd","legendFormat":"미정산 예약 USD"},{"refId":"C","expr":"rag_ai_estimated_usd","legendFormat":"추정 USD"}]},
+    {"id":3,"type":"timeseries","title":"AI 역할별 호출 결과 (합성/실제 모드는 결과 파일 확인)","gridPos":{"x":0,"y":5,"w":12,"h":8},"datasource":{"type":"prometheus","uid":"loadtest-prometheus"},"targets":[{"refId":"A","expr":"rag_ai_requests_total","legendFormat":"{{role}} / {{status}}"}]},
+    {"id":4,"type":"timeseries","title":"임베딩·리랭커 실행/대기","gridPos":{"x":12,"y":5,"w":12,"h":8},"datasource":{"type":"prometheus","uid":"loadtest-prometheus"},"targets":[{"refId":"A","expr":"kure_inference_active","legendFormat":"실행 {{operation}}"},{"refId":"B","expr":"kure_queue_waiting","legendFormat":"대기 {{operation}}"}]},
+    {"id":5,"type":"stat","title":"마지막 정상 배선 검사 - 첫 답변/완료(초)","gridPos":{"x":0,"y":13,"w":12,"h":5},"datasource":{"type":"prometheus","uid":"loadtest-prometheus"},"targets":[{"refId":"A","expr":"rag_probe_first_text_seconds","legendFormat":"첫 answer_delta"},{"refId":"B","expr":"rag_probe_completed_seconds","legendFormat":"completed"}]},
+    {"id":6,"type":"timeseries","title":"마지막 정상 배선 검사 - 클라이언트 관측 단계 간격(초)","gridPos":{"x":12,"y":13,"w":12,"h":8},"datasource":{"type":"prometheus","uid":"loadtest-prometheus"},"targets":[{"refId":"A","expr":"rag_probe_stage_seconds","legendFormat":"{{stage}}"}]}
+  ]
+}

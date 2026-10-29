@@ -19,6 +19,7 @@
 [리랭커 단독 부하](reranker-capacity.md)는 실제 검색 후보 5/20개를 사용해 동시 요청·대기 만료·회복을 비교한다.
 [임베딩·리랭커 혼합 부하](mixed-rag-capacity.md)는 두 연산의 고정 동시 요청 배분과 공유 잠금에 따른 간섭·503을 확인한다.
 [AI 답변 생성 시험 계획](answer-generation-plan.md)은 대역→최종 생성 단독→전체 RAG→저장형 순서다. [실행 결과](answer-generation-results.md)에 대역 14건, 최초 인용 실패와 재실행 16호출 통과를 함께 기록한다.
+[전체 RAG 시험 준비](full-rag-preparation.md)는 전용 앱/색인·추가 수집 차단·공통 AI 예산 게이트웨이와 합성 배선 검증 결과를 제공한다. 유료 전체 RAG는 아직 미실행이다.
 
 ## 1. 무엇을 알아보려는가
 

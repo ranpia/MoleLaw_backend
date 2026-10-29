@@ -55,6 +55,8 @@ public class LegalEvidenceCollector {
     private final RetrievalBackend backend;
     private final LawCandidateSelectionProperties selection;
     private final Duration processingTimeout;
+    @Value("${app.law-retrieval.fixed-index-only:false}")
+    private boolean fixedIndexOnly;
 
     public LegalEvidenceCollector(ObjectProvider<LawRagSearchToolService> searches,
             ObjectProvider<LawVectorizationToolService> vectors, LegalApiToolService laws,
@@ -88,6 +90,7 @@ public class LegalEvidenceCollector {
     public CollectedLegalEvidence collectForAnswer(String question, com.MoleLaw_backend.law.dto.retrieval.RetrievalObserver observer) {
         if (question == null || question.isBlank() || question.codePointCount(0, question.length()) > 2000)
             throw new MolelawException(ErrorCode.INVALID_REQUEST);
+        if (fixedIndexOnly && backend != RetrievalBackend.QDRANT) throw new MolelawException(ErrorCode.RETRIEVAL_UNAVAILABLE);
         if (backend == RetrievalBackend.AI_SEARCH) return aiSearch.collect(question, observer);
         var search = searches.getIfAvailable();
         var vector = vectors.getIfAvailable();
@@ -174,6 +177,7 @@ public class LegalEvidenceCollector {
                             evidence = searchBatch(freshQueries, evidence, ids, context, search, attempts, retained, searchProgress);
                     }
                     case COLLECT_LAW -> {
+                        if (fixedIndexOnly) throw insufficient();
                         boolean progressed = false;
                         collectionQueue.offer(decision.lawSearches(), attempts);
                         for (var condition : collectionQueue.pending()) {

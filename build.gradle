@@ -76,7 +76,7 @@ dependencies {
 tasks.named('test') {
 	// Multiple Spring contexts, metrics registries and tokenizer dictionaries exceed Gradle's 512 MiB default.
 	maxHeapSize = '1g'
-	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration', 'redis-integration', 'qdrant-integration', 'postman-simulation', 'embedding-live', 'evidence-decision-live', 'question-analysis-live', 'case-search-intent-live', 'answer-generation-live' }
+	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration', 'redis-integration', 'qdrant-integration', 'postman-simulation', 'embedding-live', 'evidence-decision-live', 'question-analysis-live', 'case-search-intent-live', 'answer-generation-live', 'rag-preparation' }
 }
 
 tasks.register('caseSearchIntentLiveTest', Test) {
@@ -202,6 +202,15 @@ tasks.register('answerGenerationLiveTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform { includeTags 'answer-generation-live' }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('ragPreparationContractTest', Test) {
+    description = 'Checks generated RAG fixture against the actual application fingerprint and article chunker, without network calls.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'rag-preparation' }
     outputs.upToDateWhen { false }
 }
 
