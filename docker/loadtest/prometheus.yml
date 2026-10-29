@@ -22,3 +22,10 @@ scrape_configs:
       - source_labels: [container_label_com_docker_compose_project]
         regex: molelaw-loadtest
         action: keep
+  - job_name: molelaw-redis-bench
+    static_configs:
+      - targets: [redis-bench-exporter:9121]
+  - job_name: molelaw-refresh-backend
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [refresh-backend:9091]

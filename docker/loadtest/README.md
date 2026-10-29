@@ -131,6 +131,10 @@ Redis는 tmpfs이므로 컨테이너 재생성 시 Refresh 상태가 사라져 �
 
 ## 검증 범위
 
+Redis 직접 부하와 실제 Refresh API 시험은 각각 `redisbench`, `refreshbench` 프로필을 사용한다.
+별도 Redis·시험 백엔드·장애 프록시와 전용 결과 파일을 사용하며 [실행과 결과](../../docs/testing/redis-performance.md)를 따른다.
+추가된 Grafana `MoleLaw 부하 테스트 - Refresh API` 대시보드는 기존 백엔드와 다른 job만 조회한다.
+
 구성 검증은 Compose 해석·볼륨/네트워크 격리·관리 포트 미공개를 확인한다.
 백엔드 HTTP 테스트는 별도 관리 포트에서 scrape 성공·JVM/Hikari/HTTP histogram 존재와 애플리케이션 포트의 인증·CSRF 유지를 확인한다.
 2026-10-28 최소 환경에서 MySQL Flyway V8, backend healthy, Prometheus backend UP, JVM/Hikari/HTTP histogram 존재,

@@ -170,7 +170,7 @@
         {
           "refId": "A",
           "expr": "redis_up",
-          "legendFormat": "Redis 연결 상태"
+          "legendFormat": "{{job}} / Redis 연결 상태"
         }
       ]
     },
@@ -192,12 +192,12 @@
         {
           "refId": "A",
           "expr": "redis_memory_used_bytes",
-          "legendFormat": "사용 메모리"
+          "legendFormat": "{{job}} / 사용 메모리"
         },
         {
           "refId": "B",
           "expr": "redis_memory_max_bytes",
-          "legendFormat": "메모리 상한"
+          "legendFormat": "{{job}} / 메모리 상한"
         }
       ]
     },
@@ -219,7 +219,7 @@
         {
           "refId": "A",
           "expr": "redis_connected_clients",
-          "legendFormat": "Redis 연결 클라이언트"
+          "legendFormat": "{{job}} / Redis 연결 클라이언트"
         }
       ]
     },
@@ -241,7 +241,7 @@
         {
           "refId": "A",
           "expr": "rate(redis_commands_processed_total[1m])",
-          "legendFormat": "Redis 초당 명령 수"
+          "legendFormat": "{{job}} / Redis 초당 명령 수"
         }
       ]
     },
@@ -263,12 +263,12 @@
         {
           "refId": "A",
           "expr": "rate(redis_rejected_connections_total[1m])",
-          "legendFormat": "연결 거부"
+          "legendFormat": "{{job}} / 연결 거부"
         },
         {
           "refId": "B",
           "expr": "rate(redis_evicted_keys_total[1m])",
-          "legendFormat": "키 퇴출"
+          "legendFormat": "{{job}} / 키 퇴출"
         }
       ]
     },
@@ -290,7 +290,7 @@
         {
           "refId": "A",
           "expr": "rate(redis_expired_keys_total[1m])",
-          "legendFormat": "Redis 키 만료 (초당)"
+          "legendFormat": "{{job}} / Redis 키 만료 (초당)"
         }
       ]
     },

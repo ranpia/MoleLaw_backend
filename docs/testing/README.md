@@ -1,6 +1,6 @@
 # 테스트 도구와 부하 테스트 입문
 
-기준일: 2026-10-28. **2~2,048명 조회 탐색과 512명 지속 검증을 완료했다. DB·컨테이너 대시보드도 연결했다. RAG 부하는 아직 실행하지 않았다.**
+기준일: 2026-10-29. **조회·MySQL 직접 부하와 Redis·Refresh API의 부하 및 장애·복구 검증을 완료했다. RAG 부하는 아직 실행하지 않았다.**
 실행 순서는 [백엔드·DB·RAG 부하 테스트 계획](../plans/load-testing.md)을 따른다.
 현재 장비·서비스 조사와 준비 명령은 [로컬 환경 조사](environment-readiness.md)에 기록한다.
 격리 Compose·환경변수·Grafana 시작 안내는 [전용 Docker 환경](../../docker/loadtest/README.md)을 따른다.
@@ -10,6 +10,7 @@
 [조회 한계 탐색](read-capacity.md)은 로그인 집중과 인증된 조회를 구분해 단계적으로 증량한다.
 [컨테이너 관측](container-monitoring.md)은 CPU·메모리·네트워크·디스크 I/O 범위를 설명한다.
 [Redis 시험 계획](redis-performance-plan.md)은 Redis 단독 부하와 후속 Refresh API의 동시 갱신·장애·복구 검증을 다룬다.
+[Redis·Refresh API 결과](redis-performance.md)에서 실제 수치와 503·응답 유실 후 재시도의 세션 폐기 동작을 확인한다.
 [MySQL 직접 부하](mysql-capacity.md)는 앱 데이터와 분리한 200만 행으로 읽기·쓰기·락 경합을 측정한다.
 
 ## 1. 무엇을 알아보려는가

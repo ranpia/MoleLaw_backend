@@ -27,7 +27,7 @@ services:
       start_period: 60s
     logging: *logging
 
-  redis:
+  redis: &redis-server
     image: redis:7.4.11-alpine
     environment:
       REDIS_PASSWORD: ${LT_REDIS_PASSWORD:?Set LT_REDIS_PASSWORD}
@@ -51,12 +51,45 @@ services:
       retries: 5
     logging: *logging
 
-  backend:
+  redis-bench:
+    <<: *redis-server
+    profiles: [redisbench, refreshbench]
+    environment:
+      REDIS_PASSWORD: ${LT_REDIS_BENCH_PASSWORD:-}
+
+  redis-bench-exporter:
+    profiles: [redisbench]
+    image: oliver006/redis_exporter:v1.74.0
+    environment:
+      REDIS_ADDR: redis://redis-bench:6379
+      REDIS_PASSWORD: ${LT_REDIS_BENCH_PASSWORD:-}
+    depends_on:
+      redis-bench: {condition: service_healthy}
+    cpus: 0.25
+    mem_limit: 128m
+    logging: *logging
+
+  redis-load:
+    profiles: [redisbench]
+    image: molelaw/redis-load:v1
+    build:
+      context: ./redis-bench
+    command: [version]
+    environment:
+      REDISCLI_AUTH: ${LT_REDIS_BENCH_PASSWORD:-}
+    volumes:
+      - ../../src/main/resources/auth:/lua:ro
+      - ../../build/redis-loadtest-runs:/results
+    cpus: 3.0
+    mem_limit: 1g
+    logging: *logging
+
+  backend: &backend-server
     image: molelaw-app:loadtest
     build:
       context: ../..
       dockerfile: docker/app.Dockerfile
-    environment:
+    environment: &backend-environment
       # Existing cookie policy allows local HTTP only under local/test.
       # Override local's group to mysql so minimal startup does not require Qdrant.
       SPRING_PROFILES_ACTIVE: local,loadtest
@@ -112,6 +145,43 @@ services:
       timeout: 5s
       retries: 6
       start_period: 60s
+    logging: *logging
+
+  fault-proxy:
+    profiles: [refreshbench]
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    cpus: 2.0
+    mem_limit: 128m
+    logging: *logging
+
+  refresh-backend:
+    <<: *backend-server
+    profiles: [refreshbench]
+    environment:
+      <<: *backend-environment
+      REDIS_HOST: fault-proxy
+      REDIS_PORT: "16379"
+      REDIS_PASSWORD: ${LT_REDIS_BENCH_PASSWORD:-}
+      MYSQL_HOST: fault-proxy
+      MYSQL_PORT: "13306"
+    depends_on:
+      mysql: {condition: service_healthy}
+      redis-bench: {condition: service_healthy}
+      fault-proxy: {condition: service_started}
+
+  refresh-load:
+    profiles: [refreshbench]
+    image: locustio/locust:2.47.0
+    command: [--version]
+    environment:
+      LT_DATA_PASSWORD: ${LT_DATA_PASSWORD:-}
+      REDISCLI_AUTH: ${LT_REDIS_BENCH_PASSWORD:-}
+    volumes:
+      - ./locust:/scenario:ro
+      - ../../build/loadtest-data:/fixtures:ro
+      - ../../build/refresh-loadtest-runs:/results
+    cpus: 3.0
+    mem_limit: 1g
     logging: *logging
 
   qdrant:
