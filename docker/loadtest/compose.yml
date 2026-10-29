@@ -351,6 +351,24 @@ services:
     mem_limit: 256m
     logging: *logging
 
+  rag-data:
+    profiles: [ragtools]
+    image: molelaw/kure-service:loadtest-cpu
+    entrypoint: [python]
+    command: [/data/validate.py]
+    environment:
+      HF_HOME: /models
+      HF_HUB_OFFLINE: "1"
+      LT_KURE_THREADS: ${LT_KURE_THREADS:-4}
+      LT_QDRANT_API_KEY: ${LT_QDRANT_API_KEY:?Set LT_QDRANT_API_KEY}
+    volumes:
+      - ./rag-data:/data:ro
+      - ../../build/rag-dataset:/results
+      - model_cache:/models:ro
+    cpus: 1.0
+    mem_limit: 512m
+    logging: *logging
+
   sysbench:
     profiles: [dbbench]
     image: molelaw/sysbench:local-v1
