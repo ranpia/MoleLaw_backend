@@ -80,11 +80,12 @@ def request(row):
         return error.code,reason
 
 
-def phase(inputs, concurrency, seconds, label, perform=None, observation=None, drain_allowance=45):
+def phase(inputs, concurrency, seconds, label, perform=None, observation=None, drain_allowance=45, worker_inputs=None):
     assert concurrency in (1,2,3,4,5,8) and seconds in (10,60,120)
     assert drain_allowance in (45,135)
     perform = perform or request
     observation = observation or point
+    assert worker_inputs is None or (len(worker_inputs)==concurrency and all(worker_inputs))
     stop = threading.Event()
     finished = threading.Event()
     lock = threading.Lock()
@@ -124,13 +125,21 @@ def phase(inputs, concurrency, seconds, label, perform=None, observation=None, d
                     fail('monitoring_or_model_resource_guard')
             finished.wait(3)
 
-    def worker():
+    def worker(index):
         nonlocal counter
+        lane_counter = index
         while not stop.is_set() and time.monotonic() < end:
             with lock:
-                row = inputs[counter % len(inputs)]
-                counter += 1
+                if worker_inputs is None:
+                    row = inputs[counter % len(inputs)]
+                    counter += 1
+                else:
+                    lane = worker_inputs[index]
+                    row = lane[lane_counter % len(lane)]
+                    lane_counter += 1
             before = time.monotonic()
+            if before >= end:
+                break
             try:
                 status, reason = perform(row)
             except Exception as exc:
@@ -138,6 +147,8 @@ def phase(inputs, concurrency, seconds, label, perform=None, observation=None, d
             after = time.monotonic()
             record = {'inputId':row['id'],'tokens':row['tokens'],'startSeconds':before-start,
                       'finishSeconds':after-start,'elapsedSeconds':after-before,'status':status,'reason':reason}
+            if worker_inputs is not None:
+                record.update(operation=row['operation'],worker=index)
             with lock:
                 records.append(record)
             if status != 200 and not (status == 503 and reason in ('queue_full','queue_timeout')):
@@ -150,7 +161,7 @@ def phase(inputs, concurrency, seconds, label, perform=None, observation=None, d
     monitor_thread.start()
     try:
         with ThreadPoolExecutor(max_workers=concurrency) as pool:
-            jobs = [pool.submit(worker) for _ in range(concurrency)]
+            jobs = [pool.submit(worker,index) for index in range(concurrency)]
             for job in jobs:
                 job.result(timeout=seconds+drain_allowance)
     finally:
