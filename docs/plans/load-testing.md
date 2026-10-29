@@ -1,9 +1,10 @@
 # 백엔드·DB·RAG 부하 테스트 계획
 
-기준일: 2026-10-29. 상태: **조회·DB·Refresh API·임베딩/리랭커 부하 검증 완료, 최종 AI 생성 동시 1/2개 소수 실측 완료(과거 인용 실패 보존), 전체 백엔드 RAG 미실행**.
+기준일: 2026-10-29. 상태: **조회·DB·Refresh API·임베딩/리랭커·최종 AI 생성 단독 시험 완료, 실제 모델 전체 RAG 1상담 확인, 전체 RAG 동시 부하·실제 저장형 미실행**.
 
-AI 답변은 [단계별 계획](../testing/answer-generation-plan.md)과 [결과](../testing/answer-generation-results.md)를 따른다. 대역 14건, 최초 인용 실패 6호출 이후 재실행 16호출(진단 1+정규 15) 통과를 확인했다. 전체 RAG·실제 저장형은 아직 실행하지 않았다.
+AI 답변은 [단계별 계획](../testing/answer-generation-plan.md)과 [결과](../testing/answer-generation-results.md)를 따른다. 대역 14건, 최초 인용 실패 6호출 이후 재실행 16호출(진단 1+정규 15) 통과를 확인했다. 이후 전체 RAG 1상담을 확인했고, 전체 RAG 동시 부하·실제 저장형은 미실행이다.
 [전체 RAG 준비](../testing/full-rag-preparation.md)는 전용 앱/색인과 공통 AI 제한을 구성하고 합성 모델+실제 KURE/Qdrant로 정상 완료·추가 수집 차단을 검증했다. 실제 유료 전체 RAG 성능과는 구분한다.
+[첫 실제 전체 RAG](../testing/full-rag-first-live.md)는 무저장 1상담·5 공급자 호출을 완료했다. 누적 27회로 남은 3회 한도와 근거 읽기 실효 옵션 차이를 정리한 뒤 추가 시험을 진행한다.
 처음이라면 [테스트 도구와 입문 안내](../testing/README.md)를 먼저 읽는다. 진행 상태는 아래 표 한 곳에서 관리한다.
 
 추가 결과: [MySQL 직접 부하](../testing/mysql-capacity.md)와
