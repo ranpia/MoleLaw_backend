@@ -1,11 +1,40 @@
-﻿# Docker 실행 가이드
+# Docker 실행 가이드
+
+부하 테스트용 격리 환경은 [전용 Compose·환경변수·Grafana 안내](loadtest/README.md)를 따른다. 개발용 데이터 볼륨을 공유하지 않는다.
 
 Docker 관련 구성은 이 디렉터리에 모은다. Spring 애플리케이션 환경변수는 루트 `.env.example`, 프로젝트 구조와 실행은 [루트 README](../README.md)를 참고한다.
+
+## 현재 PC의 세 서비스 그룹
+
+Docker Desktop에서 `backend-service`(Spring 서버), `database-service`(MySQL·Redis·Qdrant·Redis Insight),
+`ai-service`(KURE 임베딩·선택적 BGE 리랭커)로 구분한다. 저장소 루트에서 DB와 AI를 먼저 시작한다.
+
+```powershell
+docker compose --env-file docker/.env.compose -f docker/compose.database.yml up -d
+docker compose --env-file docker/kure/.env -f docker/compose.ai.yml up -d --build
+.\gradlew.bat bootJar
+docker compose --env-file .env -f docker/compose.backend.yml up -d --build
+```
+
+DB 인증은 `docker/.env.compose`, 서버 설정은 `.env`, AI 자원·모델 설정은 `docker/kure/.env`에서 관리한다.
+리랭커는 서버의 `APP_LAW_RERANKER_ENABLED=true`와 AI의 `KURE_RERANKER_ENABLED=true`를 함께 설정한다.
+현재 CPU 실행은 서버 `APP_LAW_VECTOR_GPU_COUNT=0`, `APP_LAW_VECTOR_THREADS=6`과 AI `KURE_THREADS=6`을 맞춘다.
+
+이 구성은 기존 `molelaw-local_mysql_data`, `molelaw-local_qdrant_data`,
+`molelaw-local_qdrant_snapshots`와 모델 캐시 볼륨을 외부 볼륨으로 재사용한다.
+다른 PC에서는 `BACKEND_MYSQL_VOLUME`, `BACKEND_QDRANT_VOLUME`, `BACKEND_QDRANT_SNAPSHOTS_VOLUME`,
+`KURE_MODEL_VOLUME`에 실제 볼륨 이름을 지정한다. 외부 볼륨은 실행 전에 존재해야 한다.
+기존 별도 구성과 같은 호스트 포트를 사용하므로 동시에 실행하지 않는다.
+AI 첫 실행은 모델 다운로드·로딩이 끝나야 준비된다. 서버 헬스 체크만으로 AI 준비를 판단하지 않는다.
+Redis는 메모리 저장소이므로 재생성 후 재로그인이 필요할 수 있다.
+Redis Insight는 기존 설정 볼륨을 재사용하며 `http://127.0.0.1:5540`에서 접속한다.
+다른 PC에서는 `BACKEND_REDISINSIGHT_VOLUME`에 기존 대시보드 볼륨 이름도 지정한다.
 
 | 파일 | 용도 |
 | --- | --- |
 | `app.Dockerfile` | Gradle로 빌드한 Spring Boot JAR의 배포 이미지 |
 | `compose.yml` | 로컬 MySQL·Qdrant·Redis |
+| `compose.app.yml` | 기존 DB·KURE 네트워크를 재사용하는 로컬 백엔드 컨테이너 |
 | `.env.compose.example` | Compose 환경변수 예제 |
 | `compose.insight.yml` | 선택적으로 실행하는 Redis Insight |
 | `verify.ps1` | 실행 중인 DB의 인증·읽기·쓰기 검증 |
@@ -38,7 +67,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File docker/verify.ps1
 
 기본 바인딩은 `127.0.0.1`이다. 자원 값은 예약량이 아닌 상한이며 `.env.compose`에서 조정한다. 기본 메모리 상한 합계는 8.25 GiB이므로 Docker VM에 운영 여유를 포함한 메모리를 배정한다.
 
-MySQL과 Qdrant 데이터는 named volume에 보존된다. Redis는 인증 상태 저장소이며 RDB·AOF를 끄고 tmpfs를 사용한다. Redis 재시작 시 기존 Access 인증 상태가 사라진다. Redis `maxmemory`는 128 MiB, 정책은 `noeviction`이다.
+MySQL과 Qdrant 데이터는 named volume에 보존된다. Redis는 RDB·AOF를 끄고 tmpfs를 사용한다. Refresh 회전 상태를 저장하므로 재시작해 상태가 유실되면 재로그인이 필요하다. 기존 stateless Access는 만료까지 최대 5분 유효하다. 이 로컬 비영속 설정을 운영 Refresh 복구 정책으로 사용하지 않는다. Redis `maxmemory`는 128 MiB, 정책은 `noeviction`이다.
+
+Refresh 회전은 `molelaw:auth:refresh:v1:*` 키의 해시·세대·절대 TTL로 관리하며 JWT Refresh는 더 이상 받지 않는다. Redis Insight에서 해당 패턴으로 확인할 수 있다. 루트의 `.\gradlew.bat redisIntegrationTest`는 별도 임시 Redis 컨테이너에서 동시 소비·재사용/폐기·TTL·키 유실·메모리 부족/연결 오류를 검증하며 기존 개발 Redis를 변경하지 않는다. [현재 계약과 실행 가이드](../docs/auth/refresh-rotation.md)를 따른다.
 
 ```powershell
 # 컨테이너만 중지·제거하고 DB 볼륨은 보존한다.
@@ -63,7 +94,7 @@ Spring은 IDE 또는 Gradle로 실행하고, 루트 `.env`에 다음 연결 정�
 | `REDIS_PASSWORD` | Compose의 `REDIS_PASSWORD` |
 | `REDIS_SSL_ENABLED` | `false` |
 
-빈 개발 DB에는 `local` 프로필을 사용한다. 기본 MySQL 프로필의 스키마 검증은 `validate`, `local`은 `update`다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
+빈 MySQL DB는 애플리케이션 시작 시 Flyway V1~V8로 초기화하고 기본/mysql·local 모두 JPA `validate`로 검사한다. 기존 Flyway 관리 DB에는 미적용 migration만 추가한다. 이력 없는 비어 있지 않은 DB는 자동 baseline 없이 거절한다. 수동 `001-legal-source.sql`과 Hibernate `update`를 함께 사용하지 않는다. `JPA_DDL_AUTO`를 설정했다면 `validate`로 맞춘다. V6/V7은 중복 색인 예약과 본문 없는 조문 메타데이터를 추가한다. [MySQL 실행 가이드](../docs/database/mysql-setup.md)를 따른다. Qdrant 컬렉션과 법령 데이터는 Compose가 생성하지 않는다. H2 기반 `test` 프로필은 이 인프라 없이 실행된다.
 
 다른 PC에서 연결할 때는 DB PC의 LAN IP를 `DB_BIND_ADDRESS`와 애플리케이션 호스트에 설정하고 방화벽에서 개발 PC의 접근만 허용한다. MySQL·Qdrant 볼륨은 Compose 파일을 복사해도 이동하지 않는다. 데이터 이동에는 별도 백업·복원이 필요하다.
 
@@ -78,6 +109,23 @@ docker compose --env-file docker/.env.compose -f docker/compose.yml -f docker/co
 
 `http://127.0.0.1:5540`에서 접속한다. 포트는 루프백으로 고정되며 UI 설정은 `redisinsight_data`에 보존된다. UI만 중지하려면 같은 Compose 옵션에 `stop redisinsight`를 사용한다.
 
+## 로컬 백엔드 컨테이너
+
+DB Compose와 `kure/compose.yml`이 실행된 상태에서 루트 `.env`를 사용한다. 기존 DB·Qdrant·모델 볼륨을 재사용하고 백엔드만 추가한다.
+
+```powershell
+.\gradlew.bat bootJar
+docker compose --env-file .env -f docker/compose.app.yml up -d --build
+docker compose --env-file .env -f docker/compose.app.yml ps
+docker compose --env-file .env -f docker/compose.app.yml logs -f backend
+```
+
+API는 `http://localhost:8080`, Swagger는 `http://localhost:8080/swagger-ui.html`이다. 기본 포트는 루프백으로 제한하며 `APP_PORT`로 변경할 수 있다. 개발 전용 `local` 프로필을 사용한다. `.env`는 이미지에 넣지 않고 실행 시 주입한다. 컨테이너의 DB·Redis·Qdrant·KURE 주소는 Docker 서비스 이름으로 지정한다. 기존 `.env`의 DB 이름과 자격증명을 사용하며 시작 시 미적용 Flyway migration이 실행된다.
+
+백엔드 자원은 루트 `.env`의 `APP_CPUS`(기본 2.0), `APP_MEMORY_LIMIT`(기본 2g), `APP_JAVA_TOOL_OPTIONS`(기본 `-XX:MaxRAMPercentage=70.0`)로 조정한다. KURE 자원 제한과 별개이며 특정 PC 사양에 종속되지 않는다.
+
+2026-10-23 현재 컨테이너의 healthy 상태, MySQL 연결 풀·Flyway V5 적용, Redis 인증 PING, Qdrant 인증 조회, KURE 모델 정보·로드 상태를 확인했다. Swagger·CSRF HTTP도 정상이며 실제 임베딩·LLM 상담 요청은 실행하지 않았다.
+
 ## 애플리케이션 배포 이미지
 
 저장소 루트를 빌드 컨텍스트로 사용한다. 루트 `.dockerignore`는 패키징한 JAR과 Dockerfile만 컨텍스트에 포함한다.
@@ -90,3 +138,9 @@ docker build -f docker/app.Dockerfile -t molelaw-app:local .
 이미지는 프로젝트와 동일한 Java 17 JRE를 사용한다. Gradle 버전이나 프로젝트 이름을 변경해 JAR 이름이 달라지면 `--build-arg JAR_FILE=build/libs/<파일명>.jar`를 지정한다. 기본 파일명은 `MoleLaw_backend-0.0.1-SNAPSHOT.jar`다. 실행 환경변수는 이미지에 포함하지 않고 배포 시 `--env-file`로 전달한다. 컨테이너에서 `127.0.0.1`은 컨테이너 자신이므로 DB 호스트는 배포 환경에 맞춰 설정한다.
 
 수동 배포 workflow는 [deploy.yml](../.github/workflows/deploy.yml)에서 같은 Dockerfile을 사용한다. 운영에는 `local`·`test` 프로필을 지정하지 않는다.
+
+동시 상태 조회와 제한된 추론 대기열을 사용하는 [KURE 서비스](kure/README.md)는 기본 11437 포트로 실행한다. CPU 기본 구성에 선택적 CUDA override를 제공하며 GPU·배치·자원 한도는 환경 설정으로 지정한다.
+
+## 문서와 정책 구분
+
+현재 서비스 모델·추론 설정은 [역할별 Client](../docs/architecture/role-chat-clients.md), 남은 운영 작업은 [작업 계획 P08](../docs/plans/README.md), 비용·보존·복구 정책은 [사용자 판단](../docs/decisions/README.md)에 둔다. Compose 실행 성공은 실제 모델 품질·배포 준비 완료와 다르다. 서비스용 컬렉션과 evaluation 실험 컬렉션은 별도로 관리한다.

@@ -37,7 +37,8 @@ class DatabaseProfilesTest {
         runner.withPropertyValues("spring.profiles.active=local").run(context -> {
             assertThat(context).hasNotFailed().hasSingleBean(DataSource.class).hasSingleBean(QdrantVectorStore.class);
             assertThat(context.getEnvironment().getActiveProfiles()).contains("mysql", "qdrant", "local");
-            assertThat(context.getEnvironment().getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("update");
+            assertThat(context.getEnvironment().getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
+            assertThat(context.getEnvironment().getProperty("spring.flyway.enabled")).isEqualTo("true");
             verifyNoInteractions(context.getBean(EmbeddingModel.class));
         });
     }
@@ -47,6 +48,7 @@ class DatabaseProfilesTest {
         runner.withPropertyValues("spring.profiles.active=test,mysql,qdrant").run(context -> {
             assertThat(context).hasNotFailed().doesNotHaveBean(DataSource.class).doesNotHaveBean(QdrantVectorStore.class);
             assertThat(context.getEnvironment().getProperty("spring.datasource.url")).startsWith("jdbc:h2:mem:");
+            assertThat(context.getEnvironment().getProperty("spring.flyway.enabled")).isEqualTo("false");
         });
     }
 }

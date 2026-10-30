@@ -57,13 +57,20 @@ public class SecurityConfig {
     private boolean csrfHttpOnly;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public static org.springframework.security.web.context.SecurityContextRepository jwtRequestSecurityContextRepository() {
+        return new org.springframework.security.web.context.RequestAttributeSecurityContextRepository();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+            org.springframework.security.web.context.SecurityContextRepository jwtRequestSecurityContextRepository) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfTokenRepository())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .securityContext(context -> context.securityContextRepository(jwtRequestSecurityContextRepository))
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html")
@@ -73,7 +80,7 @@ public class SecurityConfig {
                                         || environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class, false))))
                         .requestMatchers(
                                 "/api/auth/signup", "/api/auth/login", "/api/auth/logout",
-                                "/api/auth/csrf", "/api/auth/reissue",
+                                "/api/auth/csrf", "/api/auth/refresh",
                                 "/login/**", "/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()

@@ -1,234 +1,146 @@
 # MoleLaw Backend
 
-**몰루로 묻고 법으로 답하다.** MoleLaw는 사용자의 법률 질문에 관련 법령과 판례 정보를 연결해 답변하고, 상담방에 대화를 저장하는 법률 검색·AI 상담 백엔드입니다.
+**몰루로 묻고 법으로 답하다.** 법령 검색·근거 기반 AI 상담과 사용자별 대화 기록을 제공하는 Java 17 / Spring Boot 3.5 백엔드입니다.
 
-현재 Java 17·Spring Boot 3.5·Spring AI 기반으로 백엔드를 재구축하고 있습니다. 법령 수집부터 벡터 검색, 대화 맥락 유지, 토큰 인증까지 역할을 분리하고 검증 가능한 구조로 바꾸는 것이 목표입니다.
+기준일: **2026-10-26**, 현재 `dev` 작업 코드 기준입니다. 기능 구현과 실제 법률 품질·운영 검증은 구분합니다.
 
-> 이 README는 2026-10-13 기준입니다. 아래의 현재 구현과 재구축 계획을 구분해 읽어 주세요. Qdrant·Redis 컨테이너 구동이 애플리케이션 검색·인증 전환 완료를 의미하지는 않습니다.
+| 읽을 내용 | 문서 |
+| --- | --- |
+| 구현 기능·첫 질문·후속 질문 다이어그램 | [기능과 질문 처리 흐름](docs/project/features-and-question-flow.md) |
+| 로그인·채팅방 생성 흐름 | [로그인](docs/auth/login-flow.md), [채팅방 생성·제목 변경](docs/chat/chat-room-management.md) |
+| 현재 구현·제한 | [개발 현황](docs/project/development-status.md) |
+| 사용자가 정할 정책 | [사용자 판단 대기](docs/decisions/README.md) |
+| 이미 확정한 방향 | [확정 결정](docs/decisions/confirmed.md) |
+| 앞으로 할 일·실행 순서 | [작업 계획](docs/plans/README.md) |
+| 검증 범위·결과 | [검증 현황](docs/validation/validation-status.md) |
+| 상세 사용법·설계 | [전체 문서](docs/README.md) |
+
+문서는 기능별로 [인증·사용자](docs/auth/README.md), [상담·대화](docs/chat/README.md), [법령·판례·RAG](docs/law/README.md), [데이터베이스](docs/database/README.md), [코드·모델 구조](docs/architecture/README.md), [검증](docs/validation/README.md)으로 묶었습니다. [작업 계획](docs/plans/README.md)과 [사용자 결정](docs/decisions/README.md)은 별도로 관리합니다.
 
 ## 주요 기능
 
-- 이메일·비밀번호 회원가입과 로그인, Google OAuth 로그인
-- 사용자별 상담방 생성·목록 조회·메시지 조회·삭제
-- 최초 질문의 법령 유사도 검색·판례 목록 조회와 AI 답변 생성
-- USER·BOT·INFO 구분과 메시지 암호화 저장
-- JWT 인증과 상담방 소유권 검사
-- local 프로필의 Swagger UI를 통한 API 확인 (운영 비활성화)
+- 이메일·비밀번호 가입/로그인과 Google OAuth, 사용자 프로필 관리
+- JWT 인증·상담방 소유권 검사, Redis Refresh 회전·재사용 탐지
+- 최초 질문 분류·Qdrant 검색·충분성 판단·필요한 법령 수집·ETL·재검색·답변 생성
+- 일반 법령 검색 전체 페이지 리랭크와 기준 미달 후보 수집 제외
+- Qdrant 적재 후 포인트·출처·벡터 재조회 검증, 완료 세대만 검색
+- 최초 근거 스냅샷·UUID 인용 검증, USER/BOT AES-256-GCM 저장
+- 후속 상담의 MessageChatMemoryAdvisor와 최초 고정 근거 사용
+- 후속 판례 실행계획·요청별 동의 확인·사건 식별어를 보존한 검색·본문 리랭크·실제 인용한 근거 누적
+- 최초 SSE·NDJSON과 후속 NDJSON의 진행 단계·근거·임시 답변·완료·오류 전달
+- local 전용 Swagger·ETL 테스트·AI Search 비교 API
 
-Kakao OAuth 설정은 별도 `kakao` 프로필로 분리되어 있습니다. 기본·로컬 실행에서는 Google 설정을 사용합니다.
+AI Search는 별도 코드·모의 검증을 준비했으나 실제 API 404 원인은 미확인이고 재시도는 보류 중입니다. 기본 경로는 QDRANT이며 자동 대체하지 않습니다.
 
-## 현재 구현과 바뀔 구조
-
-| 영역 | 현재 구현 | 재구축 방향 |
-| --- | --- | --- |
-| AI 호출 | Spring AI 1.0.9 ChatClient·EmbeddingModel 통합 | 상담·보조 호출 분리, Advisor와 구조화 답변·출처 검증 |
-| 법령 수집 | 기존 상담 경로는 첫 페이지/fallback, 별도 내부 Tool은 페이지·정확명·ID·날짜·정렬 지원 | 최초 질문에서 다음 페이지·다른 법령 후보 수집, 이력·실패 재개 |
-| 임베딩 | OpenAI 모델, MySQL 임베딩 테이블 저장 | Ollama 모델 비교 후 Spring AI ETL·Qdrant 색인으로 전환 |
-| 검색 | 전체 임베딩 조회 후 코사인 유사도 직접 계산 | Qdrant 벡터 검색·필터·중복 제거·조문 맥락 확장 |
-| 후속 상담 | 최초 assistant 답변과 현재 질문 전달 | MessageChatMemoryAdvisor로 채팅방 기록과 최초 원문 근거 전달 |
-| Access | JWT 서명·용도·만료 + Redis jti·사용자 일치 확인, 만료까지 TTL | 로그인 세션 활성 상태·사용자별 세션 인덱스 추가 |
-| Refresh | 서버 저장·회전 없이 쿠키와 JSON에 전달 | MySQL 별도 테이블에 해시·회전·폐기 이력 관리 |
-
-MySQL·Qdrant 프로필과 H2 테스트 구성, 공통 AI 호출, 기본 법령 수집 회귀 테스트는 구현되어 있습니다. Redis Access 등록·매 요청 확인·TTL·전달된 Access 폐기를 구현했습니다. 로그인 세션 관리와 MySQL Refresh 저장소는 후속 단계입니다.
-
-## 목표 아키텍처
-
-다음 그림은 재구축 후 목표 구조입니다.
+## 현재 아키텍처
 
 ```mermaid
 flowchart LR
-    Client[클라이언트] --> API[Spring Boot API]
-    API --> Auth[JWT 검증]
-    Auth --> Redis[Redis: Access 활성 상태]
-    Auth --> Refresh[MySQL: Refresh 해시·회전·폐기]
-    API --> Chat[상담 처리]
-    Chat --> History[MySQL: 상담방·대화·근거]
-    Chat --> Advisor[MessageChatMemoryAdvisor]
-    Advisor --> Answer[ChatClient: 답변 모델]
-    Chat --> Retrieval[검색·최초 수집 조정]
-    Retrieval --> Qdrant[Qdrant: 청크·벡터·메타데이터]
-    Retrieval --> OpenLaw[국가법령정보센터 API]
-    OpenLaw --> Source[MySQL: 원문·수집 이력]
-    Source --> ETL[Reader → Transformer → Writer]
-    ETL --> Ollama[Ollama: 임베딩]
-    ETL --> Qdrant
+    Client[사용자] --> API[API]
+    API --> Auth[인증]
+    Auth --> Chat[상담 처리]
+    Auth -->|Refresh| Redis[Redis]
+    Chat --> LLM[역할별 LLM]
+    Chat --> Tools[법령·판례 API]
+    Chat --> RAG[조문 검색·색인]
+    RAG --> KURE[임베딩·리랭크]
+    RAG --> Qdrant[Qdrant]
+    Chat --> MySQL[대화·원문·근거 저장]
 ```
 
-MySQL 원문은 기준 데이터이며 Qdrant 색인은 재생성 가능한 검색 데이터로 관리합니다. Redis 인증 상태와 Advisor 대화 메모리는 별개입니다. 상담방 conversationId와 로그인 sessionId도 구분합니다.
+위 그림은 서비스 구성입니다. 실행 순서와 분기는 [첫 질문·법령 확보·후속 질문·응답 마무리 다이어그램](docs/project/features-and-question-flow.md#첫-질문)을 따릅니다. 첫 질문은 실행 한도 안에서 수집·색인 검증·재검색을 반복합니다. 후속 검색 여부는 최신 메시지만으로 판단하며, 판례 외부 조회는 이번 요청의 동의가 있어야 실행합니다. 답변 작성은 같은 방의 대화 기록을 활용합니다.
 
-## 법령 ETL과 RAG 계획
+## 현재 모델 배정
 
-Spring AI의 `DocumentReader → DocumentTransformer → QdrantVectorStore` 구조로 법령 자료를 읽고, 조문 구조를 보존해 나눈 뒤 임베딩·색인합니다. 법령 ID/MST, 조·항·호·목 경로, 원문 링크, 수집 시각과 내용 해시를 보존합니다. 안정적인 청크 ID와 색인 버전으로 중복·변경·삭제·재실행을 관리합니다.
-
-**최초 질문**에서는 기존 색인을 검색하고, 근거가 부족하면 같은 검색 조건의 다음 페이지나 다른 법령 후보를 수집합니다. 새 자료를 ETL·색인한 뒤 재검색해 같은 질문의 답변에 반영합니다. 고정 2라운드 제한을 두지 않고 근거 확보, 탐색 소진, 설정한 시간·호출·임베딩 예산으로 종료합니다.
-
-**후속 질문**에서는 Advisor가 채팅방 기록을 전달하고 최초에 저장한 근거 스냅샷으로 답변합니다. 추가 수집·색인·법령/판례 검색은 하지 않습니다. 기존 근거 밖의 새로운 쟁점은 한계를 설명하고 새 상담방에서 다루도록 안내합니다.
-
-판례는 쟁점 기반 검색 후 상세 내용과 관련성을 검증한 자료만 채택할 계획입니다. 이전 assistant 답변이나 판례 제목만을 법률 원문 근거로 취급하지 않습니다. 최종 답변의 근거 ID·출처를 서버에서 검증한 후 성공한 대화 턴을 확정합니다.
-
-## Ollama 임베딩 비교 계획
-
-모델과 청크 크기는 아직 확정하지 않았습니다.
-
-| 비교군 | 기본 벡터 차원 | 역할 |
+| 역할 | 모델 | 추론 수준 |
 | --- | --- | --- |
-| bge-m3 | 1,024 | 다국어 검색 기준선 |
-| qwen3-embedding:0.6b | 1,024 | 소형 모델의 검색 품질 비교 |
-| embeddinggemma | 768 | 로컬 자원 부담과 검색 품질 비교 |
+| 질문 분석·후보 목록·본문 읽기 선택 | gpt-5.4-mini | low |
+| 후속 판례 실행계획·검색어·본문 리랭크 | gpt-5.4-mini | low |
+| 근거 충분성·추가 행동 판단 | gpt-5.4 | medium |
+| 최초·후속 답변 | gpt-5.4-mini | medium |
 
-먼저 동일한 512토큰 기준 청크와 평가 질문 30~50개로 모델을 비교합니다. 이후 선정한 모델에서 청크 상한 256·512·1,024토큰을 비교합니다. 법령 10~30개·청크 1만 개 이하·동시 임베딩 1개부터 실험하고 Recall@K, 무관한 결과 비율, 지연시간, 색인 시간과 메모리를 측정합니다.
+역할별 환경변수와 완료 토큰 한도를 분리했습니다. 실제 모델 접근·옵션·법률 품질·비용 평가는 아직 남아 있습니다. 키워드 추출의 기존 OPENAI_CHAT_MODEL과 로컬 임베딩 모델은 별도입니다. [모델 설정](docs/architecture/role-chat-clients.md)을 따릅니다.
 
-모델별 토크나이저·질문/문서 입력 형식·실제 출력 차원을 확인합니다. 모델별 Qdrant 컬렉션을 분리하며 같은 차원이어도 서로 다른 모델 벡터를 섞지 않습니다. 답변 모델은 우선 외부 API를 유지하고 Ollama는 임베딩 후보로 도입합니다.
+임베딩은 현재 KURE-v1·고정 revision·1024차원·float32, 서비스용 threaded HTTP 서버를 사용합니다. 실행 환경은 CPU 기본 구성과 선택적 CUDA override로 분리하고 장치·배치·자원 한도는 환경변수로 조정합니다. Ollama 모델 비교는 별도 실험입니다. [KURE 실행](docker/kure/README.md), [Ollama 실험](docker/ollama/README.md)을 구분하세요.
 
-zero-shot RAG 기준선을 확보한 뒤 one-shot 답변 예시와 step-back 검색 전략을 각각 비교합니다. one-shot은 답변 예시 한 개를 넣는 방식이며 최종 답변 호출 횟수와는 다른 개념입니다.
+## 기술 구성과 구조
 
-## 역할별 에이전트 도입 계획
-
-기본 ETL·RAG 이후 서버 오케스트레이터 아래 검색 계획·근거 검토·답변 역할을 순서대로 분리할 계획입니다. 인증·수집·ETL·예산·종료·출처 ID 검증·저장은 서버 코드가 담당하고, 모델은 검색어와 부족한 근거를 구조화해 제안합니다. 후속 상담은 Advisor와 최초 근거를 사용하며 검색 도구를 제공하지 않습니다.
-
-초기 비교안은 검색 계획에 `gpt-5.4-mini / low`, 근거 검토·최초 답변에 `gpt-5.4-mini / medium`, 어려운 사례의 품질 비교에 `gpt-5.4 / medium`입니다. 최종 선정은 아니며 Spring AI 1.0.9의 옵션 호환성·검색/답변 품질·지연·비용을 검증한 뒤 결정합니다. Ollama 임베딩 비교와는 별도입니다. 상세 역할 계약은 [재구축 계획](docs/backend-rebuild-plan.md)을 참고하세요.
-
-## 인증 보안 개선 계획
-
-Access는 JWT 검증과 Redis 등록 확인을 모두 통과해야 합니다. 가입·로그인·OAuth·재발급은 고유 `jti`와 사용자 식별자를 JWT 만료까지 Redis에 등록한 뒤 Access를 전달합니다. Redis에는 토큰 원문을 저장하지 않습니다. 키 누락·폐기는 401, 저장소 장애는 503 `AUTH_STORE_UNAVAILABLE`이며 JWT만으로 인증하거나 키를 자동 복원하지 않습니다. 로그인 세션 관리와 MySQL Refresh 해시 저장·회전·재사용 탐지는 후속 구현입니다.
-
-Access/Refresh 용도 검증, 토큰·payload 로그 제거, 공통 쿠키 정책, 명시적 CORS 허용 목록과 CSRF 보호를 적용했습니다. 브라우저 Refresh는 HttpOnly 쿠키로 전달하며 로그인·재발급 JSON에도 아직 포함됩니다. 로그아웃은 전달된 Bearer와 Access 쿠키의 등록을 폐기한 뒤 인증 쿠키를 삭제하고 상담 기록을 보존합니다. 다른 Access와 Refresh는 폐기하지 않으므로 복사된 Refresh로 재발급할 수 있습니다. 전체 세션 폐기·Refresh JSON 제거는 후속 범위입니다.
-
-현재 Access 수명은 **15시간**, Refresh는 **7일**이며 Access **15분**은 재구축 초기 제안입니다. `POST /api/auth/reissue`는 **Access 인증 없이** 유효한 `refreshToken` 쿠키와 CSRF 토큰으로 호출합니다. Refresh 용도·서명·만료와 사용자 존재를 확인하고 Access만 새로 발급합니다. 용도 claim이 없는 기존 JWT는 거절하므로 재로그인이 필요합니다. 후속 설계와 이전 위험 분석은 [인증·보안 실행 계획](docs/plans/auth-security.md)과 [JWT 보안 검토](docs/jwt-security-review.md)를 참고하세요.
-
-## 기술 구성과 디렉터리
-
-| 구분 | 구성 |
-| --- | --- |
-| 언어·빌드 | Java 17, Gradle Wrapper |
-| 서버 | Spring Boot 3.5.0, Spring MVC, WebClient |
-| 데이터·인증 | Spring Data JPA, Spring Security, OAuth2 Client, JJWT |
-| AI | Spring AI 1.0.9, OpenAI ChatClient·EmbeddingModel |
-| 로컬 인프라 | MySQL 8.4.11, Qdrant v1.19.1, Redis 7.4.11-alpine |
-| 테스트·문서 | JUnit Jupiter, Mockito, Spring Security Test, H2, springdoc |
+Java 17, Spring Boot 3.5.0, Spring AI 1.0.9, Gradle Wrapper, MySQL 8.4.11, Qdrant 1.19.1, Redis 7.4.11을 사용합니다. 테스트는 JUnit Jupiter·Mockito·Spring Security Test·H2와 선택 통합 검증으로 구성합니다.
 
 ```text
 src/main/java/com/MoleLaw_backend/
-├── auth/                JWT·OAuth·CSRF·보안 설정
-├── user/                사용자·계정·프로필 관리
-├── chat/                상담방·메시지·상담 흐름
-├── law/                 법령·판례·원문·검색·임베딩
-└── common/              공통 응답·예외·설정·AI 호출
-src/main/resources/      프로필 설정·프롬프트
-src/test/                테스트·법령 응답 fixture
-docker/                  Compose·환경변수 예제·검증 스크립트
-docs/                    재구축 계획·기준선·보안 검토
+  auth/       JWT·OAuth·CSRF·Refresh
+  user/       사용자·계정·프로필
+  chat/       상담방·메시지·답변·근거·메모리
+  law/        법령·판례·수집·ETL·검색
+  common/     공통 응답·예외·설정·AI 호출
+src/main/resources/  설정·프롬프트·Flyway
+src/test/            테스트·fixture
+docker/              로컬 컨테이너·임베딩
+postman/             HTTP 모의 계약·simulation
+scripts/             실행 검증 스크립트
+docs/                현재 계약·decisions·plans·archive
+../MoleLaw_backend-experiments/  별도 실험 워크트리 (실험 브랜치)
 ```
 
-도메인 안에 필요한 controller·service·entity·repository·dto 계층을 둡니다. 코드 배치와 의존 관계 기준은 [도메인 구조 스킬](.agents/skills/domain-structure/SKILL.md)을 따릅니다. 설계와 구현 상태는 [문서 안내](docs/README.md)에서 확인할 수 있습니다.
+코드 배치는 [domain-structure](.agents/skills/domain-structure/SKILL.md), 기여 기준은 [AGENTS.md](AGENTS.md)를 따릅니다. 실험 자료·컬렉션은 서비스 데이터와 분리합니다.
 
 ## 로컬 실행
 
-JDK 17과 Linux containers 모드의 Docker Desktop을 준비합니다. 기존 환경변수 파일이 있으면 덮어쓰지 않고 필요한 항목만 추가합니다.
+JDK 17과 Linux containers 모드의 Docker Desktop을 준비합니다. 설정 파일이 없을 때만 복사하세요.
 
 ```powershell
-# 저장소 루트에서 실행. 두 대상 파일이 없을 때만 복사합니다.
-Copy-Item .env.example .env
-Copy-Item docker/.env.compose.example docker/.env.compose
-```
-
-`.env`에는 DB·OAuth·OpenAI·OpenLaw·JWT 설정을, `docker/.env.compose`에는 MySQL 비밀번호·Qdrant API 키·Redis 비밀번호를 입력합니다. 같은 서비스의 비밀값은 두 설정에서 일치시킵니다. Redis 비밀번호는 32자 이상의 무작위 영문·숫자·밑줄·하이픈을 사용합니다. 비밀값은 커밋하지 않습니다.
-
-```powershell
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+if (!(Test-Path docker/.env.compose)) { Copy-Item docker/.env.compose.example docker/.env.compose }
 docker compose -f docker/compose.yml --env-file docker/.env.compose config --quiet
 docker compose -f docker/compose.yml --env-file docker/.env.compose up -d
 .\gradlew.bat bootRun --args="--spring.profiles.active=local"
 ```
 
-local 프로필의 주소는 백엔드 `http://localhost:8080`, Swagger `http://localhost:8080/swagger-ui.html`, MySQL `127.0.0.1:3307`, Qdrant HTTP/gRPC `6333/6334`, Redis `6379`입니다.
+.env에 DB·Redis·OAuth·JWT·OC_KEY·OPENAI_API_KEY·CHAT_ENCRYPTION_KEY를 설정하고 Compose와 같은 서비스 비밀값을 일치시킵니다. 암호화 키는 무작위 32바이트의 Base64입니다. 비밀값을 커밋하거나 로그에 출력하지 마세요.
 
-| 프로필 | 현재 동작 |
+Qdrant RAG는 APP_LAW_VECTOR_ENABLED=true와 별도 임베딩 서버가 필요합니다. 서비스 KURE 실행은 [Docker 가이드](docker/README.md)를 따르세요. 코드 기본 포트 11436과 서비스 컨테이너 11437을 혼동하지 않도록 APP_LAW_VECTOR_EMBEDDING_BASE_URL을 지정합니다. 모델·.env 변경 후 서버를 재시작합니다.
+
+local 주소는 API :8080, Swagger /swagger-ui.html, MySQL :3307, Qdrant HTTP/gRPC :6333/:6334, Redis :6379입니다. 기본 mysql 프로필은 MySQL·JPA validate, local은 mysql+qdrant·Swagger, test는 H2·모킹입니다. 운영에 local/test 프로필을 사용하지 않습니다. Flyway V1~V8 적용·오류 대응은 [MySQL 실행](docs/database/mysql-setup.md)을 따릅니다.
+
+## 인증·API 사용
+
+Access는 모든 프로필에서 최대 5분 stateless JWT입니다. Refresh는 Redis 해시·원자 회전·재사용 탐지·절대 7일 family이며 HttpOnly 쿠키로만 전달합니다. 로그아웃·비밀번호 변경 후 복사된 Access는 만료까지 유효합니다. [Access](docs/auth/stateless-access.md), [Refresh](docs/auth/refresh-rotation.md)를 참고하세요.
+
+프론트는 먼저 GET /api/auth/csrf를 credentials와 함께 호출하고 JSON의 token을 X-XSRF-TOKEN 헤더로 보냅니다. 가입·로그인·재발급과 Bearer 요청을 포함한 상태 변경 요청에도 필요합니다. 운영 CSRF 쿠키는 HttpOnly이며 JSON 토큰을 사용합니다. 운영 Swagger는 비활성화합니다.
+
+| 기능 | 경로 |
 | --- | --- |
-| 기본 / mysql | MySQL @Primary 데이터소스, 스키마 validate, Swagger UI·OpenAPI 비활성화 |
-| local | mysql + qdrant, 개발 스키마 update, SSL 비활성화, Swagger 활성화 |
-| test | H2·더미 인증·모델 모킹, 외부 저장소 없이 테스트 |
-| kakao | 필요한 경우 명시적으로 활성화하는 OAuth 설정 |
+| CSRF·가입·로그인·재발급·로그아웃 | /api/auth/{csrf,signup,login,refresh,logout} |
+| 내 정보·탈퇴·비밀번호·닉네임 | /api/users/me, /api/users/me/password, /api/users/me/nickname |
+| 상담방 목록·최초 질문 | GET·POST /api/chat-rooms |
+| 최초 상담 전 추천 질문 | POST /api/legal-answers/suggestions |
+| 메시지 조회·후속 질문 | GET·POST /api/chat-rooms/{roomId}/messages |
+| 방 삭제 | DELETE /api/chat-rooms/{roomId} |
+| 방 제목 변경 | PATCH /api/chat-rooms/{roomId}/title |
+| 법령 검색·질문 분석 검색 | GET /api/laws, POST /api/laws/search |
+| 판례 목록·상세 | GET /api/precedents, GET /api/precedents/{id} |
+| 키워드·무저장 답변 | POST /api/law-keywords, POST /api/legal-answers |
 
-가입·로그인·재발급·OAuth·삭제에 공통 쿠키 정책을 적용합니다. 운영 기본값은 Secure=true·SameSite=None이며 local/test는 Secure=false·SameSite=Lax입니다. Access/Refresh는 모든 환경에서 HttpOnly이고 Path는 각각 `/`, `/api/auth`이며, 이전 Path=/ Refresh 쿠키는 발급·삭제 시 정리합니다. Ollama 애플리케이션 연동은 아직 없습니다. 준비 상태 검사·자원 예산·LAN 연결·데이터 보존 정책은 [로컬 인프라 가이드](docker/README.md)를 따릅니다.
-
-Redis 연결은 `.env`의 `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DATABASE`, `REDIS_SSL_ENABLED`로 설정합니다. 로컬 비밀번호는 `docker/.env.compose`와 일치시킵니다. 연결·명령 제한 시간은 각각 2초입니다. Redis 재시작으로 키가 유실되면 기존 Access는 거절되며 정상 Refresh와 CSRF 토큰으로 새 Access를 발급받아야 합니다. 기존 jti 없는 Access도 거절되므로 정상 Refresh가 없으면 재로그인합니다.
-
-로컬 키·TTL 모니터링은 선택적 Redis Insight를 사용합니다. 접속 주소는 `http://localhost:5540`이며 실행 방법은 [로컬 모니터링 안내](docker/README.md#redis-insight-로컬-모니터링)를 참고하세요.
-
-Swagger UI와 OpenAPI는 공통 설정에서 비활성화하고 문서 경로 접근도 차단합니다. `local`에서 개발용으로 활성화하며 `test`는 문서 검증용 예외입니다. 운영 배포에는 local/test 프로필을 사용하지 않습니다.
+상담 요청은 {"content":"상담 질문"}, 법령 질문 분석·키워드·무저장 답변은 {"query":"법률 질문"}입니다. 실제 메서드·응답·인증·오류는 local OpenAPI와 [API 정리](docs/architecture/package-api-organization.md)를 확인하세요. 로컬 전용 ETL·검색 비교 경로는 [ETL](docs/law/law-etl-local.md), [AI Search 비교](docs/law/ai-search-comparison.md)에 있습니다.
 
 ## 빌드와 검증
 
 ```powershell
 .\gradlew.bat test
-.\gradlew.bat clean build
 .\gradlew.bat bootJar
-# 실행 중인 로컬 Redis 필요. 일반 test/CI에서는 제외됩니다.
-.\gradlew.bat redisLiveTest
-powershell -NoProfile -ExecutionPolicy Bypass -File docker/verify.ps1
+# Docker 등 별도 준비가 필요한 선택 검증
+.\gradlew.bat mysqlIntegrationTest
+.\gradlew.bat redisIntegrationTest
+.\gradlew.bat qdrantIntegrationTest
 ```
 
-Gradle 테스트는 실제 모델 호출을 모킹하며 Docker·실제 API 키 없이 실행할 수 있습니다. H2 테스트는 실제 MySQL 통합 검증을 대체하지 않습니다. `verify.ps1`은 실행 중인 컨테이너의 MySQL 쿼리, Qdrant 인증·임시 벡터 검색, Redis 인증·임시 키 쓰기·TTL·삭제를 검사합니다.
+일반 테스트는 실제 모델·OpenLaw를 모킹하며 Docker·실 API 키 없이 실행합니다. 실제 저장소·임베딩·모델 품질은 각각 별도로 검증합니다. 최신 결과와 실행 구분은 [검증 현황](docs/validation/validation-status.md), 상세 방법은 [검증 계획](docs/plans/delivery-validation.md)을 따릅니다.
 
-2026-10-13 전체 자동 테스트 95개·JAR 생성과 실제 Redis의 TTL·사용자 일치·Access 폐기 검증을 통과했습니다. 일반 테스트는 테스트 전용 저장소 대체 구현·모킹을 사용하며 실제 Redis는 `redisLiveTest`로 별도 검증합니다. ETL·Advisor·MySQL Refresh·실제 모델 품질 검증은 별도 구현 후 진행할 예정입니다.
+## 앞으로 할 일
 
-## 주요 API
+현재는 복수 쟁점·지정 사건 검색·후속 답변의 품질과 실패 복구에 집중합니다. 실제 usage 기반 최종 예산 산출은 기능 안정화 후 진행합니다. 기준일·중단 복구·선택 공급자·운영 준비는 [작업 계획](docs/plans/README.md), 정책 선택은 [사용자 판단](docs/decisions/README.md)에서 관리합니다. 진행 상태와 답변 스트리밍은 구현돼 있습니다.
 
-| 메서드·경로 | 설명 |
-| --- | --- |
-| GET /api/auth/csrf | CSRF 쿠키 발급 및 JSON 토큰 조회 (Access 인증 불필요) |
-| POST /api/auth/signup | 회원가입: 200 성공 JSON과 JWT 쿠키 |
-| POST /api/auth/login | 로그인 |
-| GET /api/auth/me | 내 정보 조회 |
-| POST /api/auth/reissue | Access 없이 Refresh 쿠키 + CSRF 토큰으로 재발급 |
-| POST /api/auth/logout | 로그아웃 |
-| GET /api/chat-rooms | 내 상담방 목록 |
-| GET /api/chat-rooms/{roomId} | 상담방 메시지 조회 |
-| POST /api/chat-rooms/first-message | 상담방 생성과 최초 질문 |
-| POST /api/chat-rooms/{roomId}/messages | 후속 질문 |
-| DELETE /api/chat-rooms/{roomId} | 상담방·메시지 삭제 |
+개발은 dev에서 진행합니다. 검증한 통합본을 main에 반영하며 EC2 배포는 main의 Deploy to EC2 수동 실행입니다. push만으로 배포하지 않습니다.
 
-질문 입력은 `{"content":"상담 질문"}`이며 최초 응답은 상담방 ID와 메시지 목록, 후속 응답은 BOT 메시지입니다. 현재 요청·응답 계약은 local Swagger에서 확인할 수 있습니다. [재구축 기준선](docs/backend-baseline.md)은 변경 전 동작 기록입니다. Refresh JSON 응답 제거·장시간 최초 질문 응답 방식은 후속 구현 범위입니다.
-
-### 회원가입과 CSRF 전달 계약
-
-회원가입 요청은 `{"email":"user@example.com","password":"Example-password-123!","nickname":"두더지"}`입니다. 성공 시 HTTP **200**, `Content-Type: application/json`, 두 JWT의 `Set-Cookie`와 다음 본문을 반환합니다. 기존 302 및 `/Main` 리다이렉트는 제거했으며 화면 이동은 프론트에서 처리합니다.
-
-```json
-{"success":true,"data":"회원가입 되었습니다."}
-```
-
-1. 인증 없이 `GET /api/auth/csrf`를 호출합니다. 응답은 `{"token":"<csrf-token>","headerName":"X-XSRF-TOKEN"}`이며 `XSRF-TOKEN` 쿠키와 `Cache-Control: no-store`를 함께 받습니다.
-2. 해당 쿠키를 유지하고 JSON의 `token`을 `X-XSRF-TOKEN` 헤더에 넣어 POST·PUT·PATCH·DELETE 요청을 보냅니다. 가입·로그인·재발급·로그아웃과 Bearer 인증 요청에도 필요합니다. 교차 Origin 프론트는 조회와 후속 요청 모두 `credentials: "include"`를 사용합니다.
-3. 운영 CSRF 쿠키는 HttpOnly이므로 JavaScript에서 쿠키를 읽지 않고 JSON 토큰을 사용합니다. local/test에서는 Swagger 자동 처리를 위해 CSRF 쿠키를 읽을 수 있으며, Swagger에서 CSRF 조회 후 헤더에 자동 적용합니다. Access/Refresh 쿠키는 계속 HttpOnly입니다.
-
-교차 Origin 요청은 `CORS_ALLOWED_ORIGINS`의 명시적 허용 목록(미설정 시 `FRONTENDURI`)에 포함되어야 합니다. CSRF 누락·불일치 또는 허용되지 않은 Origin은 403으로 거절하며, Origin 헤더가 없어도 CSRF 검증은 적용됩니다. 보안 필터의 403 본문은 공통 `ApiResponse` JSON 형식을 보장하지 않습니다.
-
-## 다음 단계
-
-1. 기준선·권한·인증 보안 점검과 스키마 준비
-2. Spring AI ETL·다중 페이지 수집·Ollama 임베딩 비교
-3. MySQL Refresh 저장소·회전과 Redis 로그인 세션·전체 폐기 구현
-4. Qdrant 검색·최초 근거 스냅샷·판례 검증 연결
-5. Advisor 기반 후속 상담과 출처 검증
-6. 검색·답변 품질 비교와 기존 구현 정리
-7. 서버 오케스트레이터와 검색 계획·근거 검토 역할의 단계적 도입·모델별 추론 수준 평가
-
-상세 작업 순서·완료 조건·미정 정책은 [백엔드 재구축 계획](docs/backend-rebuild-plan.md)에 관리합니다. JWT에 상담방 목록을 넣는 방안은 검토 단계이며 현재 토큰 claim에 추가하는 것으로 확정하지 않았습니다.
-
-## 관련 문서
-
-- [백엔드 재구축 계획](docs/backend-rebuild-plan.md)
-- [개발 인수인계](docs/development-handoff.md)
-- [법령·판례 Tool 사용 계약](docs/legal-api-tools.md)
-- [RAG·ETL 상세 계획](docs/plans/rag-etl.md)
-- [인증·보안 실행 계획](docs/plans/auth-security.md)
-- [오케스트레이션·모델 계획](docs/plans/orchestration-models.md)
-- [구현·검증 계획](docs/plans/delivery-validation.md)
-- [JWT 인증 보안 검토](docs/jwt-security-review.md)
-- [재구축 전 동작 기준선](docs/backend-baseline.md)
-- [로컬 인프라 실행·검증 가이드](docker/README.md)
-- [CPU Ollama 임베딩 테스트 이미지](docker/ollama/README.md)
-- [기여 가이드](AGENTS.md)
-
-`main`은 검증한 최신 통합본, `dev`는 기능 통합·테스트 브랜치로 사용합니다. `dev` push와 `dev`/`main` 대상 PR은 외부 API 키 없이 테스트·JAR 패키징을 실행합니다. EC2 배포는 `Deploy to EC2`를 main에서 수동 실행하며 push만으로 배포하지 않습니다. [개발 인수인계](docs/development-handoff.md)에 브랜치 운영·스키마·검증·후속 작업을 정리했습니다. 새 Redis 인증·ETL·Ollama 연동의 운영 배포 구성은 별도 준비가 필요합니다.
+브랜치별 파일 관리와 갱신 방법은 [브랜치 작업 가이드](docs/project/branch-workflow.md)를 참고하세요.

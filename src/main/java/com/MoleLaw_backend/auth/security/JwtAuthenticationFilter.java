@@ -1,8 +1,6 @@
 package com.MoleLaw_backend.auth.security;
 
 import io.jsonwebtoken.JwtException;
-import com.MoleLaw_backend.common.exception.MolelawException;
-import com.MoleLaw_backend.common.exception.ErrorCode;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -24,7 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
-    private final AccessTokenService accessTokenService;
+    private final org.springframework.security.web.context.SecurityContextRepository jwtRequestSecurityContextRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -50,31 +48,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-
         // ✅ 3. 토큰 검증 및 사용자 인증 설정
         if (token != null && jwtUtil.validateAccessToken(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                if (accessTokenService.isActive(token)) {
-                    String userId = jwtUtil.getUserIdFromAccessToken(token); // email:provider
+                String userId = jwtUtil.getUserIdFromAccessToken(token).toString();
 
-                    CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(userId);
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(userId);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                var context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(authentication);
+                SecurityContextHolder.setContext(context);
+                // Keep authentication for ASYNC/ERROR dispatches of this request only, without an HTTP session.
+                jwtRequestSecurityContextRepository.saveContext(context, request, response);
 
-            } catch (MolelawException e) {
-                if (e.getErrorCode() != ErrorCode.AUTH_STORE_UNAVAILABLE) {
-                    throw e;
-                }
-                SecurityContextHolder.clearContext();
-                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"success\":false,\"error\":{\"status\":503,\"code\":\"AUTH_STORE_UNAVAILABLE\",\"message\":\"인증 저장소를 사용할 수 없습니다. 잠시 후 다시 시도하세요.\"}}");
-                return;
             } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
                 SecurityContextHolder.clearContext();
             }
@@ -95,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/api/auth/login")
                 || path.equals("/api/auth/signup")
                 || path.equals("/api/auth/csrf")
-                || path.equals("/api/auth/reissue")
-                || path.equals("/api/auth/logout");  // ✅ "/api/auth/me" 절대 금지!
+                || path.equals("/api/auth/refresh")
+                || path.equals("/api/auth/logout");  // ✅ "/api/users/me" 절대 금지!
     }
 }

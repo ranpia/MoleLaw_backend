@@ -1,0 +1,100 @@
+package com.MoleLaw_backend.auth.controller;
+
+import com.MoleLaw_backend.auth.dto.response.AuthApiSchemas.ErrorEnvelope;
+import com.MoleLaw_backend.auth.dto.response.AuthApiSchemas.StringEnvelope;
+import com.MoleLaw_backend.auth.dto.response.AuthApiSchemas.AuthEnvelope;
+
+import com.MoleLaw_backend.auth.dto.request.LoginRequest;
+import com.MoleLaw_backend.auth.dto.request.SignupRequest;
+import com.MoleLaw_backend.common.dto.response.ApiResponse;
+import com.MoleLaw_backend.auth.dto.response.AuthResponse;
+import com.MoleLaw_backend.user.service.UserService;
+import com.MoleLaw_backend.auth.security.AuthTokenService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+@Tag(name = "Authentication", description = "회원가입·로그인·토큰 회전·로그아웃")
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/auth")
+public class AuthController {
+    private final UserService userService;
+    private final AuthTokenService authTokens;
+    @Operation(summary = "회원가입", description = "local 계정을 생성하고 Access JWT·난수 Refresh의 HttpOnly 쿠키와 성공 JSON을 반환합니다. 화면 이동은 프론트에서 처리합니다. 이메일 형식·최대 254자, 닉네임 2~50자, 비밀번호 8~72자 및 UTF-8 최대 72바이트를 검증하며 공백 값은 거절합니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @SecurityRequirements
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "JSON 요청 본문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SignupRequest.class), examples = @ExampleObject(value = "{\"email\":\"user@example.com\",\"password\":\"Example-password-123!\",\"nickname\":\"두더지\"}")))
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원가입 성공. Access/Refresh 쿠키 발급 및 성공 JSON 반환", headers = @Header(name = "Set-Cookie", description = "accessToken: Path=/, 모든 프로필 5분; refreshToken: Path=/api/auth, family 절대 수명 최대 7일. HttpOnly 및 설정된 Secure/SameSite 적용", schema = @Schema(type = "string")), content = @Content(mediaType = "application/json", schema = @Schema(implementation = StringEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":\"회원가입 되었습니다.\"}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력 검증 실패 또는 이메일 중복", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = {@ExampleObject(name = "입력 검증 실패", value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"), @ExampleObject(name = "업무 규칙 실패", value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"DUPLICATED_EMAIL\",\"message\":\"이미 존재하는 이메일입니다.\"}}") })),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
+    })
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<String>> signup(@Valid @RequestBody SignupRequest request, HttpServletResponse response) {
+        userService.signup(request, response);
+        return ResponseEntity.ok(ApiResponse.success("회원가입 되었습니다."));
+    }
+
+    @Operation(summary = "로그인", description = "local 계정의 이메일과 비밀번호를 확인해 Access는 JSON과 HttpOnly 쿠키로, 난수 Refresh는 HttpOnly 쿠키로만 발급합니다. Refresh family의 절대 수명은 로그인부터 7일입니다. 소셜 로그인은 OAuth2 경로를 사용합니다. 이메일 형식·최대 254자, 비밀번호 공백 여부·최대 72자 및 UTF-8 최대 72바이트를 검증합니다. 로그인은 최소 8자 규칙을 재적용하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @SecurityRequirements
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "JSON 요청 본문", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginRequest.class), examples = @ExampleObject(value = "{\"email\":\"user@example.com\",\"password\":\"Example-password-123!\"}")))
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공", headers = @Header(name = "Set-Cookie", description = "accessToken: Path=/, 모든 프로필 5분. refreshToken: Path=/api/auth, 최초 로그인부터 최대 7일의 남은 수명. 둘 다 HttpOnly 및 설정된 Secure/SameSite 적용", schema = @Schema(type = "string")), content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class), examples = @ExampleObject(value = "{\"accessToken\":\"<access-jwt>\"}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력 검증 실패 또는 비밀번호 불일치", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = {@ExampleObject(name = "입력 검증 실패", value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"), @ExampleObject(name = "업무 규칙 실패", value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"PASSWORD_FAIL\",\"message\":\"비밀번호가 일치하지 않습니다.\"}}") })),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "502", description = "해당 사용자를 찾을 수 없습니다. - 해당 이메일이 존재하지 않습니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":502,\"code\":\"USER_NOT_FOUND\",\"message\":\"해당 사용자를 찾을 수 없습니다. - 해당 이메일이 존재하지 않습니다.\"}}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
+    })
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
+        AuthResponse authResponse = userService.login(request, response);
+        return ResponseEntity.ok(authResponse);
+    }
+
+    @Operation(summary = "로그아웃", description = "인증 없이 호출할 수 있으며 Access/Refresh HttpOnly 쿠키를 삭제합니다. 이미 발급된 Access는 즉시 폐기하지 않으며 만료까지 최대 5분 유효합니다. 함께 전달된 Refresh 쿠키의 family를 폐기해 회전 후 토큰도 재발급할 수 없게 합니다. 이미 소비한 Refresh 쿠키로 로그아웃해도 같은 family를 폐기합니다. 다른 로그인 family는 유지합니다. Redis 폐기 실패는 503이며 성공으로 처리하지 않습니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @SecurityRequirements
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "전달된 Refresh family 폐기 및 쿠키 삭제 성공. 기존 Access는 만료까지 유효", headers = @Header(name = "Set-Cookie", description = "accessToken Path=/ 및 refreshToken Path=/api/auth 삭제. 이전 Path=/ Refresh도 삭제", schema = @Schema(type = "string")), content = @Content(mediaType = "application/json", schema = @Schema(implementation = StringEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":\"로그아웃 되었습니다.\"}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
+    })
+    @PostMapping(value = "/logout", consumes = MediaType.ALL_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request, HttpServletResponse response) {
+        authTokens.logout(request, response);
+        return ResponseEntity.ok(ApiResponse.success("로그아웃 되었습니다."));
+    }
+
+    @Operation(summary = "액세스 토큰 재발급", description = "Refresh 쿠키의 해시·세대·family·절대 만료와 DB 사용자 존재를 확인해 기존 Refresh를 소비하고 새 난수 Refresh와 Access를 발급합니다. Access 인증은 필요하지 않습니다. Refresh는 HttpOnly Set-Cookie로만 전달하며 JSON에는 Access만 포함됩니다. family 수명은 최초 로그인부터 7일이고 회전으로 연장하지 않습니다. 이전 Refresh 재사용은 family 전체 폐기와 401이며 응답 유실·다중 탭 재시도도 동일합니다. 요청 본문은 필요하지 않습니다. 먼저 GET /api/auth/csrf를 호출해 받은 쿠키를 유지하고 응답 token을 X-XSRF-TOKEN 헤더에 넣습니다. 같은 서버의 Swagger에서는 CSRF 조회 후 쿠키에서 토큰을 읽어 헤더에 자동 적용합니다. Bearer 인증에도 CSRF 헤더가 필요하며 Origin은 같은 서버 주소 또는 허용 목록의 주소여야 합니다.")
+    @SecurityRequirements
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Access 발급 및 accessToken/refreshToken 쿠키 갱신", headers = @Header(name = "Set-Cookie", description = "accessToken: Path=/, 모든 프로필 5분. refreshToken: Path=/api/auth, 최초 로그인부터 최대 7일의 남은 수명. 둘 다 HttpOnly 및 설정된 Secure/SameSite 적용", schema = @Schema(type = "string")), content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthEnvelope.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":{\"accessToken\":\"<new-access-jwt>\"}}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Refresh 누락·구형 JWT·만료·미등록·폐기 또는 재사용. 재사용 시 해당 family 전체 폐기", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = {
+                    @ExampleObject(name = "유효하지 않은 Refresh", value = "{\"success\":false,\"error\":{\"status\":401,\"code\":\"INVALID_REFRESH_TOKEN\",\"message\":\"유효하지 않거나 만료·폐기된 Refresh 토큰입니다.\"}}"),
+                    @ExampleObject(name = "재사용 탐지", value = "{\"success\":false,\"error\":{\"status\":401,\"code\":\"REFRESH_TOKEN_REUSED\",\"message\":\"Refresh 토큰 재사용이 감지되어 로그인 세션이 폐기되었습니다.\"}}") })),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(HttpServletRequest request, HttpServletResponse response) {
+        AuthResponse authResponse = userService.reissue(request, response);
+        return ResponseEntity.ok(ApiResponse.success(authResponse));
+    }
+
+}

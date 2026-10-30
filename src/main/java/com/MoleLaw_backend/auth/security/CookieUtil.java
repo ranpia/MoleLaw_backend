@@ -9,14 +9,19 @@ import org.springframework.core.env.Profiles;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.time.Instant;
+
 @Component
 public class CookieUtil {
     private final boolean secure;
     private final String sameSite;
+    private final Duration accessTtl;
 
     public CookieUtil(@Value("${cookie.secure:true}") boolean secure,
                       @Value("${cookie.same-site:None}") String sameSite,
-                      Environment environment) {
+                      Environment environment,
+                      @Value("${jwt.access-ttl:5m}") Duration accessTtl) {
         if (!secure && !environment.acceptsProfiles(Profiles.of("local", "test"))) {
             throw new IllegalArgumentException("Insecure cookies require the local or test profile");
         }
@@ -26,12 +31,16 @@ public class CookieUtil {
         }
         this.secure = secure;
         this.sameSite = sameSite;
+        if (accessTtl == null || accessTtl.isNegative() || accessTtl.isZero()
+                || accessTtl.getNano() != 0 || accessTtl.compareTo(Duration.ofMinutes(5)) > 0) {
+            throw new IllegalArgumentException("Access token TTL must be positive whole seconds up to 300 seconds");
+        }
+        this.accessTtl = accessTtl;
     }
 
     public void addJwtCookie(HttpServletResponse response, String name, String token) {
         long maxAge = switch (name) {
-            case "accessToken" -> 15 * 60 * 60;
-            case "refreshToken" -> 7 * 24 * 60 * 60;
+            case "accessToken" -> accessTtl.toSeconds();
             default -> throw new IllegalArgumentException("Unknown authentication cookie");
         };
         writeCookie(response, name, token, maxAge);
@@ -41,6 +50,14 @@ public class CookieUtil {
     public void clearJwtCookie(HttpServletResponse response, String name) {
         writeCookie(response, name, "", 0);
         clearLegacyRefreshCookie(response, name);
+    }
+
+    public void addRefreshCookie(HttpServletResponse response, String value, Instant expiresAt) {
+        long maxAge = Duration.between(Instant.now(), expiresAt).toSeconds();
+        if (maxAge <= 0) throw new com.MoleLaw_backend.common.exception.MolelawException(
+                com.MoleLaw_backend.common.exception.ErrorCode.INVALID_REFRESH_TOKEN);
+        writeCookie(response, "refreshToken", value, maxAge);
+        clearLegacyRefreshCookie(response, "refreshToken");
     }
 
     private void clearLegacyRefreshCookie(HttpServletResponse response, String name) {

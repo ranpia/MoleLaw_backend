@@ -27,7 +27,6 @@ import java.util.List;
         }
 )
 
-
 public class SwaggerConfig {
 
     @Bean
@@ -35,8 +34,17 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("MoleLaw API")
-                        .description("MoleLaw 백엔드 API. 보호된 API는 Bearer Access JWT 또는 accessToken 쿠키로 인증하며 Bearer가 우선합니다. "
-                                + "Access는 JWT 검증과 Redis jti 등록 확인을 모두 통과해야 합니다. 미등록·폐기 Access는 401, Redis 장애는 503입니다. "
+                        .description("MoleLaw 백엔드 개발용 API 문서.\n\n"
+                                + "### 실행 순서\n"
+                                + "1. GET /api/auth/csrf를 실행합니다. 이후 변경 요청에는 CSRF 헤더가 자동으로 추가됩니다.\n"
+                                + "2. 로그인 API로 인증 쿠키를 발급받습니다.\n"
+                                + "3. 선택적으로 POST /api/legal-answers/suggestions에 초안을 보내 추천 질문을 받습니다. 이 단계는 상담을 저장하지 않습니다.\n"
+                                + "4. 선택한 question 또는 원래 질문을 POST /api/chat-rooms의 content로 보내 최초 상담을 시작합니다.\n"
+                                + "5. 생성된 상담방에서 후속 메시지와 근거 조회 API를 사용합니다. 판례 검색 동의는 해당 요청에서 별도로 전달합니다.\n\n"
+                                + "### 인증·보안\n"
+                                + "보호된 API는 Bearer Access JWT 또는 accessToken 쿠키로 인증하며 Bearer가 우선합니다. "
+                                + "Access는 5분 stateless JWT로 Redis 조회 없이 검증합니다. 로그아웃·비밀번호 변경 후에도 기존 Access는 만료까지 유효합니다. Refresh 저장·회전·폐기의 Redis 장애는 503입니다. "
+                                + "Access subject는 User.id 문자열이며 tokenVersion=3, issuer=molelaw-auth, audience=molelaw-api입니다. Refresh는 난수 기반 HttpOnly 쿠키로만 전달하며 매 재발급마다 회전합니다. 이전 JWT Refresh는 거절하므로 재로그인해야 합니다. "
                                 + "POST/PUT/PATCH/DELETE는 로그인·가입을 포함하여 GET /api/auth/csrf에서 받은 토큰을 X-XSRF-TOKEN 헤더로 보내야 합니다. "
                                 + "같은 서버의 Swagger UI에서 GET /api/auth/csrf를 한 번 실행하면 XSRF-TOKEN 쿠키를 읽어 이후 요청에 X-XSRF-TOKEN 헤더를 자동으로 추가합니다. 직접 토큰을 입력할 필요가 없습니다.")
                         .version("v1.0"))
@@ -57,8 +65,8 @@ public class SwaggerConfig {
         return (operation, handler) -> {
             String method = handler.getMethod().getName();
             boolean publicEndpoint = handler.getBeanType().getSimpleName().equals("CsrfController")
-                    || (handler.getBeanType().getSimpleName().equals("UserController")
-                    && java.util.Set.of("signup", "login", "logout", "reissue").contains(method));
+                    || (handler.getBeanType().getSimpleName().equals("AuthController")
+                    && java.util.Set.of("signup", "login", "logout", "refresh").contains(method));
             operation.setSecurity(publicEndpoint ? List.of() : List.of(
                     new SecurityRequirement().addList("AccessCookie")));
             boolean unsafe = handler.hasMethodAnnotation(org.springframework.web.bind.annotation.PostMapping.class)
@@ -76,19 +84,29 @@ public class SwaggerConfig {
                 }
             }
             if (!publicEndpoint) {
-                operation.getResponses().addApiResponse("401", new ApiResponse().description("Access 인증 누락·만료·잘못된 용도 또는 Redis 등록 누락·폐기")
+                operation.getResponses().addApiResponse("401", new ApiResponse().description("Access 인증 누락·만료·서명/용도/버전/issuer/audience 오류 또는 사용자 없음")
                         .content(new Content().addMediaType("application/json", new MediaType()
                                 .schema(new ObjectSchema().addProperty("error", new StringSchema()))
                                 .example(java.util.Map.of("error", "Unauthorized")))));
             }
-            if (!handler.getBeanType().getSimpleName().equals("CsrfController")) {
+            if ((handler.getBeanType().getSimpleName().equals("AuthController") || handler.getBeanType().getSimpleName().equals("UserController"))
+                    && java.util.Set.of("signup", "login", "refresh", "logout", "changePassword", "deleteUser").contains(method)) {
                 operation.getResponses().addApiResponse("503", new ApiResponse()
-                        .description("Redis 인증 저장소 조회·등록·폐기 실패. JWT만으로 우회하지 않습니다. 자동 재발급을 반복하지 말고 제한된 횟수로 재시도합니다.")
+                        .description("Redis Refresh 저장·회전·폐기 실패. 기존 Access 검증은 Redis에 의존하지 않습니다. 사용한 Refresh로 자동 재시도하지 않습니다.")
                         .content(new Content().addMediaType("application/json", new MediaType()
                                 .schema(new io.swagger.v3.oas.models.media.Schema<>().$ref("#/components/schemas/BusinessErrorResponse"))
                                 .example(java.util.Map.of("success", false, "error", java.util.Map.of(
                                         "status", 503, "code", "AUTH_STORE_UNAVAILABLE",
                                         "message", "인증 저장소를 사용할 수 없습니다. 잠시 후 다시 시도하세요."))))));
+            }
+            if (publicEndpoint && java.util.Set.of("signup", "login").contains(method)) {
+                operation.getResponses().addApiResponse("401", new ApiResponse()
+                        .description("발급 전 Refresh 사용자 세대가 변경·유실되어 등록 거절. 재로그인이 필요합니다.")
+                        .content(new Content().addMediaType("application/json", new MediaType()
+                                .schema(new io.swagger.v3.oas.models.media.Schema<>().$ref("#/components/schemas/BusinessErrorResponse"))
+                                .example(java.util.Map.of("success", false, "error", java.util.Map.of(
+                                        "status", 401, "code", "INVALID_REFRESH_TOKEN",
+                                        "message", "유효하지 않거나 만료·폐기된 Refresh 토큰입니다."))))));
             }
             return operation;
         };

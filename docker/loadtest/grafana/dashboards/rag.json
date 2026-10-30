@@ -1,0 +1,587 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-15m"
+             },
+    "uid":  "molelaw-loadtest-rag",
+    "title":  "MoleLaw 부하 테스트 - Qdrant·RAG 구성요소",
+    "refresh":  "5s",
+    "schemaVersion":  41,
+    "editable":  false,
+    "panels":  [
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  1,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "수집 연결 상태",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{job}}",
+                                           "expr":  "up{job=~\"molelaw-(qdrant|kure)\"}",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  2,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  8
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "임베딩·리랭커 모델 준비",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{operation}}",
+                                           "expr":  "kure_model_ready{job=\"molelaw-kure\"}",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  3,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  16
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "Qdrant 컬렉션 수",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  null,
+                                           "expr":  "collections_total{job=\"molelaw-qdrant\"}",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  4,
+                       "gridPos":  {
+                                       "y":  6,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "Qdrant 전체 벡터 수",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  null,
+                                           "expr":  "collections_vector_total{job=\"molelaw-qdrant\"}",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "reqps"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  5,
+                       "gridPos":  {
+                                       "y":  6,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  8
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "Qdrant REST 처리량",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{method}} {{endpoint}} {{status}}",
+                                           "expr":  "sum by (endpoint,method,status) (rate(rest_responses_total{job=\"molelaw-qdrant\"}[1m]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "s"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  6,
+                       "gridPos":  {
+                                       "y":  6,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  16
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "Qdrant REST p95",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{endpoint}}",
+                                           "expr":  "histogram_quantile(0.95,sum by(le,endpoint) (rate(rest_responses_duration_seconds_bucket{job=\"molelaw-qdrant\"}[1m])))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "reqps"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  7,
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "임베딩·리랭킹 HTTP 처리량",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{operation}} / {{status}}",
+                                           "expr":  "sum by(operation,status) (rate(kure_requests_total{job=\"molelaw-kure\"}[1m]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "s"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  8,
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  8
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "임베딩·리랭킹 전체 요청 p95",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{operation}}",
+                                           "expr":  "histogram_quantile(0.95,sum by(le,operation) (rate(kure_request_duration_seconds_bucket{job=\"molelaw-kure\"}[1m])))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "s"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  9,
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  16
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "추론 게이트 대기 p95",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{operation}}",
+                                           "expr":  "histogram_quantile(0.95,sum by(le,operation) (rate(kure_queue_wait_seconds_bucket{job=\"molelaw-kure\"}[1m])))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "s"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  10,
+                       "gridPos":  {
+                                       "y":  18,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "인코더·predict 평균 실행 시간",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{operation}}",
+                                           "expr":  "sum by(operation) (rate(kure_inference_duration_seconds_sum{job=\"molelaw-kure\"}[1m])) / sum by(operation) (rate(kure_inference_duration_seconds_count{job=\"molelaw-kure\"}[1m]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  11,
+                       "gridPos":  {
+                                       "y":  18,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  8
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "추론 대기 요청 수",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{operation}}",
+                                           "expr":  "kure_queue_waiting{job=\"molelaw-kure\"}",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  12,
+                       "gridPos":  {
+                                       "y":  18,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  16
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "추론 게이트 사용 중",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{operation}}",
+                                           "expr":  "kure_inference_active{job=\"molelaw-kure\"}",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "reqps"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  13,
+                       "gridPos":  {
+                                       "y":  24,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "큐 포화·대기 만료 거부",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{operation}} / {{reason}}",
+                                           "expr":  "sum by(operation,reason) (rate(kure_rejections_total{job=\"molelaw-kure\"}[1m]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  14,
+                       "gridPos":  {
+                                       "y":  24,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  8
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "처리 텍스트·후보 수 (초당)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{operation}}",
+                                           "expr":  "sum by(operation) (rate(kure_processed_items_total{job=\"molelaw-kure\"}[1m]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  15,
+                       "gridPos":  {
+                                       "y":  24,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  16
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "Qdrant·KURE CPU (코어)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{container_label_com_docker_compose_service}}",
+                                           "expr":  "sum by(container_label_com_docker_compose_service) (rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_project=\"molelaw-loadtest\",container_label_com_docker_compose_service=~\"qdrant|kure\"}[1m]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "bytes"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  16,
+                       "gridPos":  {
+                                       "y":  30,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "Qdrant·KURE 메모리 working set",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{container_label_com_docker_compose_service}}",
+                                           "expr":  "sum by(container_label_com_docker_compose_service) (container_memory_working_set_bytes{container_label_com_docker_compose_project=\"molelaw-loadtest\",container_label_com_docker_compose_service=~\"qdrant|kure\"})",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "bytes"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  17,
+                       "gridPos":  {
+                                       "y":  30,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  8
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "Qdrant 할당기 상주 메모리",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  null,
+                                           "expr":  "memory_resident_bytes{job=\"molelaw-qdrant\"}",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  18,
+                       "gridPos":  {
+                                       "y":  30,
+                                       "w":  8,
+                                       "h":  6,
+                                       "x":  16
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "loadtest-prometheus"
+                                      },
+                       "title":  "공유 추론 큐 설정 상한",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  null,
+                                           "expr":  "kure_queue_capacity{job=\"molelaw-kure\"}",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "description":  "현재 구간에 요청이 없으면 지연은 빈 값일 수 있습니다. 연결 상태와 모델 준비를 먼저 확인하세요."
+                   },
+                   {
+                       "gridPos":  {
+                                       "y":  36,
+                                       "w":  24,
+                                       "h":  5,
+                                       "x":  0
+                                   },
+                       "title":  "측정 범위와 해석",
+                       "id":  99,
+                       "type":  "text",
+                       "options":  {
+                                       "content":  "임베딩(embed)과 리랭킹(rerank)은 하나의 추론 게이트를 공유합니다. 전체 요청 시간은 본문 읽기·대기·모델 준비·추론·응답 전송을 포함하며, 인코더 실행 시간과 구분합니다. Qdrant의 컬렉션 목록·정보·스냅샷 조회는 REST 요청 지표에서 제외됩니다. 실제 검색 요청 전에는 해당 패널이 비어 있을 수 있습니다. 이 화면은 RAG 구성요소 관측이며 질문 분석·검색 조립·원문 조회·AI 답변 생성의 전체 시간은 아직 계측하지 않았습니다. 질문·문서 원문·토큰·사용자 ID는 지표 레이블에 넣지 않습니다.",
+                                       "mode":  "markdown"
+                                   }
+                   }
+               ]
+}

@@ -16,19 +16,17 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
-        String[] parts = identifier.split(":");
-        if (parts.length != 2) {
-            throw new UsernameNotFoundException("올바르지 않은 사용자 식별자입니다: " + identifier);
+        Long userId;
+        try {
+            userId = JwtUtil.parseUserId(identifier);
+        } catch (IllegalArgumentException e) {
+            throw new UsernameNotFoundException("올바르지 않은 사용자 식별자입니다.");
         }
 
-        String email = parts[0];
-        String provider = parts[1];
-
-        User user = userRepository.findByEmailAndProvider(email, provider)
-                .orElseThrow(() -> new UsernameNotFoundException("해당 이메일을 찾을 수 없습니다: " + identifier));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("해당 사용자를 찾을 수 없습니다."));
 
         return new CustomUserDetails(user);
     }
-
 
 }

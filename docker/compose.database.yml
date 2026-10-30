@@ -1,0 +1,31 @@
+﻿name: database-service
+services:
+  mysql:
+    extends:
+      file: compose.yml
+      service: mysql
+  redis:
+    extends:
+      file: compose.yml
+      service: redis
+  qdrant:
+    extends:
+      file: compose.yml
+      service: qdrant
+  redisinsight:
+    extends:
+      file: compose.insight.yml
+      service: redisinsight
+volumes:
+  mysql_data:
+    external: true
+    name: ${BACKEND_MYSQL_VOLUME:-molelaw-local_mysql_data}
+  qdrant_data:
+    external: true
+    name: ${BACKEND_QDRANT_VOLUME:-molelaw-local_qdrant_data}
+  qdrant_snapshots:
+    external: true
+    name: ${BACKEND_QDRANT_SNAPSHOTS_VOLUME:-molelaw-local_qdrant_snapshots}
+  redisinsight_data:
+    external: true
+    name: ${BACKEND_REDISINSIGHT_VOLUME:-molelaw-local_redisinsight_data}

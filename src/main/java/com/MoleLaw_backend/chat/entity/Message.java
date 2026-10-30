@@ -17,19 +17,39 @@ public class Message {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id", nullable = false)
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     private ChatRoom chatRoom;
 
     @Enumerated(EnumType.STRING)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 16)
     private Sender sender;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String content;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp;
+
+    @Column(nullable = false, updatable = false)
+    private boolean caseSearchRequested;
+
+    @Column(nullable = false, updatable = false)
+    private boolean caseSearchConsent;
 
     @PrePersist
     public void prePersist() {
-        this.timestamp = LocalDateTime.now();
+        validate();
+        this.timestamp = LocalDateTime.now(java.time.Clock.systemUTC());
+    }
+
+    @PreUpdate
+    public void validate() {
+        if ((caseSearchRequested && sender != Sender.BOT) || (caseSearchConsent && sender != Sender.USER))
+            throw new IllegalArgumentException("Invalid message consent role");
+        if (chatRoom == null || sender == null || sender == Sender.INFO || content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Persisted messages require room, USER/BOT sender and encrypted content");
+        }
     }
 
     public enum Sender {

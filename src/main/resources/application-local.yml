@@ -7,6 +7,15 @@ server:
   ssl:
     enabled: false
 
+# Local diagnosis only: validated decision reason/issues and visible source titles, never source bodies.
+logging:
+  level:
+    com.MoleLaw_backend.law.service.retrieval.EvidenceDecisionPlanner: DEBUG
+
+jwt:
+  # Keep Access lifetime aligned with production; never activate local in production.
+  access-ttl: 5m
+
 frontend:
   uri: ${FRONTENDURI:http://localhost:3000}
 security:
@@ -22,5 +31,9 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+    doc-expansion: none
+    tags-sorter: alpha
+    operations-sorter: method
+    display-request-duration: true
     csrf:
       enabled: true

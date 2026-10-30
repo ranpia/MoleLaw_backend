@@ -1,16 +1,19 @@
 package com.MoleLaw_backend.common.config;
 
+import com.MoleLaw_backend.user.entity.User;
 import com.MoleLaw_backend.user.repository.UserRepository;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.common.exception.MolelawException;
-import com.MoleLaw_backend.auth.security.AccessTokenStore;
 import com.MoleLaw_backend.auth.security.JwtUtil;
+import com.MoleLaw_backend.auth.security.RefreshTokenStore;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,43 +30,43 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RedisAccessFailureHttpTest {
     @MockitoBean ChatModel chatModel;
     @MockitoBean EmbeddingModel embeddingModel;
-    @MockitoBean AccessTokenStore store;
+    @MockitoBean RefreshTokenStore refreshStore;
     @Autowired MockMvc mvc;
     @Autowired JwtUtil jwt;
     @Autowired UserRepository users;
+    @Autowired PasswordEncoder passwords;
 
     @Test
-    void redisReadFailureIs503RatherThan401AndBootstrapStillWorks() throws Exception {
-        when(store.isActive(anyString(), anyString())).thenThrow(unavailable());
-        String token = jwt.generateAccessToken("u@example.com", "local");
-        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("error.code").value("AUTH_STORE_UNAVAILABLE"));
-        mvc.perform(get("/api/auth/csrf").header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk()).andExpect(jsonPath("token").exists());
-        verify(store, never()).register(anyString(), anyString(), any());
+    void redisOutageDoesNotAffectAccessButPreventsLoginRotationAndLogout() throws Exception {
+        User user = users.save(User.builder().email("stateless-outage@example.com").provider("local")
+                .nickname("stateless").password(passwords.encode("Example-password-123!")).build());
+        when(refreshStore.generation(anyLong())).thenThrow(unavailable());
+        when(refreshStore.rotate(anyLong(), anyString(), anyString(), anyString())).thenThrow(unavailable());
+        doThrow(unavailable()).when(refreshStore).revoke(anyLong(), anyString(), anyString());
+        String token = jwt.generateAccessToken(user.getId());
+        mvc.perform(get("/api/users/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("data.email").value(user.getEmail()));
+        mvc.perform(get("/api/auth/csrf")).andExpect(status().isOk());
+        verifyNoInteractions(refreshStore);
+        mvc.perform(post("/api/auth/login").with(csrf()).contentType("application/json")
+                        .content("{\"email\":\"stateless-outage@example.com\",\"password\":\"Example-password-123!\"}"))
+                .andExpect(status().isServiceUnavailable()).andExpect(header().doesNotExist("Set-Cookie"));
+        String refresh = "r1." + user.getId() + ".00000000-0000-0000-0000-000000000001." + "a".repeat(43);
+        mvc.perform(post("/api/auth/refresh").with(csrf()).cookie(new Cookie("refreshToken", refresh)))
+                .andExpect(status().isServiceUnavailable()).andExpect(header().doesNotExist("Set-Cookie"));
+        mvc.perform(post("/api/auth/logout").with(csrf()).cookie(new Cookie("refreshToken", refresh)))
+                .andExpect(status().isServiceUnavailable()).andExpect(header().doesNotExist("Set-Cookie"));
+        mvc.perform(get("/api/users/me").cookie(new Cookie("accessToken", token))).andExpect(status().isOk());
     }
 
     @Test
-    void failedSignupRegistrationReturnsNoJwtAndRollsBackTheAccount() throws Exception {
-        doThrow(unavailable()).when(store).register(anyString(), anyString(), any());
+    void failedSignupRefreshPersistenceReturnsNoTokenAndRollsBackAccount() throws Exception {
+        when(refreshStore.generation(anyLong())).thenThrow(unavailable());
         mvc.perform(post("/api/auth/signup").with(csrf()).contentType("application/json")
                         .content("{\"email\":\"redis-failure@example.com\",\"password\":\"Example-password-123!\",\"nickname\":\"redis-test\"}"))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(header().doesNotExist("Set-Cookie"))
-                .andExpect(jsonPath("error.code").value("AUTH_STORE_UNAVAILABLE"))
-                .andExpect(jsonPath("data").doesNotExist());
-        assertThat(users.existsByEmailAndProvider("redis-failure@example.com", "local")).isFalse();
-    }
-
-    @Test
-    void failedLogoutRevocationDoesNotReportSuccessOrClearCookies() throws Exception {
-        doThrow(unavailable()).when(store).revoke(anyString());
-        mvc.perform(post("/api/auth/logout").with(csrf())
-                        .header("Authorization", "Bearer " + jwt.generateAccessToken("u@example.com", "local")))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(header().doesNotExist("Set-Cookie"))
+                .andExpect(status().isServiceUnavailable()).andExpect(header().doesNotExist("Set-Cookie"))
                 .andExpect(jsonPath("error.code").value("AUTH_STORE_UNAVAILABLE"));
+        assertThat(users.existsByEmailAndProvider("redis-failure@example.com", "local")).isFalse();
     }
 
     private MolelawException unavailable() {

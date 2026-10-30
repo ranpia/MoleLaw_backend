@@ -1,0 +1,407 @@
+name: molelaw-loadtest
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  mysql:
+    image: mysql:8.4.11
+    environment:
+      MYSQL_DATABASE: molelaw_loadtest
+      MYSQL_USER: molelaw_loadtest
+      MYSQL_PASSWORD: ${LT_MYSQL_PASSWORD:?Set LT_MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${LT_MYSQL_ROOT_PASSWORD:?Set LT_MYSQL_ROOT_PASSWORD}
+      TZ: Asia/Seoul
+    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_0900_ai_ci, --innodb-buffer-pool-size=512M, --max-connections=60]
+    volumes: [mysql_data:/var/lib/mysql]
+    cpus: ${LT_MYSQL_CPUS:-1.0}
+    mem_limit: ${LT_MYSQL_MEMORY:-1536m}
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$${MYSQL_PASSWORD}" mysql --protocol=TCP -h 127.0.0.1 -u "$${MYSQL_USER}" -D "$${MYSQL_DATABASE}" -e "SELECT 1" > /dev/null']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    logging: *logging
+
+  redis: &redis-server
+    image: redis:7.4.11-alpine
+    environment:
+      REDIS_PASSWORD: ${LT_REDIS_PASSWORD:?Set LT_REDIS_PASSWORD}
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        case "$$REDIS_PASSWORD" in
+          *[!a-zA-Z0-9_-]*|'') echo 'Use letters, digits, underscore or hyphen in LT_REDIS_PASSWORD.' >&2; exit 1 ;;
+        esac
+        umask 077
+        printf 'bind 0.0.0.0\nprotected-mode yes\nrequirepass %s\nsave ""\nappendonly no\nmaxmemory 128mb\nmaxmemory-policy noeviction\n' "$$REDIS_PASSWORD" > /data/redis.conf
+        chown redis:redis /data/redis.conf
+        exec /usr/local/bin/docker-entrypoint.sh redis-server /data/redis.conf
+    tmpfs: [/data:size=16m]
+    cpus: 0.5
+    mem_limit: 256m
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -qx PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+
+  redis-bench:
+    <<: *redis-server
+    profiles: [redisbench, refreshbench]
+    environment:
+      REDIS_PASSWORD: ${LT_REDIS_BENCH_PASSWORD:-}
+
+  redis-bench-exporter:
+    profiles: [redisbench]
+    image: oliver006/redis_exporter:v1.74.0
+    environment:
+      REDIS_ADDR: redis://redis-bench:6379
+      REDIS_PASSWORD: ${LT_REDIS_BENCH_PASSWORD:-}
+    depends_on:
+      redis-bench: {condition: service_healthy}
+    cpus: 0.25
+    mem_limit: 128m
+    logging: *logging
+
+  redis-load:
+    profiles: [redisbench]
+    image: molelaw/redis-load:v1
+    build:
+      context: ./redis-bench
+    command: [version]
+    environment:
+      REDISCLI_AUTH: ${LT_REDIS_BENCH_PASSWORD:-}
+    volumes:
+      - ../../src/main/resources/auth:/lua:ro
+      - ../../build/redis-loadtest-runs:/results
+    cpus: 3.0
+    mem_limit: 1g
+    logging: *logging
+
+  backend: &backend-server
+    image: molelaw-app:loadtest
+    build:
+      context: ../..
+      dockerfile: docker/app.Dockerfile
+    environment: &backend-environment
+      # Existing cookie policy allows local HTTP only under local/test.
+      # Override local's group to mysql so minimal startup does not require Qdrant.
+      SPRING_PROFILES_ACTIVE: local,loadtest
+      SPRING_PROFILES_GROUP_LOCAL: mysql
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_CSRF_ENABLED: "false"
+      COOKIE_CSRF_HTTP_ONLY: "true"
+      SPRING_CONFIG_IMPORT: ""
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: molelaw_loadtest
+      MYSQL_USER: molelaw_loadtest
+      MYSQL_PASSWORD: ${LT_MYSQL_PASSWORD:?Set LT_MYSQL_PASSWORD}
+      MYSQL_POOL_SIZE: ${LT_MYSQL_POOL_SIZE:-10}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${LT_REDIS_PASSWORD:?Set LT_REDIS_PASSWORD}
+      REDIS_DATABASE: "0"
+      REDIS_SSL_ENABLED: "false"
+      JWT_SECRET: ${LT_JWT_SECRET:?Set LT_JWT_SECRET}
+      CHAT_ENCRYPTION_KEY: ${LT_CHAT_ENCRYPTION_KEY:?Set LT_CHAT_ENCRYPTION_KEY}
+      CHAT_ENCRYPTION_KEY_VERSION: loadtest-v1
+      # Dummy credentials only. No root .env is imported and no paid API is reachable.
+      OPENAI_API_KEY: loadtest-dummy-key
+      OC_KEY: loadtest-dummy-key
+      GOOGLE_CLIENT_ID: loadtest-dummy-client
+      GOOGLE_CLIENT_SECRET: loadtest-dummy-secret
+      FRONTENDURI: http://localhost:18080
+      CORS_ALLOWED_ORIGINS: http://localhost:18080
+      COOKIE_SECURE: "false"
+      COOKIE_SAME_SITE: Lax
+      APP_LAW_VECTOR_ENABLED: ${LT_RAG_ENABLED:-false}
+      APP_LAW_VECTOR_EMBEDDING_BASE_URL: http://kure:11434
+      APP_LAW_VECTOR_QDRANT_BASE_URL: http://qdrant:6333
+      APP_LAW_VECTOR_COLLECTION_NAME: molelaw_loadtest_kure_v1
+      APP_LAW_VECTOR_GPU_COUNT: "0"
+      APP_LAW_VECTOR_THREADS: ${LT_KURE_THREADS:-4}
+      QDRANT_API_KEY: ${LT_QDRANT_API_KEY:?Set LT_QDRANT_API_KEY}
+      APP_LAW_RERANKER_ENABLED: ${LT_RAG_ENABLED:-false}
+      APP_LAW_RERANKER_BASE_URL: http://kure:11434
+      APP_LAW_RERANKER_CANDIDATE_LIMIT: ${LT_RERANK_CANDIDATES:-50}
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70.0
+    depends_on:
+      mysql: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    # Management port 9091 is intentionally not published to the host.
+    expose: ["9091"]
+    cpus: ${LT_BACKEND_CPUS:-2.0}
+    mem_limit: ${LT_BACKEND_MEMORY:-2g}
+    healthcheck:
+      test: [CMD-SHELL, "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9091; printf \"GET /actuator/health HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" >&3; head -n 1 <&3 | grep -q \" 200 \"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+    logging: *logging
+
+  fault-proxy:
+    profiles: [refreshbench]
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    cpus: 2.0
+    mem_limit: 128m
+    logging: *logging
+
+  refresh-backend:
+    <<: *backend-server
+    profiles: [refreshbench]
+    environment:
+      <<: *backend-environment
+      REDIS_HOST: fault-proxy
+      REDIS_PORT: "16379"
+      REDIS_PASSWORD: ${LT_REDIS_BENCH_PASSWORD:-}
+      MYSQL_HOST: fault-proxy
+      MYSQL_PORT: "13306"
+    depends_on:
+      mysql: {condition: service_healthy}
+      redis-bench: {condition: service_healthy}
+      fault-proxy: {condition: service_started}
+
+  refresh-load:
+    profiles: [refreshbench]
+    image: locustio/locust:2.47.0
+    command: [--version]
+    environment:
+      LT_DATA_PASSWORD: ${LT_DATA_PASSWORD:-}
+      REDISCLI_AUTH: ${LT_REDIS_BENCH_PASSWORD:-}
+    volumes:
+      - ./locust:/scenario:ro
+      - ../../build/loadtest-data:/fixtures:ro
+      - ../../build/refresh-loadtest-runs:/results
+    cpus: 3.0
+    mem_limit: 1g
+    logging: *logging
+
+  qdrant:
+    profiles: [rag]
+    image: qdrant/qdrant:v1.19.1
+    environment:
+      QDRANT__SERVICE__API_KEY: ${LT_QDRANT_API_KEY:?Set LT_QDRANT_API_KEY}
+      QDRANT__TELEMETRY_DISABLED: "true"
+    volumes: [qdrant_data:/qdrant/storage, qdrant_snapshots:/qdrant/snapshots]
+    cpus: ${LT_QDRANT_CPUS:-2.0}
+    mem_limit: ${LT_QDRANT_MEMORY:-2g}
+    logging: *logging
+
+  kure:
+    profiles: [rag]
+    image: molelaw/kure-service:loadtest-cpu
+    build:
+      context: ../kure
+    environment:
+      HF_HOME: /models
+      EMBEDDING_DEVICE: cpu
+      EMBEDDING_THREADS: ${LT_KURE_THREADS:-4}
+      EMBEDDING_BATCH_SIZE: ${LT_KURE_BATCH_SIZE:-16}
+      EMBEDDING_QUEUE_CAPACITY: ${LT_KURE_QUEUE_CAPACITY:-4}
+      EMBEDDING_QUEUE_WAIT_SECONDS: ${LT_KURE_QUEUE_WAIT_SECONDS:-5}
+      RERANKER_ENABLED: "true"
+      RERANKER_BATCH_SIZE: "2"
+      RERANKER_MAX_TOKENS: "1024"
+      METRICS_PORT: "9092"
+    expose: ["9092"]
+    ports: ["127.0.0.1:${LT_KURE_PORT:-21437}:11434"]
+    volumes: [model_cache:/models]
+    # Only the model server can download model weights. The backend has no egress network.
+    networks: [default, model_download]
+    cpus: ${LT_KURE_CPUS:-4.0}
+    mem_limit: ${LT_KURE_MEMORY:-6g}
+    healthcheck:
+      start_period: 10m
+    logging: *logging
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command: [--config.file=/etc/prometheus/prometheus.yml, --storage.tsdb.path=/prometheus, --storage.tsdb.retention.time=3d, --storage.tsdb.retention.size=1GB]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../build/loadtest-secrets:/run/loadtest-secrets:ro
+      - prometheus_data:/prometheus
+    cpus: 0.5
+    mem_limit: 512m
+    logging: *logging
+
+  mysql-exporter:
+    profiles: [monitoring]
+    image: prom/mysqld-exporter:v0.17.2
+    command: [--config.my-cnf=/dev/null, --mysqld.address=mysql:3306, --mysqld.username=loadtest_exporter]
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: ${LT_MYSQL_EXPORTER_PASSWORD:-}
+    depends_on:
+      mysql: {condition: service_healthy}
+    cpus: 0.25
+    mem_limit: 128m
+    logging: *logging
+
+  redis-exporter:
+    profiles: [monitoring]
+    image: oliver006/redis_exporter:v1.74.0
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${LT_REDIS_PASSWORD:?Set LT_REDIS_PASSWORD}
+    depends_on:
+      redis: {condition: service_healthy}
+    cpus: 0.25
+    mem_limit: 128m
+    logging: *logging
+
+  cadvisor:
+    profiles: [monitoring]
+    image: ghcr.io/google/cadvisor:v0.60.6
+    command:
+      - --docker_only=true
+      - --containerd-namespace=moby
+      - --disable_root_cgroup_stats=true
+      - --housekeeping_interval=5s
+      - --allow_dynamic_housekeeping=false
+      - --store_container_labels=false
+      - --whitelisted_container_labels=com.docker.compose.project,com.docker.compose.service
+      - --disable_metrics=percpu,process,sched,tcp,udp,hugetlb,referenced_memory,resctrl
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    cpus: 0.5
+    mem_limit: 512m
+    logging: *logging
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    environment:
+      GF_SECURITY_ADMIN_USER: loadtest
+      GF_SECURITY_ADMIN_PASSWORD: ${LT_GRAFANA_PASSWORD:?Set LT_GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_DEFAULT_LANGUAGE: ko-KR
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    cpus: 0.5
+    mem_limit: 512m
+    logging: *logging
+
+  gateway:
+    image: haproxy:3.2.4-alpine
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks: [default, ingress]
+    ports:
+      - "127.0.0.1:${LT_BACKEND_PORT:-18080}:8080"
+      - "127.0.0.1:${LT_MYSQL_PORT:-13307}:3306"
+      - "127.0.0.1:${LT_GRAFANA_PORT:-13000}:3000"
+      - "127.0.0.1:${LT_PROMETHEUS_PORT:-19090}:9090"
+      - "127.0.0.1:${LT_QDRANT_HTTP_PORT:-16333}:6333"
+      - "127.0.0.1:${LT_QDRANT_GRPC_PORT:-16334}:6334"
+    depends_on:
+      backend: {condition: service_started}
+      mysql: {condition: service_healthy}
+      prometheus: {condition: service_started}
+      grafana: {condition: service_started}
+    cpus: 0.5
+    mem_limit: 256m
+    logging: *logging
+
+  locust:
+    profiles: [tools]
+    image: locustio/locust:2.47.0
+    # Default remains harmless; run-one-user.ps1 explicitly starts the bounded scenario.
+    command: [--version]
+    environment:
+      LT_DATA_PASSWORD: ${LT_DATA_PASSWORD:-}
+    volumes:
+      - ./locust:/scenario:ro
+      - ../../build/loadtest-data:/fixtures:ro
+      - ../../build/loadtest-runs:/results
+    cpus: ${LT_LOCUST_CPUS:-3.0}
+    mem_limit: ${LT_LOCUST_MEMORY:-1g}
+    logging: *logging
+
+  seed-data:
+    profiles: [data]
+    image: molelaw/loadtest-data:v1
+    build:
+      context: ./data
+    environment:
+      LT_SEED_CONFIRM: molelaw_loadtest
+      LT_MYSQL_PASSWORD: ${LT_MYSQL_PASSWORD:?Set LT_MYSQL_PASSWORD}
+      LT_CHAT_ENCRYPTION_KEY: ${LT_CHAT_ENCRYPTION_KEY:?Set LT_CHAT_ENCRYPTION_KEY}
+      LT_DATA_PASSWORD: ${LT_DATA_PASSWORD:-}
+    volumes:
+      - ../../build/loadtest-data:/results
+    depends_on:
+      mysql: {condition: service_healthy}
+    cpus: 1.0
+    mem_limit: 256m
+    logging: *logging
+
+  rag-data: &rag-data-runner
+    profiles: [ragtools]
+    image: molelaw/kure-service:loadtest-cpu
+    entrypoint: [python]
+    command: [/data/validate.py]
+    environment:
+      HF_HOME: /models
+      HF_HUB_OFFLINE: "1"
+      LT_KURE_THREADS: ${LT_KURE_THREADS:-4}
+      LT_QDRANT_API_KEY: ${LT_QDRANT_API_KEY:?Set LT_QDRANT_API_KEY}
+    volumes:
+      - ./rag-data:/data:ro
+      - ../../build/rag-dataset:/results
+      - model_cache:/models:ro
+    cpus: 1.0
+    mem_limit: 512m
+    healthcheck:
+      disable: true
+    logging: *logging
+
+  rerank-data:
+    <<: *rag-data-runner
+    profiles: [ragtools]
+    command: [/data/prepare_rerank.py]
+    mem_limit: 1g
+
+  sysbench:
+    profiles: [dbbench]
+    image: molelaw/sysbench:local-v1
+    build:
+      context: ./sysbench
+    command: [version]
+    environment:
+      LT_SYSBENCH_PASSWORD: ${LT_SYSBENCH_PASSWORD:-}
+    volumes:
+      - ../../build/db-loadtest-runs:/results
+    cpus: 3.0
+    mem_limit: 1g
+    logging: *logging
+
+networks:
+  default:
+    internal: true
+  model_download: {}
+  ingress: {}
+
+# Project-scoped volumes only: no external volumes, development mounts or explicit shared names.
+volumes:
+  mysql_data:
+  qdrant_data:
+  qdrant_snapshots:
+  model_cache:
+  prometheus_data:
+  grafana_data:

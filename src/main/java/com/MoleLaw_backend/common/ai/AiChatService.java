@@ -18,21 +18,6 @@ import java.util.List;
 public class AiChatService {
     private final ChatClient chatClient;
 
-    public String generateText(String system, List<Message> messages, double temperature) {
-        try {
-            String content = request(system, messages, temperature).call().content();
-            if (content == null || content.isBlank()) {
-                throw new GptApiException(ErrorCode.GPT_EMPTY_RESPONSE);
-            }
-            return content;
-        } catch (GptApiException e) {
-            throw e;
-        } catch (Exception e) {
-            log.warn("모델 답변 생성 실패: errorType={}", e.getClass().getSimpleName());
-            throw new GptApiException(ErrorCode.GPT_API_FAILURE);
-        }
-    }
-
     public <T> T generateEntity(String system, String userPrompt, Class<T> type, double temperature) {
         try {
             T result = request(system, List.of(new UserMessage(userPrompt)),

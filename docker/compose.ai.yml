@@ -1,0 +1,13 @@
+﻿name: ai-service
+services:
+  kure:
+    extends:
+      file: kure/compose.yml
+      service: kure
+    build:
+      context: ./kure
+    restart: unless-stopped
+volumes:
+  kure_models:
+    external: true
+    name: ${KURE_MODEL_VOLUME:-molelaw-kure-lab_kure_models}

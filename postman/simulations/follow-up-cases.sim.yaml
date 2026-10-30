@@ -1,0 +1,6 @@
+simulation: Room-scoped follow-up precedent tools
+routing: path
+mocks:
+  - name: Follow-up precedent contract
+    routeKey: DRF
+    path: ../mocks/follow-up-cases/config.yaml

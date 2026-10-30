@@ -15,6 +15,9 @@ public enum ErrorCode {
     OPENLAW_INVALID_RESPONSE(HttpStatus.BAD_REQUEST.value(), "공공법령 API 응답이 올바르지 않습니다"),
     GPT_API_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "GPT 응답 생성 중 오류 발생"),
     GPT_EMPTY_RESPONSE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "GPT 응답이 비어 있음"),
+    EVIDENCE_INSUFFICIENT(422, "확보한 근거가 충분하지 않습니다. 질문을 구체화해 주세요."),
+    RETRIEVAL_UNAVAILABLE(503, "법령 근거 검색을 사용할 수 없습니다. 잠시 후 다시 시도하세요."),
+    RETRIEVAL_BUSY(503, "임베딩 처리량이 초과되었습니다. 잠시 후 다시 시도하세요."),
     USER_NOT_FOUND(HttpStatus.BAD_GATEWAY.value(), "해당 사용자를 찾을 수 없습니다."),
     USER_ID_NULL(HttpStatus.UNAUTHORIZED.value(), "사용자 정보가 유효하지 않습니다."),
     CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "채팅방을 찾을 수 없습니다."),
@@ -23,6 +26,8 @@ public enum ErrorCode {
     USER_NOT_AUTHENTICATED(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다."),
     PASSWORD_FAIL(HttpStatus.BAD_REQUEST.value(), "비밀번호가 일치하지 않습니다."),
     TOKEN_FAIL(HttpStatus.BAD_REQUEST.value(), "유효하지 않은 리프레시 토큰입니다."),
+    INVALID_REFRESH_TOKEN(401, "유효하지 않거나 만료·폐기된 Refresh 토큰입니다."),
+    REFRESH_TOKEN_REUSED(401, "Refresh 토큰 재사용이 감지되어 로그인 세션이 폐기되었습니다."),
     DUPLICATED_EMAIL(HttpStatus.BAD_REQUEST.value(), "이미 존재하는 이메일입니다."),
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST.value(), "잘못된 형식입니다.");
     private final int status;

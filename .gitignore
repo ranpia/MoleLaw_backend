@@ -38,8 +38,19 @@ out/
 # VS Code
 .vscode/
 
+# Codex 로컬 설정
+/.codex/
+
 # 환경 변수
 .env
 .env.compose
+/secrets.txt
 /docker/ollama/results/
 /molelaw-ollama-cpu.tar
+
+# 실험 입력·보고서·캐시는 experiment/legal-embedding-evaluation 브랜치에서 관리
+/evaluation/
+
+# Python generated caches
+__pycache__/
+*.py[cod]

@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.auth.security;
 
+import java.time.Duration;
+
 import com.MoleLaw_backend.user.entity.User;
 import com.MoleLaw_backend.user.repository.UserRepository;
 import com.MoleLaw_backend.common.exception.MolelawException;
@@ -16,14 +18,14 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RefreshTokenValidationTest {
-    private final JwtUtil jwt = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes");
+    private final JwtUtil jwt = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes", Duration.ofMinutes(5));
     private final CookieUtil cookies = mock(CookieUtil.class);
     private final UserRepository users = mock(UserRepository.class);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final MockHttpServletResponse response = new MockHttpServletResponse();
-    private final AccessTokenStore store = mock(AccessTokenStore.class);
-    private final UserService service = new UserService(users, mock(PasswordEncoder.class), jwt, cookies,
-            new AccessTokenService(jwt, store));
+    private final RefreshTokenService refresh = new RefreshTokenService(new InMemoryRefreshTokenStore());
+    private final UserService service = new UserService(users, mock(PasswordEncoder.class), cookies,
+            new AuthTokenService(new AccessTokenService(jwt), refresh, cookies), refresh);
 
     @BeforeEach
     void setUp() {
@@ -33,7 +35,7 @@ class RefreshTokenValidationTest {
     @Test
     void rejectsAccessTokenInRefreshCookieBeforeUserLookup() {
         when(cookies.getTokenFromCookie(request, "refreshToken"))
-                .thenReturn(jwt.generateAccessToken("u@example.com", "local"));
+                .thenReturn(jwt.generateAccessToken(1L));
         assertThatThrownBy(() -> service.reissue(request, response)).isInstanceOf(MolelawException.class);
         verifyNoInteractions(users);
     }
@@ -41,8 +43,8 @@ class RefreshTokenValidationTest {
     @Test
     void rejectsDeletedUsersRefreshToken() {
         when(cookies.getTokenFromCookie(request, "refreshToken"))
-                .thenReturn(jwt.generateRefreshToken("u@example.com", "local"));
-        when(users.findByEmailAndProvider("u@example.com", "local")).thenReturn(Optional.empty());
+                .thenReturn(refresh.issue(1L).value());
+        when(users.findByIdForUpdate(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.reissue(request, response)).isInstanceOf(MolelawException.class);
         verify(cookies, never()).addJwtCookie(any(), anyString(), anyString());
     }
@@ -50,11 +52,18 @@ class RefreshTokenValidationTest {
     @Test
     void validRefreshWorksWithoutAnAccessToken() {
         when(cookies.getTokenFromCookie(request, "refreshToken"))
-                .thenReturn(jwt.generateRefreshToken("u@example.com", "local"));
-        when(users.findByEmailAndProvider("u@example.com", "local"))
-                .thenReturn(Optional.of(User.builder().email("u@example.com").provider("local").build()));
+                .thenReturn(refresh.issue(1L).value());
+        when(users.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(User.builder().id(1L).email("u@example.com").provider("local").build()));
         assertThat(jwt.validateAccessToken(service.reissue(request, response).getAccessToken())).isTrue();
         verify(cookies).addJwtCookie(eq(response), eq("accessToken"), anyString());
-        verify(store).register(anyString(), eq("u@example.com:local"), any());
+        verify(cookies).addRefreshCookie(eq(response), anyString(), any());
+    }
+
+    @Test
+    void rejectsLegacyRefreshJwtBeforeUserLookup() {
+        when(cookies.getTokenFromCookie(request, "refreshToken")).thenReturn(TestJwtTokens.legacyRefresh(1L));
+        assertThatThrownBy(() -> service.reissue(request, response)).isInstanceOf(MolelawException.class);
+        verifyNoInteractions(users);
     }
 }

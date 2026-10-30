@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -12,7 +13,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "legal_source")
+@Table(name = "legal_source", indexes = @Index(name = "idx_legal_source_history", columnList = "source_type,external_id,collected_at,id"))
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class LegalSource {
@@ -29,7 +30,7 @@ public class LegalSource {
     @Column(updatable = false)
     private String lawId;
 
-    @Column(updatable = false)
+    @Column(length = 8, updatable = false)
     private String effectiveDate;
 
     @Column(nullable = false, length = 2048, updatable = false)

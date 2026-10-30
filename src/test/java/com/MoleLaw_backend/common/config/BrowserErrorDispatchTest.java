@@ -19,7 +19,7 @@ import java.net.http.HttpResponse;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestAccessTokenStoreConfig.class)
+@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestRefreshTokenStoreConfig.class)
 @ActiveProfiles("test")
 class BrowserErrorDispatchTest {
     @MockitoBean ChatModel chatModel;
@@ -45,7 +45,7 @@ class BrowserErrorDispatchTest {
         var externalOrigin = client.send(login(base).header("Origin", "https://attacker.example")
                 .header("X-XSRF-TOKEN", token).build(), HttpResponse.BodyHandlers.ofString());
         assertEquals(403, externalOrigin.statusCode());
-        var protectedRequest = client.send(HttpRequest.newBuilder(URI.create(base + "/api/auth/me")).GET().build(),
+        var protectedRequest = client.send(HttpRequest.newBuilder(URI.create(base + "/api/users/me")).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(401, protectedRequest.statusCode());
         var directError = client.send(HttpRequest.newBuilder(URI.create(base + "/error")).GET().build(),

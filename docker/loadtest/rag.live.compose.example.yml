@@ -1,0 +1,9 @@
+# Explicit future paid mode only. Preparation does not load this file.
+services:
+  rag-model:
+    environment:
+      RAG_MODEL_MODE: live
+      RAG_MODEL_MAX_CALLS: "8"
+    networks: [default, model_download]
+    volumes:
+      - ../../build/loadtest-secrets/openai-key:/run/secrets/openai-key:ro

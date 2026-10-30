@@ -17,7 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestAccessTokenStoreConfig.class)
+@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestRefreshTokenStoreConfig.class)
 @ActiveProfiles("test")
 class LawMateBackendApplicationTests {
 
@@ -29,6 +29,15 @@ class LawMateBackendApplicationTests {
     private DataSource dataSource;
     @Autowired
     private ChatClient chatClient;
+    @Autowired
+    private org.springframework.core.env.Environment environment;
+
+    @Test
+    void defaultProfilesDoNotExposeManagementHttpOrEndpoints() {
+        assertEquals(-1, environment.getProperty("management.server.port", Integer.class));
+        assertEquals("none", environment.getProperty("management.endpoints.access.default"));
+        assertEquals(0, environment.getProperty("management.endpoints.web.exposure.include", String[].class).length);
+    }
 
     @Test
     void contextLoadsWithoutExternalDatabaseOrModelCalls() throws Exception {

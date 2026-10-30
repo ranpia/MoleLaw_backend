@@ -1,11 +1,25 @@
 server:
   forward-headers-strategy: framework
 
+# No management HTTP listener or exposed endpoints in default/deployed profiles.
+management:
+  server:
+    port: -1
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: []
+
 spring:
+  application:
+    name: MoleLaw_backend
   config:
     import: optional:file:.env[.properties]
 
   profiles:
+    active: ${SPRING_PROFILES_ACTIVE:mysql}
     default: mysql
     group:
       local:
@@ -26,12 +40,16 @@ spring:
         enabled: ${REDIS_SSL_ENABLED:false}
 
   ai:
+    follow-up-plan:
+      model: ${APP_AI_FOLLOW_UP_PLAN_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_FOLLOW_UP_PLAN_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_FOLLOW_UP_PLAN_MAX_COMPLETION_TOKENS:2048}
     openai:
       api-key: ${OPENAI_API_KEY:}
       chat:
         options:
-          model: ${OPENAI_CHAT_MODEL:gpt-4}
-          temperature: 0.5
+          model: ${OPENAI_CHAT_MODEL:gpt-5.4-mini}
+          reasoning-effort: ${OPENAI_CHAT_REASONING_EFFORT:none}
       embedding:
         options:
           model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
@@ -63,6 +81,7 @@ spring:
             user-name-attribute: email
 
 springdoc:
+  override-with-generic-response: false
   api-docs:
     enabled: false
     path: /v3/api-docs
@@ -98,3 +117,90 @@ cookie:
 
 jwt:
   secret: ${JWT_SECRET}
+  # Production/default lifetime. Local development overrides this for convenience.
+  access-ttl: 5m
+
+app:
+  case-search:
+    body-max-input-tokens: ${APP_CASE_SEARCH_BODY_MAX_INPUT_TOKENS:32000}
+    max-api-calls: ${APP_CASE_SEARCH_MAX_API_CALLS:64}
+    max-candidates: ${APP_CASE_SEARCH_MAX_CANDIDATES:5000}
+    max-details: ${APP_CASE_SEARCH_MAX_DETAILS:6}
+    details-per-search: ${APP_CASE_SEARCH_DETAILS_PER_SEARCH:4}
+    max-selected: ${APP_CASE_SEARCH_MAX_SELECTED:2}
+    minimum-score: ${APP_CASE_SEARCH_MINIMUM_SCORE:60}
+    excerpt-chars: ${APP_CASE_SEARCH_EXCERPT_CHARS:4000}
+    max-rerank-calls: ${APP_CASE_SEARCH_MAX_RERANK_CALLS:2}
+  chat-stream:
+    max-concurrent: ${APP_CHAT_STREAM_MAX_CONCURRENT:4}
+    write-threads: ${APP_CHAT_STREAM_WRITE_THREADS:4}
+    timeout: ${APP_CHAT_STREAM_TIMEOUT:20m}
+  law-reranker:
+    enabled: ${APP_LAW_RERANKER_ENABLED:false}
+    base-url: ${APP_LAW_RERANKER_BASE_URL:http://localhost:11437}
+    model: ${APP_LAW_RERANKER_MODEL:BAAI/bge-reranker-v2-m3}
+    revision: ${APP_LAW_RERANKER_REVISION:953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e}
+    candidate-limit: ${APP_LAW_RERANKER_CANDIDATE_LIMIT:50}
+    read-timeout-millis: ${APP_LAW_RERANKER_READ_TIMEOUT_MILLIS:30000}
+  law-candidate-selection:
+    minimum-score: ${APP_LAW_CANDIDATE_MINIMUM_SCORE:70}
+    max-candidates: ${APP_LAW_CANDIDATE_MAX_CANDIDATES:2}
+  law-retrieval:
+    backend: ${APP_LAW_RETRIEVAL_BACKEND:QDRANT}
+    processing-timeout: ${APP_LAW_RETRIEVAL_PROCESSING_TIMEOUT:3m}
+  law-ai-search:
+    base-url: ${APP_LAW_AI_SEARCH_BASE_URL:https://www.law.go.kr/DRF}
+  ai:
+    case-rerank:
+      model: ${APP_AI_CASE_RERANK_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_CASE_RERANK_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_CASE_RERANK_MAX_COMPLETION_TOKENS:4096}
+    question-suggestion:
+      model: ${APP_AI_QUESTION_SUGGESTION_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_QUESTION_SUGGESTION_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_QUESTION_SUGGESTION_MAX_COMPLETION_TOKENS:2048}
+    case-query:
+      model: ${APP_AI_CASE_QUERY_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_CASE_QUERY_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_CASE_QUERY_MAX_COMPLETION_TOKENS:2048}
+    read-timeout-ms: ${APP_AI_READ_TIMEOUT_MS:120000}
+    read:
+      model: ${APP_AI_READ_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_READ_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_READ_MAX_COMPLETION_TOKENS:4096}
+    question:
+      model: ${APP_AI_QUESTION_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_QUESTION_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_QUESTION_MAX_COMPLETION_TOKENS:4096}
+    candidate:
+      model: ${APP_AI_CANDIDATE_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_CANDIDATE_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_CANDIDATE_MAX_COMPLETION_TOKENS:8192}
+    evidence:
+      catalog-max-input-tokens: ${APP_AI_EVIDENCE_CATALOG_MAX_INPUT_TOKENS:8000}
+      body-max-input-tokens: ${APP_AI_EVIDENCE_BODY_MAX_INPUT_TOKENS:12000}
+      decision-max-input-tokens: ${APP_AI_EVIDENCE_DECISION_MAX_INPUT_TOKENS:32000}
+      model: ${APP_AI_EVIDENCE_MODEL:gpt-5.4}
+      reasoning-effort: ${APP_AI_EVIDENCE_REASONING_EFFORT:medium}
+      max-completion-tokens: ${APP_AI_EVIDENCE_MAX_COMPLETION_TOKENS:12288}
+      max-input-tokens: ${APP_AI_EVIDENCE_MAX_INPUT_TOKENS:8000}
+    answer:
+      model: ${APP_AI_ANSWER_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_ANSWER_REASONING_EFFORT:medium}
+      max-completion-tokens: ${APP_AI_ANSWER_MAX_COMPLETION_TOKENS:16384}
+  chat:
+    encryption:
+      key: ${CHAT_ENCRYPTION_KEY:}
+      key-version: ${CHAT_ENCRYPTION_KEY_VERSION:v1}
+  law-vector:
+    gpu-count: ${APP_LAW_VECTOR_GPU_COUNT:0}
+    threads: ${APP_LAW_VECTOR_THREADS:6}
+    embedding-max-calls: ${APP_LAW_VECTOR_EMBEDDING_MAX_CALLS:1024}
+    indexing-max-calls: ${APP_LAW_VECTOR_INDEXING_MAX_CALLS:1024}
+    embedding-timeout-seconds: ${APP_LAW_VECTOR_EMBEDDING_TIMEOUT_SECONDS:900}
+    embedding-read-timeout-millis: ${APP_LAW_VECTOR_EMBEDDING_READ_TIMEOUT_MILLIS:120000}
+    enabled: ${APP_LAW_VECTOR_ENABLED:false}
+    embedding-base-url: ${APP_LAW_VECTOR_EMBEDDING_BASE_URL:http://localhost:11436}
+    qdrant-base-url: ${APP_LAW_VECTOR_QDRANT_BASE_URL:http://localhost:6333}
+    collection-name: ${APP_LAW_VECTOR_COLLECTION_NAME:molelaw_service_law_kure_v1}
+    api-key: ${QDRANT_API_KEY:}

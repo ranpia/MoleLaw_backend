@@ -1,0 +1,36 @@
+name: molelaw-kure-service
+services:
+  kure:
+    image: molelaw/kure-service:single-vector-cpu-v2
+    build:
+      context: .
+    ports:
+      - "127.0.0.1:${KURE_SERVICE_PORT:-11437}:11434"
+    environment:
+      HF_HOME: /models
+      EMBEDDING_DEVICE: cpu
+      RERANKER_ENABLED: ${KURE_RERANKER_ENABLED:-false}
+      RERANKER_MODEL: ${KURE_RERANKER_MODEL:-BAAI/bge-reranker-v2-m3}
+      RERANKER_REVISION: ${KURE_RERANKER_REVISION:-953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e}
+      RERANKER_BATCH_SIZE: ${KURE_RERANKER_BATCH_SIZE:-2}
+      RERANKER_MAX_TOKENS: ${KURE_RERANKER_MAX_TOKENS:-1024}
+      EMBEDDING_THREADS: ${KURE_THREADS:-6}
+      EMBEDDING_BATCH_SIZE: ${KURE_BATCH_SIZE:-16}
+      EMBEDDING_QUEUE_CAPACITY: ${KURE_QUEUE_CAPACITY:-4}
+      EMBEDDING_QUEUE_WAIT_SECONDS: ${KURE_QUEUE_WAIT_SECONDS:-5}
+    volumes:
+      - kure_models:/models
+    cpus: ${KURE_CPUS:-6.0}
+    mem_limit: ${KURE_MEMORY_LIMIT:-8g}
+    memswap_limit: ${KURE_MEMORY_LIMIT:-8g}
+    restart: "no"
+    healthcheck:
+      start_period: ${KURE_START_PERIOD:-10m}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  kure_models:
+    name: ${KURE_MODEL_VOLUME:-molelaw-kure-models}

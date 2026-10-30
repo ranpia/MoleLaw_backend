@@ -20,9 +20,70 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestAccessTokenStoreConfig.class)
+@org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestRefreshTokenStoreConfig.class)
 @ActiveProfiles("test")
 class OpenApiDocumentationTest {
+    @Test void documentsEvidencePreviewsSavedSnapshotsAndBodylessDeletion() throws Exception {
+        var document = mapper.readTree(mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        var schemas = document.path("components").path("schemas");
+        assertTrue(schemas.path("InitialAnswerStreamResponse").path("properties").path("type").path("enum").toString().contains("evidence"));
+        assertTrue(schemas.path("InitialAnswerStreamResponse").path("properties").has("evidence"));
+        var update = schemas.path("EvidenceUpdateResponse").path("properties");
+        assertTrue(update.path("state").path("enum").toString().contains("PREVIEW"));
+        assertTrue(update.path("state").path("enum").toString().contains("SAVED"));
+        assertTrue(update.path("items").path("items").path("$ref").asText().endsWith("EvidenceSummaryResponse"));
+        var remove = document.path("paths").path("/api/chat-rooms/{roomId}/evidence/{evidenceId}").path("delete");
+        assertFalse(remove.has("requestBody"));
+        assertTrue(remove.path("responses").has("204"));
+        assertTrue(remove.path("responses").path("204").path("content").isMissingNode());
+        assertTrue(remove.path("description").asText().contains("X-XSRF-TOKEN"));
+        for (String path : java.util.List.of("/api/chat-rooms/stream", "/api/chat-rooms/ndjson", "/api/chat-rooms/{roomId}/messages/ndjson"))
+            assertTrue(document.path("paths").path(path).path("post").path("description").asText().contains("PREVIEW"));
+    }
+
+    @Test void documentsOrdinaryFollowUpRoutingAndBoundedCitationRepair() throws Exception {
+        var document = mapper.readTree(mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        String description = document.path("paths").path("/api/chat-rooms/{roomId}/messages/ndjson")
+                .path("post").path("description").asText();
+        assertTrue(description.contains("일반 질문은 판례 본문 읽기 없이"));
+        assertTrue(description.contains("ANSWER_REPAIR"));
+        assertTrue(description.contains("completed.response.answer"));
+    }
+
+    @Test
+    void documentsUserSelectedCaseSearchLawForJsonAndNdjson() throws Exception {
+        var document = mapper.readTree(mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        var schema = document.path("components").path("schemas").path("MessageRequest");
+        var selection = schema.path("properties").path("caseSearchLawEvidenceIds");
+        assertFalse(selection.path("items").path("pattern").asText().isBlank());
+        assertFalse(selection.has("maxItems"));
+        assertTrue(selection.path("description").asText().contains("LAW_"));
+        assertTrue(selection.path("type").toString().contains("null"));
+        assertFalse(schema.path("required").toString().contains("caseSearchLawEvidenceIds"));
+        assertFalse(schema.path("properties").has("caseSearchSelectionValid"));
+        for (String path : java.util.List.of("/api/chat-rooms/{roomId}/messages", "/api/chat-rooms/{roomId}/messages/ndjson")) {
+            var operation = document.path("paths").path(path).path("post");
+            assertTrue(operation.path("description").asText().contains("caseSearchLawEvidenceIds"));
+            assertTrue(operation.path("requestBody").path("content").path("application/json").path("examples")
+                    .toString().contains("caseSearchLawEvidenceIds"));
+        }
+    }
+
+    @Test
+    void documentsTitleUpdateAndBothRequiredPasswordFields() throws Exception {
+        var document = mapper.readTree(mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        var required = document.path("components").path("schemas").path("ChangePasswordRequest").path("required");
+        assertTrue(required.toString().contains("currentPassword"));
+        assertTrue(required.toString().contains("newPassword"));
+        assertTrue(document.path("paths").path("/api/chat-rooms/{roomId}/title").path("patch")
+                .path("responses").has("204"));
+        var suggestion = document.path("components").path("schemas").path("SuggestedInitialQuestion").path("required").toString();
+        for (String field : java.util.List.of("id", "label", "question")) assertTrue(suggestion.contains(field));
+    }
     @MockitoBean ChatModel chatModel;
     @MockitoBean EmbeddingModel embeddingModel;
     @Autowired MockMvc mvc;
@@ -34,8 +95,9 @@ class OpenApiDocumentationTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
         Set<String> verbs = Set.of("get", "post", "put", "patch", "delete");
         Set<String> publicPaths = Set.of("/api/auth/signup", "/api/auth/login", "/api/auth/logout",
-                "/api/auth/reissue", "/api/auth/csrf");
+                "/api/auth/refresh", "/api/auth/csrf");
         int count = 0;
+        Set<String> actualOperations = new java.util.HashSet<>();
         var paths = document.path("paths").fields();
         while (paths.hasNext()) {
             var path = paths.next();
@@ -45,8 +107,10 @@ class OpenApiDocumentationTest {
                 if (!verbs.contains(method.getKey())) continue;
                 count++;
                 String context = method.getKey() + " " + path.getKey();
+                actualOperations.add(context);
                 JsonNode operation = method.getValue();
-                if (!path.getKey().equals("/api/auth/csrf")) {
+                if (Set.of("/api/auth/signup", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout", "/api/users/me/password").contains(path.getKey())
+                        || (path.getKey().equals("/api/users/me") && method.getKey().equals("delete"))) {
                     JsonNode unavailable = operation.path("responses").path("503").path("content").path("application/json");
                     assertTrue(unavailable.has("schema"), context);
                     assertEquals("AUTH_STORE_UNAVAILABLE", unavailable.path("example").path("error").path("code").asText(), context);
@@ -95,7 +159,28 @@ class OpenApiDocumentationTest {
                 assertTrue(success, context);
             }
         }
-        assertEquals(20, count);
+        assertEquals(30, count);
+        assertEquals(Set.of(
+                "get /api/auth/csrf", "post /api/auth/signup", "post /api/auth/login",
+                "post /api/auth/refresh", "post /api/auth/logout",
+                "get /api/users/me", "delete /api/users/me", "patch /api/users/me/password", "patch /api/users/me/nickname",
+                "get /api/chat-rooms", "post /api/chat-rooms", "delete /api/chat-rooms/{roomId}", "patch /api/chat-rooms/{roomId}/title",
+                "get /api/chat-rooms/{roomId}/messages", "post /api/chat-rooms/{roomId}/messages",
+                "get /api/chat-rooms/{roomId}/evidence", "get /api/chat-rooms/{roomId}/evidence/{evidenceId}",
+                "delete /api/chat-rooms/{roomId}/evidence/{evidenceId}",
+                "get /api/laws", "post /api/laws/search", "get /api/precedents", "get /api/precedents/{id}",
+                "post /api/law-keywords", "post /api/legal-answers", "post /api/legal-answers/suggestions",
+                "post /api/legal-answers/stream", "post /api/chat-rooms/stream",
+                "post /api/legal-answers/ndjson", "post /api/chat-rooms/ndjson",
+                "post /api/chat-rooms/{roomId}/messages/ndjson"), actualOperations);
+        for (String path : java.util.List.of("/api/legal-answers/stream", "/api/chat-rooms/stream")) {
+            assertTrue(document.path("paths").path(path).path("post").path("responses").path("200")
+                    .path("content").has("text/event-stream"));
+        }
+        for (String path : java.util.List.of("/api/legal-answers/ndjson", "/api/chat-rooms/ndjson"))
+            assertTrue(document.path("paths").path(path).path("post").path("responses").path("200")
+                    .path("content").has("application/x-ndjson"));
+        assertFalse(document.path("paths").has("/api/test/import"));
         JsonNode schemes = document.path("components").path("securitySchemes");
         assertFalse(schemes.has("CsrfToken"));
         assertFalse(schemes.has("BearerAuth"));
@@ -105,13 +190,38 @@ class OpenApiDocumentationTest {
                 .path("responses").has("200"));
         assertFalse(document.path("paths").path("/api/auth/signup").path("post")
                 .path("responses").has("302"));
-        assertTrue(document.path("paths").path("/api/auth/reissue").path("post")
-                .path("responses").has("400"));
+        assertTrue(document.path("paths").path("/api/auth/refresh").path("post")
+                .path("responses").has("401"));
+        assertFalse(document.path("components").path("schemas").path("AuthResponse").path("properties").has("refreshToken"));
+        assertTrue(document.path("components").path("schemas").path("AuthResponse").path("properties").has("accessToken"));
         verifyLocalReferences(document, document);
-        JsonNode userSchema = resolve(document, document.path("paths").path("/api/auth/me").path("get")
+        JsonNode userSchema = resolve(document, document.path("paths").path("/api/users/me").path("get")
                 .path("responses").path("200").path("content").path("application/json").path("schema"));
         JsonNode userData = resolve(document, userSchema.path("properties").path("data"));
         assertTrue(userData.path("properties").has("email"), "User response must retain generic data schema");
+        JsonNode lawOperation = document.path("paths").path("/api/laws").path("get");
+        JsonNode lawSchema = lawOperation.path("responses").path("200").path("content")
+                .path("application/json").path("schema");
+        assertEquals("array", lawSchema.path("type").asText());
+        JsonNode lawItem = resolve(document, lawSchema.path("items"));
+        assertTrue(lawItem.path("properties").has("lawName"));
+        assertTrue(lawItem.path("properties").has("lawType"));
+        assertTrue(lawOperation.path("responses").has("400"));
+        JsonNode casesOperation = document.path("paths").path("/api/precedents").path("get");
+        assertEquals("array", casesOperation.path("responses").path("200").path("content")
+                .path("application/json").path("schema").path("type").asText());
+        Set<String> caseParameters = new java.util.HashSet<>();
+        for (JsonNode parameter : casesOperation.path("parameters")) {
+            caseParameters.add(parameter.path("name").asText());
+            if (parameter.path("name").asText().equals("query")) assertTrue(parameter.path("required").asBoolean());
+        }
+        assertTrue(caseParameters.containsAll(Set.of("query", "search", "page", "display", "referenceLaw", "courtType", "courtName")));
+        JsonNode caseDetail = document.path("paths").path("/api/precedents/{id}").path("get");
+        JsonNode caseDetailSchema = resolve(document, caseDetail.path("responses").path("200").path("content")
+                .path("application/json").path("schema"));
+        assertTrue(hasSchemaProperty(document, caseDetailSchema, "판례내용"));
+        assertTrue(hasSchemaProperty(document, caseDetailSchema, "판례일련번호"));
+        assertTrue(caseDetail.path("responses").has("400"));
     }
 
     @Test
@@ -126,6 +236,32 @@ class OpenApiDocumentationTest {
 
     private JsonNode resolve(JsonNode document, JsonNode schema) {
         return schema.has("$ref") ? document.at(schema.path("$ref").asText().substring(1)) : schema;
+    }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser
+    @org.junit.jupiter.api.extension.ExtendWith(org.springframework.boot.test.system.OutputCaptureExtension.class)
+    void missingDevToolsAndOtherResourcesRemain404WithoutServerErrorTrace(
+            org.springframework.boot.test.system.CapturedOutput output) throws Exception {
+        for (String path : new String[]{"/.well-known/appspecific/com.chrome.devtools.json", "/missing-resource.js"}) {
+            var result = mvc.perform(get(path)).andExpect(status().isNotFound()).andReturn();
+            assertInstanceOf(org.springframework.web.servlet.resource.NoResourceFoundException.class,
+                    result.getResolvedException());
+            JsonNode body = mapper.readTree(result.getResponse().getContentAsString());
+            assertEquals("NOT_FOUND", body.path("error").path("code").asText());
+            assertEquals(404, body.path("error").path("status").asInt());
+        }
+        assertFalse(output.getAll().contains("Global exception handler 진입"));
+        assertFalse(output.getAll().contains("\tat org.springframework.web.servlet.resource.ResourceHttpRequestHandler"));
+    }
+
+    private boolean hasSchemaProperty(JsonNode document, JsonNode schema, String name) {
+        JsonNode resolved = resolve(document, schema);
+        if (resolved.path("properties").has(name)) return true;
+        for (JsonNode member : resolved.path("allOf")) {
+            if (hasSchemaProperty(document, member, name)) return true;
+        }
+        return false;
     }
 
     private void verifyLocalReferences(JsonNode document, JsonNode node) {
@@ -146,5 +282,20 @@ class OpenApiDocumentationTest {
             String example = exampleNode.path("value").asText();
             if (example.startsWith("{") || example.startsWith("[")) mapper.readTree(example);
         }
+    }
+
+    @Test
+    void documentsStatelessAccessAndRefreshOnlyRevocation() throws Exception {
+        var result = mvc.perform(get("/v3/api-docs")).andExpect(status().isOk()).andReturn();
+        JsonNode document = mapper.readTree(result.getResponse().getContentAsString());
+        String info = document.path("info").path("description").asText();
+        assertTrue(info.contains("5분 stateless"));
+        assertTrue(info.contains("tokenVersion=3"));
+        assertFalse(info.contains("Redis jti 등록 확인"));
+        String logout = document.at("/paths/~1api~1auth~1logout/post/description").asText();
+        assertTrue(logout.contains("최대 5분"));
+        assertFalse(document.at("/paths/~1api~1auth~1me/get/responses").has("503"));
+        assertTrue(document.at("/paths/~1api~1auth~1logout/post/responses").has("503"));
+        assertFalse(logout.contains("Access의 Redis 등록"));
     }
 }

@@ -36,6 +36,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'me.paulschwarz:spring-dotenv:3.0.0'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
@@ -51,6 +53,8 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'
+	implementation 'org.flywaydb:flyway-core'
+	runtimeOnly 'org.flywaydb:flyway-mysql'
 	implementation 'org.springframework.ai:spring-ai-starter-model-openai'
 	implementation 'org.springframework.ai:spring-ai-qdrant-store'
 	implementation 'io.grpc:grpc-api:1.65.1'
@@ -59,6 +63,7 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testRuntimeOnly 'com.h2database:h2'
+	testImplementation 'org.testcontainers:mysql'
 
 	// JWT (JJWT)
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -69,15 +74,174 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live' }
+	// Multiple Spring contexts, metrics registries and tokenizer dictionaries exceed Gradle's 512 MiB default.
+	maxHeapSize = '1g'
+	useJUnitPlatform { excludeTags 'openlaw-live', 'redis-live', 'mysql-integration', 'redis-integration', 'qdrant-integration', 'postman-simulation', 'embedding-live', 'evidence-decision-live', 'question-analysis-live', 'case-search-intent-live', 'answer-generation-live', 'rag-preparation' }
 }
 
-tasks.register('redisLiveTest', Test) {
-    description = 'Verifies Access token registration, TTL and revocation against local Redis.'
+tasks.register('caseSearchIntentLiveTest', Test) {
+    description = 'Checks real LLM case intent and selection from public metadata; incurs API usage, no room data writes.'
     group = 'verification'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
-    useJUnitPlatform { includeTags 'redis-live' }
+    useJUnitPlatform { includeTags 'case-search-intent-live' }
+    outputs.upToDateWhen { false }
+    testLogging { showStandardStreams = true }
+}
+
+tasks.register('questionAnalysisLiveTest', Test) {
+    description = 'Checks intent extraction with one real OpenAI call; incurs API usage, without retrieval or embedding.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'question-analysis-live' }
+    outputs.upToDateWhen { false }
+    testLogging { showStandardStreams = true }
+}
+
+tasks.register('evidenceDecisionLiveTest', Test) {
+    description = 'Checks four evidence decisions with the configured real OpenAI model; incurs API usage.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'evidence-decision-live' }
+    outputs.upToDateWhen { false }
+    testLogging { showStandardStreams = true }
+}
+
+tasks.register('embeddingLiveTest', Test) {
+    description = 'Runs both law vector tools against the real local KURE server and an isolated Qdrant.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'embedding-live' }
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
+    testLogging { showStandardStreams = true }
+}
+
+tasks.register('lawEtlSimulationTest', Test) {
+    description = 'Runs ETL against the local Postman embedding simulation and isolated Qdrant; requires LAW_VECTOR_SIMULATION_URL.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    filter { includeTestsMatching 'com.MoleLaw_backend.law.service.tool.LawVectorPostmanSimulationTest' }
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('aiLawSearchSimulationTest', Test) {
+    description = 'Checks aiSearch HTTP contract, failures, and cited consultation persistence without Qdrant.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter {
+        includeTestsMatching 'com.MoleLaw_backend.law.client.openlaw.AiLawSearchSimulationTest'
+        includeTestsMatching 'com.MoleLaw_backend.common.config.AiSearchConsultationSimulationTest'
+    }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('initialConsultationSimulationTest', Test) {
+    description = 'Checks question-to-first-answer HTTP flow, ETL and atomic persistence with Postman embeddings and isolated Qdrant.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.common.config.InitialConsultationSimulationTest' }
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('lawEffectiveDateSimulationTest', Test) {
+    description = 'Verifies effective-date law detail requests over real HTTP against the local Postman fixture.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.law.service.search.LawEffectiveDateSimulationTest' }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('followUpConsultationSimulationTest', Test) {
+    description = 'Checks room-scoped precedent consent, tool callbacks, HTTP transport, persistence and evidence APIs.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.common.config.FollowUpConsultationSimulationTest' }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('initialQuestionSuggestionSimulationTest', Test) {
+    description = 'Checks recommendation ChatClient options and errors over HTTP against a synthetic model provider.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.chat.service.answer.InitialQuestionSuggestionSimulationTest' }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('answerStreamSimulationTest', Test) {
+    description = 'Exercises real answer streaming and persistence against an isolated synthetic HTTP model.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'postman-simulation' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.chat.controller.AnswerStreamSimulationTest' }
+    outputs.upToDateWhen { false }
+    maxHeapSize = '1g'
+}
+
+tasks.register('answerGenerationLiveTest', Test) {
+    description = 'Explicit paid final-writer smoke and 1/2 concurrency; request/cost capped, no DB or RAG.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'answer-generation-live' }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('ragPreparationContractTest', Test) {
+    description = 'Checks generated RAG fixture against the actual application fingerprint and article chunker, without network calls.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'rag-preparation' }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('qdrantIntegrationTest', Test) {
+    description = 'Validates isolated Qdrant collection metadata, vector upserts and distinct-article top-15 retrieval.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'qdrant-integration' }
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('redisIntegrationTest', Test) {
+    description = 'Validates Refresh Lua rotation, reuse, revocation and failure handling on isolated Redis.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'redis-integration' }
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('mysqlIntegrationTest', Test) {
+    description = 'Migrates an isolated MySQL 8.4 container and validates all JPA mappings and data constraints.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'mysql-integration' }
+    // Docker 29 rejects docker-java's older default API; keep this local to Docker tests.
+    systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
     outputs.upToDateWhen { false }
 }
 

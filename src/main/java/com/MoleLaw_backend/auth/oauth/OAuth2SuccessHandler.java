@@ -2,9 +2,7 @@ package com.MoleLaw_backend.auth.oauth;
 
 import com.MoleLaw_backend.user.entity.User;
 import com.MoleLaw_backend.user.repository.UserRepository;
-import com.MoleLaw_backend.auth.security.CookieUtil;
-import com.MoleLaw_backend.auth.security.JwtUtil;
-import com.MoleLaw_backend.auth.security.AccessTokenService;
+import com.MoleLaw_backend.auth.security.AuthTokenService;
 import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import jakarta.servlet.ServletException;
@@ -18,71 +16,58 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final JwtUtil jwtUtil;
-    private final CookieUtil cookieUtil;
     private final UserRepository userRepository;
-    private final AccessTokenService accessTokenService;
+    private final AuthTokenService authTokens;
 
     @Value("${frontend.uri}")
     private String frontenduri;
 
-
     @Override
+    @jakarta.transaction.Transactional
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication)
             throws IOException, ServletException {
 
-
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        String email = oAuth2User.getAttribute("email");
-        String provider = oAuth2User.getAttribute("provider"); // 예: "google"
-
-
-        if (email == null || provider == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "이메일 또는 provider를 가져올 수 없습니다.");
+        if (!(authentication.getPrincipal() instanceof OAuth2User principal)) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid OAuth identity");
+            return;
+        }
+        Object userId = principal.getAttribute("userId");
+        Object providerValue = principal.getAttribute("provider");
+        Object subjectValue = principal.getAttribute("providerSubject");
+        if (!(userId instanceof Long id) || id <= 0
+                || !(providerValue instanceof String provider)
+                || !(subjectValue instanceof String subject) || subject.isBlank()
+                || !("google".equals(provider) || "kakao".equals(provider))) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid OAuth identity");
+            return;
+        }
+        User user = userRepository.findByIdForUpdate(id).orElse(null);
+        if (user == null || !provider.equals(user.getProvider())
+                || !subject.equals(user.getProviderSubject())) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid OAuth identity");
             return;
         }
 
-        // ✅ 유저가 존재하지 않으면 새로 저장
-        User user = userRepository.findByEmailAndProvider(email, provider)
-                .orElseGet(() -> {
-                    User newUser = User.builder()
-                            .email(email)
-                            .provider(provider)
-                            .build();
-                    return userRepository.save(newUser);
-                });
-
-        // ✅ JWT 발급
-        String accessToken;
         try {
-            accessToken = accessTokenService.issue(email, provider);
+            authTokens.issue(user.getId(), response);
         } catch (MolelawException e) {
-            if (e.getErrorCode() != ErrorCode.AUTH_STORE_UNAVAILABLE) {
+            if (e.getErrorCode() != ErrorCode.AUTH_STORE_UNAVAILABLE
+                    && e.getErrorCode() != ErrorCode.INVALID_REFRESH_TOKEN) {
                 throw e;
             }
-            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.setStatus(e.getErrorCode().getStatus());
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"AUTH_STORE_UNAVAILABLE\"}");
+            response.getWriter().write("{\"error\":\"" + e.getErrorCode().name() + "\"}");
             return;
         }
-        String refreshToken = jwtUtil.generateRefreshToken(email, provider);
-
-
-        // ✅ 쿠키 저장
-        cookieUtil.addJwtCookie(response, "accessToken", accessToken);
-        cookieUtil.addJwtCookie(response, "refreshToken", refreshToken);
-
-        // ✅ 리다이렉트
         response.sendRedirect(frontenduri);
     }
 }
-
 

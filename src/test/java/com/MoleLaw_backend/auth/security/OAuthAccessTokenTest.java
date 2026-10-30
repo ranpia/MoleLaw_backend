@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.auth.security;
 
+import java.time.Duration;
+
 import com.MoleLaw_backend.user.entity.User;
 import com.MoleLaw_backend.user.repository.UserRepository;
 import com.MoleLaw_backend.common.exception.ErrorCode;
@@ -23,21 +25,57 @@ import static org.mockito.Mockito.*;
 
 class OAuthAccessTokenTest {
     @Test
-    void oauthRegistersBeforeSettingCookiesAndRedirecting() throws Exception {
+    void missingOrMismatchedStableIdentityNeverIssuesTokens() throws Exception {
+        Fixture missing = new Fixture();
+        when(missing.authentication.getPrincipal()).thenReturn(new DefaultOAuth2User(
+                List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                Map.of("email", "oauth@example.com", "provider", "google"), "email"));
+        missing.handler.onAuthenticationSuccess(new MockHttpServletRequest(), missing.response, missing.authentication);
+        assertThat(missing.response.getStatus()).isEqualTo(401);
+        verifyNoInteractions(missing.cookies, missing.store);
+        verify(missing.users, never()).save(any());
+
+        Fixture mismatch = new Fixture();
+        when(mismatch.users.findByIdForUpdate(1L)).thenReturn(Optional.of(User.builder().id(1L)
+                .provider("google").providerSubject("different").build()));
+        mismatch.handler.onAuthenticationSuccess(new MockHttpServletRequest(), mismatch.response, mismatch.authentication);
+        assertThat(mismatch.response.getStatus()).isEqualTo(401);
+        verifyNoInteractions(mismatch.cookies, mismatch.store);
+    }
+
+    @Test
+    void oauthAccountUsesTheVerifiedPrimaryKey() throws Exception {
+        Fixture fixture = new Fixture();
+        when(fixture.users.findByIdForUpdate(42L)).thenReturn(Optional.of(User.builder().id(42L)
+                .email("oauth@example.com").provider("google").providerSubject("google-sub").build()));
+        when(fixture.authentication.getPrincipal()).thenReturn(new DefaultOAuth2User(
+                List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                Map.of("userId", 42L, "provider", "google", "providerSubject", "google-sub"), "userId"));
+        fixture.handler.onAuthenticationSuccess(new MockHttpServletRequest(), fixture.response, fixture.authentication);
+        var access = ArgumentCaptor.forClass(String.class);
+        var refresh = ArgumentCaptor.forClass(String.class);
+        verify(fixture.cookies).addJwtCookie(eq(fixture.response), eq("accessToken"), access.capture());
+        verify(fixture.cookies).addRefreshCookie(eq(fixture.response), refresh.capture(), any());
+        assertThat(fixture.jwt.getUserIdFromAccessToken(access.getValue())).isEqualTo(42L);
+        assertThat(fixture.refresh.userId(refresh.getValue())).isEqualTo(42L);
+    }
+
+    @Test
+    void oauthPersistsRefreshBeforeReturningCookiesAndRedirecting() throws Exception {
         Fixture fixture = new Fixture();
         fixture.handler.onAuthenticationSuccess(new MockHttpServletRequest(), fixture.response, fixture.authentication);
         var token = ArgumentCaptor.forClass(String.class);
         verify(fixture.cookies).addJwtCookie(eq(fixture.response), eq("accessToken"), token.capture());
         var identity = fixture.jwt.getAccessTokenIdentity(token.getValue());
-        verify(fixture.store).register(identity.tokenId(), "oauth@example.com:google", identity.expiresAt());
+        verify(fixture.store).create(eq(1L), anyString(), anyString(), any(), anyLong());
         assertThat(fixture.response.getRedirectedUrl()).isEqualTo("http://localhost:3000");
     }
 
     @Test
-    void oauthRegistrationFailureReturns503WithoutCookiesOrRedirect() throws Exception {
+    void oauthRefreshPersistenceFailureReturns503WithoutCookiesOrRedirect() throws Exception {
         Fixture fixture = new Fixture();
         doThrow(new MolelawException(ErrorCode.AUTH_STORE_UNAVAILABLE))
-                .when(fixture.store).register(anyString(), anyString(), any());
+                .when(fixture.store).create(anyLong(), anyString(), anyString(), any(), anyLong());
         fixture.handler.onAuthenticationSuccess(new MockHttpServletRequest(), fixture.response, fixture.authentication);
         assertThat(fixture.response.getStatus()).isEqualTo(503);
         assertThat(fixture.response.getContentAsString()).contains("AUTH_STORE_UNAVAILABLE");
@@ -46,23 +84,24 @@ class OAuthAccessTokenTest {
     }
 
     private static class Fixture {
-        final JwtUtil jwt = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes");
-        final AccessTokenStore store = mock(AccessTokenStore.class);
+        final JwtUtil jwt = new JwtUtil("test-secret-key-with-at-least-thirty-two-bytes", Duration.ofMinutes(5));
+        final RefreshTokenStore store = spy(new InMemoryRefreshTokenStore());
         final CookieUtil cookies = mock(CookieUtil.class);
         final UserRepository users = mock(UserRepository.class);
         final Authentication authentication = mock(Authentication.class);
         final MockHttpServletResponse response = new MockHttpServletResponse();
-        final OAuth2SuccessHandler handler = new OAuth2SuccessHandler(jwt, cookies, users,
-                new AccessTokenService(jwt, store));
+        final RefreshTokenService refresh = new RefreshTokenService(store);
+        final OAuth2SuccessHandler handler = new OAuth2SuccessHandler(users,
+                new AuthTokenService(new AccessTokenService(jwt), refresh, cookies));
 
         Fixture() {
             jwt.init();
             ReflectionTestUtils.setField(handler, "frontenduri", "http://localhost:3000");
             when(authentication.getPrincipal()).thenReturn(new DefaultOAuth2User(
                     List.of(new SimpleGrantedAuthority("ROLE_USER")),
-                    Map.of("email", "oauth@example.com", "provider", "google"), "email"));
-            when(users.findByEmailAndProvider("oauth@example.com", "google"))
-                    .thenReturn(Optional.of(User.builder().email("oauth@example.com").provider("google").build()));
+                    Map.of("userId", 1L, "provider", "google", "providerSubject", "google-sub"), "userId"));
+            when(users.findByIdForUpdate(1L))
+                    .thenReturn(Optional.of(User.builder().id(1L).email("oauth@example.com").provider("google").providerSubject("google-sub").build()));
         }
     }
 }

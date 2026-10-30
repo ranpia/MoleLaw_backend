@@ -1,26 +1,28 @@
 package com.MoleLaw_backend.chat.service;
 
 import com.MoleLaw_backend.chat.entity.ChatRoom;
+import com.MoleLaw_backend.chat.dto.answer.PreparedLegalAnswer;
 import com.MoleLaw_backend.chat.entity.Message;
 import com.MoleLaw_backend.user.entity.User;
 import com.MoleLaw_backend.chat.repository.ChatRoomRepository;
 import com.MoleLaw_backend.chat.repository.MessageRepository;
-import com.MoleLaw_backend.chat.dto.request.FirstMessageRequest;
-import com.MoleLaw_backend.chat.dto.request.MessageRequest;
+import com.MoleLaw_backend.chat.dto.request.CreateChatRoomRequest;
+import com.MoleLaw_backend.chat.dto.request.CreateMessageRequest;
 import com.MoleLaw_backend.chat.dto.response.ChatRoomResponse;
-import com.MoleLaw_backend.chat.dto.response.FirstMessageResponse;
-import com.MoleLaw_backend.chat.dto.response.GptAnswerResponse;
-import com.MoleLaw_backend.law.dto.response.KeywordAndTitleResponse;
+import com.MoleLaw_backend.chat.dto.response.ChatRoomCreationResponse;
+import com.MoleLaw_backend.chat.dto.response.LegalAnswerResponse;
 import com.MoleLaw_backend.chat.dto.response.MessageResponse;
 import com.MoleLaw_backend.common.exception.ErrorCode;
 import com.MoleLaw_backend.common.exception.MolelawException;
-import com.MoleLaw_backend.law.service.ExtractKeyword;
-import com.MoleLaw_backend.law.service.FinalAnswer;
+import com.MoleLaw_backend.law.service.analysis.KeywordExtractionService;
+import com.MoleLaw_backend.chat.service.answer.LegalAnswerService;
+import com.MoleLaw_backend.chat.service.answer.EvidenceRenderer;
+import com.MoleLaw_backend.chat.service.evidence.ChatEvidenceService;
 import com.MoleLaw_backend.chat.util.EncryptUtil;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,32 +33,27 @@ public class ChatService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final MessageRepository messageRepository;
-    private final FinalAnswer finalAnswer;
-    private final GptService gptService;
-    private final EntityManager entityManager;
-    private final ExtractKeyword extractKeyword;
-
-    public ChatRoom createChatRoom(User user, String title) {
-        if (user == null || user.getId() == null) {
-            throw new MolelawException(ErrorCode.USER_NOT_AUTHENTICATED);
-        }
-
-        return chatRoomRepository.save(ChatRoom.builder()
-                .user(user)
-                .title(title)
-                .build());
-    }
+    private final LegalAnswerService answers;
+    private final ChatTurnService turns;
+    private final KeywordExtractionService extractKeyword;
+    private final ChatEvidenceService evidence;
+    private final EvidenceRenderer renderer;
+    private final EncryptUtil encryptor;
 
     public List<ChatRoomResponse> getMyChatRooms(User user) {
-        if (user == null || user.getId() == null) {
-            throw new MolelawException(ErrorCode.USER_NOT_AUTHENTICATED);
-        }
+        return getMyChatRooms(user, 0, 20);
+    }
 
-        return chatRoomRepository.findByUser(user).stream()
+    public List<ChatRoomResponse> getMyChatRooms(User user, int page, int size) {
+        requireAuthenticated(user);
+        if (page < 0 || size < 1 || size > 100) {
+            throw new MolelawException(ErrorCode.INVALID_REQUEST, "page는 0 이상, size는 1–100이어야 합니다");
+        }
+        return chatRoomRepository.findByUserOrderByCreatedAtDescIdDesc(user, PageRequest.of(page, size)).stream()
                 .map(room -> {
                     String preview = messageRepository
-                            .findFirstByChatRoomIdOrderByTimestampAsc(room.getId())
-                            .map(m -> EncryptUtil.decrypt(m.getContent()))
+                            .findFirstByChatRoomIdOrderByTimestampAscIdAsc(room.getId())
+                            .map(m -> encryptor.decrypt(m.getContent()))
                             .orElse("(메시지 없음)");
                     return ChatRoomResponse.from(room, preview);
                 })
@@ -64,123 +61,122 @@ public class ChatService {
     }
 
     public List<MessageResponse> getMessages(User user, Long chatRoomId) {
-        ChatRoom room = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
-
-        if (room.getUser() == null || !room.getUser().getId().equals(user.getId())) {
-            throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
-        }
-
-        return messageRepository.findByChatRoomIdOrderByTimestampAsc(chatRoomId).stream()
-                .map(MessageResponse::from)
+        requireOwnedRoom(user, chatRoomId);
+        List<MessageResponse> result = messageRepository.findByChatRoomIdOrderByTimestampAscIdAsc(chatRoomId).stream()
+                .map(message -> MessageResponse.from(message, encryptor.decrypt(message.getContent())))
                 .collect(Collectors.toList());
+        // Preserve USER/BOT/INFO response order without storing a duplicate evidence body.
+        int firstBot = -1;
+        for (int i = 0; i < result.size(); i++) {
+            if ("BOT".equals(result.get(i).getSender())) { firstBot = i; break; }
+        }
+        if (firstBot >= 0) {
+            result.add(firstBot + 1, MessageResponse.builder().sender("INFO")
+                    .content(renderer.render(evidence.load(user.getId(), chatRoomId).stream()
+                            .filter(item -> !"CASE_BODY".equals(item.kind())).toList()))
+                    .timestamp(result.get(firstBot).getTimestamp()).build());
+        }
+        return List.copyOf(result);
     }
 
-    public MessageResponse askQuestion(User user, Long chatRoomId, MessageRequest request) {
-        ChatRoom room = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
-
-        if (room.getUser() == null || !room.getUser().getId().equals(user.getId())) {
-            throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
-        }
-
-        messageRepository.save(Message.builder()
-                .chatRoom(room)
-                .sender(Message.Sender.USER)
-                .content(EncryptUtil.encrypt(request.getContent()))
-                .build());
-
-        List<Message> messages = messageRepository.findByChatRoomIdOrderByTimestampAsc(chatRoomId);
-
-        String firstBotQuestion = messages.stream()
-                .filter(m -> m.getSender() == Message.Sender.BOT)
-                .map(m -> EncryptUtil.decrypt(m.getContent()))
-                .findFirst()
-                .orElse(request.getContent());
+    public MessageResponse askQuestion(User user, Long chatRoomId, CreateMessageRequest request) {
+        ChatRoom room = requireOwnedRoom(user, chatRoomId);
+        ChatContentLimits.question(request == null ? null : request.getContent());
 
         try {
-            GptAnswerResponse answer = gptService.generateAnswerWithContext(firstBotQuestion, request.getContent());
-
-            Message botMessage = messageRepository.save(Message.builder()
-                    .chatRoom(room)
-                    .sender(Message.Sender.BOT)
-                    .content(EncryptUtil.encrypt(answer.getAnswer()))
-                    .build());
-            return MessageResponse.from(botMessage);
+            var prepared = request.getCaseSearchLawEvidenceIds() == null
+                    ? answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch())
+                    : answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch(), request.getCaseSearchLawEvidenceIds());
+            Message botMessage = turns.savePreparedFollowUpTurn(room, request.getContent(), prepared);
+            return MessageResponse.from(botMessage, encryptor.decrypt(botMessage.getContent()));
         } catch (Exception e) {
+            if (e instanceof MolelawException failure) throw failure;
             throw new MolelawException(ErrorCode.GPT_API_FAILURE, "GPT 응답 생성 중 오류 발생", e);
         }
     }
 
-    public FirstMessageResponse createRoomAndAsk(User user, FirstMessageRequest request) {
-        if (request == null || request.getContent().trim().isEmpty()) {
-            throw new MolelawException(ErrorCode.INVALID_REQUEST, "입력 내용 없음");
-        }
+    public void validateFollowUpAccess(User user, Long roomId, String question) {
+        requireOwnedRoom(user, roomId);
+        ChatContentLimits.question(question);
+    }
 
-        KeywordAndTitleResponse keywordAndTitle;
+    public List<com.MoleLaw_backend.chat.dto.response.EvidenceSummaryResponse> getEvidenceSummaries(User user, Long roomId) {
+        requireOwnedRoom(user, roomId);
+        return evidence.load(user.getId(), roomId).stream()
+                .map(com.MoleLaw_backend.chat.dto.response.EvidenceSummaryResponse::from).toList();
+    }
+
+    public MessageResponse saveStreamedFollowUp(User user, Long roomId, String question,
+            com.MoleLaw_backend.chat.dto.answer.PreparedFollowUpAnswer prepared) {
+        var room = requireOwnedRoom(user, roomId);
+        var bot = turns.savePreparedFollowUpTurn(room, question, prepared);
+        return MessageResponse.from(bot, encryptor.decrypt(bot.getContent()));
+    }
+
+    public ChatRoomCreationResponse createRoomAndAsk(User user, CreateChatRoomRequest request) {
+        requireAuthenticated(user);
+        ChatContentLimits.question(request == null ? null : request.getContent());
+
+        ChatRoom chatRoom;
         try {
-            keywordAndTitle = extractKeyword.extractKeywords(request.getContent());
-        } catch (Exception e) {
-            throw new MolelawException(ErrorCode.KEYWORD_EXTRACTION_FAILED, "입력 내용: " + request.getContent(), e);
-        }
-
-        ChatRoom chatRoom = createChatRoom(user, keywordAndTitle.getSummary());
-
-        messageRepository.save(Message.builder()
-                .chatRoom(chatRoom)
-                .sender(Message.Sender.USER)
-                .content(EncryptUtil.encrypt(request.getContent()))
-                .build());
-
-        try {
-            GptAnswerResponse gptAnswerResponse = finalAnswer.getAnswer(request.getContent(), keywordAndTitle);
-
-            messageRepository.save(Message.builder()
-                    .chatRoom(chatRoom)
-                    .sender(Message.Sender.BOT)
-                    .content(EncryptUtil.encrypt(gptAnswerResponse.getAnswer()))
-                    .build());
-
-            messageRepository.save(Message.builder()
-                    .chatRoom(chatRoom)
-                    .sender(Message.Sender.INFO)
-                    .content(EncryptUtil.encrypt(gptAnswerResponse.getInfo()))
-                    .build());
+            var prepared = answers.prepareInitialAnswer(request.getContent());
+            String title = initialTitle(request.getContent(), prepared);
+            chatRoom = turns.saveInitialTurn(user, title, request.getContent(), prepared);
 
         } catch (Exception e) {
+            if (e instanceof MolelawException failure) throw failure;
             throw new MolelawException(ErrorCode.GPT_API_FAILURE, "초기 GPT 응답 생성 실패", e);
         }
 
-        return FirstMessageResponse.builder()
+        return ChatRoomCreationResponse.builder()
                 .id(chatRoom.getId())
                 .messages(getMessages(user, chatRoom.getId()))
                 .build();
     }
 
-    @Transactional
-    public void deleteChatRoom(User user, Long chatRoomId) {
-        try {
-            System.out.println("🧹 [삭제 시작] 사용자 ID: " + user.getId() + ", 채팅방 ID: " + chatRoomId);
-
-            ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                    .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
-
-            System.out.println("🔍 채팅방 소유자 ID: " + (chatRoom.getUser() != null ? chatRoom.getUser().getId() : "null"));
-            System.out.println("📦 메시지 개수: " + chatRoom.getMessages().size());
-
-            if (chatRoom.getUser() == null || !chatRoom.getUser().getId().equals(user.getId())) {
-                throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
-            }
-
-            chatRoomRepository.delete(chatRoom);
-            System.out.println("✅ 삭제 완료");
-
-        } catch (Exception e) {
-            System.out.println("❌ 예외 발생:");
-            e.printStackTrace(); // ✅ 콘솔에 전체 예외 출력
-            throw e; // 다시 던져서 글로벌 핸들러에서 처리되게
-        }
+    /** Only called after streamed answer validation; all writes remain in ChatTurnService. */
+    public ChatRoomCreationResponse saveStreamedInitialAnswer(User user, String question,
+            PreparedLegalAnswer prepared) {
+        requireAuthenticated(user);
+        ChatContentLimits.question(question);
+        var title = initialTitle(question, prepared);
+        var room = turns.saveInitialTurn(user, title, question, prepared);
+        return ChatRoomCreationResponse.builder().id(room.getId()).messages(getMessages(user, room.getId())).build();
     }
 
+    private String initialTitle(String question, PreparedLegalAnswer prepared) {
+        String title = prepared.title() == null ? extractKeyword.extractKeywords(question).getSummary() : prepared.title();
+        ChatContentLimits.title(title);
+        return title;
+    }
+
+    @Transactional
+    public void deleteChatRoom(User user, Long chatRoomId) {
+        chatRoomRepository.delete(requireOwnedRoom(user, chatRoomId));
+    }
+
+    @Transactional
+    public void changeRoomTitle(User user, Long roomId, String title) {
+        String normalized = title == null ? "" : title.strip();
+        if (normalized.isBlank() || normalized.codePointCount(0, normalized.length()) > 255)
+            throw new MolelawException(ErrorCode.INVALID_REQUEST);
+        requireOwnedRoom(user, roomId).changeTitle(normalized);
+    }
+
+    private ChatRoom requireOwnedRoom(User user, Long roomId) {
+        requireAuthenticated(user);
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
+        if (room.getUser() == null || !user.getId().equals(room.getUser().getId())) {
+            throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
+        }
+        return room;
+    }
+
+    private void requireAuthenticated(User user) {
+        if (user == null || user.getId() == null) {
+            throw new MolelawException(ErrorCode.USER_NOT_AUTHENTICATED);
+        }
+    }
 
 }

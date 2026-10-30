@@ -1,8 +1,13 @@
 package com.MoleLaw_backend.law.service.tool;
+import com.MoleLaw_backend.law.dto.tool.LegalToolContracts;
+import com.MoleLaw_backend.law.service.source.LegalSourceService;
+import com.MoleLaw_backend.law.exception.LegalToolException;
+import com.MoleLaw_backend.law.exception.OpenLawRequestException;
+import com.MoleLaw_backend.law.client.openlaw.OpenLawCaseClient;
 
 import com.MoleLaw_backend.law.entity.LegalSource;
 import com.MoleLaw_backend.law.dto.request.LawSearchFilters;
-import com.MoleLaw_backend.law.service.LawSearchService;
+import com.MoleLaw_backend.law.service.search.LawSearchService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,13 +19,22 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
-import static com.MoleLaw_backend.law.service.tool.LegalToolContracts.*;
-import static com.MoleLaw_backend.law.service.tool.LegalToolException.Reason.*;
+import static com.MoleLaw_backend.law.dto.tool.LegalToolContracts.*;
+import static com.MoleLaw_backend.law.exception.LegalToolException.Reason.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class LegalApiToolServiceTest {
+    @Test void caseOnlyFollowUpContextCannotCollectLawsOrReserveEmbeddingCalls() {
+        var context = new LegalToolContext(LegalToolContext.Purpose.FOLLOW_UP_CASE, "case-turn",
+                Instant.now().plusSeconds(60), 8, Clock.systemUTC());
+        assertThatThrownBy(() -> tools.searchLaws(context, request(1))).isInstanceOf(LegalToolException.class);
+        assertThatThrownBy(() -> tools.getLawDetail(context, "11")).isInstanceOf(LegalToolException.class);
+        assertThatThrownBy(context::reserveEmbedding).isInstanceOf(LegalToolException.class);
+        assertThatThrownBy(context::reserveIndex).isInstanceOf(LegalToolException.class);
+        verifyNoInteractions(laws, cases);
+    }
     private final LawSearchService laws = mock(LawSearchService.class);
     private final OpenLawCaseClient cases = mock(OpenLawCaseClient.class);
     private final LegalSourceService sources = mock(LegalSourceService.class);
@@ -34,6 +48,19 @@ class LegalApiToolServiceTest {
                 anyString(), any(JsonNode.class))).thenAnswer(call -> new LegalSource(call.getArgument(0),
                 call.getArgument(1), call.getArgument(2), call.getArgument(3), call.getArgument(4),
                 "hash", call.getArgument(5).toString()));
+    }
+
+    @Test
+    void stagedEnforcementDetailReceivesTheListsExactEffectiveDate() throws Exception {
+        when(laws.searchPage("민법", 1, null, 1, 1))
+                .thenReturn(lawPage("11", 1, 1).replace("20260101", "20270309"));
+        when(laws.getLawDetailByMst("11", "20270309")).thenReturn(lawDetail("100", "20270309"));
+        var context = context(3);
+        tools.searchLaws(context, request(1));
+        var detail = tools.getLawDetail(context, "11");
+        assertThat(detail.effectiveDate()).isEqualTo("20270309");
+        verify(laws).getLawDetailByMst("11", "20270309");
+        verify(laws, never()).getLawDetailByMst("11");
     }
 
     @Test
@@ -81,7 +108,7 @@ class LegalApiToolServiceTest {
         tools.searchLaws(context, request(1));
         assertThat(tools.searchLaws(context, request(2)).status()).isEqualTo(Status.BUDGET_EXHAUSTED);
         expectReason(() -> tools.getLawDetail(context, "11"), BUDGET_EXHAUSTED);
-        verify(laws, never()).getLawDetailByMst(anyString());
+        verify(laws, never()).getLawDetailByMst(anyString(), nullable(String.class));
     }
 
     @Test
@@ -89,7 +116,7 @@ class LegalApiToolServiceTest {
         when(laws.searchPage("민법", 1, null, 1, 1)).thenReturn(lawPage("11", 1, 1));
         var context = context(3);
         tools.searchLaws(context, request(1));
-        when(laws.getLawDetailByMst("11")).thenAnswer(call -> {
+        when(laws.getLawDetailByMst("11", "20260101")).thenAnswer(call -> {
             clock.instant = clock.instant.plusSeconds(61);
             return lawDetail("100", "20260101");
         });
@@ -121,7 +148,7 @@ class LegalApiToolServiceTest {
         for (JsonNode detail : new JsonNode[]{lawDetail("999", "20260101"), lawDetail("100", "20270101")}) {
             var context = context(3);
             tools.searchLaws(context, request(1));
-            when(laws.getLawDetailByMst("11")).thenReturn(detail);
+            when(laws.getLawDetailByMst("11", "20260101")).thenReturn(detail);
             expectReason(() -> tools.getLawDetail(context, "11"), INVALID_RESPONSE);
         }
         verifyNoInteractions(sources);
@@ -130,7 +157,7 @@ class LegalApiToolServiceTest {
     @Test
     void lawDetailIsSavedOnceAndCachedReferenceIsReused() throws Exception {
         when(laws.searchPage("민법", 1, null, 1, 1)).thenReturn(lawPage("11", 1, 1));
-        when(laws.getLawDetailByMst("11")).thenReturn(lawDetail("100", "20260101"));
+        when(laws.getLawDetailByMst("11", "20260101")).thenReturn(lawDetail("100", "20260101"));
         var context = context(3);
         tools.searchLaws(context, request(1));
         var detail = tools.getLawDetail(context, "11");
@@ -138,7 +165,7 @@ class LegalApiToolServiceTest {
         assertThat(detail.articleCount()).isEqualTo(1);
         assertThat(detail.contentAvailable()).isTrue();
         assertThat(tools.getLawDetail(context, "11")).isSameAs(detail);
-        verify(laws, times(1)).getLawDetailByMst("11");
+        verify(laws, times(1)).getLawDetailByMst("11", "20260101");
         verify(sources, times(1)).save(eq("LAW"), eq("11"), eq("100"), eq("20260101"), anyString(), any());
         assertThat(context.callsUsed()).isEqualTo(2);
     }
@@ -214,7 +241,7 @@ class LegalApiToolServiceTest {
         var second = tools.searchLaws(context, new SearchRequest("민법", 1, null, 2, 1, filters));
         assertThat(second.status()).isEqualTo(Status.AVAILABLE);
         assertThat(second.candidates()).extracting(Candidate::title).containsExactly("민법");
-        verify(laws, never()).getLawDetailByMst("11");
+        verify(laws, never()).getLawDetailByMst("11", "20260101");
     }
 
     @Test
