@@ -31,5 +31,9 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+    doc-expansion: none
+    tags-sorter: alpha
+    operations-sorter: method
+    display-request-duration: true
     csrf:
       enabled: true

@@ -101,7 +101,7 @@ docker compose -f docker/compose.yml --env-file docker/.env.compose up -d
 
 Qdrant RAG는 APP_LAW_VECTOR_ENABLED=true와 별도 임베딩 서버가 필요합니다. 서비스 KURE 실행은 [Docker 가이드](docker/README.md)를 따르세요. 코드 기본 포트 11436과 서비스 컨테이너 11437을 혼동하지 않도록 APP_LAW_VECTOR_EMBEDDING_BASE_URL을 지정합니다. 모델·.env 변경 후 서버를 재시작합니다.
 
-local 주소는 API :8080, Swagger /swagger-ui.html, MySQL :3307, Qdrant HTTP/gRPC :6333/:6334, Redis :6379입니다. 기본 mysql 프로필은 MySQL·JPA validate, local은 mysql+qdrant·Swagger, test는 H2·모킹입니다. 운영에 local/test 프로필을 사용하지 않습니다. Flyway V1~V7 적용·오류 대응은 [MySQL 실행](docs/database/mysql-setup.md)을 따릅니다.
+local 주소는 API :8080, Swagger /swagger-ui.html, MySQL :3307, Qdrant HTTP/gRPC :6333/:6334, Redis :6379입니다. 기본 mysql 프로필은 MySQL·JPA validate, local은 mysql+qdrant·Swagger, test는 H2·모킹입니다. 운영에 local/test 프로필을 사용하지 않습니다. Flyway V1~V8 적용·오류 대응은 [MySQL 실행](docs/database/mysql-setup.md)을 따릅니다.
 
 ## 인증·API 사용
 
@@ -114,6 +114,7 @@ Access는 모든 프로필에서 최대 5분 stateless JWT입니다. Refresh는 
 | CSRF·가입·로그인·재발급·로그아웃 | /api/auth/{csrf,signup,login,refresh,logout} |
 | 내 정보·탈퇴·비밀번호·닉네임 | /api/users/me, /api/users/me/password, /api/users/me/nickname |
 | 상담방 목록·최초 질문 | GET·POST /api/chat-rooms |
+| 최초 상담 전 추천 질문 | POST /api/legal-answers/suggestions |
 | 메시지 조회·후속 질문 | GET·POST /api/chat-rooms/{roomId}/messages |
 | 방 삭제 | DELETE /api/chat-rooms/{roomId} |
 | 방 제목 변경 | PATCH /api/chat-rooms/{roomId}/title |

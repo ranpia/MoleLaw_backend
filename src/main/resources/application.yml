@@ -1,6 +1,17 @@
 server:
   forward-headers-strategy: framework
 
+# No management HTTP listener or exposed endpoints in default/deployed profiles.
+management:
+  server:
+    port: -1
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: []
+
 spring:
   application:
     name: MoleLaw_backend
@@ -144,6 +155,10 @@ app:
       model: ${APP_AI_CASE_RERANK_MODEL:gpt-5.4-mini}
       reasoning-effort: ${APP_AI_CASE_RERANK_REASONING_EFFORT:low}
       max-completion-tokens: ${APP_AI_CASE_RERANK_MAX_COMPLETION_TOKENS:4096}
+    question-suggestion:
+      model: ${APP_AI_QUESTION_SUGGESTION_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_QUESTION_SUGGESTION_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_QUESTION_SUGGESTION_MAX_COMPLETION_TOKENS:2048}
     case-query:
       model: ${APP_AI_CASE_QUERY_MODEL:gpt-5.4-mini}
       reasoning-effort: ${APP_AI_CASE_QUERY_REASONING_EFFORT:low}

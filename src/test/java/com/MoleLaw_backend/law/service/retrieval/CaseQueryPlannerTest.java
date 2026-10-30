@@ -12,6 +12,19 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.*;
 class CaseQueryPlannerTest {
+    @Test void passesAllSelectedLawTitlesAndDoesNotInventContextForAnEmptySelection() {
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"queries\":[\"게임 협박\"],\"intent\":\"SIMILAR_ISSUE\",\"targets\":[],\"scope\":\"BODY\"}"));
+        var laws = java.util.stream.IntStream.rangeClosed(1, 40).mapToObj(index -> new EvidenceItem(
+                "id-" + index, "LAW_CHUNK", "law-" + index, "선택 법령 " + index, "https://www.law.go.kr", "본문")).toList();
+        planner.planWithLawContexts("게임 협박 판례", laws, "검색 요청", null);
+        planner.planWithLawContexts("게임 협박 판례", List.of(), "검색 요청", null);
+        var prompts = org.mockito.ArgumentCaptor.forClass(Prompt.class);
+        verify(model, times(2)).call(prompts.capture());
+        String selected = prompts.getAllValues().get(0).getUserMessage().getText();
+        for (var law : laws) assertThat(selected).contains(law.title());
+        assertThat(prompts.getAllValues().get(1).getUserMessage().getText()).contains("\"roomLawContexts\":[]");
+    }
+
     @Test void repairsUnobservedTargetOnceWithoutLosingTheEventInTheAcceptedIssue() {
         when(model.call(any(Prompt.class))).thenReturn(
                 response("{\"queries\":[\"성수대교 붕괴사고\"],\"intent\":\"SPECIFIC_CASE\",\"targets\":[\"성수대교 붕괴사고\"],\"scope\":\"BODY\"}"),

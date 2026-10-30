@@ -1,0 +1,6 @@
+simulation: Initial question suggestions model contract
+routing: path
+mocks:
+  - name: Initial question suggestion model contract
+    routeKey: openai
+    path: ../mocks/question-suggestions/config.yaml

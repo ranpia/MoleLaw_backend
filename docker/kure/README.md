@@ -53,6 +53,10 @@ Get-Content -Raw docker/kure/check_live.py | docker compose -f docker/kure/compo
 
 ## 선택적 조문 리랭커
 
+KURE 계측은 선택적 `METRICS_PORT`로 연다. 부하 테스트 Compose는 Docker 내부 9092를 사용한다.
+요청·대기·추론·거부·모델 준비 지표와 검증 범위는 [RAG 모니터링](../../docs/testing/rag-monitoring.md)을 따른다.
+새 `monitoring.py`와 prometheus-client 의존성을 반영하려면 테스트 전에 해당 이미지를 재빌드한다.
+
 `docker/kure/.env`에서 `KURE_RERANKER_ENABLED=true`를 설정하고 실행 명령에
 `--env-file docker/kure/.env`를 지정하면 고정 BGE cross-encoder도 시작 시 로드한다.
 KURE와 추론 잠금·대기열·캐시를 공유하며 CUDA에서는 리랭커만 FP16을 사용한다.

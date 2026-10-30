@@ -23,6 +23,14 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class LegalEvidenceCollectorTest {
+    @Test void fixedIndexRejectsCollectionWithoutCallingExternalApiOrIndexWriter() {
+        org.springframework.test.util.ReflectionTestUtils.setField(collector,"fixedIndexOnly",true);
+        when(rag.searchTop15(any(),anyString())).thenReturn(List.of(hit()));
+        when(planner.decide(anyString(),anyList(),any(),anyList(),anyInt())).thenReturn(collect());
+        assertThatThrownBy(() -> collector.collect("질문")).isInstanceOf(MolelawException.class);
+        verifyNoInteractions(laws,vectors);
+    }
+
     @Test void observerPublishesOnlyAdoptedEvidenceAfterDecisionInsteadOfSearchCandidates() {
         var first = hit();
         var second = new LawSearchEvidence("123:2", first.referenceId(), first.externalId(), first.lawId(),

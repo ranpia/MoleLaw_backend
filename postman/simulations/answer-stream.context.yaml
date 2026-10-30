@@ -1,0 +1,30 @@
+purpose:
+  stands_in_for: Synthetic Chat Completions streaming model, never a real provider
+  unblocks: Cost-free stream, admission, validation and persistence checks before paid writer probes
+assumptions:
+  - id: application-stream-contract
+    status: supported
+    claim: Under this fixture, partial NDJSON/SSE precedes completion and validated completion precedes persisted room disclosure.
+    reason: The actual Spring AI HTTP adapter and application controller/service execute against a synthetic HTTP provider; retrieval and title extraction are mocked.
+    verification: 2026-10-29 answerStreamSimulationTest; 14 checks cover early output, 1/2/4 requests, fifth-request admission rejection, provider failures and recovery. Final rerun evidence is linked in docs/testing/answer-generation-results.md.
+    source: src/test/java/com/MoleLaw_backend/chat/controller/AnswerStreamSimulationTest.java
+    updated_at: '2026-10-29'
+  - id: cancellation-stops-provider-computation
+    status: unknown
+    claim: Cancelling the application stream immediately stops real provider computation and charges.
+    reason: Application cancellation reaches the model adapter and frees the slot, but the direct synthetic upstream can remain held. Neither a synthetic disconnect nor local cancellation establishes provider billing behavior.
+    verification: Direct-origin cancellation records adapterCancelled and providerHeld. Use retained maximum output cost reservation on missing usage. No real-provider cancellation or billing test was performed.
+    source: src/test/java/com/MoleLaw_backend/chat/controller/AnswerStreamSimulationTest.java
+    updated_at: '2026-10-29'
+  - id: every-model-output-has-valid-citations
+    status: contradicted
+    claim: A normal model completion always follows the required double-bracket citation format.
+    reason: A separate paid writer diagnostic returned single-bracket UUID references and failed MISSING_CITATION. Synthetic success does not establish real model format compliance.
+    verification: The first six paid calls included citation failures. An unchanged-condition retry added sixteen passing calls (one diagnostic and fifteen staged requests), twenty-two cumulative. This does not erase the counterexample or prove reliable compliance. No validation relaxation or repair call was introduced. See build/answer-generation and the results document.
+    source: docs/testing/answer-generation-results.md
+    updated_at: '2026-10-29'
+fingerprints:
+  - id: answer-stream-local
+    date: '2026-10-29'
+    commit: null
+    cli: Local postman simulation run --no-history, direct Node fixture for cancellation observation

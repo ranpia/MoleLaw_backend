@@ -11,6 +11,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CitationValidatorTest {
+    @Test void exposesSafeDiagnosticReasonsWithoutChangingThePublicFailureCode() {
+        var missing = assertThrows(com.MoleLaw_backend.chat.exception.CitationValidationException.class,
+                () -> validator.validate("인용 없는 설명", List.of(item)));
+        assertEquals(com.MoleLaw_backend.chat.exception.CitationValidationException.Reason.MISSING_CITATION, missing.reason());
+        assertEquals(ErrorCode.GPT_API_FAILURE, missing.getErrorCode());
+        var unknown = assertThrows(com.MoleLaw_backend.chat.exception.CitationValidationException.class,
+                () -> validator.validate("설명 [[764a37ed-3ffd-4ae4-a1c4-0170544a987a]]", List.of(item)));
+        assertEquals(com.MoleLaw_backend.chat.exception.CitationValidationException.Reason.UNKNOWN_ID, unknown.reason());
+    }
+
     private static final String ID = "65ead687-bda9-4fce-aa72-056efec095a6";
     private final CitationValidator validator = new CitationValidator();
     private final EvidenceItem item = new EvidenceItem(ID, "LAW", "source", "민법",

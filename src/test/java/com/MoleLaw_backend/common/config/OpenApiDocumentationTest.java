@@ -23,6 +23,55 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @org.springframework.context.annotation.Import(com.MoleLaw_backend.common.config.TestRefreshTokenStoreConfig.class)
 @ActiveProfiles("test")
 class OpenApiDocumentationTest {
+    @Test void documentsEvidencePreviewsSavedSnapshotsAndBodylessDeletion() throws Exception {
+        var document = mapper.readTree(mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        var schemas = document.path("components").path("schemas");
+        assertTrue(schemas.path("InitialAnswerStreamResponse").path("properties").path("type").path("enum").toString().contains("evidence"));
+        assertTrue(schemas.path("InitialAnswerStreamResponse").path("properties").has("evidence"));
+        var update = schemas.path("EvidenceUpdateResponse").path("properties");
+        assertTrue(update.path("state").path("enum").toString().contains("PREVIEW"));
+        assertTrue(update.path("state").path("enum").toString().contains("SAVED"));
+        assertTrue(update.path("items").path("items").path("$ref").asText().endsWith("EvidenceSummaryResponse"));
+        var remove = document.path("paths").path("/api/chat-rooms/{roomId}/evidence/{evidenceId}").path("delete");
+        assertFalse(remove.has("requestBody"));
+        assertTrue(remove.path("responses").has("204"));
+        assertTrue(remove.path("responses").path("204").path("content").isMissingNode());
+        assertTrue(remove.path("description").asText().contains("X-XSRF-TOKEN"));
+        for (String path : java.util.List.of("/api/chat-rooms/stream", "/api/chat-rooms/ndjson", "/api/chat-rooms/{roomId}/messages/ndjson"))
+            assertTrue(document.path("paths").path(path).path("post").path("description").asText().contains("PREVIEW"));
+    }
+
+    @Test void documentsOrdinaryFollowUpRoutingAndBoundedCitationRepair() throws Exception {
+        var document = mapper.readTree(mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        String description = document.path("paths").path("/api/chat-rooms/{roomId}/messages/ndjson")
+                .path("post").path("description").asText();
+        assertTrue(description.contains("일반 질문은 판례 본문 읽기 없이"));
+        assertTrue(description.contains("ANSWER_REPAIR"));
+        assertTrue(description.contains("completed.response.answer"));
+    }
+
+    @Test
+    void documentsUserSelectedCaseSearchLawForJsonAndNdjson() throws Exception {
+        var document = mapper.readTree(mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        var schema = document.path("components").path("schemas").path("MessageRequest");
+        var selection = schema.path("properties").path("caseSearchLawEvidenceIds");
+        assertFalse(selection.path("items").path("pattern").asText().isBlank());
+        assertFalse(selection.has("maxItems"));
+        assertTrue(selection.path("description").asText().contains("LAW_"));
+        assertTrue(selection.path("type").toString().contains("null"));
+        assertFalse(schema.path("required").toString().contains("caseSearchLawEvidenceIds"));
+        assertFalse(schema.path("properties").has("caseSearchSelectionValid"));
+        for (String path : java.util.List.of("/api/chat-rooms/{roomId}/messages", "/api/chat-rooms/{roomId}/messages/ndjson")) {
+            var operation = document.path("paths").path(path).path("post");
+            assertTrue(operation.path("description").asText().contains("caseSearchLawEvidenceIds"));
+            assertTrue(operation.path("requestBody").path("content").path("application/json").path("examples")
+                    .toString().contains("caseSearchLawEvidenceIds"));
+        }
+    }
+
     @Test
     void documentsTitleUpdateAndBothRequiredPasswordFields() throws Exception {
         var document = mapper.readTree(mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
@@ -32,6 +81,8 @@ class OpenApiDocumentationTest {
         assertTrue(required.toString().contains("newPassword"));
         assertTrue(document.path("paths").path("/api/chat-rooms/{roomId}/title").path("patch")
                 .path("responses").has("204"));
+        var suggestion = document.path("components").path("schemas").path("SuggestedInitialQuestion").path("required").toString();
+        for (String field : java.util.List.of("id", "label", "question")) assertTrue(suggestion.contains(field));
     }
     @MockitoBean ChatModel chatModel;
     @MockitoBean EmbeddingModel embeddingModel;
@@ -108,7 +159,7 @@ class OpenApiDocumentationTest {
                 assertTrue(success, context);
             }
         }
-        assertEquals(28, count);
+        assertEquals(30, count);
         assertEquals(Set.of(
                 "get /api/auth/csrf", "post /api/auth/signup", "post /api/auth/login",
                 "post /api/auth/refresh", "post /api/auth/logout",
@@ -116,8 +167,9 @@ class OpenApiDocumentationTest {
                 "get /api/chat-rooms", "post /api/chat-rooms", "delete /api/chat-rooms/{roomId}", "patch /api/chat-rooms/{roomId}/title",
                 "get /api/chat-rooms/{roomId}/messages", "post /api/chat-rooms/{roomId}/messages",
                 "get /api/chat-rooms/{roomId}/evidence", "get /api/chat-rooms/{roomId}/evidence/{evidenceId}",
+                "delete /api/chat-rooms/{roomId}/evidence/{evidenceId}",
                 "get /api/laws", "post /api/laws/search", "get /api/precedents", "get /api/precedents/{id}",
-                "post /api/law-keywords", "post /api/legal-answers",
+                "post /api/law-keywords", "post /api/legal-answers", "post /api/legal-answers/suggestions",
                 "post /api/legal-answers/stream", "post /api/chat-rooms/stream",
                 "post /api/legal-answers/ndjson", "post /api/chat-rooms/ndjson",
                 "post /api/chat-rooms/{roomId}/messages/ndjson"), actualOperations);

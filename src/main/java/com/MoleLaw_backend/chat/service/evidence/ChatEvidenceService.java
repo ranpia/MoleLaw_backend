@@ -34,6 +34,7 @@ public class ChatEvidenceService {
     private final ChatEvidenceSnapshotRepository snapshots;
     private final ObjectMapper mapper;
     private final ChatCaseEvidenceService cases;
+    private final com.MoleLaw_backend.chat.repository.ChatEvidenceRemovalRepository removals;
 
     /** Called inside the initial successful-turn transaction; an existing snapshot is never replaced. */
     @Transactional
@@ -84,10 +85,27 @@ public class ChatEvidenceService {
             try { combined.addAll(cases.load(roomId)); }
             catch (IllegalArgumentException malformed) { throw failure(); }
             validate(combined);
-            return List.copyOf(combined);
+            var removed = removals.findByRoomId(roomId).stream().map(com.MoleLaw_backend.chat.entity.ChatEvidenceRemoval::getEvidenceId)
+                    .collect(java.util.stream.Collectors.toSet());
+            return combined.stream().filter(item -> !removed.contains(item.id())).toList();
         } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
             throw new MolelawException(ErrorCode.GPT_API_FAILURE, "근거 스냅샷 복원 실패", ex);
         }
+    }
+
+    @Transactional
+    public void remove(Long userId, Long roomId, String evidenceId) {
+        if (userId == null) throw new MolelawException(ErrorCode.USER_NOT_AUTHENTICATED);
+        var room = rooms.lockById(roomId).orElseThrow(() -> new MolelawException(ErrorCode.CHATROOM_NOT_FOUND));
+        if (room.getUser() == null || !userId.equals(room.getUser().getId()))
+            throw new MolelawException(ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS);
+        if (evidenceId == null || !evidenceId.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))
+            throw new MolelawException(ErrorCode.INVALID_REQUEST);
+        String canonicalId = UUID.fromString(evidenceId).toString();
+        if (load(userId, roomId).stream().noneMatch(item -> item.id().equals(canonicalId)))
+            throw new MolelawException(ErrorCode.NOT_FOUND);
+        removals.saveAndFlush(new com.MoleLaw_backend.chat.entity.ChatEvidenceRemoval(room, canonicalId));
+        cases.removeReference(roomId, canonicalId);
     }
 
     private static void validate(List<EvidenceItem> evidence) {

@@ -1,0 +1,55 @@
+{
+  "dataset": "legal-perf-v1",
+  "sources": [
+    {
+      "id": "civil",
+      "name": "민법",
+      "lsiSeq": "246569",
+      "effective_date": "20230628",
+      "download_url": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=246569&efYd=20230628&chrClsCd=010202",
+      "raw_sha256": "2ee7d1c97cb4f80064e8e824400782ae4c2a5a9e461a43f1f8c94a42b7764cdc",
+      "downloaded_at_utc": "2026-10-29T01:13:01.849548+00:00",
+      "version": "[시행 2023. 6. 28.] [법률 제19098호, 2022. 12. 27., 일부개정]",
+      "articles": 1115,
+      "deleted_omitted": 77
+    },
+    {
+      "id": "housing",
+      "name": "주택임대차보호법",
+      "lsiSeq": "249999",
+      "effective_date": "20230719",
+      "download_url": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=249999&efYd=20230719&chrClsCd=010202",
+      "raw_sha256": "ea2aac738a71cbd09c47cb4b5c825b6e531ef15acf6cf4387f3be43be17e5a51",
+      "downloaded_at_utc": "2026-10-29T01:13:03.022210+00:00",
+      "version": "[시행 2023. 7. 19.] [법률 제19356호, 2023. 4. 18., 일부개정]",
+      "articles": 41,
+      "deleted_omitted": 1
+    },
+    {
+      "id": "labor",
+      "name": "근로기준법",
+      "lsiSeq": "285279",
+      "effective_date": "20261008",
+      "download_url": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285279&efYd=20261008&chrClsCd=010202",
+      "raw_sha256": "2a9ec0e8577e90108646c7c88b277c7ef39f217ac719ba347856aec2e0b76c7f",
+      "downloaded_at_utc": "2026-10-29T01:13:04.293281+00:00",
+      "version": "[시행 2026. 10. 8.] [법률 제21533호, 2026. 4. 7., 일부개정]",
+      "articles": 128,
+      "deleted_omitted": 5
+    },
+    {
+      "id": "copyright",
+      "name": "저작권법",
+      "lsiSeq": "260839",
+      "effective_date": "20240828",
+      "download_url": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=260839&efYd=20240828&chrClsCd=010202",
+      "raw_sha256": "9fd500fca3bd9e27b550167d6292bf554340f8582b5d6ffdcc69b6940ef2f0b3",
+      "downloaded_at_utc": "2026-10-29T01:13:05.594020+00:00",
+      "version": "[시행 2024. 8. 28.] [법률 제20358호, 2024. 2. 27., 일부개정]",
+      "articles": 193,
+      "deleted_omitted": 2
+    }
+  ],
+  "articles_sha256": "0323bfb94955455346887f71f947daf94ed64b2d13c79f4288741072d9dcc43f",
+  "extraction": "Main joNoList lawcon blocks; HTML/UI, sfon history notes, deleted articles omitted; NFC/whitespace normalized"
+}

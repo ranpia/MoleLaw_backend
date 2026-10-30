@@ -1,0 +1,30 @@
+# Dedicated local load-test environment only. Do not use this profile in production.
+spring:
+  config:
+    activate:
+      on-profile: loadtest
+
+management:
+  server:
+    port: 9091
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      access: read-only
+      show-details: never
+      # Readiness of Redis/Qdrant/models is checked separately; probes must not load them.
+      probes:
+        enabled: false
+    prometheus:
+      access: read-only
+  metrics:
+    tags:
+      application: molelaw-loadtest
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Swagger stays disabled as in the default profile.

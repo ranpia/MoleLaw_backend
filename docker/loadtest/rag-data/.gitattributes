@@ -1,0 +1,4 @@
+snapshot/*.jsonl text eol=lf
+snapshot/*.json text eol=lf
+sources.json text eol=lf
+questions.json text eol=lf

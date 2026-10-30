@@ -13,6 +13,7 @@ from importlib.metadata import version
 import torch
 from sentence_transformers import SentenceTransformer
 import reranker
+import monitoring
 
 MODEL_ID = "nlpai-lab/KURE-v1"
 REVISION = "8b418a58414668e75532ed045c22d9ca018ae2b2"
@@ -35,6 +36,8 @@ QUEUE_WAIT_SECONDS = float(os.environ.get("EMBEDDING_QUEUE_WAIT_SECONDS", "5"))
 if not 0 <= QUEUE_CAPACITY <= 32 or not 0 < QUEUE_WAIT_SECONDS <= 120:
     raise ValueError("Invalid embedding queue configuration")
 ADMISSION = threading.BoundedSemaphore(1 + QUEUE_CAPACITY)
+monitoring.QUEUE_CAPACITY.set(QUEUE_CAPACITY)
+monitoring.BATCH_SIZE.labels('embed').set(BATCH_SIZE)
 
 
 def load_model():
@@ -52,11 +55,13 @@ def load_model():
         if loaded[2].__class__.__name__ != "Normalize":
             raise RuntimeError("Unexpected official normalization module")
         model = loaded
+        monitoring.MODEL_READY.labels('embed').set(1)
     return model
 
 
 class Handler(BaseHTTPRequestHandler):
     def respond(self, status, payload):
+        self._metric_status = status
         encoded = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8")
         try:
             self.send_response(status)
@@ -78,8 +83,25 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self.respond(404, {"error": "Unknown evaluation route"})
 
+    def acquire_inference(self, operation):
+        monitoring.WAITING.labels(operation).inc()
+        started = time.monotonic()
+        try:
+            acquired = INFERENCE_LOCK.acquire(timeout=QUEUE_WAIT_SECONDS)
+        finally:
+            monitoring.WAITING.labels(operation).dec()
+            monitoring.WAIT_SECONDS.labels(operation).observe(time.monotonic()-started)
+        if acquired:
+            monitoring.ACTIVE.labels(operation).inc()
+        else:
+            monitoring.REJECTED.labels(operation, 'timeout').inc()
+        return acquired
+
     def do_POST(self):
         global model
+        started_request = time.monotonic()
+        operation = {'/api/embed':'embed', '/api/rerank':'rerank'}.get(self.path, 'other')
+        self._metric_status = 500
         admitted = False
         locked = False
         try:
@@ -88,6 +110,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(404, {"error": "Unknown embedding route"})
                 return
             if not ADMISSION.acquire(blocking=False):
+                monitoring.REJECTED.labels(operation, 'full').inc()
                 self.respond(503, {"error": "Embedding queue is full"})
                 self.close_connection = True
                 return
@@ -99,7 +122,7 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(payload, dict):
                 raise ValueError("Expected a JSON object")
             if self.path == "/api/rerank":
-                locked = INFERENCE_LOCK.acquire(timeout=QUEUE_WAIT_SECONDS)
+                locked = self.acquire_inference(operation)
                 if not locked:
                     self.respond(503, {"error": "Inference queue wait expired"})
                     return
@@ -111,12 +134,13 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(inputs, list) or len(inputs) > 32 or any(not isinstance(text, str) for text in inputs):
                 raise ValueError("Expected at most 32 text inputs")
             # All operations touching the model, including unload, share the same lock.
-            locked = INFERENCE_LOCK.acquire(timeout=QUEUE_WAIT_SECONDS)
+            locked = self.acquire_inference(operation)
             if not locked:
                 self.respond(503, {"error": "Embedding queue wait expired"})
                 return
             if not inputs and payload.get("keep_alive") == 0:
                 model = None
+                monitoring.MODEL_READY.labels('embed').set(0)
                 gc.collect()
                 if DEVICE == "cuda":
                     torch.cuda.empty_cache()
@@ -130,8 +154,9 @@ class Handler(BaseHTTPRequestHandler):
             if any(size > encoder.max_seq_length for size in lengths):
                 raise ValueError("Input exceeds official model context limit")
             started = time.monotonic()
-            with torch.inference_mode():
+            with monitoring.INFERENCE_SECONDS.labels('embed').time(), torch.inference_mode():
                 embeddings = encoder.encode(inputs, batch_size=BATCH_SIZE, normalize_embeddings=True, show_progress_bar=False)
+            monitoring.ITEMS.labels('embed').inc(len(inputs))
             print(f"Embedding complete inputs={len(inputs)} elapsed_seconds={time.monotonic() - started:.3f}", flush=True)
             self.respond(200, {"model": TAG, "embeddings": embeddings.tolist()})
         except torch.cuda.OutOfMemoryError:
@@ -143,12 +168,18 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(500, {"error": "Embedding execution failed"})
         finally:
             if locked:
+                monitoring.ACTIVE.labels(operation).dec()
                 INFERENCE_LOCK.release()
             if admitted:
                 ADMISSION.release()
+            monitoring.REQUESTS.labels(operation, str(self._metric_status)).inc()
+            monitoring.REQUEST_SECONDS.labels(operation).observe(time.monotonic()-started_request)
 
 
 if __name__ == "__main__":
+    metrics_port = int(os.environ.get('METRICS_PORT', '0'))
+    if metrics_port:
+        monitoring.start(metrics_port)
     load_model()
     if reranker.ENABLED:
         reranker.load_model()

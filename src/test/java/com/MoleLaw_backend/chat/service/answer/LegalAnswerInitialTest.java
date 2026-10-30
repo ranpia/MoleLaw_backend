@@ -32,7 +32,8 @@ class LegalAnswerInitialTest {
     private final ChatEvidenceService roomEvidence = mock(ChatEvidenceService.class);
     private final LegalAnswerService service = new LegalAnswerService(collector, ChatClient.builder(model).build(),
             followUp, roomEvidence, new EvidencePromptBuilder(),
-            new CitationValidator(), new EvidenceRenderer(), mock(FollowUpCaseToolsFactory.class), mock(FollowUpCasePlanner.class));
+            new CitationValidator(), new EvidenceRenderer(), mock(FollowUpCaseToolsFactory.class), mock(FollowUpCasePlanner.class),
+            mock(CaseSearchQuestionResolver.class));
     private final EvidenceItem item = new EvidenceItem(ID, "LAW_CHUNK", "law-chunk:12", "민법 제548조",
             "https://www.law.go.kr/법령/민법", "원상회복 의무가 있다.");
 
@@ -94,9 +95,11 @@ class LegalAnswerInitialTest {
         var updates = service.streamInitialAnswer("질문 {literal}").collectList().block(java.time.Duration.ofSeconds(5));
         assertNotNull(updates);
         assertEquals("progress", updates.get(0).type());
-        assertEquals("info", updates.get(1).type());
-        assertTrue(updates.get(1).text().contains(item.content()));
-        assertFalse(updates.get(1).text().contains(ID));
+        assertEquals("evidence", updates.get(1).type());
+        assertEquals(List.of(item), updates.get(1).evidence());
+        assertEquals("info", updates.get(2).type());
+        assertTrue(updates.get(2).text().contains(item.content()));
+        assertFalse(updates.get(2).text().contains(ID));
         assertEquals(2, updates.stream().filter(u -> "answer_delta".equals(u.type())).count());
         assertTrue(updates.stream().filter(u -> "answer_delta".equals(u.type())).noneMatch(u -> u.text().contains(ID)));
         var completed = updates.get(updates.size() - 1);

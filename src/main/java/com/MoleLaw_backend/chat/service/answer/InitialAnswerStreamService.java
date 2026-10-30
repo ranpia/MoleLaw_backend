@@ -31,10 +31,11 @@ public class InitialAnswerStreamService {
             Map.entry("LAW_INDEX_REUSE", "저장된 법령의 검색 색인을 확인하고 있습니다."),
             Map.entry("SEARCH_AFTER_INDEX", "확보한 법령에서 조문을 다시 검색하고 있습니다."),
             Map.entry("ANSWER_GENERATION", "확인한 근거를 바탕으로 답변을 작성하고 있습니다."),
+            Map.entry("ANSWER_REPAIR", "답변의 출처 표기를 정리하고 다시 확인하고 있습니다."),
             Map.entry("ANSWER_VALIDATION", "답변의 인용과 근거를 확인하고 있습니다."),
             Map.entry("CONVERSATION_LOADING", "이전 대화와 상담방 근거를 확인하고 있습니다."),
-            Map.entry("FOLLOW_UP_PREPARATION", "질문에 필요한 근거와 판례를 검토하고 있습니다."),
-            Map.entry("FOLLOW_UP_ROUTING", "새 판례 검색이 필요한 요청인지 확인하고 있습니다."),
+            Map.entry("FOLLOW_UP_PREPARATION", "질문과 상담방 근거를 확인하고 있습니다."),
+            Map.entry("FOLLOW_UP_ROUTING", "질문에 맞는 답변 방식을 확인하고 있습니다."),
             Map.entry("CASE_QUERY_PLANNING", "상담 쟁점을 판례 검색용 법률용어로 바꾸고 있습니다."),
             Map.entry("CASE_CANDIDATE_SELECTION", "찾으시는 사건의 본문을 확인할 후보를 고르고 있습니다."),
             Map.entry("CASE_BODY_READY", "확인한 판례를 근거 목록에 추가하고 있습니다."),
@@ -71,8 +72,18 @@ public class InitialAnswerStreamService {
         return stream(question, owner, roomId, allowCaseSearch, "NDJSON").map(ServerSentEvent::data);
     }
 
+    public Flux<InitialAnswerStreamResponse> followUp(String question, User owner, Long roomId, boolean allowCaseSearch,
+            java.util.List<String> caseSearchLawEvidenceIds) {
+        return stream(question, owner, roomId, allowCaseSearch, "NDJSON", caseSearchLawEvidenceIds).map(ServerSentEvent::data);
+    }
+
     private Flux<ServerSentEvent<InitialAnswerStreamResponse>> stream(String question, User owner, Long roomId,
             boolean allowCaseSearch, String format) {
+        return stream(question, owner, roomId, allowCaseSearch, format, null);
+    }
+
+    private Flux<ServerSentEvent<InitialAnswerStreamResponse>> stream(String question, User owner, Long roomId,
+            boolean allowCaseSearch, String format, java.util.List<String> caseSearchLawEvidenceIds) {
         return Flux.defer(() -> {
             String streamId = java.util.UUID.randomUUID().toString();
             long started = System.nanoTime();
@@ -86,15 +97,21 @@ public class InitialAnswerStreamService {
             }
             var work = Flux.defer(() -> roomId == null ? answers.streamInitialAnswer(question)
                     : Flux.concat(Flux.just(com.MoleLaw_backend.chat.dto.answer.InitialAnswerUpdate.progress("CONVERSATION_LOADING")),
-                            answers.streamFollowUp(owner.getId(), roomId, question, allowCaseSearch)))
+                            caseSearchLawEvidenceIds == null
+                                    ? answers.streamFollowUp(owner.getId(), roomId, question, allowCaseSearch)
+                                    : answers.streamFollowUp(owner.getId(), roomId, question, allowCaseSearch, caseSearchLawEvidenceIds)))
                     .publishOn(Schedulers.boundedElastic(), 1)
                     .concatMap(update -> {
                         if (update.followUp() != null) {
                             return Flux.concat(Flux.just(progress("SAVING")), reactor.core.publisher.Mono.fromCallable(() -> {
                                 var message = chats.saveStreamedFollowUp(owner, roomId, question, update.followUp());
-                                return new InitialAnswerStreamResponse("completed", null, null, null, null,
+                                var savedEvidence = evidenceEvent(roomId,
+                                        com.MoleLaw_backend.chat.dto.response.EvidenceUpdateResponse.State.SAVED,
+                                        chats.getEvidenceSummaries(owner, roomId));
+                                var completed = new InitialAnswerStreamResponse("completed", null, null, null, null,
                                         update.followUp().response(), null, null, message);
-                            }));
+                                return java.util.List.of(savedEvidence, completed);
+                            }).flatMapMany(Flux::fromIterable));
                         }
                         if (update.prepared() != null) {
                             var saved = owner == null ? reactor.core.publisher.Mono.<com.MoleLaw_backend.chat.dto.response.ChatRoomCreationResponse>empty()
@@ -103,11 +120,18 @@ public class InitialAnswerStreamService {
                                     update.prepared().response(), room, null))
                                     .defaultIfEmpty(new InitialAnswerStreamResponse("completed", null, null, null, null,
                                             update.prepared().response(), null, null));
-                            return owner == null ? completion.flux() : Flux.concat(Flux.just(progress("SAVING")), completion);
+                            return owner == null ? completion.flux() : Flux.concat(Flux.just(progress("SAVING")),
+                                    completion.flatMapMany(completed -> completed.room() == null ? Flux.just(completed)
+                                            : Flux.just(evidenceEvent(completed.room().getId(),
+                                                    com.MoleLaw_backend.chat.dto.response.EvidenceUpdateResponse.State.SAVED,
+                                                    chats.getEvidenceSummaries(owner, completed.room().getId())), completed)));
                         }
                         return Flux.just(switch (update.type()) {
                             case "progress" -> progress(update.text());
                             case "info" -> new InitialAnswerStreamResponse("info", null, null, update.text(), null, null, null, null);
+                            case "evidence" -> evidenceEvent(roomId,
+                                    com.MoleLaw_backend.chat.dto.response.EvidenceUpdateResponse.State.PREVIEW,
+                                    update.evidence().stream().map(com.MoleLaw_backend.chat.dto.response.EvidenceSummaryResponse::from).toList());
                             case "answer_delta" -> new InitialAnswerStreamResponse("answer_delta", null, null, null, update.text(), null, null, null);
                             default -> throw new IllegalStateException("Unexpected stream state");
                         });
@@ -139,6 +163,13 @@ public class InitialAnswerStreamService {
 
     private static InitialAnswerStreamResponse error(ErrorCode code) {
         return new InitialAnswerStreamResponse("error", null, code.getMessage(), null, null, null, null, code.name());
+    }
+
+    private static InitialAnswerStreamResponse evidenceEvent(Long roomId,
+            com.MoleLaw_backend.chat.dto.response.EvidenceUpdateResponse.State state,
+            java.util.List<com.MoleLaw_backend.chat.dto.response.EvidenceSummaryResponse> items) {
+        return new InitialAnswerStreamResponse("evidence", null, null, null, null, null, null, null, null,
+                new com.MoleLaw_backend.chat.dto.response.EvidenceUpdateResponse(roomId, state, items));
     }
 
     private static ServerSentEvent<InitialAnswerStreamResponse> event(InitialAnswerStreamResponse data) {

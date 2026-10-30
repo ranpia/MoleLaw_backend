@@ -44,6 +44,77 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestRefreshTokenStoreConfig.class)
 class InitialAnswerStreamIntegrationTest {
+    @Test void ownerCanDeleteSavedEvidenceButCannotDeleteItTwice() throws Exception {
+        Long roomId = seedRoom();
+        mvc.perform(delete("/api/chat-rooms/" + roomId + "/evidence/" + id).with(user(principal)).with(csrf()))
+                .andExpect(status().isNoContent()).andExpect(content().string(""));
+        mvc.perform(get("/api/chat-rooms/" + roomId + "/evidence").with(user(principal)))
+                .andExpect(status().isOk()).andExpect(content().json("[]"));
+        mvc.perform(get("/api/chat-rooms/" + roomId + "/evidence/" + id).with(user(principal)))
+                .andExpect(status().isNotFound());
+        mvc.perform(delete("/api/chat-rooms/" + roomId + "/evidence/" + id).with(user(principal)).with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test void deletingEvidenceRequiresCsrfAndRejectsMalformedOrUnknownIds() throws Exception {
+        Long roomId = seedRoom();
+        mvc.perform(delete("/api/chat-rooms/" + roomId + "/evidence/" + id).with(user(principal)))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete("/api/chat-rooms/" + roomId + "/evidence/bad-id").with(user(principal)).with(csrf()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(delete("/api/chat-rooms/" + roomId + "/evidence/" + UUID.randomUUID()).with(user(principal)).with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test void followUpRepairsCitationOnceAndSavesOnlyTheCorrectedCompletion() throws Exception {
+        Long roomId = seedRoom();
+        long before = messages.count();
+        when(model.call(any(Prompt.class))).thenAnswer(call -> {
+            Prompt prompt = call.getArgument(0);
+            return response(prompt.getSystemMessage().getText().contains("후속판례실행계획자")
+                    ? "{\"action\":\"ANSWER_FROM_ROOM\",\"lawEvidenceId\":null,\"query\":\"\",\"reason\":\"일반 설명 요청\"}"
+                    : "교정한 설명 [[" + id + "]]");
+        });
+        when(model.stream(any(Prompt.class))).thenReturn(Flux.just(response("출처 표기가 빠진 설명")));
+        var result = mvc.perform(post("/api/chat-rooms/" + roomId + "/messages/ndjson").accept("application/x-ndjson")
+                .with(user(principal)).with(csrf()).contentType("application/json").content("{\"content\":\"설명해줘\"}"))
+                .andExpect(request().asyncStarted()).andReturn();
+        result.getAsyncResult(10000);
+        mvc.perform(asyncDispatch(result)).andExpect(status().isOk());
+        assertThat(result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8))
+                .contains("ANSWER_REPAIR", "\"type\":\"completed\"", "교정한 설명")
+                .doesNotContain("\"type\":\"error\"", "CASE_BODY_READY");
+        assertThat(messages.count()).isEqualTo(before + 2);
+        verify(model, times(2)).call(any(Prompt.class));
+    }
+
+    @Test void selectionWithoutConsentIsRejectedBeforeStartingStream() throws Exception {
+        Long roomId = seedRoom();
+        long before = messages.count();
+        mvc.perform(post("/api/chat-rooms/" + roomId + "/messages/ndjson").accept("application/x-ndjson")
+                .with(user(principal)).with(csrf()).contentType("application/json")
+                .content("{\"content\":\"검색\",\"caseSearchLawEvidenceIds\":[\"" + id + "\"]}"))
+                .andExpect(status().isBadRequest()).andExpect(request().asyncNotStarted());
+        assertThat(messages.count()).isEqualTo(before);
+        verify(model, never()).call(any(Prompt.class));
+    }
+
+    @Test void unknownSelectedLawEmitsInvalidRequestWithoutSavingOrCallingModel() throws Exception {
+        Long roomId = seedRoom();
+        long before = messages.count();
+        var result = mvc.perform(post("/api/chat-rooms/" + roomId + "/messages/ndjson").accept("application/x-ndjson")
+                .with(user(principal)).with(csrf()).contentType("application/json")
+                .content("{\"content\":\"검색\",\"allowCaseSearch\":true,\"caseSearchLawEvidenceIds\":[\""
+                        + UUID.randomUUID() + "\"]}"))
+                .andExpect(request().asyncStarted()).andReturn();
+        result.getAsyncResult(10000);
+        mvc.perform(asyncDispatch(result)).andExpect(status().isOk());
+        assertThat(result.getResponse().getContentAsString()).contains("\"type\":\"error\"", "INVALID_REQUEST")
+                .doesNotContain("\"type\":\"completed\"");
+        assertThat(messages.count()).isEqualTo(before);
+        verify(model, never()).call(any(Prompt.class));
+    }
+
     @MockitoBean ChatModel model;
     @MockitoBean EmbeddingModel embeddings;
     @MockitoBean LegalEvidenceCollector collector;
@@ -52,12 +123,18 @@ class InitialAnswerStreamIntegrationTest {
     @Autowired UserRepository users;
     @Autowired ChatRoomRepository rooms;
     @Autowired MessageRepository messages;
+    @Autowired org.springframework.security.web.FilterChainProxy securityFilters;
     @Autowired com.MoleLaw_backend.auth.security.JwtUtil jwt;
     @Autowired com.MoleLaw_backend.chat.service.ChatTurnService turns;
     private CustomUserDetails principal;
     private final String id = "00000000-0000-0000-0000-000000000001";
 
     @BeforeEach void fixture() {
+        // MockHttpServletResponse header maps are not safe for initial/async concurrent writes.
+        securityFilters.getFilterChains().forEach(chain -> chain.getFilters().stream()
+                .filter(org.springframework.security.web.header.HeaderWriterFilter.class::isInstance)
+                .map(org.springframework.security.web.header.HeaderWriterFilter.class::cast)
+                .forEach(filter -> filter.setShouldWriteHeadersEagerly(true)));
         when(model.call(any(Prompt.class))).thenAnswer(call -> {
             Prompt prompt = call.getArgument(0);
             return response(prompt.getSystemMessage().getText().contains("후속판례실행계획자")
@@ -141,6 +218,7 @@ class InitialAnswerStreamIntegrationTest {
                 && System.nanoTime() < until) Thread.sleep(10);
         String early = result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
         assertThat(early).contains("\"type\":\"progress\"", "\"type\":\"info\"", "\"type\":\"answer_delta\"")
+                .contains("\"type\":\"evidence\"", "\"state\":\"PREVIEW\"")
                 .doesNotContain("event:", "data:", "\"type\":\"completed\"");
         assertThat(rooms.count()).isEqualTo(roomCount);
         var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -154,6 +232,7 @@ class InitialAnswerStreamIntegrationTest {
         String body = result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
         var lines = body.strip().split("\\r?\\n");
         for (String line : lines) assertThat(mapper.readTree(line).isObject()).isTrue();
+        assertThat(body).contains("\"state\":\"SAVED\"");
         var completed = mapper.readTree(lines[lines.length - 1]);
         assertThat(completed.path("type").asText()).isEqualTo("completed");
         assertThat(completed.path("room").path("id").asLong()).isPositive();
@@ -192,8 +271,8 @@ class InitialAnswerStreamIntegrationTest {
 
     @Test void explicitCaseSearchEmitsConsentInsteadOfGenericLawAdviceInNdjson() throws Exception {
         Long roomId = seedRoom(); long before = messages.count();
-        when(model.call(any(Prompt.class))).thenReturn(response("{\"action\":\"SEARCH_CASES\",\"lawEvidenceId\":\""
-                + id + "\",\"query\":\"삼풍백화점 판결\",\"reason\":\"사용자가 지정한 판결의 새 검색 요청\"}"));
+        when(model.call(any(Prompt.class))).thenReturn(response("{\"action\":\"SEARCH_CASES\",\"lawEvidenceId\":null,"
+                + "\"query\":\"삼풍백화점 판결\",\"reason\":\"사용자가 지정한 판결의 새 검색 요청\"}"));
         var result = mvc.perform(post("/api/chat-rooms/" + roomId + "/messages/ndjson").accept("application/x-ndjson")
                 .cookie(new jakarta.servlet.http.Cookie("accessToken", jwt.generateAccessToken(principal.getUserId())))
                 .with(csrf()).contentType("application/json").content("{\"content\":\"삼풍백화점 판결을 새로 찾아줘\",\"allowCaseSearch\":false}"))
@@ -221,7 +300,16 @@ class InitialAnswerStreamIntegrationTest {
                 && System.nanoTime() < until) Thread.sleep(10);
         String early = result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
         assertThat(early).contains("CONVERSATION_LOADING", "\"type\":\"info\"", "\"type\":\"answer_delta\"")
-                .doesNotContain(id.substring(0, 12), "\"type\":\"completed\"");
+                .contains("\"type\":\"evidence\"", "\"state\":\"PREVIEW\"")
+                .doesNotContain("\"type\":\"completed\"");
+        var earlyMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        for (String line : early.strip().split("\\r?\\n")) {
+            var frame = earlyMapper.readTree(line);
+            if (frame.path("type").asText().equals("answer_delta"))
+                assertThat(frame.path("delta").asText()).doesNotContain(id.substring(0, 12));
+            if (frame.path("type").asText().equals("evidence"))
+                assertThat(frame.path("evidence").path("items").get(0).has("content")).isFalse();
+        }
         assertThat(messages.count()).isEqualTo(before);
         finish.tryEmitValue(response(id.substring(12) + "]]"));
         result.getAsyncResult(10000);
@@ -231,8 +319,9 @@ class InitialAnswerStreamIntegrationTest {
         var lines = body.strip().split("\\r?\\n");
         var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
         for (int i = 0; i < lines.length - 1; i++) {
-            assertThat(mapper.readTree(lines[i]).isObject()).isTrue();
-            assertThat(lines[i]).doesNotContain(id);
+            var frame = mapper.readTree(lines[i]);
+            assertThat(frame.isObject()).isTrue();
+            if (!frame.path("type").asText().equals("evidence")) assertThat(lines[i]).doesNotContain(id);
         }
         var last = mapper.readTree(lines[lines.length - 1]);
         assertThat(last.path("type").asText()).isEqualTo("completed");

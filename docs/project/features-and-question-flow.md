@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | 인증·사용자 | 이메일 가입·로그인, Google OAuth, 프로필·비밀번호·탈퇴, 입력 검증, CSRF, 5분 Access JWT, Redis Refresh 회전·재사용 탐지 | [인증](../auth/refresh-rotation.md), [사용자](../auth/user-account-validation.md) |
 | 상담방 | 사용자별 목록·대화 조회·제목 변경·삭제, 소유권 검사, 질문·답변 암호화 저장 | [생성·관리](../chat/chat-room-management.md), [저장](../chat/chat-storage.md) |
+| 최초 질문 보조 | 초안 원문을 보존하는 추천 질문 최대 3개. 선택한 문장을 기존 상담 API로 전송 | [추천 질문](../chat/initial-question-suggestions.md) |
 | 질문 분석 | 목적·사실·복수 쟁점·명시 대상·후보 법령·쟁점 관계 구분, 원문 인용 검증, 쟁점별 질의 생성 | [질문 라우팅](../law/question-routing.md) |
 | 법령 검색·수집 | 검색 필드·정확한 명칭·소관부처 옵션, 전체 페이지 후보 평가, 점수·선정 사유, 중복 수집 방지·진행 이력 | [법령 도구](../law/legal-api-tools.md) |
 | ETL·색인 | Reader → Transformer → Writer, 조문 청킹, KURE 임베딩, Qdrant 적재·재조회 검증, 완료 세대 재사용·증분 색인 | [ETL](../law/law-etl-local.md), [증분 색인](../law/incremental-law-indexing.md) |
@@ -17,7 +18,7 @@
 | 근거 판단·답변 | 후보 목록과 본문 입력 분리, 읽을 근거 선택, 충분성·추가 행동 판단, 부분 일반 안내, UUID 인용 소속 검증 | [본문 읽기](../law/evidence-reading.md), [판단 계약](../law/evidence-decision.md) |
 | 후속 대화 | Advisor로 기록 복원, 고정 법령 근거 사용, 새 판례 검색 실행계획, 동의 확인 | [후속 상담](../chat/follow-up-consultation.md) |
 | 판례 검색 | 특정 사건·유사 쟁점 구분, 사건명/본문/참조법령 범위 선택, 전체 페이지 수집, 후보 선정·본문 관련성 평가 | [판례 흐름](../law/case-retrieval-reranking.md) |
-| 근거 관리 | 최초 스냅샷, 실제 읽고 인용한 새 판례만 누적, 근거 목록·본문 분리 조회 | [상담방 근거](../chat/room-evidence.md) |
+| 근거 관리 | 최초 스냅샷, 읽고 인용한 새 판례 누적, PREVIEW/SAVED 실시간 카드, 근거 목록·본문 조회와 사용자 삭제 | [상담방 근거](../chat/room-evidence.md) |
 | 진행 상태 | 최초 SSE·NDJSON, 후속 NDJSON, 실제 단계·근거·임시 답변·완료·오류 이벤트 | [스트리밍](../chat/initial-answer-stream.md) |
 | 개발 환경 | local Swagger, ETL 진단, AI Search 비교 코드, DB/AI/백엔드 Compose 분리 | [Docker](../../docker/README.md), [검증](../validation/validation-status.md) |
 

@@ -27,16 +27,11 @@ public class FollowUpCasePlanner {
     public FollowUpCasePlan plan(String question, List<EvidenceItem> sources, String conversationId) {
         try {
             var input = mapper.createObjectNode().put("question", question);
-            var laws = input.putArray("roomLaws");
-            var allowed = sources.stream().filter(item -> item.kind().startsWith("LAW_")).map(EvidenceItem::id).toList();
-            for (var item : sources) {
-                if (item.kind().startsWith("LAW_")) laws.addObject().put("id", item.id()).put("title", item.title());
-            }
-            var anchorValues = new java.util.ArrayList<Object>(allowed); anchorValues.add(null);
+            input.putArray("roomLaws");
             var schema = Map.<String, Object>of("type", "object", "additionalProperties", false,
                     "required", List.of("action", "lawEvidenceId", "query", "reason"), "properties", Map.of(
-                            "action", Map.of("type", "string", "enum", List.of("ANSWER_FROM_ROOM", "SEARCH_CASES")),
-                            "lawEvidenceId", Map.of("type", List.of("string", "null"), "enum", anchorValues),
+                            "action", Map.of("type", "string", "enum", List.of("ANSWER_FROM_ROOM", "READ_ROOM_CASES", "SEARCH_CASES")),
+                            "lawEvidenceId", Map.of("type", "null"),
                             "query", Map.of("type", "string"), "reason", Map.of("type", "string")));
             var format = ResponseFormat.builder().type(ResponseFormat.Type.JSON_SCHEMA)
                     .jsonSchema(ResponseFormat.JsonSchema.builder().name("follow_up_case_plan").strict(true).schema(schema).build()).build();
@@ -47,7 +42,7 @@ public class FollowUpCasePlanner {
                     .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
                     .with(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES).with(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS)
                     .<FollowUpCasePlan>readValue(output);
-            if (plan == null || (plan.action() == FollowUpCasePlan.Action.SEARCH_CASES && !allowed.contains(plan.lawEvidenceId())))
+            if (plan == null || plan.lawEvidenceId() != null)
                 throw new IllegalArgumentException();
             return plan;
         } catch (Exception failure) { throw new GptApiException(ErrorCode.GPT_API_FAILURE); }

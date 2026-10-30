@@ -38,6 +38,169 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class LegalAnswerFollowUpTest {
+    @Test void ordinaryQuestionSkipsCasePreparationAndGoesStraightToFinalWriter() {
+        ownRoom();
+        var law = new EvidenceItem(EVIDENCE_ID, "LAW_CHUNK", "law-1", "법령", "https://www.law.go.kr", "본문");
+        var oldCase = new EvidenceItem("00000000-0000-0000-0000-000000000099", "CASE_BODY", "242151",
+                "과거 검색 판결", "https://www.law.go.kr", "과거 판결 본문");
+        when(evidence.load(1L, 2L)).thenReturn(List.of(law, oldCase));
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
+                new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER))))));
+        var updates = service.streamFollowUp(1L, 2L, "협박죄 성립 요건을 설명해줘", false).collectList().block();
+        assertThat(updates.get(updates.size() - 1).followUp().response().getAnswer()).isEqualTo(CITED_ANSWER);
+        assertThat(updates).noneSatisfy(update -> {
+            assertThat(update.type()).isEqualTo("progress");
+            assertThat(update.text()).isEqualTo("CASE_BODY_READY");
+        });
+        verify(model, never()).call(any(Prompt.class));
+        verify(casePipeline, never()).search(any(), any(), anyString(), anyInt(), any(), any());
+    }
+
+    @Test void explicitExistingCaseQuestionReadsOnlyTheRequestedRoomCase() {
+        ownRoom();
+        var existing = new EvidenceItem("00000000-0000-0000-0000-000000000099", "CASE_BODY", "242151",
+                "기존 판결", "https://www.law.go.kr", "확인한 판결 본문");
+        var law = new EvidenceItem(EVIDENCE_ID, "LAW_CHUNK", "law-1", "법령", "https://www.law.go.kr", "법령 본문");
+        when(evidence.load(1L, 2L)).thenReturn(List.of(law, existing));
+        when(routing.plan(anyString(), any(), anyString())).thenReturn(new com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan(
+                com.MoleLaw_backend.chat.dto.answer.FollowUpCasePlan.Action.READ_ROOM_CASES, null, "", "기존 판결의 판단 이유 요청"));
+        when(model.call(any(Prompt.class))).thenAnswer(call -> {
+            var callbacks = ((org.springframework.ai.model.tool.ToolCallingChatOptions) ((Prompt) call.getArgument(0)).getOptions()).getToolCallbacks();
+            assertThat(callbacks).extracting(c -> c.getToolDefinition().name()).containsExactly("readRoomCase");
+            callbacks.get(0).call("{\"caseId\":\"242151\"}");
+            return new ChatResponse(List.of(new Generation(new AssistantMessage("준비 완료"))));
+        });
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
+                new ChatResponse(List.of(new Generation(new AssistantMessage("판결의 판단 이유입니다 [[" + existing.id() + "]]"))))));
+        var result = service.streamFollowUp(1L, 2L, "그 판결의 판단 이유를 설명해줘", false).blockLast().followUp();
+        assertThat(result.newEvidence()).isEmpty();
+        assertThat(result.response().getAnswer()).contains(existing.id());
+        verify(model).call(any(Prompt.class));
+        verify(casePipeline, never()).search(any(), any(), anyString(), anyInt(), any(), any());
+    }
+
+    @Test void invalidStreamCitationIsRepairedOnceUsingTheSameEvidenceWithoutSearchTools() {
+        ownRoom();
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
+                new ChatResponse(List.of(new Generation(new AssistantMessage("출처가 빠진 초안"))))));
+        when(model.call(any(Prompt.class))).thenAnswer(call -> {
+            Prompt prompt = call.getArgument(0);
+            assertThat(prompt.getSystemMessage().getText()).contains("출처 표기를 교정");
+            assertThat(prompt.getUserMessage().getText()).contains("출처가 빠진 초안", EVIDENCE_ID, "original statute text");
+            assertThat(prompt.getInstructions()).hasSize(2);
+            return new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER))));
+        });
+        var updates = service.streamFollowUp(1L, 2L, "설명해줘", false).collectList().block();
+        assertThat(updates).anySatisfy(update -> {
+            assertThat(update.type()).isEqualTo("progress");
+            assertThat(update.text()).isEqualTo("ANSWER_REPAIR");
+        });
+        assertThat(updates.get(updates.size() - 1).followUp().response().getAnswer()).isEqualTo(CITED_ANSWER);
+        verify(model).call(any(Prompt.class));
+        verify(casePipeline, never()).search(any(), any(), anyString(), anyInt(), any(), any());
+    }
+
+    @Test void aSecondInvalidCitationStillFailsWithoutFurtherRetries() {
+        ownRoom();
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
+                new ChatResponse(List.of(new Generation(new AssistantMessage("인용 없는 초안"))))));
+        when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage("여전히 인용 없음")))));
+        assertThatThrownBy(() -> service.streamFollowUp(1L, 2L, "설명해줘", false).blockLast()).isInstanceOf(GptApiException.class);
+        verify(model).call(any(Prompt.class));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints = {0, 1, 40})
+    void allSelectedContextsReachSearchAndEmptySelectionNeverUsesRoomLaw(int count) {
+        ownRoom();
+        var selected = java.util.stream.IntStream.rangeClosed(1, count).mapToObj(index -> new EvidenceItem(
+                "00000000-0000-0000-0000-" + String.format("%012d", index), "LAW_CHUNK", "law-" + index,
+                "선택 법령 " + index, "https://www.law.go.kr", "본문")).toList();
+        when(evidence.load(1L, 2L)).thenReturn(selected.isEmpty() ? List.of(new EvidenceItem(
+                EVIDENCE_ID, "LAW_CHUNK", "unused-law", "선택하지 않은 방 법령", "https://www.law.go.kr", "본문")) : selected);
+        routeSearch();
+        when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER)))));
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
+                new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER))))));
+        when(casePipeline.search(any(), any(), anyString(), anyInt(), any(), any())).thenAnswer(call -> {
+            Object state = call.getArgument(4);
+            assertThat(org.springframework.test.util.ReflectionTestUtils.getField(state, "lawContexts")).isEqualTo(selected);
+            assertThat((EvidenceItem) call.getArgument(1)).isEqualTo(selected.isEmpty() ? null : selected.get(0));
+            return null;
+        });
+        var ids = selected.stream().map(EvidenceItem::id).toList();
+        service.prepareFollowUp(1L, 2L, "검색해줘", true, ids);
+        service.streamFollowUp(1L, 2L, "검색해줘", true, ids).blockLast();
+        verify(casePipeline, times(2)).search(any(), any(), anyString(), anyInt(), any(), any());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void userSelectedLawOverridesAutomaticAnchorInSyncAndStreaming(boolean streaming) {
+        ownRoom();
+        String selectedId = "00000000-0000-0000-0000-000000000002";
+        var automatic = new EvidenceItem(EVIDENCE_ID, "LAW_CHUNK", "law-1", "자동 법령", "https://www.law.go.kr", "본문");
+        var selected = new EvidenceItem(selectedId, "LAW_CHUNK", "law-2", "선택한 법령", "https://www.law.go.kr", "본문");
+        when(evidence.load(1L, 2L)).thenReturn(List.of(automatic, selected));
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
+        routeSearch();
+        when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER)))));
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
+                new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER))))));
+
+        if (streaming) service.streamFollowUp(1L, 2L, "게임 욕설 협박 판례", true, java.util.List.of(selectedId)).blockLast();
+        else service.prepareFollowUp(1L, 2L, "게임 욕설 협박 판례", true, java.util.List.of(selectedId));
+
+        verify(casePipeline).search(any(), eq(selected), eq("판례 검색"), eq(1), any(), any());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void invalidLawSelectionStopsBeforePlanningOrExternalSearch(boolean streaming) {
+        var caseBody = new EvidenceItem("case-id", "CASE_BODY", "123", "판례", "https://www.law.go.kr", "본문");
+        when(evidence.load(1L, 2L)).thenReturn(List.of(caseBody));
+        for (String selectedId : List.of("case-id", "another-room-id")) {
+            assertThatThrownBy(() -> {
+                if (streaming) service.streamFollowUp(1L, 2L, "질문", true, java.util.List.of(selectedId)).blockLast();
+                else service.prepareFollowUp(1L, 2L, "질문", true, java.util.List.of(selectedId));
+            }).isInstanceOfSatisfying(MolelawException.class, failure -> assertThat(failure.getErrorCode()).isEqualTo(ErrorCode.INVALID_REQUEST));
+        }
+        assertThatThrownBy(() -> service.prepareFollowUp(1L, 2L, "질문", false, java.util.List.of(EVIDENCE_ID)))
+                .isInstanceOf(MolelawException.class);
+        verifyNoInteractions(routing);
+        verify(casePipeline, never()).search(any(), any(), anyString(), anyInt(), any(), any());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void consentMessageDoesNotReplaceOriginalSearchQuestion(boolean streaming) {
+        ownRoom();
+        String original = "게임 상에서의 욕설 협박에 관련해서 판례가 있다면 보고싶어";
+        var proposal = Message.builder().sender(Message.Sender.BOT)
+                .content(TestEncryption.create().encrypt("검색을 진행할까요?"))
+                .caseSearchRequested(true).build();
+        when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of(
+                message(1L, Message.Sender.USER, original), proposal));
+        routeSearch();
+        when(casePipeline.search(any(), any(), anyString(), anyInt(), any(), any())).thenAnswer(call -> {
+            Object searchState = call.getArgument(4);
+            assertThat(org.springframework.test.util.ReflectionTestUtils.getField(searchState, "userQuestion"))
+                    .isEqualTo(original);
+            return null;
+        });
+        when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(
+                new Generation(new AssistantMessage(CITED_ANSWER)))));
+        when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
+                new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER))))));
+
+        if (streaming) service.streamFollowUp(1L, 2L, "네, 관련 판례를 검색해 주세요.", true).blockLast();
+        else service.prepareFollowUp(1L, 2L, "네, 관련 판례를 검색해 주세요.", true);
+
+        verify(routing).plan(eq(original), any(), eq("1:2"));
+        verify(routing, never()).plan(eq("네, 관련 판례를 검색해 주세요."), any(), anyString());
+        verify(casePipeline).search(any(), any(), anyString(), anyInt(), any(), any());
+    }
+
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void summaryCannotReopenSearchOrConsentAfterRoomAnswerPlan(boolean consent) {
@@ -47,7 +210,7 @@ class LegalAnswerFollowUpTest {
                 message(2L, Message.Sender.BOT, "이전 판례 검색을 진행할까요?")));
         when(model.call(any(Prompt.class))).thenAnswer(call -> {
             var options = (org.springframework.ai.model.tool.ToolCallingChatOptions) ((Prompt) call.getArgument(0)).getOptions();
-            assertThat(options.getToolCallbacks()).extracting(c -> c.getToolDefinition().name()).containsExactly("readRoomCase");
+            assertThat(options.getToolCallbacks()).extracting(c -> c.getToolDefinition().name()).isEmpty();
             return new ChatResponse(List.of(new Generation(new AssistantMessage(CITED_ANSWER))));
         });
         when(model.stream(any(Prompt.class))).thenReturn(reactor.core.publisher.Flux.just(
@@ -81,16 +244,14 @@ class LegalAnswerFollowUpTest {
         when(model.stream(any(Prompt.class))).thenAnswer(call -> {
             Prompt prompt = call.getArgument(0);
             assertThat(prompt.getUserMessage().getText()).contains("SEARCH_CASES");
-            if (oversized) assertThat(prompt.getUserMessage().getText()).contains("읽기 한도").doesNotContain(body.content());
+            if (oversized) assertThat(prompt.getUserMessage().getText()).contains("판결문 일부 발췌", "실제 본문").doesNotContain(body.content());
             else assertThat(prompt.getUserMessage().getText()).contains(body.content());
             return reactor.core.publisher.Flux.just(new ChatResponse(List.of(new Generation(new AssistantMessage(
-                    oversized ? "판결 검색은 실행했지만 본문 읽기 한도를 초과했습니다. 상담 맥락입니다 [[" + EVIDENCE_ID + "]]"
-                            : "찾은 판결입니다 [[" + caseUuid + "]]")))));
+                    "찾은 판결입니다 [[" + caseUuid + "]]")))));
         });
         var updates = service.streamFollowUp(1L, 2L, "지정 사건 찾아줘", true).collectList().block(java.time.Duration.ofSeconds(5));
         var answer = updates.get(updates.size() - 1).followUp();
-        if (oversized) assertThat(answer.newEvidence()).isEmpty();
-        else assertThat(answer.newEvidence()).containsExactly(body);
+        assertThat(answer.newEvidence()).containsExactly(body);
         assertThat(answer.caseSearchRequested()).isFalse();
         verify(casePipeline).search(any(), any(), eq("지정 사건 판결"), eq(1), any(), any());
         verify(model, never()).call(any(Prompt.class));
@@ -172,7 +333,7 @@ class LegalAnswerFollowUpTest {
                 .allMatch(info -> !info.contains(EVIDENCE_ID));
         assertThat(updates.get(updates.size() - 1).followUp().response().getAnswer())
                 .isEqualTo("확인한 근거 [[" + EVIDENCE_ID + "]]");
-        verify(model).call(any(Prompt.class));
+        verify(model, never()).call(any(Prompt.class));
         verifyNoInteractions(collector);
     }
 
@@ -193,7 +354,8 @@ class LegalAnswerFollowUpTest {
         assertThat(result.caseSearchRequested()).isTrue();
         assertThat(result.caseSearchConsent()).isFalse();
         assertThat(result.newEvidence()).isEmpty();
-        assertThat(result.response().getAnswer()).contains("[[" + EVIDENCE_ID + "]]", "동의하신 경우에만");
+        assertThat(result.response().getAnswer()).contains("법령 근거를 자동 선택하지 않고", "동의하신 경우에만")
+                .doesNotContain("[[");
     }
 
     private static final String EVIDENCE_ID = "00000000-0000-0000-0000-000000000001";
@@ -216,13 +378,13 @@ class LegalAnswerFollowUpTest {
         var memory = new PersistedChatMemory(messages, rooms, 20, TestEncryption.create());
         var builder = new AiConfig().baseAiChatClientBuilder(model);
         var config = new AnswerChatClientConfig();
-        service = new LegalAnswerService(collector, mock(ChatClient.class),
+        service = new LegalAnswerService(collector, ChatClient.builder(model).build(),
                 config.followUpAnswerChatClient(config.legalAnswerChatClient(builder, "gpt-5.4-mini", "medium", 16384,
                         mock(com.MoleLaw_backend.common.ai.AiPrompts.class)), memory, "gpt-5.4-mini", 16384), evidence,
                 new EvidencePromptBuilder(), new CitationValidator(), new EvidenceRenderer(), new FollowUpCaseToolsFactory(
                         mock(com.MoleLaw_backend.law.service.tool.LegalApiToolService.class),
                         mock(com.MoleLaw_backend.law.service.tool.CaseEvidenceReader.class),
-                        casePipeline), routing);
+                        casePipeline), routing, new CaseSearchQuestionResolver(messages, TestEncryption.create()));
         when(evidence.load(1L, 2L)).thenReturn(List.of(new EvidenceItem(EVIDENCE_ID,
                 "LAW_CHUNK", "law-1", "Civil law article", "https://www.law.go.kr/law/1", "original statute text")));
     }
@@ -243,7 +405,8 @@ class LegalAnswerFollowUpTest {
         var result = service.prepareFollowUp(1L, 2L, "판례도 필요한가요?");
         assertThat(result.caseSearchRequested()).isTrue();
         assertThat(result.caseSearchConsent()).isFalse();
-        assertThat(result.response().getAnswer()).contains("[[" + EVIDENCE_ID + "]]", "동의하신 경우에만");
+        assertThat(result.response().getAnswer()).contains("법령 근거를 자동 선택하지 않고", "동의하신 경우에만")
+                .doesNotContain("[[");
         assertThat(result.newEvidence()).isEmpty();
         verifyNoInteractions(collector);
         verify(messages, never()).save(any());

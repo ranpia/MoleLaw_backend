@@ -84,7 +84,9 @@ public class ChatService {
         ChatContentLimits.question(request == null ? null : request.getContent());
 
         try {
-            var prepared = answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch());
+            var prepared = request.getCaseSearchLawEvidenceIds() == null
+                    ? answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch())
+                    : answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch(), request.getCaseSearchLawEvidenceIds());
             Message botMessage = turns.savePreparedFollowUpTurn(room, request.getContent(), prepared);
             return MessageResponse.from(botMessage, encryptor.decrypt(botMessage.getContent()));
         } catch (Exception e) {
@@ -96,6 +98,12 @@ public class ChatService {
     public void validateFollowUpAccess(User user, Long roomId, String question) {
         requireOwnedRoom(user, roomId);
         ChatContentLimits.question(question);
+    }
+
+    public List<com.MoleLaw_backend.chat.dto.response.EvidenceSummaryResponse> getEvidenceSummaries(User user, Long roomId) {
+        requireOwnedRoom(user, roomId);
+        return evidence.load(user.getId(), roomId).stream()
+                .map(com.MoleLaw_backend.chat.dto.response.EvidenceSummaryResponse::from).toList();
     }
 
     public MessageResponse saveStreamedFollowUp(User user, Long roomId, String question,

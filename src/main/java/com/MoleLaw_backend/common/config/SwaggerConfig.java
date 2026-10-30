@@ -34,7 +34,15 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("MoleLaw API")
-                        .description("MoleLaw 백엔드 API. 보호된 API는 Bearer Access JWT 또는 accessToken 쿠키로 인증하며 Bearer가 우선합니다. "
+                        .description("MoleLaw 백엔드 개발용 API 문서.\n\n"
+                                + "### 실행 순서\n"
+                                + "1. GET /api/auth/csrf를 실행합니다. 이후 변경 요청에는 CSRF 헤더가 자동으로 추가됩니다.\n"
+                                + "2. 로그인 API로 인증 쿠키를 발급받습니다.\n"
+                                + "3. 선택적으로 POST /api/legal-answers/suggestions에 초안을 보내 추천 질문을 받습니다. 이 단계는 상담을 저장하지 않습니다.\n"
+                                + "4. 선택한 question 또는 원래 질문을 POST /api/chat-rooms의 content로 보내 최초 상담을 시작합니다.\n"
+                                + "5. 생성된 상담방에서 후속 메시지와 근거 조회 API를 사용합니다. 판례 검색 동의는 해당 요청에서 별도로 전달합니다.\n\n"
+                                + "### 인증·보안\n"
+                                + "보호된 API는 Bearer Access JWT 또는 accessToken 쿠키로 인증하며 Bearer가 우선합니다. "
                                 + "Access는 5분 stateless JWT로 Redis 조회 없이 검증합니다. 로그아웃·비밀번호 변경 후에도 기존 Access는 만료까지 유효합니다. Refresh 저장·회전·폐기의 Redis 장애는 503입니다. "
                                 + "Access subject는 User.id 문자열이며 tokenVersion=3, issuer=molelaw-auth, audience=molelaw-api입니다. Refresh는 난수 기반 HttpOnly 쿠키로만 전달하며 매 재발급마다 회전합니다. 이전 JWT Refresh는 거절하므로 재로그인해야 합니다. "
                                 + "POST/PUT/PATCH/DELETE는 로그인·가입을 포함하여 GET /api/auth/csrf에서 받은 토큰을 X-XSRF-TOKEN 헤더로 보내야 합니다. "

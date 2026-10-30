@@ -1,0 +1,57 @@
+services:
+  qdrant:
+    profiles: [rag, ragprep]
+  kure:
+    profiles: [rag, ragprep]
+  rag-model:
+    profiles: [ragprep]
+    image: molelaw/kure-service:loadtest-cpu
+    entrypoint: [python, /tools/model_gateway.py]
+    environment:
+      RAG_MODEL_MODE: synthetic
+    volumes:
+      - ./rag-prep:/tools:ro
+      - ../../build/rag-prep/model:/results
+      - ../../build/rag-prep/probe:/probe:ro
+    cpus: 0.5
+    mem_limit: 256m
+    healthcheck: {disable: true}
+    expose: ["8080", "9093"]
+
+  rag-backend:
+    extends: {file: compose.yml, service: backend}
+    profiles: [ragprep]
+    image: molelaw-app:ragprep
+    ports: ["127.0.0.1:18083:8080"]
+    environment:
+      OPENAI_API_KEY: rag-internal-dummy
+      SPRING_AI_OPENAI_BASE_URL: http://rag-model:8080
+      SPRING_AI_RETRY_MAX_ATTEMPTS: "1"
+      APP_LAW_RETRIEVAL_FIXED_INDEX_ONLY: "true"
+      APP_LAW_RETRIEVAL_BACKEND: QDRANT
+      APP_LAW_VECTOR_ENABLED: "true"
+      APP_LAW_VECTOR_COLLECTION_NAME: molelaw_service_loadtest_rag_app_v1
+      APP_LAW_VECTOR_CHUNK_SIZE: "512"
+      APP_LAW_VECTOR_CHUNK_OVERLAP: "64"
+      APP_LAW_RERANKER_ENABLED: "true"
+      APP_LAW_RERANKER_CANDIDATE_LIMIT: "15"
+      APP_AI_ANSWER_MAX_COMPLETION_TOKENS: "4096"
+      APP_CHAT_STREAM_TIMEOUT: 3m
+    depends_on:
+      rag-model: {condition: service_started}
+      kure: {condition: service_healthy}
+      qdrant: {condition: service_started}
+
+  rag-probe:
+    profiles: [ragprep]
+    image: molelaw/kure-service:loadtest-cpu
+    entrypoint: [python, /tools/probe.py]
+    environment:
+      LT_DATA_PASSWORD: ${LT_DATA_PASSWORD:?Set LT_DATA_PASSWORD}
+    volumes:
+      - ./rag-prep:/tools:ro
+      - ../../build/loadtest-data:/fixtures:ro
+      - ../../build/rag-prep/probe:/results
+    cpus: 1
+    mem_limit: 256m
+    healthcheck: {disable: true}

@@ -1,6 +1,6 @@
 # 역할별 ChatClient와 모델
 
-기준일: 2026-10-23. 모델 설정은 반영했으며 실제 모델 품질·계정 접근 검증은 [P01·P02](../plans/README.md)에 남아 있다.
+기준일: 2026-10-26. 역할별 설정을 설명하며 실제 모델 품질·계정 접근 검증은 [P01·P02](../plans/README.md)에 남아 있다.
 
 ## 역할과 옵션
 
@@ -8,10 +8,14 @@
 | --- | --- | --- | ---: |
 | questionPlanningChatClient | gpt-5.4-mini | low | 4096 |
 | lawCandidateChatClient | gpt-5.4-mini | low | 8192 |
-| evidenceReadChatClient | gpt-5.4-mini | low | 4096 | gpt-5.4 | medium | 12288 |
+| evidenceReadChatClient | gpt-5.4-mini | low | 4096 |
+| evidenceCollectionChatClient | gpt-5.4 | medium | 12288 |
 | legalAnswerChatClient | gpt-5.4-mini | medium | 16384 |
-| followUpAnswerChatClient | 최초 답변 Client 설정 복제 | medium | 16384 |
+| followUpAnswerChatClient | 최초 답변 Client 설정 복제 | none | 16384 |
 | followUpCasePlanningChatClient | gpt-5.4-mini | low | 2048 |
+| initialQuestionSuggestionChatClient | gpt-5.4-mini | low | 2048 |
+
+최초 상담 추천 Client는 초안만 받아 질문 방향을 생성하며 Advisor·Tool·검색·저장을 사용하지 않는다. 원문과 추천 방향을 조합하는 작업 및 길이 검사는 서버가 수행한다. [추천 질문 계약](../chat/initial-question-suggestions.md)을 따른다.
 
 후속 판례 실행계획 Client는 Advisor 없이 최신 사용자 메시지로만 검색 여부를 판단한다. 기존 방 법령 ID 목록은 실행 대상을 묶는 용도다. 요약·정리·재설명은 기존 근거로 답하고 과거 검색 요청을 승계하지 않는다. 서버는 검색 계획이 있을 때만 동의를 요청하거나 실제 검색·본문 읽기를 실행한다. 이후 모델에는 기존 판례 읽기만 허용하고 검색·동의 도구는 제공하지 않는다. 답변 작성 Client의 대화 Advisor는 유지한다. 설정 접두사는 `APP_AI_FOLLOW_UP_PLAN_*`다.
 
@@ -52,3 +56,7 @@ RoleChatClientConfigTest가 모델·effort·완료 토큰 격리, 기본 tempera
 ## 읽은 근거로 충분성 판단
 
 최초 충분성 판단은 후보 전체 목록→본문 읽기 선택→MySQL 원문 확인→실제 읽은 본문 입력으로 변경했다. 질문 분석을 포함한 8000토큰은 판단 기본 JSON의 상한이며 본문을 그 안에서 한 조문만 남기는 방식은 사용하지 않는다. 후보 목록 8000·본문 누적 12000·결합 판단 입력 32000토큰의 추정 상한과 최대 2회 읽기 선택을 적용한다. [현재 계약과 제한](../law/evidence-reading.md)을 따른다.
+
+## 후속 판례 처리와 인용 교정 (2026-10-27)
+
+일반 질문은 ANSWER_FROM_ROOM으로 판례 준비·본문 읽기를 생략한다. 기존 판결 자체의 검토 요청만 READ_ROOM_CASES로 로컬 읽기를 실행하고, 새 판례 조회 요청만 SEARCH_CASES로 동의·검색을 실행한다. 인용 표기 검증 실패는 대화 메모리·검색 도구 없는 기존 최초 답변 Client에 동일 확인 근거와 초안을 전달해 1회 교정한다. 교정 후에도 기존 인용 검증을 통과해야 저장한다. 실시간 근거 카드와 삭제는 상담 API 계약을 따른다.

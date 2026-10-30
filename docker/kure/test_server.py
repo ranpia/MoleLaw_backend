@@ -7,6 +7,7 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 import server
+import monitoring
 
 
 class Encoder:
@@ -30,6 +31,44 @@ class Encoder:
 
 
 class ConcurrencyTest(unittest.TestCase):
+    def test_metrics_scrape_bypasses_inference_and_contains_no_input_text(self):
+        encoder = Encoder()
+        marker = 'private-input-must-not-be-a-metric-label'
+        metrics_http, metrics_thread = monitoring.start(0)
+        with patch.object(server, 'model', encoder), patch.object(server, 'ADMISSION', threading.BoundedSemaphore(1)):
+            http = server.ThreadingHTTPServer(('127.0.0.1',0),server.Handler)
+            threading.Thread(target=http.serve_forever,daemon=True).start()
+            body = json.dumps({'model':server.TAG,'input':[marker],'truncate':False,
+                              'options':{'num_thread':server.THREADS,'num_gpu':0}}).encode()
+            def embed():
+                request = urllib.request.Request(f'http://127.0.0.1:{http.server_port}/api/embed',data=body)
+                return urllib.request.urlopen(request,timeout=5)
+            try:
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    pending = pool.submit(embed)
+                    self.assertTrue(encoder.started.wait(2))
+                    with urllib.request.urlopen(f'http://127.0.0.1:{metrics_http.server_port}/metrics',timeout=1) as response:
+                        metrics = response.read().decode()
+                    self.assertIn('kure_inference_active{operation="embed"} 1.0',metrics)
+                    self.assertNotIn(marker,metrics)
+                    rejected_before = monitoring.REJECTED.labels('embed','full')._value.get()
+                    with self.assertRaises(urllib.error.HTTPError) as rejected:
+                        embed()
+                    self.assertEqual(rejected.exception.code,503)
+                    self.assertEqual(monitoring.REJECTED.labels('embed','full')._value.get(),rejected_before+1)
+                    encoder.release.set()
+                    with pending.result(timeout=3) as response:
+                        self.assertEqual(response.status,200)
+            finally:
+                encoder.release.set()
+                http.shutdown()
+                http.server_close()
+                metrics_http.shutdown()
+                metrics_http.server_close()
+                metrics_thread.join(timeout=2)
+        self.assertEqual(monitoring.ACTIVE.labels('embed')._value.get(),0)
+        self.assertEqual(monitoring.WAITING.labels('embed')._value.get(),0)
+
     def test_cuda_oom_returns_503_and_releases_inference_permit(self):
         encoder = Encoder()
         encoder.release.set()

@@ -24,3 +24,12 @@ jobs:
         run: bash ./gradlew mysqlIntegrationTest
       - name: Validate Refresh rotation on isolated Redis
         run: bash ./gradlew redisIntegrationTest
+      - name: Preserve test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            build/test-results/
+            build/reports/tests/
+          retention-days: 7

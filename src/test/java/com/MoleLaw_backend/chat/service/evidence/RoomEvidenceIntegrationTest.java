@@ -37,6 +37,55 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ActiveProfiles("test")
 @Import({ChatCaseEvidenceService.class, com.MoleLaw_backend.law.service.source.LegalSourceService.class, com.MoleLaw_backend.law.service.tool.CaseEvidenceReader.class, EncryptUtil.class, ChatEvidenceService.class, ChatTurnService.class, RoomEvidenceIntegrationTest.JsonConfiguration.class})
 class RoomEvidenceIntegrationTest {
+    @Autowired private ChatCaseEvidenceService caseEvidence;
+    @Autowired private com.MoleLaw_backend.law.service.source.LegalSourceService sourceStore;
+    @Autowired private com.MoleLaw_backend.law.service.tool.CaseEvidenceReader caseReader;
+
+    @Test void deletingOneRoomsCaseRetainsSharedSourceAndTheOtherRoomsReference() {
+        ChatRoom first = room();
+        ChatRoom second = rooms.saveAndFlush(ChatRoom.builder().user(first.getUser()).title("다른 방").build());
+        service.freeze(first, evidence());
+        service.freeze(second, evidence());
+        var raw = new ObjectMapper().createObjectNode().put("판례정보일련번호", "101").put("사건명", "검증 판결")
+                .put("판례내용", "변경하지 않을 전체 판결 본문");
+        var source = sourceStore.save("CASE", "101", null, null, "https://www.law.go.kr/precInfoP.do?precSeq=101", raw);
+        var firstCase = caseReader.read(source.getId(), java.util.UUID.randomUUID().toString());
+        var secondCase = caseReader.read(source.getId(), java.util.UUID.randomUUID().toString());
+        caseEvidence.append(first, List.of(firstCase));
+        caseEvidence.append(second, List.of(secondCase));
+        service.remove(first.getUser().getId(), first.getId(), firstCase.id());
+        assertThat(caseEvidence.load(first.getId())).isEmpty();
+        assertThat(caseEvidence.load(second.getId())).containsExactly(secondCase);
+        assertThat(sourceStore.restore(source.getId()).getRawJson()).isEqualTo(source.getRawJson());
+        assertThat(service.load(first.getUser().getId(), first.getId())).noneMatch(item -> item.id().equals(firstCase.id()));
+    }
+
+    @Test void removingAllLawEvidenceKeepsTheOriginalSnapshotButExcludesItFromFutureContext() {
+        ChatRoom room = room();
+        var original = evidence();
+        service.freeze(room, original);
+        var snapshot = snapshots.findById(room.getId()).orElseThrow();
+        String json = snapshot.getEvidenceJson();
+        String hash = snapshot.getContentHash();
+        service.remove(room.getUser().getId(), room.getId(), original.get(0).id());
+        assertThat(service.load(room.getUser().getId(), room.getId())).isEmpty();
+        assertThat(snapshots.findById(room.getId()).orElseThrow().getEvidenceJson()).isEqualTo(json);
+        assertThat(snapshots.findById(room.getId()).orElseThrow().getContentHash()).isEqualTo(hash);
+        assertThatThrownBy(() -> service.remove(room.getUser().getId(), room.getId(), original.get(0).id()))
+                .isInstanceOfSatisfying(MolelawException.class, failure -> assertThat(failure.getErrorCode())
+                        .isEqualTo(com.MoleLaw_backend.common.exception.ErrorCode.NOT_FOUND));
+    }
+
+    @Test void aForeignOwnerCannotRemoveEvidence() {
+        ChatRoom room = room();
+        var original = evidence();
+        service.freeze(room, original);
+        assertThatThrownBy(() -> service.remove(room.getUser().getId() + 1, room.getId(), original.get(0).id()))
+                .isInstanceOfSatisfying(MolelawException.class, failure -> assertThat(failure.getErrorCode())
+                        .isEqualTo(com.MoleLaw_backend.common.exception.ErrorCode.UNAUTHORIZED_CHATROOM_ACCESS));
+        assertThat(service.load(room.getUser().getId(), room.getId())).containsExactlyElementsOf(original);
+    }
+
     @Test
     void accountDeletedDuringLongCollectionCannotCauseForeignKeyFailureAtSave() {
         var owner = User.builder().email("deleted@example.test").provider("local").nickname("deleted").password("hash").build();

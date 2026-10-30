@@ -1,0 +1,10 @@
+version: 1
+name: Answer streaming provider fixture
+slug: answer-stream-fixture
+protocol: http
+interceptRequests: true
+port: 14041
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true
