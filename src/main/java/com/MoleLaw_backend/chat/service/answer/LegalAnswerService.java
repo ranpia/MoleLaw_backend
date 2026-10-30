@@ -145,18 +145,17 @@ public class LegalAnswerService {
     public Flux<InitialAnswerUpdate> streamFollowUp(Long userId, Long roomId, String question, boolean allowCaseSearch,
             java.util.List<String> caseSearchLawEvidenceIds) {
         ChatContentLimits.question(question);
-        return Flux.deferContextual(context -> {
+        return Flux.deferContextual(context -> Flux.<InitialAnswerUpdate>create(sink -> {
             var sources = evidence.load(userId, roomId);
             String searchQuestion = searchQuestions.resolve(roomId, question, allowCaseSearch);
-            var stages = reactor.core.publisher.Sinks.many().unicast().<InitialAnswerUpdate>onBackpressureBuffer();
             var display = new com.MoleLaw_backend.chat.util.StreamCitationDisplay();
             var sessionRef = new java.util.concurrent.atomic.AtomicReference<FollowUpCaseToolsFactory.Session>();
             String traceId = context.getOrDefault("consultationTraceId", UUID.randomUUID().toString());
             var tools = caseTools.create(sources, allowCaseSearch, traceId, roomId, stage -> {
-                stages.tryEmitNext(InitialAnswerUpdate.progress(stage));
+                sink.next(InitialAnswerUpdate.progress(stage));
                 if ("CASE_BODY_READY".equals(stage) && sessionRef.get() != null) {
-                    stages.tryEmitNext(InitialAnswerUpdate.evidence(sessionRef.get().confirmedEvidence()));
-                    stages.tryEmitNext(InitialAnswerUpdate.info(renderer.renderForStream(sessionRef.get().evidence(), display::label)));
+                    sink.next(InitialAnswerUpdate.evidence(sessionRef.get().confirmedEvidence()));
+                    sink.next(InitialAnswerUpdate.info(renderer.renderForStream(sessionRef.get().evidence(), display::label)));
                 }
             }, searchQuestion);
             tools.selectLawContexts(caseSearchLawEvidenceIds);
@@ -220,7 +219,7 @@ public class LegalAnswerService {
                             String text = com.MoleLaw_backend.chat.util.UserFacingAnswerText.normalize(raw.toString());
                             ChatContentLimits.answer(text);
                             text = validateFollowUpText(question, text, tools.consentRequested() ? List.of() : verified,
-                                    traceId, () -> stages.tryEmitNext(InitialAnswerUpdate.progress("ANSWER_REPAIR")));
+                                    traceId, () -> sink.next(InitialAnswerUpdate.progress("ANSWER_REPAIR")));
                             return InitialAnswerUpdate.completeFollowUp(new PreparedFollowUpAnswer(new LegalAnswerResponse(text, ""),
                                     tools.citedAdditions(text), tools.consentRequested(), allowCaseSearch));
                         }).flatMapMany(completed -> {
@@ -233,9 +232,11 @@ public class LegalAnswerService {
                     InitialAnswerUpdate.evidence(sources),
                     InitialAnswerUpdate.info(renderer.renderForStream(sources.stream().filter(item -> !"CASE_BODY".equals(item.kind())).toList(), display::label)),
                     InitialAnswerUpdate.progress("FOLLOW_UP_ROUTING")), answer);
-            return Flux.merge(updates, stages.asFlux()).takeUntil(update -> update.followUp() != null)
-                    .doFinally(signal -> stages.tryEmitComplete());
-        }).subscribeOn(Schedulers.boundedElastic());
+            // One queue preserves tool/repair progress before the corresponding completion.
+            var subscription = reactor.core.Disposables.swap();
+            sink.onDispose(subscription);
+            subscription.update(updates.subscribe(sink::next, sink::error, sink::complete));
+        })).subscribeOn(Schedulers.boundedElastic());
     }
 
     private String withUnresolvedIssues(String answer, List<String> unresolvedIssues) {
