@@ -1,0 +1,12 @@
+{
+  "queryId" : "ind-002",
+  "question" : "월세집 벽에 곰팡이가 심해졌는데 집주인은 제가 환기를 안 해서 그렇다며 수리비를 내래요. 누가 부담하나요?",
+  "goldUnitIds" : [ "civil:284415:062300", "civil:284415:039000" ],
+  "rounds" : [ ],
+  "status" : "FAILED",
+  "errorType" : "GptApiException",
+  "errorCode" : "GPT_API_FAILURE",
+  "searches" : [ ],
+  "elapsedMs" : 5706,
+  "completedAtUtc" : "2026-10-31T02:24:48.958507700Z"
+}

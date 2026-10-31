@@ -1,0 +1,18 @@
+{
+    "questionCount":  1,
+    "successful":  0,
+    "hitAt15Gains":  0,
+    "hitAt15Losses":  0,
+    "completeAt15Gains":  0,
+    "completeAt15Losses":  0,
+    "meanSearchCount":  0,
+    "meanInitialElapsedMs":  0,
+    "meanTotalElapsedMs":  9689,
+    "lastActions":  [
+                        {
+                            "action":  "NONE",
+                            "count":  1
+                        }
+                    ],
+    "interpretation":  "Candidate availability is not answer accuracy. Terminal pools from failed executions remain diagnostic only; failed executions publish no selected evidence."
+}

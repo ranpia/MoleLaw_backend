@@ -1,0 +1,32 @@
+{
+    "snapshotDirectory":  "C:\\Users\\KOSA\\IdeaProjects\\MoleLaw_backend-experiments\\evaluation\\legal-retrieval\\artifacts\\adaptive-comparison-v1\\snapshots\\full-canonical-20261031",
+    "questionCount":  36,
+    "snapshotSha256":  "5347B0FB568BCB592E1942C07DE8C7E5702B1EEE4E46776FE814F1446231F7EB",
+    "intervention":  "Shared prefix: initial post-fusion/balancing pool vs terminal pool. Same reranker; no external collection; no answer generation.",
+    "questionsSha256":  "EF03C5E0D59C9FC45F789E6EE420370951DB3E496BD3DF6C5F3E60F2E1C37DE4",
+    "completed":  false,
+    "corpusSha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+    "runtime":  {
+                    "APP_LAW_RERANKER_READ_TIMEOUT_MILLIS":  "120000",
+                    "APP_AI_EVIDENCE_CATALOG_MAX_INPUT_TOKENS":  "8000",
+                    "APP_AI_QUESTION_REASONING_EFFORT":  "low",
+                    "APP_AI_QUESTION_MAX_COMPLETION_TOKENS":  "4096",
+                    "APP_AI_READ_MODEL":  "gpt-5.4-mini",
+                    "APP_AI_EVIDENCE_MAX_COMPLETION_TOKENS":  "12288",
+                    "APP_AI_READ_MAX_COMPLETION_TOKENS":  "4096",
+                    "APP_AI_EVIDENCE_REASONING_EFFORT":  "medium",
+                    "APP_AI_EVIDENCE_DECISION_MAX_INPUT_TOKENS":  "32000",
+                    "APP_AI_EVIDENCE_MAX_INPUT_TOKENS":  "8000",
+                    "APP_LAW_RERANKER_REVISION":  "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+                    "APP_AI_READ_TIMEOUT_MS":  "120000",
+                    "APP_LAW_RETRIEVAL_PROCESSING_TIMEOUT":  "15m",
+                    "APP_AI_EVIDENCE_BODY_MAX_INPUT_TOKENS":  "12000",
+                    "APP_AI_QUESTION_MODEL":  "gpt-5.4-mini",
+                    "APP_LAW_RERANKER_MODEL":  "BAAI/bge-reranker-v2-m3",
+                    "APP_LAW_RERANKER_BASE_URL":  "http://kure:11434",
+                    "APP_AI_EVIDENCE_MODEL":  "gpt-5.4",
+                    "APP_LAW_RERANKER_ENABLED":  "true",
+                    "APP_AI_READ_REASONING_EFFORT":  "low"
+                },
+    "collection":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58"
+}

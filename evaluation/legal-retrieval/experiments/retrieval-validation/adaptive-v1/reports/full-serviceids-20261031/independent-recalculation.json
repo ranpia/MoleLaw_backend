@@ -1,0 +1,20 @@
+[
+    {
+        "phase":  "initial",
+        "hitCount":  19,
+        "completeCount":  5,
+        "meanRecall":  0.32037037037037036
+    },
+    {
+        "phase":  "terminal",
+        "hitCount":  26,
+        "completeCount":  8,
+        "meanRecall":  0.45925925925925931
+    },
+    {
+        "phase":  "selected",
+        "hitCount":  25,
+        "completeCount":  7,
+        "meanRecall":  0.44074074074074071
+    }
+]

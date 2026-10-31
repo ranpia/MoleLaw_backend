@@ -1,0 +1,23 @@
+{
+    "publicEnvironment":  [
+                              "EMBEDDING_THREADS=6",
+                              "RERANKER_MODEL=BAAI/bge-reranker-v2-m3",
+                              "EMBEDDING_BATCH_SIZE=16",
+                              "RERANKER_REVISION=953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+                              "EMBEDDING_DEVICE=cpu",
+                              "RERANKER_BATCH_SIZE=2",
+                              "RERANKER_ENABLED=true",
+                              "RERANKER_MAX_TOKENS=1024"
+                          ],
+    "containerId":  "4b9dec1df595527c535a5073df0c420eeb9170b7430827dac838d7be2bb0328d",
+    "imageId":  "sha256:1c811b60da6f26790065cb05ee39150a87a72ce7d22435c012fddfef5c7fbbc4",
+    "version":  {
+                    "version":  "sentence-transformers/6.1.0;torch/2.7.1+cpu;transformers/5.0.0",
+                    "runtime":  "sentence-transformers",
+                    "revision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                    "dtype":  "float32",
+                    "device":  "cpu",
+                    "batch_size":  16
+                },
+    "observedAtUtc":  "2026-10-31T02:25:44.9669350Z"
+}

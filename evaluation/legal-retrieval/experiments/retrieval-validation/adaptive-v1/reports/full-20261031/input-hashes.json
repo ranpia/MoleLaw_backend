@@ -1,0 +1,22 @@
+[
+    {
+        "path":  "experiments/reranking/dense50-v1/data/c500-legal_transformed/candidates.jsonl",
+        "sha256":  "EF03C5E0D59C9FC45F789E6EE420370951DB3E496BD3DF6C5F3E60F2E1C37DE4"
+    },
+    {
+        "path":  "experiments/query-strategies/chunk-sizes-v1/data/char500/corpus.jsonl",
+        "sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E"
+    },
+    {
+        "path":  "experiments/model-comparison/data/corpus-manifest.json",
+        "sha256":  "4CB2E125D078948BE62107BE99E14C8F3442C0876A8F1B6CDC29561A6248311C"
+    },
+    {
+        "path":  "experiments/retrieval-validation/expanded-v1/review/sources.json",
+        "sha256":  "ADF9D18913CFE44E5CC87E90EFCE85A49D1D58D98F3FDA73E9EA420753D73A2F"
+    },
+    {
+        "path":  "experiments/model-comparison/review/special-sources.json",
+        "sha256":  "C06126023629718356C26DDC36C8F0A1F3CA14554CCC187A46445002C75FDE2A"
+    }
+]

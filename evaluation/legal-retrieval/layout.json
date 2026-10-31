@@ -13,6 +13,8 @@
                         "recall50-v1":  "query-strategies/candidate-coverage-v1",
                         "threshold-sweep-v1":  "query-strategies/threshold-sweep-v1",
                         "retrieval-ablation-v1":  "hybrid-search/ablation-v1",
-                        "qdrant-lab":  "infrastructure/qdrant"
+                        "qdrant-lab":  "infrastructure/qdrant",
+                        "reranker-v1":  "reranking/dense50-v1",
+                        "adaptive-comparison-v1":  "retrieval-validation/adaptive-v1"
                     }
 }

@@ -1,0 +1,11 @@
+{
+    "capturedAtUtc":  "2026-10-31T01:21:18.4831833Z",
+    "containerName":  "backend-service-backend-1",
+    "note":  "Only public reranker environment settings are included. Missing candidate limit uses the service source default of 50. Offline evaluation deadline is separately 300 seconds.",
+    "settings":  {
+                     "APP_LAW_RERANKER_ENABLED":  "true",
+                     "APP_LAW_RERANKER_MODEL":  "BAAI/bge-reranker-v2-m3",
+                     "APP_LAW_RERANKER_REVISION":  "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+                     "APP_LAW_RERANKER_READ_TIMEOUT_MILLIS":  "120000"
+                 }
+}

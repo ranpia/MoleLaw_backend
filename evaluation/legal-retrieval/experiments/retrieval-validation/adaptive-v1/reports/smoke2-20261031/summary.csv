@@ -1,0 +1,4 @@
+﻿"phase","questionCount","hitAt5","completeAt5","recallAt5","ndcgAt5","hitAt15","completeAt15","recallAt15"
+"initial","1","0","0","0","0","0","0","0"
+"terminal","1","0","0","0","0","0","0","0"
+"selected","1","0","0","0","0","0","0","0"

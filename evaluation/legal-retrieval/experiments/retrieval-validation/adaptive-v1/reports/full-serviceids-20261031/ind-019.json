@@ -1,0 +1,12 @@
+{
+  "queryId" : "ind-019",
+  "question" : "옆집 누수로 천장과 가구가 망가졌는데 세입자와 집주인이 서로 책임이 없다고 합니다.",
+  "goldUnitIds" : [ "civil:284415:075800", "civil:284415:075000" ],
+  "rounds" : [ ],
+  "status" : "FAILED",
+  "errorType" : "GptApiException",
+  "errorCode" : "GPT_API_FAILURE",
+  "searches" : [ ],
+  "elapsedMs" : 10462,
+  "completedAtUtc" : "2026-10-31T02:44:32.847318700Z"
+}

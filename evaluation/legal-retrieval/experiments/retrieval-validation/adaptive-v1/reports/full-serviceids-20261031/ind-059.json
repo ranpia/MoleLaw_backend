@@ -1,0 +1,12 @@
+{
+  "queryId" : "ind-059",
+  "question" : "가게에서 바닥이 젖어 넘어졌는데 주의 표지판이 있었다며 보상을 거부해요.",
+  "goldUnitIds" : [ "civil:284415:075000", "civil:284415:075800", "civil:284415:076300", "civil:284415:039600" ],
+  "rounds" : [ ],
+  "status" : "FAILED",
+  "errorType" : "GptApiException",
+  "errorCode" : "GPT_API_FAILURE",
+  "searches" : [ ],
+  "elapsedMs" : 10980,
+  "completedAtUtc" : "2026-10-31T03:01:53.793442700Z"
+}

@@ -1,0 +1,26 @@
+[
+    {
+        "path":  "build.gradle",
+        "sha256":  "F3200101534BA4C421AE6C1994326BAD8FD1A0161D55BD001B94FCCC523C5CEA"
+    },
+    {
+        "path":  "settings.gradle",
+        "sha256":  "FCABD2029E784EB9D1DC10A8760853693D282A220F3EC083CD6D8FCE325C2A16"
+    },
+    {
+        "path":  "gradlew.bat",
+        "sha256":  "1D297E00BD21DE3ACE22B4D7F2DE1F9DFA858883D66BBF7C1CCBECCCEC8F4F3B"
+    },
+    {
+        "path":  "gradle/wrapper/gradle-wrapper.properties",
+        "sha256":  "ED47C661FC85351897CABD1B1F27A4C26D5FFF9B9B94AB641565C10BB762EF78"
+    },
+    {
+        "path":  "gradle/wrapper/gradle-wrapper.jar",
+        "sha256":  "7D3A4AC4DE1C32B59BC6A4EB8ECB8E612CCD0CF1AE1E99F66902DA64DF296172"
+    },
+    {
+        "path":  "harness/AdaptiveRetrievalComparison.java",
+        "sha256":  "41B02BE70F66F99EA5223A33265DB0F04F63BD65DA59A8A28F8592C2E2E32A1A"
+    }
+]

@@ -1,0 +1,974 @@
+{
+    "capturedAtUtc":  "2026-10-31T02:04:55.1365668Z",
+    "files":  [
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/config/LoadTestManagementSecurityConfig.java",
+                      "sha256":  "EE9D0755D286FB09841BB8F5BC95888FC7CDC18C45128FC2F0418C6C05109CEF"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/config/SecurityConfig.java",
+                      "sha256":  "82E711F3CA3D0501CEDC6702DF47DC8907E69F7CEB898360E9CB70FDC9E86256"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/controller/AuthController.java",
+                      "sha256":  "80115325E3F8BE146DC007B36FD804A5847202196A855B62F935C8BB59069164"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/controller/CsrfController.java",
+                      "sha256":  "ECDF0171CCBD0FEBCAD9E938BB59227D4B5E3234904A0987CD870D9512ED933F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/dto/request/LoginRequest.java",
+                      "sha256":  "FAD43F0106BDE1F60542AE4DA5D309837E4235072E53C8E878B0D8D05B7BD9EA"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/dto/request/SignupRequest.java",
+                      "sha256":  "6F2A1443EE3ECF18325DE3104EAD0ADE6352337CFD14F55E9F79B61C4C68588B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/dto/response/AuthApiSchemas.java",
+                      "sha256":  "798B851EE92EDD7D2BAAE0FF9A8FABBC6AC56E345D26635C124E70BC4694DF5B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/dto/response/AuthResponse.java",
+                      "sha256":  "D13572082BBF3C747435F4D59F0A3B17CF1FCF57B4E631656F5F4A5792E5BFAA"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/dto/response/CsrfResponse.java",
+                      "sha256":  "CF41E25EF7A736C8A0474B6FDB1B608DF731058AD4AFD480481C9015B8BDF037"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/oauth/CustomOAuth2UserService.java",
+                      "sha256":  "71A18B6D360EF894DEA9EA952834CF27AF29DFED1CBE22D489309F70FE178647"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/oauth/OAuth2SuccessHandler.java",
+                      "sha256":  "CBA36C9F67B725BF0B582A6844FF17F399DD2CCF4D2E1FC56FF9B8BAEB6D0D84"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/AccessTokenService.java",
+                      "sha256":  "8B9A3F5B42A296699D485E419C1F81E415388FC417EEA8ED5CFEE652A29B20CD"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/AllowedOriginFilter.java",
+                      "sha256":  "52764BBE5216B1F9F92CDA7C7F0F2B073F87D49BDBDC3CC1DBB99E3B4CF5603E"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/AuthTokenService.java",
+                      "sha256":  "EABDC6F7F1027AABB5E177CF82AC5FB703C8488E8EAC8262ED4AF6AD58C0464D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/CookieUtil.java",
+                      "sha256":  "C0E2FBFFD7B962EBDE1D19C39F28670799A910EF662D8B6C2DEAD26BB4657815"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/CustomUserDetails.java",
+                      "sha256":  "6B31D08E79F857675391C532E13E31B3FF243B167B11489F215BE8B89EBD0F91"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/CustomUserDetailsService.java",
+                      "sha256":  "15FDD68D157390F9357C5C3662A733155C7E57051B7078860937927009F8B8EA"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/JwtAuthenticationFilter.java",
+                      "sha256":  "1CA2E1450B5255AA5B18CE8E0D0C94A8F01098135F2F1381ABCF36457D6E0DBC"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/JwtUtil.java",
+                      "sha256":  "F858936E178D50BEED4032E6B5102568DD42523D59A09817B7E375AE4DDA8F5C"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/RedisRefreshTokenStore.java",
+                      "sha256":  "88CB61F1C84A650033CC030E2BA63B4F9FBC8628A4E1E44EB5775D4AAD7B6E87"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/RefreshTokenService.java",
+                      "sha256":  "3F7F684B98D178D1DDA1C10C73F068958C496D5387230872F2B1A67943EAD22B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/security/RefreshTokenStore.java",
+                      "sha256":  "A0DDB1EBE1E555C36AEC77AB9162792B891B8CF6D81356AC46E944C9725CE3C3"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/validation/Utf8ByteLength.java",
+                      "sha256":  "D04356CA3C681C2638453850E5B8BC79C1304A07FD671FD44DF77EE5CF5F600E"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/auth/validation/Utf8ByteLengthValidator.java",
+                      "sha256":  "A64E46945DAA0A3951B7CC7AA3664DD0AA33F14E18A7EF5309FA7DBC65C85AA2"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/config/AnswerChatClientConfig.java",
+                      "sha256":  "16561C1849EE501F757E0A57694CC10B244B9E0693BFC3D911EB38EB06CF1953"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/config/ChatStreamMvcConfig.java",
+                      "sha256":  "4EB06288C6018E7BC15A3398DA40EC83B120C01840BE6C9166E5103A282BB0D0"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/controller/ChatEvidenceController.java",
+                      "sha256":  "032A4300A98B26FE84D9C37E42BC9232E0499161D7D4058113F445351D2378A4"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/controller/ChatRoomController.java",
+                      "sha256":  "2983C09CD48986F035353B4F4EBBD8601B4037926391CC5F7351CAC6BEFB4A2A"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/controller/InitialAnswerStreamController.java",
+                      "sha256":  "7547385A9B7DFB9312D91BE122B889B514B0F75F30F7B4FFA65FC8C0B4049878"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/controller/InitialQuestionSuggestionController.java",
+                      "sha256":  "CAC2CB51C1EE7201F2735A8FF521EFBB0A3B8002E22035B7F0218190ACD03E6D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/controller/LegalAnswerController.java",
+                      "sha256":  "4A5D1999A9857CEA5F7C923D4892A0E7E4A8FDEE07E61D261B5E5DB420C43A9D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/answer/FollowUpCasePlan.java",
+                      "sha256":  "B7704717916AABDDAD1F07CA2701EA248351E10A4D65A771BABDD0440ACD4A89"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/answer/InitialAnswerUpdate.java",
+                      "sha256":  "6250EC78AE8FB7E8AF008CA19881B2834FFBF6E4CA62DBA17AFFC6B718F8D608"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/answer/InitialQuestionSuggestionDraft.java",
+                      "sha256":  "071A88898998E3562438641B9B54CFE5D5CE772D4AED7BE0E95B16C3AB67EB33"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/answer/PreparedFollowUpAnswer.java",
+                      "sha256":  "4F721799DB948306FE5141005E7FBDF4E85D38E32B21B842B0529529B3FE37C5"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/answer/PreparedLegalAnswer.java",
+                      "sha256":  "49151024633346ED11E9E7E5DA413AD5B8B0AC9BAE659F63E59C49C30F8A4233"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/request/ChangeChatRoomTitleRequest.java",
+                      "sha256":  "97C472E09575079F66331FC1328FDDDDE04C3B78102335E791BD3E9DB49A1EEC"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/request/CreateChatRoomRequest.java",
+                      "sha256":  "008815B69B2DA56092B88BC626C63F6FEB990D60A1A3A02B4F3158E9819C40A2"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/request/CreateMessageRequest.java",
+                      "sha256":  "6BB470FF8950E7CB66ACAA137DD15360D639C292E9FC1E3B220121AE8C7AF1BD"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/request/InitialQuestionSuggestionsRequest.java",
+                      "sha256":  "C6C1A09E6567AF91E4552198F349C4F65D9D7314310CAC8CA936AB74884916DE"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/request/LegalAnswerRequest.java",
+                      "sha256":  "89E8C0A0E11B811B9EAB36A73EA5A38F019CDA730863EC60977A652E791A6F32"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/CaseSourceResponse.java",
+                      "sha256":  "F9DD2457AE01257FE5119BC0C85B58292AF3478C679C69C9C1B967BDCB47B59F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/ChatRoomCreationResponse.java",
+                      "sha256":  "D0BD9E5F8B7B1F0C0A8358FBEC2F218EBE40358728E01BFABD712BF6B858EF51"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/ChatRoomResponse.java",
+                      "sha256":  "01255F89AC1AC942AD158F82A94D7454B8980A771A92F466ADA3C24C467844F6"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/EvidenceDetailResponse.java",
+                      "sha256":  "2EB5692B1D381A01D4E24B7FF27B72B65AB10462BB41FDBB8F7BC5E2AC3D2072"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/EvidenceSummaryResponse.java",
+                      "sha256":  "265765F87191B37658AFBF35D2A38DB6BEAA42AB40E6821BB39772F69A1CD83B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/EvidenceUpdateResponse.java",
+                      "sha256":  "C822DDA5814B2BF641F812B6D200CDB8D173D15FE55749AC59BD03A88F625E44"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/InitialAnswerStreamResponse.java",
+                      "sha256":  "3E4FCB6338B9513557BF4F15FF18DADAF5BD1F5513C2E3E790EFB96296366294"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/InitialQuestionSuggestionsResponse.java",
+                      "sha256":  "3AE8412DFBBBED647D29981A09C9E9CA13B093C34BC00E70F18B2C7BCB135212"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/LegalAnswerResponse.java",
+                      "sha256":  "281032F1E8320D54B73D408E65676C1E23AECC68684E57CDFCF578F01BA04D9C"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/dto/response/MessageResponse.java",
+                      "sha256":  "61C88FECF762C9738DA730A9009C0EC677FBDD0D104E14ACCC4A5B6DCABBDC51"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/entity/ChatCaseEvidence.java",
+                      "sha256":  "C30C9AD93BD7B897A39CEA1983ED984E5E52E2F8EBFD8C9E4AA9331CD36E4DFD"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/entity/ChatEvidenceRemoval.java",
+                      "sha256":  "3687817505C1C56B98E608AEBB52F5DBB7485D4C3C6CF9922FF26BB50F7A8CE5"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/entity/ChatEvidenceSnapshot.java",
+                      "sha256":  "E85ED9C2B5C2306730DA61597D584CAB00D0EACBD74FB7D82958052098357AA6"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/entity/ChatRoom.java",
+                      "sha256":  "8986D68FF4695CF4206F62004F4AF929BF99DB76628B7FA939787F9DE798968F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/entity/Message.java",
+                      "sha256":  "CEF8CC468D3F7036CE7A9702B5DCBC35BCA6382262D34D1F1C7A066CD24DA4A9"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/exception/CitationValidationException.java",
+                      "sha256":  "FC09F08ADABB7EF6BBB2F7B3E4854E62F6F5F196430F2CFB2B4B9C2C31C55288"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/repository/ChatCaseEvidenceRepository.java",
+                      "sha256":  "9654E802EF9743F5A1405968E0D79E450B6708C7641928EB68D391EED3442A47"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/repository/ChatEvidenceRemovalRepository.java",
+                      "sha256":  "7DF02239C4C722D650428E9C2E5E19E48F440A3B2BD7CFF0D515E424B60747D6"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/repository/ChatEvidenceSnapshotRepository.java",
+                      "sha256":  "580B84C0F8BEA4527A51DDE9DC57688CB01F21D62A05E4BC7001EF0F2FD0B2DD"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/repository/ChatRoomRepository.java",
+                      "sha256":  "741DFB26246EE6E1D6F31AD81D67E2B0732AD1041489B31FD6A700138E35974F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/repository/MessageRepository.java",
+                      "sha256":  "86A215BF52F0F61A6F3132B3462FD4EC7CF11F1F930D51F7F6D3A93A03547828"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/answer/CaseSearchQuestionResolver.java",
+                      "sha256":  "80957093700CBE3E259A81373E7309E477010A20CCFCB8ACCCFA88B547BEB2DA"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/answer/EvidencePromptBuilder.java",
+                      "sha256":  "44BAD9C2A339A2546436562F61BF144B77FB6902E5EBBBD7AA2314BD0C8DEA6F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/answer/EvidenceRenderer.java",
+                      "sha256":  "8E3D2C11B78AB4215E93B14838FAA9DC83ECACA00B8438398DCA48D3D470A1AB"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/answer/FollowUpCasePlanner.java",
+                      "sha256":  "549B7DC77DEF108FA80782851AD4DCE964E2FE9322706A2DBA4016C528F8201B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/answer/FollowUpCaseToolsFactory.java",
+                      "sha256":  "BCD64A1C91A8AA4E7518DBB5FD5BB9AF68317F547188976BE33D7582ED2FE925"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/answer/InitialAnswerStreamService.java",
+                      "sha256":  "607E666D615E7E13346D787D9EC6764FBCAE877352E9E9457C9C2C958DBF7F26"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/answer/InitialQuestionSuggestionService.java",
+                      "sha256":  "F945FF0E441429C14E1D8393362F0197D680938472761BC7CC769379186DB903"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/answer/LegalAnswerService.java",
+                      "sha256":  "8D408B19719F4BC1587E3756A01E9C46249EDA6EDCE4838BD41A87FB7EE5AD58"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/ChatContentLimits.java",
+                      "sha256":  "CE395456BF121CC8A341C3D65488B177067312764D826230408B5452CE164308"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/ChatService.java",
+                      "sha256":  "1F37E5BE589E2D37F5A58DD07B0FFD68A14E8B56B2AE6E638DE07171F56DDD86"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/ChatTurnService.java",
+                      "sha256":  "390CF16DF4FCD9D5F25BA7E33459B4A1870CE5C3702DCEA9F7E022EAF28FC87C"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/evidence/ChatCaseEvidenceService.java",
+                      "sha256":  "B627E6E9B06AA66F25B5F17DCAEF534E7802191F2B83E32D3EF8AA6C7964D019"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/evidence/ChatEvidenceQueryService.java",
+                      "sha256":  "55E98F770615DD9B737B3BA46407F80EA8666B9DD756704F634A733F2795CEE2"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/evidence/ChatEvidenceService.java",
+                      "sha256":  "0409250E7AD63C9A9FFCEDCD94F6C20538FBA4CB5051E9257FDF674C81DD9641"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/evidence/CitationValidator.java",
+                      "sha256":  "F2977EF0586FE76C37988CCF55C195A94041C3C0FFAD16506D3D9A33593B4357"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/service/memory/PersistedChatMemory.java",
+                      "sha256":  "CBC47D4B08AF3BF41CD883182D514DECEF6966BCBEDCBF9940A6D646A6C3565B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/util/EncryptUtil.java",
+                      "sha256":  "6953DB2CC901B88726377EB134A77F8E31B9D598F1BBEC1F0C72C0AAB660E559"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/util/EvidenceDisplayText.java",
+                      "sha256":  "E81CB4FBA89F793D361BC89C73D674F40A980F76558C02AEE15C81420D5E3431"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/util/StreamCitationDisplay.java",
+                      "sha256":  "FCDADDA88924DEA7CF3D335567F288EE3F062F225CD94AA2168EF4F3DD9B1247"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/chat/util/UserFacingAnswerText.java",
+                      "sha256":  "246B7DADCAD5D57ABD43BF1F2E694A8722D62DD54619CCD778E661E1FC705FF8"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/ai/AiChatService.java",
+                      "sha256":  "A5CD95300F7C7B42DDA9BB108AB8EE1496C4019B0C9FFF2A5F08F7A651FFD66D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/ai/AiPrompts.java",
+                      "sha256":  "EE8C0D248F94A6680F25502FACFB4DABFAACDBB01DBB8CB6F4D85D4D7C08EC61"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/ai/config/AiConfig.java",
+                      "sha256":  "466A98F6768E183FD227512E4235D02644550FC98F2E57EBA47E4299C7348C47"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/ai/config/ReasoningOptions.java",
+                      "sha256":  "1E3CAD8A5C0D0EB73FF326A3A01BA790A6CE488277B9FB4572B9C57DC1A6A01C"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/ai/exception/GptApiException.java",
+                      "sha256":  "243197A17F5575B37DC36E55E1784F54C962E24387C904988BF649731933B8E0"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/config/MySqlConfig.java",
+                      "sha256":  "F9752F59D91AAF1C5D4CED3F3039F2C97B3F0CCBE980DC55FBC0559963A809F0"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/config/SwaggerConfig.java",
+                      "sha256":  "F26D67D31579B03CE46FD20A671A25E106E8A10B720C61207E79EEBE800AA051"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/dto/response/ApiResponse.java",
+                      "sha256":  "9E73DE6DB4F422EBEB10A1BFAD38F93BF3122B55DFD64990D02BB5255039931F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/exception/ErrorCode.java",
+                      "sha256":  "0F5BEE16BFD6DD93DA715446C0AF5A1C5E5CBF02A6A15F4778CD8FD26C45499A"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/exception/ErrorResponse.java",
+                      "sha256":  "F27DDEA47ACFE0E018AA15882E3ACB24CD28309CC9A9C1E9D1F5BE532190ADE3"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/exception/GlobalExceptionHandler.java",
+                      "sha256":  "D9B66DAE1EB50249E7C70FB6C2616DF159DF2B1A9390D7D3E574E5109AC93D89"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/common/exception/MolelawException.java",
+                      "sha256":  "ECFC30FF9A2FE554B752B2D4166CCEFE127E54015A6751E00553281DDF266DC6"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/client/openlaw/OpenLawAiSearchClient.java",
+                      "sha256":  "063CDF5A990FAFA94D53268CF33ABF3B0B04A5B0B0A89A768AAA6A2376DCA7DA"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/client/openlaw/OpenLawCaseClient.java",
+                      "sha256":  "489736E774900B0F902A0AAFA9EB2B55B39A6732EA4624544F5D94DC87C59E4D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/client/vector/LawRerankerClient.java",
+                      "sha256":  "30F0F11C2CC247E1F4CA0D322A789F3E471DB22EA834B80B3C84EB5C5ABBA35B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/client/vector/LawVectorClient.java",
+                      "sha256":  "A7DFBA82FB1B02564464F226E0F2A6F76DC95D233D209C2ED08ACBAB90F9311E"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/config/CaseSearchProperties.java",
+                      "sha256":  "3E8FA8774C9C7A798B7D40C5708B7247713838C29582794148E59AA357AE6CFB"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/config/EvidenceChatClientConfig.java",
+                      "sha256":  "F3245D83C78E9960515BEDAFBA6E081495DB4E15E45772BED43813E41F8B611D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/config/LawCandidateSelectionProperties.java",
+                      "sha256":  "23BE08CDCECB295787FA90F7CFF86E172D60A0EC6915F6CA7385492BE89A59E6"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/config/LawRerankerProperties.java",
+                      "sha256":  "291A18DFDA36DD955B63F9D3C717532B5F286D4A1CF1B6B9368CBE945A09CE89"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/config/LawVectorProperties.java",
+                      "sha256":  "6778D1B2A66ED4F0C8A005637E0A2BE26720C79BD1BB6CFCBB9E920258B23895"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/config/LawVectorToolsConfig.java",
+                      "sha256":  "DEE37CD09BC6C04ECF125129C9F7B4E5831CF1720AA01C988C6D780700DB5AB2"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/config/QdrantConfig.java",
+                      "sha256":  "BDEE94861AD6B0E8C01D38957CB2D49EC1A46D48D73B1CB5627524C068CA0393"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/config/QdrantProperties.java",
+                      "sha256":  "81F8A87C0DDA49A3374B80837004A19AB73C9AF185FEC74F9AB825D2696E68B8"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/controller/KeywordController.java",
+                      "sha256":  "0C3A5E548072F020A69F82C24406179E2EC599E12178E4918813CFE901D240DF"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/controller/LawController.java",
+                      "sha256":  "A476F78C49B08C65B112091010ACBB3AD4B50E813E5AB72157A9AE122EADC0F0"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/controller/LawEtlTestController.java",
+                      "sha256":  "A884AA0C86F2F95DC7A2A6D02CAB39B6FB87A39038606261B7A72364BCC468F5"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/controller/LawRetrievalComparisonController.java",
+                      "sha256":  "17678201312BF609CEF3FB94786B6BCCC460E5C485503D3CA4D759989A2A290B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/controller/PrecedentController.java",
+                      "sha256":  "EF32A345FD960653A1956B6626C49C39A45DCFA92A0876E406A7E76F71A7F240"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/evidence/EvidenceItem.java",
+                      "sha256":  "5B8DF05B620934DE1480D2B7FC4E79587E7D3607EA3EFDDC0F2D854C43FDDEB7"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/evidence/EvidenceProvenance.java",
+                      "sha256":  "9045384EA78460DD67D8F47EA4B9207676F3670EE4167CE3D96188843A3A91DE"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/request/AiLawSearchProbeRequest.java",
+                      "sha256":  "9656DFA3BA47DB8E9844E5D01757B0500912FCF08E7178974EC397C003D1C54C"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/request/LawEtlTestRequest.java",
+                      "sha256":  "EE9A0E058246EC98166E01E86E7E4C4E6A06E203EBA1A72B032649B55BE6192E"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/request/LawQuestionRequest.java",
+                      "sha256":  "2A3793AC537E63F4B043D6BF8926D1F1D52B8B1B86215C5209FACCA1C4D01510"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/request/LawReindexTestRequest.java",
+                      "sha256":  "9889F3C4C0AA4D06348ECF6A06B0B9722F518C09118BA33E2AEF923E9E2B89B3"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/request/LawSearchFilters.java",
+                      "sha256":  "1010A58BA72E4BC9CF2514177CD6D681554D4106482100739877E3DC64BCD82B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/request/PrecedentSearchRequest.java",
+                      "sha256":  "7C274D5DB30E21CCE04D42ED35F7F189A833E9112A58C3D5F62582A63DC78369"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/response/KeywordExtractionResponse.java",
+                      "sha256":  "558EBB03514DBE1F413DA4CB151C3C12EB1AEF26657B36A01D01E4BE3C2817A6"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/response/LawDetailResponse.java",
+                      "sha256":  "64DBAFBF23E2631305E2FC2CC94E5C284ECF61520B0D0C6DED0098C3CD5370F0"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/response/LawEtlTestResponse.java",
+                      "sha256":  "1E3CD8406964A15C81FFD7C64174F39ABB8ABB4BD91EB763605D19951ABB7D44"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/response/LawRagTestResponse.java",
+                      "sha256":  "CB1CBC20CABAFCD3B96A2F17AEA13B5F8499B68F33307E2DA9FBC74BCA2A7D04"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/response/LawRetrievalComparisonResponse.java",
+                      "sha256":  "4EA714B7756F4E393CF8F624954FCA5526CA24BC52F57AB363FA586868E46B5F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/response/PrecedentDetailResponse.java",
+                      "sha256":  "7FDDC9CCAB8D525D6A346016CB059EFDE3A225C60F7A7EE3EC80E2DBE4E75D8D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/response/PrecedentSummaryResponse.java",
+                      "sha256":  "4D6E1B791464E903839F8DDFBE46CC98060722DF539C995B17639D95ED677846"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/AiLawArticle.java",
+                      "sha256":  "39EDF5913CAF85E7A6FA48385C5FFA6FAF128BA09D0CC3AD127240A6962C55EE"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/AiLawArticlePage.java",
+                      "sha256":  "F1B386DD23C40A6BEFF9A8B63BCC26BFC2A315EE04B7F28773F13C79ED623071"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/AiLawSearchPage.java",
+                      "sha256":  "4CB2083BFDE9E4396EBF73C80A8DC46954A9983B8CEB1CC8DD8241B20423BE50"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/CaseQueryPlan.java",
+                      "sha256":  "EBFA57556F1E547E727518C046D3F34FEF0122C4C987EDD625C63E587F0C7317"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/CaseReadSelection.java",
+                      "sha256":  "CFCF8707C81D1E7E3A3359FA755E90958689E1AEADD6E6E676FCCB7D3DEFF9E8"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/CaseSearchOutcome.java",
+                      "sha256":  "9E65A0C9AC0AA7FE4158631DE875D01C0FB04BE3FD82F1A0D47BB52C4B9F940C"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/CaseSearchScope.java",
+                      "sha256":  "1316FABDF9DF4930783416CAABC338A684F512201B13E835C8044D4FB98BCF6E"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/CollectedLegalEvidence.java",
+                      "sha256":  "234F593AD6D0B8DA7220696ECEB874C2C2DCD36164F3604832F406A672E187DA"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/EvidenceDecision.java",
+                      "sha256":  "A54AA745836361813E9E697C9B171533DF6150623414137CE6F4250C035798D5"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/EvidenceReading.java",
+                      "sha256":  "8C84FCFD76C887CAEA6E9B2F95DD132C03C3DA44E9F19C1AA9ACF4FCCE26C9E0"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/LawCandidateSelection.java",
+                      "sha256":  "C90E035B0F3E4DA53AB44A6431B34A3A99D786C63BB3DA5AB50ED5E4CD9E7D1E"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/QuestionAnalysis.java",
+                      "sha256":  "EAEE5E7270D8E9888E306A086DE55F511C9380D026C27BD42583D89EF3A5BDFC"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/QuestionRetrievalPlan.java",
+                      "sha256":  "FA75FCFF92C27200E1A5EA3B817F5CFCBFF193F34823A67999ADB061661B1A2C"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/RetrievalAttempt.java",
+                      "sha256":  "017CE2F3EC57EBA7E86B58DF1B846CA1FF682A90F4CAFD7F467FA2CCDF96A32F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/RetrievalBackend.java",
+                      "sha256":  "8878D6B8EAE48158E1B9EEA210C70C8D2A30AF4CC44772E98CACBB190F1A6CD0"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/retrieval/RetrievalObserver.java",
+                      "sha256":  "801B7A6C96860AAFE8B74B7094E9CFE136359B0E9EE79FD498E59FD3FF28F00E"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/tool/AiLawSearchRequest.java",
+                      "sha256":  "CEDC5A5BBB5FF6E97C5A9FB1BF1155311B05AC679170D71CF30DDF53F121B358"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/tool/LegalToolContracts.java",
+                      "sha256":  "08A8E1F6081EE96B90375FEC826955DDCC035A7937EFF7CAADE00C71D3CD5FF0"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/vector/LawIndexResult.java",
+                      "sha256":  "90D9E20FD508B0F524A1B6EDFA2F12DDBACCDBD8AE807B08D04297425EA0A215"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/dto/vector/LawSearchEvidence.java",
+                      "sha256":  "BD0436742298FD228DC7D3C18A6B6372119003CD915E388A519CEFE59143FB7D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/entity/LawChunkIndex.java",
+                      "sha256":  "39872900D86C9E81FA562B1AB881E9587DB2DB3B47D6092AC3D683E359E456C8"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/entity/LegalSource.java",
+                      "sha256":  "721C03CBA1347C51A91D1AD5C6F98F356BADC6AC788B9F4DC3A448CBE3FD0022"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/entity/LegalSourceIndex.java",
+                      "sha256":  "86B5C812740297285A440F68EA2BE182290A1BDF12841525F59685F6EA9B9E0C"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/exception/EvidenceDecisionValidationException.java",
+                      "sha256":  "7FF48C935175451D8AE5C71EE1BEF9C2ADD3C21A9DF2E33CEBDACA9F321B67C2"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/exception/LegalToolException.java",
+                      "sha256":  "95F22CB3A170F553FF3CC0EE9C7152635C49B9EA22CDE2FBA62FA06C881771CC"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/exception/OpenLawApiException.java",
+                      "sha256":  "7E2F0624F7C75AC9BECC796A563D32AE1C25F5A1C9C083840C7E7CFEC86B4F30"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/exception/OpenLawRequestException.java",
+                      "sha256":  "69488DDA4368D0509FB469EDF86E95BDE8A64527B2F7D54DDDAD0705DF40A3A8"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/repository/LawChunkIndexRepository.java",
+                      "sha256":  "4B780C6B5F24A1859884966BCAA37EECEC409DB899B4084C9A2E2D109E49FD62"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/repository/LegalSourceIndexRepository.java",
+                      "sha256":  "D6DE18D5296B6EC79BE9C33B55D90325F1EA595BAB9D2E56987A2D2299402743"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/repository/LegalSourceRepository.java",
+                      "sha256":  "8C35A0DF45194A341219299994313D909531C380F742B9629E53217C93C97A6A"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/analysis/KeywordExtractionService.java",
+                      "sha256":  "BA1A1DC7B93E50F394EE0D3763CDE5DE627B21882FA7640D99AFEA51F1E04FDA"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/etl/LawArticleDocumentTransformer.java",
+                      "sha256":  "D9EA204A26297B685789A954C2E7199EA9339E190A7DF5D12C32B00F1D21804B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/etl/LawEtlTestService.java",
+                      "sha256":  "65BC1D7C9B014DAC5CC81ACCD685DE6086649917E890D1FF575E602C9709AC21"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/etl/LawQdrantDocumentWriter.java",
+                      "sha256":  "17FC19AB5127C08A992C7EB4F628D1B37B7BACC8D2289EEE6A0B79D4CFCFBBFC"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/etl/LawSourceDocumentReader.java",
+                      "sha256":  "2E191DE6C6E20D6AEF31E18BE8C02B86C11B3AD7E464AC245F5A5028C425E781"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/AiSearchEvidenceCollector.java",
+                      "sha256":  "E1FBDDA36EB1C1329C3BE6844F9FD9DBFEFAA4D89BA6EA4063217A9923A77B16"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/CaseCandidateReranker.java",
+                      "sha256":  "2DA580EDF180227B0D82AC02D744E70832B81C0FBEE201DEEB12C0D82E5FF499"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/CaseQueryPlanner.java",
+                      "sha256":  "67D9FA0DEA9D0B5E06E5208E3683E6F81197FA8274A8E1997F279E5A17E2F33D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/CaseSearchPipeline.java",
+                      "sha256":  "A9023ACA5732A38F3EA6844434FD3985C18E23688D4BB805912A2A970FCE02DC"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/EvidenceDecisionPlanner.java",
+                      "sha256":  "9B7691C6C34EF5315F2D30BB883F2014CBCDE0B35F10B335E8B8E8B6DD1F7615"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/EvidenceReadPlanner.java",
+                      "sha256":  "8A9D33B1D808431D054B7A9637C5B980C65BAD785A0CC6BBA19616A8135E73B9"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/LawCandidateSelector.java",
+                      "sha256":  "7A717AE462A84180A6FD6F09B7B1702EA81D8E2AD11FF7BA1A1DCA9C203F8552"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/LawRetrievalComparisonService.java",
+                      "sha256":  "2D260AC936406277F6DA9F4389F49A3E8B8B99B1B8FA2644385686361A9194B3"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/LegalEvidenceCollector.java",
+                      "sha256":  "5E631E66229C068030EA5AA736ACD6944386B1283110AEDA9F1B5E6B61DCED7A"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/retrieval/QuestionRetrievalPlanner.java",
+                      "sha256":  "ED1C0D3F9BE6AAC702A3E3A1760BC325CB59CCC9F2C024EDFC75E5ACE2515AAB"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/search/CaseSearchService.java",
+                      "sha256":  "F4D4B7EF82F74701367C3E370DF34AB6812CD1BF8663D3FD7F748245EB47C6EF"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/search/LawSearchService.java",
+                      "sha256":  "4ABDEEE65E4DD97EC392345128B9415129EB3AB858C244133B539091292FD66A"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/source/LegalSourceIndexService.java",
+                      "sha256":  "FDBEC2CA483B14B086B069AB6467653E0F494CC42B7CCDB44D8A3287C31B4C80"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/source/LegalSourceService.java",
+                      "sha256":  "2BF1497ED529DD5D729CF959A08A6C5F9B119D4A81B9A81FEA02A83500AB64FA"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/tool/CaseEvidenceReader.java",
+                      "sha256":  "A288E09A536B1E38B6631E70F241918135D2B5362C294C6C852BDC59E88DA5BE"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/tool/EvidenceReadToolService.java",
+                      "sha256":  "4FD9447CDB28B7102881AB9099FD0BA0F2CFD147B743D267E583221B659FBA4B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/tool/LawAiSearchToolService.java",
+                      "sha256":  "CABB8313B0EA1A083BFF17B987ADE474A9E2413139ACE7D999110F3038F88450"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/tool/LawRagSearchToolService.java",
+                      "sha256":  "FC8211DD868FC5FCED0A0E9540AD0783F7434033D9672E7DD5ACB52B2FCEB0C7"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/tool/LawVectorizationToolService.java",
+                      "sha256":  "36F1F051CB60F123CA996EF2F1B7BDF05296704955B2AC2E7819F6F690FA961D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/tool/LegalApiToolService.java",
+                      "sha256":  "C8E3A6C89B4A60595853F57EB47CCB97D7D4E7F5BC3403EC145EEEAE0CD12FEB"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/service/tool/LegalToolContext.java",
+                      "sha256":  "E953AB1E8D8B7D5A685E5FC4D496DAD4762F6144C3909C6BA0A7757C9C21DF6B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/CaseEvidenceExcerpt.java",
+                      "sha256":  "528A1CAA9AA21468F74E876E586DD30F738CEAF8BD8280527F70EF96D89B3ADF"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/CaseJudgmentExcerpt.java",
+                      "sha256":  "2AEECF1DEE40CA235FC42A284946A8E9DB05B7402A9A7C296A0CA57EE5C5AE7D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/EmbeddingWorkLimiter.java",
+                      "sha256":  "A0A442156CA1DB0FBDF519B9BFA92FE95EBD1972BD694A7E1C7155DB1FF670FB"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/EvidenceCandidateBalancer.java",
+                      "sha256":  "F808B416351DA96280C3F71935ACF3527D14B5E97BD3260F8E8CDA039F1E955F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/EvidenceDecisionInputBuilder.java",
+                      "sha256":  "5528C61B2615D21EE67A799EB2BB2625B86763A8900409D68F9DFBCA3D9488ED"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/EvidenceSearchProgress.java",
+                      "sha256":  "17BF4777F7E0E7C419F0840E6309E7C53BC9B5DFDA155727F1D4AB394B2A821B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/LawArticleChunker.java",
+                      "sha256":  "98790392A0C4B1438C8153FCB4360A3ECC8A17DBFFB8D616E4B8511098F8D6E3"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/LawArticleQuery.java",
+                      "sha256":  "D8B45106052BA2718F776DA73856332151FA38884760E802DFE18910D86CF1A1"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/LawCollectionQueue.java",
+                      "sha256":  "7DC5A49C26A157B06A006AFF34572F37ECA9E194CBD8EA0DBAB16D43CCEE2D82"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/LawEmbeddingInputHash.java",
+                      "sha256":  "76229B215ADE30156FA9ED80A49935B01049426177C28D7AC87DE90493F8DC4F"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/LawParseUtil.java",
+                      "sha256":  "E90D1F6E8CC939ACE0618BC323282F5AB6B07578F3816789A0E136BE4DA9B9A0"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/LawSearchQueryKey.java",
+                      "sha256":  "CF8B2E8ABABA8FFDF448596CF437E2EEB8A3DDE2ADD6DCCB96CB2697E8D5542C"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/LawSearchResultFusion.java",
+                      "sha256":  "847BDF8083FE330CB4329E6C4AB91DE59C8EE0430577580601FB40A8CB0A6252"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/LawSourceUrl.java",
+                      "sha256":  "52AF4B0CC718ACBF3969F41C3E2B0A8BCF53268DA1205BB414AA07A81ADD8D9E"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/MinistryCodeMapper.java",
+                      "sha256":  "1D10827D407AF115870837F582B708CDEBE742EB54AEDDFC1D1327B9FA7C1315"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/OpenLawAiSearchParser.java",
+                      "sha256":  "F385D66E9F5FB19A0B105EB3941B9EA3F1B5E2BE1FD5849AA55511700C407331"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/QuestionPlanInput.java",
+                      "sha256":  "B4F0D1C2747FD0DA819629099A7C832DB8843B4C59A60B9311C5E3865DDD1337"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/law/util/RetrievalProgressInput.java",
+                      "sha256":  "E7C52EFEA7590118A977655A8500DF81AB5CD40B277EAEE0A4661A9B75282E4D"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/MoleLawBackendApplication.java",
+                      "sha256":  "9492B8C1DD42681C5A8FF33049709DD6271C273BBDAA01645E86B6C8A501A5DF"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/user/controller/UserController.java",
+                      "sha256":  "99705CC5848D377B1D3A6869A796BDCEEAFB64D6D97FCAD49D3A5431D4E185B6"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/user/dto/request/ChangeNicknameRequest.java",
+                      "sha256":  "963573893F75DA273A9ECD67E19BA22BAA1900ADEAB584F1740AB6987A9D2ADC"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/user/dto/request/ChangePasswordRequest.java",
+                      "sha256":  "0D70FF1BC13B48D1FD1B4E61A720AC6D5E86122D025FD2BA5129E909AFAA228B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/user/dto/response/UserApiResponse.java",
+                      "sha256":  "DD983156BD12570FB69D678C749908B7C95AF8288DE0C0C9FD47A4C6108CB68B"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/user/dto/response/UserResponse.java",
+                      "sha256":  "CEB0B2DCFC42D19512F63FCDED237595E3853503B2F90735857ADA7481D6FA95"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/user/entity/User.java",
+                      "sha256":  "11651EAC10D3525858A0EA41AA20172DC2CD0380DE32023494EEF4563D0061DB"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/user/repository/UserRepository.java",
+                      "sha256":  "24C147184EE5ABE5AE0195BCA8048B80AB54F443555CB278470971BE3E395976"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/user/service/OAuthAccountService.java",
+                      "sha256":  "D369D21D11AF7DFD9FE5E911C6A230C55D277C4F76764CD20FA8BD2A159E5904"
+                  },
+                  {
+                      "path":  "src/main/java/com/MoleLaw_backend/user/service/UserService.java",
+                      "sha256":  "171BF2930501DF5E66C4ED5ED0C5C2D442D1F3E5F0E9BF86C10966BBB1A67A90"
+                  },
+                  {
+                      "path":  "src/main/resources/application.yml",
+                      "sha256":  "261731B83F904637352AF3CBD3C70B75A6C775977694E1D0AE93FF8098F7A527"
+                  },
+                  {
+                      "path":  "src/main/resources/application-kakao.yml",
+                      "sha256":  "72774D7E2529183DC856DBB818D4D17E24EC58995EDB29D6877A4BA1C7427481"
+                  },
+                  {
+                      "path":  "src/main/resources/application-loadtest.yml",
+                      "sha256":  "B49F7672B40FE7B39CFA33CBC19869E81AA26C471D94FD6B60AB60BFDDE67D11"
+                  },
+                  {
+                      "path":  "src/main/resources/application-local.yml",
+                      "sha256":  "B79B477C5452E10D4630BFB6CBA13005718EF8468E8842E5B9D4AD261DC8DE04"
+                  },
+                  {
+                      "path":  "src/main/resources/application-mysql.yml",
+                      "sha256":  "AED9387462A932948C5F70A007F41AB512E190C22235C00A3DED98F610752CC9"
+                  },
+                  {
+                      "path":  "src/main/resources/application-qdrant.yml",
+                      "sha256":  "09BC18746A055627D98A9F8B1033948D2F98A205E42A335F934CC2CBE5010DC9"
+                  },
+                  {
+                      "path":  "src/main/resources/application-test.yml",
+                      "sha256":  "6996EEB205AB3BF66A17D73ACD461D8BF9EC43F7CE3A0BAA216A820302A6509D"
+                  },
+                  {
+                      "path":  "src/main/resources/auth/refresh-create.lua",
+                      "sha256":  "B7E6C072E3D3A35D6DD3E4254FBCE1753708B1877088F2605115BE7A0127D24D"
+                  },
+                  {
+                      "path":  "src/main/resources/auth/refresh-revoke.lua",
+                      "sha256":  "AE8B8C3DAF01BF1F35B7311B1F49324313E87A99795DB493550ECB1339725AFE"
+                  },
+                  {
+                      "path":  "src/main/resources/auth/refresh-revoke-all.lua",
+                      "sha256":  "1E343FB74A2767274990FF274DD92CC3FDD4A42946BB35B5462995B80A7EABBB"
+                  },
+                  {
+                      "path":  "src/main/resources/auth/refresh-rotate.lua",
+                      "sha256":  "3E97F1ECE4A23FC95283409114EB14F141D4753F4F9D35C88965BE32427A7ABD"
+                  },
+                  {
+                      "path":  "src/main/resources/db/migration/V1__initial_schema.sql",
+                      "sha256":  "14DCCE34D2F39EE215D0BE0D3200865189949FBE4DDEB3534CD2CB999C73A280"
+                  },
+                  {
+                      "path":  "src/main/resources/db/migration/V2__chat_evidence_snapshot.sql",
+                      "sha256":  "505D0550D42B63D4E047B8C5786EB917E45373FA09BE4F14EDAD677E443287A8"
+                  },
+                  {
+                      "path":  "src/main/resources/db/migration/V3__user_account_constraints.sql",
+                      "sha256":  "FAB28F97E1C2B7734B0EAD719E005A0FA3F88E2DBAE5AF0060D26C28BFA588DC"
+                  },
+                  {
+                      "path":  "src/main/resources/db/migration/V4__source_index_and_chat_constraints.sql",
+                      "sha256":  "8C66B0E8292E2E709CE401776F808245C523B4BA4EBEDBAF20E0CE8568110ED8"
+                  },
+                  {
+                      "path":  "src/main/resources/db/migration/V5__chat_case_evidence.sql",
+                      "sha256":  "D923C74A9CE60822C1B0E259E0001D4AFA23E30A0E5E60A17924D3FB65357831"
+                  },
+                  {
+                      "path":  "src/main/resources/db/migration/V6__source_index_dedup.sql",
+                      "sha256":  "FFD5AF7141B45C1C64E6771CBA22C7C782BA17D14C0CA268504CD3E549B32130"
+                  },
+                  {
+                      "path":  "src/main/resources/db/migration/V7__law_chunk_index_metadata.sql",
+                      "sha256":  "070A0AC926529A78E835A71375AF2A18FCE28DECB02452CD1A2BB891A196D995"
+                  },
+                  {
+                      "path":  "src/main/resources/db/migration/V8__chat_evidence_removal.sql",
+                      "sha256":  "A3ACB48B5FEB3C260AB7E62BE86DA5194ACBB5B26C840B02A9D831125716DB1F"
+                  },
+                  {
+                      "path":  "src/main/resources/prompts/evidence-decision.txt",
+                      "sha256":  "9780A1276681534FA18F1EA8C97A7F3881846AB5E0B7A13A2E79276129C21D60"
+                  },
+                  {
+                      "path":  "src/main/resources/prompts/evidence-reading.txt",
+                      "sha256":  "AEC1983D0AD449FA3FEE45E63760CAED7F0DCBB3609EEA1FC08B23829247D94E"
+                  },
+                  {
+                      "path":  "src/main/resources/prompts/initial-question-suggestions.txt",
+                      "sha256":  "473CA1C98D743897D43FA9C9B212E3051ED6913F7479A3298F3A6273B7B909BD"
+                  },
+                  {
+                      "path":  "src/main/resources/prompts/keyword-extraction.txt",
+                      "sha256":  "87661ADEB3039B8D41ECC0C8DD71B1554DDABD4687DCB46DEC140732402695FA"
+                  },
+                  {
+                      "path":  "src/main/resources/prompts/law-candidate-selection.txt",
+                      "sha256":  "9F0FF203C96440C6C639B832D10D460D8C721947AFD09471CD1FAFF36D369A8B"
+                  },
+                  {
+                      "path":  "src/main/resources/prompts/legal-system.txt",
+                      "sha256":  "92476A58EE91F6EECC5B7F2C27357BC9A2EC51BE08670148576C012396E8596C"
+                  },
+                  {
+                      "path":  "src/main/resources/prompts/question-retrieval-plan.txt",
+                      "sha256":  "2FB124CBF88878A41A7AA984DD8AE443A26A5488BAB23BC56E7436D74A118995"
+                  }
+              ],
+    "harnessSha256":  "9AE5B0CDF55D1D2073AA4196BB47588EAC3F7301B70A70B0CBBC21269A1D3314",
+    "head":  "b0b37d87037ff3b9b0a5c6a01834c011358200e0",
+    "runtime":  {
+                    "APP_LAW_RERANKER_READ_TIMEOUT_MILLIS":  "120000",
+                    "APP_AI_EVIDENCE_CATALOG_MAX_INPUT_TOKENS":  "8000",
+                    "APP_AI_QUESTION_REASONING_EFFORT":  "low",
+                    "APP_AI_QUESTION_MAX_COMPLETION_TOKENS":  "4096",
+                    "APP_AI_READ_MODEL":  "gpt-5.4-mini",
+                    "APP_AI_EVIDENCE_MAX_COMPLETION_TOKENS":  "12288",
+                    "APP_AI_READ_MAX_COMPLETION_TOKENS":  "4096",
+                    "APP_AI_EVIDENCE_REASONING_EFFORT":  "medium",
+                    "APP_AI_EVIDENCE_DECISION_MAX_INPUT_TOKENS":  "32000",
+                    "APP_AI_EVIDENCE_MAX_INPUT_TOKENS":  "8000",
+                    "APP_LAW_RERANKER_REVISION":  "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+                    "APP_AI_READ_TIMEOUT_MS":  "120000",
+                    "APP_LAW_RETRIEVAL_PROCESSING_TIMEOUT":  "15m",
+                    "APP_AI_EVIDENCE_BODY_MAX_INPUT_TOKENS":  "12000",
+                    "APP_AI_QUESTION_MODEL":  "gpt-5.4-mini",
+                    "APP_LAW_RERANKER_MODEL":  "BAAI/bge-reranker-v2-m3",
+                    "APP_LAW_RERANKER_BASE_URL":  "http://kure:11434",
+                    "APP_AI_EVIDENCE_MODEL":  "gpt-5.4",
+                    "APP_LAW_RERANKER_ENABLED":  "true",
+                    "APP_AI_READ_REASONING_EFFORT":  "low"
+                },
+    "sourceRepository":  "C:\\Users\\KOSA\\IdeaProjects\\MoleLaw_backend"
+}

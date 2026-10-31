@@ -1,0 +1,22 @@
+{
+    "id":  "reranker-dense50-v1",
+    "createdAtUtc":  "2026-10-31T01:12:19.8371528Z",
+    "maxChars":  500,
+    "queryMode":  "legal_transformed",
+    "candidateCount":  50,
+    "questionCount":  36,
+    "model":  "kure-v1",
+    "modelRevision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+    "documentCollection":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58",
+    "queryArchive":  "molelaw_recall50_kure_v1_c500_e8ec1af6",
+    "corpusSha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+    "goldQuestionsSha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB",
+    "baselineQuerySha256":  "49EAD3847681FEE4CE7D487B4ED30E382E91A4BB29E70353DDB04929E6402CA5",
+    "baselineTop50Sha256":  "00D4E96EB09BEAA7D7F9B348B69810C9D4E27D8B19582A1A3DCF78B8B41CF246",
+    "baselineManifestSha256":  "E38E727792375BE90EF8532BF7730FA1AD08EA7F794F79E173E6F638B81C93A1",
+    "candidatesSha256":  "EF03C5E0D59C9FC45F789E6EE420370951DB3E496BD3DF6C5F3E60F2E1C37DE4",
+    "documentCount":  8286,
+    "documentFormat":  "title + newline + representative dense-search chunk",
+    "thresholdApplied":  false,
+    "policy":  "Exploratory paired reranking on a previously explored 36-question set. Read-only Qdrant; no embeddings, corpus or gold changes."
+}

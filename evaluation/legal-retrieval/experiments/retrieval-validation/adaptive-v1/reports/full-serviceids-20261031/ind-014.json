@@ -1,0 +1,12 @@
+{
+  "queryId" : "ind-014",
+  "question" : "아르바이트 사장이 내일부터 나오지 말라고 문자로 통보했어요. 제가 요구할 수 있는 게 있나요?",
+  "goldUnitIds" : [ "labor:285279:001100", "labor:285279:002300", "labor:285279:002600", "labor:285279:002700", "labor:285279:002800" ],
+  "rounds" : [ ],
+  "status" : "FAILED",
+  "errorType" : "GptApiException",
+  "errorCode" : "GPT_API_FAILURE",
+  "searches" : [ ],
+  "elapsedMs" : 6231,
+  "completedAtUtc" : "2026-10-31T02:40:01.336986600Z"
+}

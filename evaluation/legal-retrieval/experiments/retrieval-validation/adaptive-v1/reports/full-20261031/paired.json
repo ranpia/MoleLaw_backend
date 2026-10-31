@@ -1,0 +1,32 @@
+{
+    "questionCount":  6,
+    "successful":  4,
+    "hitAt15Gains":  1,
+    "hitAt15Losses":  0,
+    "completeAt15Gains":  0,
+    "completeAt15Losses":  0,
+    "meanSearchCount":  3.8333333333333335,
+    "initialPoolAvailable":  5,
+    "repeatedQuestions":  2,
+    "meanInitialElapsedMs":  32278,
+    "meanTotalElapsedMs":  126818.33333333333,
+    "lastActions":  [
+                        {
+                            "action":  "NONE",
+                            "count":  1
+                        },
+                        {
+                            "action":  "ANSWER_PARTIAL",
+                            "count":  3
+                        },
+                        {
+                            "action":  "ANSWER_READY",
+                            "count":  1
+                        },
+                        {
+                            "action":  "INSUFFICIENT",
+                            "count":  1
+                        }
+                    ],
+    "interpretation":  "Candidate availability is not answer accuracy. Terminal pools from failed executions remain diagnostic only; failed executions publish no selected evidence."
+}

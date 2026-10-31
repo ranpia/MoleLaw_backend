@@ -12,6 +12,8 @@
 | 상위 50개 후보의 정답 포함 범위 | [query-strategies/candidate-coverage-v1](query-strategies/candidate-coverage-v1/README.md) | KURE·BGE 완료, Qwen 실행 중 |
 | 점수 임계값 탐색 | [query-strategies/threshold-sweep-v1](query-strategies/threshold-sweep-v1/reports/README.md) | 과거 분석 보존, 탐색 후보 초기화·현재 미사용 |
 | Multi-Query·BM25·RRF 비교 | [hybrid-search/ablation-v1](hybrid-search/ablation-v1/review/README.md) | 기준선 완료, 후속 2~4단계 계획 |
+| 현재 서비스 리랭커 적용 전후 | [reranking/dense50-v1](reranking/dense50-v1/README.md) | 36문항 완료, Hit@5 개선·Complete@5 유지 |
+| 현재 리랭커를 유지한 반복 검색 | [retrieval-validation/adaptive-v1](retrieval-validation/adaptive-v1/README.md) | 36문항 완료, 근거 회수 개선·최종 답변 정확도는 미측정 |
 | Qdrant 관리와 과거 검색 대조 | [infrastructure/qdrant](infrastructure/qdrant/README.md) | 데이터 보존, 목적별 별칭 적용 |
 | 로컬에 남은 실험 자료 보존 | [infrastructure/local-artifact-import-20261023](infrastructure/local-artifact-import-20261023/README.md) | 기존 결과 중복 확인·추가 14개 보존, 새 평가 없음 |
 

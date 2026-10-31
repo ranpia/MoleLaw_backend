@@ -1,0 +1,167 @@
+{
+    "questionCount":  36,
+    "outsideInitialDenseDiagnosisVerified":  true,
+    "qdrantBeforeAfterValidatedBySummarizer":  true,
+    "independentSetMetricsVerified":  true,
+    "sourceSnapshotFilesVerified":  236,
+    "historicalBaselineHashesVerified":  3,
+    "runtimeBuildFilesVerified":  6,
+    "frozenInputFilesVerified":  5,
+    "validatedAtUtc":  "2026-10-31T03:08:14.9276671Z",
+    "modelRuntimeUnchanged":  true,
+    "comparisonContractTestsPassed":  true,
+    "powerShellScriptsParsed":  3,
+    "utf8BomVerified":  3,
+    "documentationLinksVerified":  30,
+    "whitespaceChecksPassed":  true,
+    "rawTraceHashes":  [
+                           {
+                               "name":  "ind-001.json",
+                               "sha256":  "7E0361AA8CA9F11804DF57AF093B89A80871F5001EEB37AA4C06BE05FA3F8530"
+                           },
+                           {
+                               "name":  "ind-002.json",
+                               "sha256":  "D7F84CF6ECBF50B199528F4CBFEEC2725E63622DAF133659036EA2AA4BA9BBA5"
+                           },
+                           {
+                               "name":  "ind-003.json",
+                               "sha256":  "CAE812FDA4F893B97A1775505CF6AE2649CA3DCFF284D75CA6C1D9177B732578"
+                           },
+                           {
+                               "name":  "ind-004.json",
+                               "sha256":  "D33FB9F4DAA349D9E47F0F25194352AE04A7159B075C13E6B970DBE26B9E5166"
+                           },
+                           {
+                               "name":  "ind-005.json",
+                               "sha256":  "34F769A6645B6BC93C36373E374876CDF740891993C19C060056CB36B44AC622"
+                           },
+                           {
+                               "name":  "ind-006.json",
+                               "sha256":  "A7A48821F8FB3909879476B8A1F6404FF2C62BDEB1AF4389FA195527826ED525"
+                           },
+                           {
+                               "name":  "ind-010.json",
+                               "sha256":  "42891BDADC71C45E3FFA4B72F1370015C9620D86FF089B890F7A3B8F1E4B780E"
+                           },
+                           {
+                               "name":  "ind-011.json",
+                               "sha256":  "15540C7440890DABCA625E6DECC3E12FEB9FB30086C4904268F86A65712BFF8A"
+                           },
+                           {
+                               "name":  "ind-012.json",
+                               "sha256":  "49077D5A1F307CE622130CD155B66D456ECB66D4FAE72A5C0542BB6197DDF47B"
+                           },
+                           {
+                               "name":  "ind-013.json",
+                               "sha256":  "FDC0609CC48129B6B58E51DDD59F33D332127BFD8E9CDCB4D78C6BBE78AD5CE9"
+                           },
+                           {
+                               "name":  "ind-014.json",
+                               "sha256":  "CF47E7993E451980060F0BF598004E9A9697DE5B680F774044561278DE8743F2"
+                           },
+                           {
+                               "name":  "ind-015.json",
+                               "sha256":  "403FD30F9364963577CD2B7CD9F6FFA6C40FC52AC111B8CDAB0238B5E802641C"
+                           },
+                           {
+                               "name":  "ind-016.json",
+                               "sha256":  "45AC575D3945434A41723CBFC00733709FA863DB2ABFE01A233C6DE729D02E3E"
+                           },
+                           {
+                               "name":  "ind-018.json",
+                               "sha256":  "C6A1915DA6C20E4BE73A7B9FA2B962582B454E5DB15E197E473422325D3B508B"
+                           },
+                           {
+                               "name":  "ind-019.json",
+                               "sha256":  "96687ABF9BD8BE1A3A5B9DC9A9C8F1B0D814FF7A12F6B27C518743F836277ED2"
+                           },
+                           {
+                               "name":  "ind-021.json",
+                               "sha256":  "8D171E4C44130A47329BC64B45375BC7281F7F86FAA8490E24C3E98009EE0E53"
+                           },
+                           {
+                               "name":  "ind-022.json",
+                               "sha256":  "51DA241AB0C2822658F870F604F6DC35709A1885126262518913381DEE372D05"
+                           },
+                           {
+                               "name":  "ind-024.json",
+                               "sha256":  "8D6E48B18CD70C0846692C3B6F0497D11155E33EF968EF88FE5A7C5A5C855672"
+                           },
+                           {
+                               "name":  "ind-027.json",
+                               "sha256":  "B4D5BAC4DB8E6CDC4890B9EF724B90E75A9C2831A64A07F89ECC4B4BF781FA1B"
+                           },
+                           {
+                               "name":  "ind-028.json",
+                               "sha256":  "2578C3C259177B59327977B43AB5BD95F5BA484824B7B6680F339669E79524C3"
+                           },
+                           {
+                               "name":  "ind-032.json",
+                               "sha256":  "7A2B89669CDDF21CEB23617729BC8C1F75A439D91DB8E90EA6ACEC7AD9F1DCA9"
+                           },
+                           {
+                               "name":  "ind-033.json",
+                               "sha256":  "A7DF7A3BF73FCCE598E21227193E9D36C7CE841DE828790A14F2EE2A18CD37C3"
+                           },
+                           {
+                               "name":  "ind-034.json",
+                               "sha256":  "F0269816EF9DB2252EB24F39AE4F8F1B9C1337E3936C775BC7156FF522DB703B"
+                           },
+                           {
+                               "name":  "ind-036.json",
+                               "sha256":  "5835FF76E92F958935351D9FC7310919F929B0757C2588D5BB7F10B9267A6462"
+                           },
+                           {
+                               "name":  "ind-037.json",
+                               "sha256":  "4733B71E48583C9597526CFB5F286DB2EF4821B66872355700C8404C981D84D1"
+                           },
+                           {
+                               "name":  "ind-039.json",
+                               "sha256":  "514E05B3D62023B2802221B53629FE88F97ACA8228312202730EB374FE9F168B"
+                           },
+                           {
+                               "name":  "ind-046.json",
+                               "sha256":  "10E746DC90F99CE206261BA636BDEB7F673EDD1C96640483A86CA91F76F3C91B"
+                           },
+                           {
+                               "name":  "ind-047.json",
+                               "sha256":  "7DD701B0BBB002EDA99B648DD2F3758148076DD20B2EA98E02E264BEBDBF71B9"
+                           },
+                           {
+                               "name":  "ind-051.json",
+                               "sha256":  "EC73B3396FA37AFF1394C52F0B9E71F358BADE1A58527EB465F132192F798DFC"
+                           },
+                           {
+                               "name":  "ind-052.json",
+                               "sha256":  "8CA3C959361EF15A4F38C5CBDB150B0D7FA24B0FA181F7EE8DA46F194CD086B9"
+                           },
+                           {
+                               "name":  "ind-053.json",
+                               "sha256":  "16B1200B8E22E74B3E2B9344514BA99FB00BFEF225C6986F91BA09BBB0B508FF"
+                           },
+                           {
+                               "name":  "ind-055.json",
+                               "sha256":  "C966BF4B5E973291AB19D6C02273C95F19A180C8035E35D89194792BDF09B42F"
+                           },
+                           {
+                               "name":  "ind-056.json",
+                               "sha256":  "0979876D1ECEA61364C7050165F351C62107CE92D31356BDA9C94830757094BD"
+                           },
+                           {
+                               "name":  "ind-058.json",
+                               "sha256":  "2097070806E67D3FB0CEEB60CD939856A4C787727A030850F9E5400929A916C1"
+                           },
+                           {
+                               "name":  "ind-059.json",
+                               "sha256":  "802D96CF59EA95375C9EBA4CDDBE16F5E97E083ACF1819FBF074EF9ADCAB01F5"
+                           },
+                           {
+                               "name":  "ind-060.json",
+                               "sha256":  "DCBB0F1F5D7987881A0504BC9167978ECA1B8FF013A6FDEAAF302A59596EB403"
+                           },
+                           {
+                               "name":  "independent-recalculation.json",
+                               "sha256":  "82B9637C7AD05A4ED6B0A23059E542384940F5BE7A00D18A8DB7A773EDC32902"
+                           }
+                       ]
+}

@@ -1,0 +1,12 @@
+{
+  "queryId" : "ind-022",
+  "question" : "주차된 제 차를 누가 긁고 갔는데 아파트 관리실이 개인정보 때문에 CCTV를 못 보여준대요.",
+  "goldUnitIds" : [ "privacy:283839:003500", "privacy-decree:289537:004100", "privacy-decree:289537:004200" ],
+  "rounds" : [ ],
+  "status" : "FAILED",
+  "errorType" : "GptApiException",
+  "errorCode" : "GPT_API_FAILURE",
+  "searches" : [ ],
+  "elapsedMs" : 6216,
+  "completedAtUtc" : "2026-10-31T02:45:41.380019600Z"
+}

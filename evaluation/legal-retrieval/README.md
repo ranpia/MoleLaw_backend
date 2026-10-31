@@ -13,6 +13,8 @@ MoleLaw에서 사용자 질문에 필요한 법령 근거를 잘 찾는 검색 �
 | 질의 표현 | 원본 질문·의미 보존 정제·법률 쟁점 변환의 차이 | [질의 변환 비교](experiments/query-strategies/sentence-transform-v1/reports/kure-v1/interpretation.md) |
 | 평가 범위 | 법령 범위를 넓히거나 독립 작성 질문을 사용했을 때의 차이 | [확장 검증](experiments/retrieval-validation/expanded-v1/reports/kure-v1/README.md) · [독립 질문 검증](experiments/retrieval-validation/independent-v1/reports/kure-v1/interpretation.md) |
 | 후보 회수 범위 | 상위 50개에 필요한 근거가 얼마나 포함되는지 | [Recall@50 비교](experiments/query-strategies/candidate-coverage-v1/reports/model-comparison.md) |
+| 서비스 리랭커 | 같은 dense 후보 50개를 현재 BGE 리랭커로 재정렬했을 때의 차이 | [리랭커 전후 비교](experiments/reranking/dense50-v1/README.md) |
+| 적응형 반복 검색 | 현재 리랭커를 유지한 최초 검색 대비 추가 검색·근거 누적의 차이 | [반복 검색 비교](experiments/retrieval-validation/adaptive-v1/README.md) |
 
 실험마다 질문셋과 코퍼스 범위가 다르므로 같은 조건의 결과끼리 비교한다. 최초 모델 비교의 점수를 독립 질문 검증이나 실제 서비스 성능으로 대체해서 해석하지 않는다.
 

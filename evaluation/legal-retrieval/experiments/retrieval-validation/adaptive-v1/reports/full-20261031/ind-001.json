@@ -1,0 +1,12 @@
+{
+  "queryId" : "ind-001",
+  "question" : "전세 계약이 끝났는데 집주인이 다음 세입자가 들어와야 보증금을 준대요. 이사 날짜는 잡혔는데 어떻게 해야 하나요?",
+  "goldUnitIds" : [ "housing:276291:000303", "housing:276291:000400", "civil:284415:053600" ],
+  "rounds" : [ ],
+  "status" : "FAILED",
+  "errorType" : "GptApiException",
+  "errorCode" : "GPT_API_FAILURE",
+  "searches" : [ ],
+  "elapsedMs" : 8024,
+  "completedAtUtc" : "2026-10-31T02:07:01.424150400Z"
+}

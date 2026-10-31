@@ -1,0 +1,24 @@
+{
+    "capturedAtUtc":  "2026-10-31T01:12:39.7535482Z",
+    "containerName":  "ai-service-kure-1",
+    "containerId":  "4b9dec1df595527c535a5073df0c420eeb9170b7430827dac838d7be2bb0328d",
+    "imageId":  "sha256:1c811b60da6f26790065cb05ee39150a87a72ce7d22435c012fddfef5c7fbbc4",
+    "apiVersion":  {
+                       "version":  "sentence-transformers/6.1.0;torch/2.7.1+cpu;transformers/5.0.0",
+                       "runtime":  "sentence-transformers",
+                       "revision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                       "dtype":  "float32",
+                       "device":  "cpu",
+                       "batch_size":  16
+                   },
+    "reranker":  {
+                     "enabled":  true,
+                     "model":  "BAAI/bge-reranker-v2-m3",
+                     "revision":  "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+                     "device":  "cpu",
+                     "dtype":  "float32",
+                     "batchSize":  2,
+                     "maxTokens":  1024
+                 },
+    "validation":  "Snapshot of currently running ai-service-kure-1. Rerank endpoint identity verified by a real smoke call. No service configuration changes."
+}

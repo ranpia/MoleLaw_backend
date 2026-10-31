@@ -1,0 +1,35 @@
+{
+    "existingRankingMetricsTestPassed":  true,
+    "branch":  "experiment/legal-embedding-evaluation",
+    "rankingRows":  3600,
+    "baseCommit":  "01c438cd290309989222a8b8d41d87b1ad528e43",
+    "serviceContainerImageRuntimeUnchanged":  true,
+    "fullReportValidationPassed":  true,
+    "contractTestsPassed":  true,
+    "questions":  36,
+    "qdrantUnchanged":  true,
+    "fullReport":  "reports/20261031T011428Z",
+    "validatedAtUtc":  "2026-10-31T01:35:50.7558303Z",
+    "scriptHashes":  [
+                         {
+                             "path":  "prepare-reranker-comparison.ps1",
+                             "sha256":  "252CB356B17C66AC45D8F267CC87054E4B1B9BC7FFD006781993A72F6A198A3B"
+                         },
+                         {
+                             "path":  "run-reranker-comparison.ps1",
+                             "sha256":  "816424F2F86908513314FDBD6EAC90C792CA8E61DB76364610FF2B022A09D391"
+                         },
+                         {
+                             "path":  "test-reranker-comparison.ps1",
+                             "sha256":  "1CD67A9054D04A2DB3ACCA6FEB7EF10E41EF371CF1438CDA842A67AF31ABA4EF"
+                         },
+                         {
+                             "path":  "validate-reranker-comparison.ps1",
+                             "sha256":  "50CF512353A29AC2B8C092D9573C9BE23291C88053450163A08B0C745CE16E7F"
+                         },
+                         {
+                             "path":  "lib/RerankerComparison.ps1",
+                             "sha256":  "0FBB0D131C32902524D2A43F8A7BCEA34F523B9C973ED43F0FF0184630687738"
+                         }
+                     ]
+}

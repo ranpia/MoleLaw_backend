@@ -1,0 +1,36 @@
+{
+    "questionCount":  36,
+    "successful":  30,
+    "hitAt15Gains":  7,
+    "hitAt15Losses":  0,
+    "completeAt15Gains":  3,
+    "completeAt15Losses":  0,
+    "meanSearchCount":  2.2777777777777777,
+    "initialPoolAvailable":  31,
+    "repeatedQuestions":  8,
+    "questionsLosingPreviouslySeenGold":  0,
+    "questionsFindingGoldOutsideInitialDense":  8,
+    "meanInitialElapsedMs":  29696.083333333332,
+    "meanTotalElapsedMs":  64751.527777777781,
+    "meanInitialAvailableElapsedMs":  34485.774193548386,
+    "meanTotalAvailableElapsedMs":  73918.06451612903,
+    "lastActions":  [
+                        {
+                            "action":  "ANSWER_READY",
+                            "count":  12
+                        },
+                        {
+                            "action":  "NONE",
+                            "count":  5
+                        },
+                        {
+                            "action":  "ANSWER_PARTIAL",
+                            "count":  18
+                        },
+                        {
+                            "action":  "INSUFFICIENT",
+                            "count":  1
+                        }
+                    ],
+    "interpretation":  "Candidate availability is not answer accuracy. Terminal pools from failed executions remain diagnostic only; failed executions publish no selected evidence."
+}

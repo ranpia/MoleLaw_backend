@@ -1,0 +1,102 @@
+{
+    "id":  "reranker-dense50-v1",
+    "runId":  "20261031T011428Z",
+    "completed":  true,
+    "datasetManifest":  {
+                            "id":  "reranker-dense50-v1",
+                            "createdAtUtc":  "2026-10-31T01:12:19.8371528Z",
+                            "maxChars":  500,
+                            "queryMode":  "legal_transformed",
+                            "candidateCount":  50,
+                            "questionCount":  36,
+                            "model":  "kure-v1",
+                            "modelRevision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                            "documentCollection":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58",
+                            "queryArchive":  "molelaw_recall50_kure_v1_c500_e8ec1af6",
+                            "corpusSha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                            "goldQuestionsSha256":  "B2B30DF83AD6045D0D144B127165330FEC14826EB16EC4C56E261990DB05D6DB",
+                            "baselineQuerySha256":  "49EAD3847681FEE4CE7D487B4ED30E382E91A4BB29E70353DDB04929E6402CA5",
+                            "baselineTop50Sha256":  "00D4E96EB09BEAA7D7F9B348B69810C9D4E27D8B19582A1A3DCF78B8B41CF246",
+                            "baselineManifestSha256":  "E38E727792375BE90EF8532BF7730FA1AD08EA7F794F79E173E6F638B81C93A1",
+                            "candidatesSha256":  "EF03C5E0D59C9FC45F789E6EE420370951DB3E496BD3DF6C5F3E60F2E1C37DE4",
+                            "documentCount":  8286,
+                            "documentFormat":  "title + newline + representative dense-search chunk",
+                            "thresholdApplied":  false,
+                            "policy":  "Exploratory paired reranking on a previously explored 36-question set. Read-only Qdrant; no embeddings, corpus or gold changes."
+                        },
+    "candidatesSha256":  "EF03C5E0D59C9FC45F789E6EE420370951DB3E496BD3DF6C5F3E60F2E1C37DE4",
+    "runtimeSha256":  "B46245607F76A52D910E872394AEF2FDF38CA9FA07797717FDEDADC4F13B82E4",
+    "runtime":  {
+                    "capturedAtUtc":  "2026-10-31T01:12:39.7535482Z",
+                    "containerName":  "ai-service-kure-1",
+                    "containerId":  "4b9dec1df595527c535a5073df0c420eeb9170b7430827dac838d7be2bb0328d",
+                    "imageId":  "sha256:1c811b60da6f26790065cb05ee39150a87a72ce7d22435c012fddfef5c7fbbc4",
+                    "apiVersion":  {
+                                       "version":  "sentence-transformers/6.1.0;torch/2.7.1+cpu;transformers/5.0.0",
+                                       "runtime":  "sentence-transformers",
+                                       "revision":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                       "dtype":  "float32",
+                                       "device":  "cpu",
+                                       "batch_size":  16
+                                   },
+                    "reranker":  {
+                                     "enabled":  true,
+                                     "model":  "BAAI/bge-reranker-v2-m3",
+                                     "revision":  "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+                                     "device":  "cpu",
+                                     "dtype":  "float32",
+                                     "batchSize":  2,
+                                     "maxTokens":  1024
+                                 },
+                    "validation":  "Snapshot of currently running ai-service-kure-1. Rerank endpoint identity verified by a real smoke call. No service configuration changes."
+                },
+    "model":  "BAAI/bge-reranker-v2-m3",
+    "revision":  "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+    "candidateCount":  50,
+    "expectedQueries":  36,
+    "requestedQueries":  36,
+    "completedQueries":  36,
+    "cacheHits":  1,
+    "inferenceRequests":  35,
+    "latencyPolicy":  "Per-query reranker HTTP wall time only; includes queue/network; baseline retrieval time not measured. Offline request deadline is 300 seconds, not a claim about Spring request SLA.",
+    "documentFormat":  "title + newline + representative dense-search chunk",
+    "thresholdApplied":  false,
+    "serviceReady":  false,
+    "finishedAtUtc":  "2026-10-31T01:33:46.4946095Z",
+    "summary":  [
+                    {
+                        "condition":  "baseline",
+                        "count":  36,
+                        "hitAt5":  0.55555555555555558,
+                        "completeAt5":  0.1111111111111111,
+                        "recallAt5":  0.31388888888888888,
+                        "ndcgAt5":  0.26512960102192823,
+                        "mrrAt10":  0.34212962962962967,
+                        "recallAt10":  0.3875,
+                        "ndcgAt10":  0.29788915476563083,
+                        "recallAt50":  0.56574074074074077,
+                        "hitAt50":  0.83333333333333337,
+                        "completeAt50":  0.30555555555555558
+                    },
+                    {
+                        "condition":  "reranked",
+                        "count":  36,
+                        "hitAt5":  0.61111111111111116,
+                        "completeAt5":  0.1111111111111111,
+                        "recallAt5":  0.38194444444444442,
+                        "ndcgAt5":  0.39432074869413986,
+                        "mrrAt10":  0.53472222222222221,
+                        "recallAt10":  0.48472222222222222,
+                        "ndcgAt10":  0.44034267071727756,
+                        "recallAt50":  0.56574074074074077,
+                        "hitAt50":  0.83333333333333337,
+                        "completeAt50":  0.30555555555555558
+                    }
+                ],
+    "latencyMs":  {
+                      "p50":  30970.445900000002,
+                      "max":  87730.471700000009,
+                      "mean":  33088.118088888892,
+                      "p95":  66123.1132
+                  }
+}

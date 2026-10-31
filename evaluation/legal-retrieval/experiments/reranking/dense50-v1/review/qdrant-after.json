@@ -1,0 +1,36 @@
+{
+    "collections":  [
+                        {
+                            "collection":  "molelaw_legal_chunks_kure_v1_c500_431ce0e1_8b418a58",
+                            "count":  8286,
+                            "vectorSize":  1024,
+                            "distance":  "Cosine",
+                            "metadata":  {
+                                             "source_units_sha256":  "0bbe79049c3a2fbb7ebd1f974cb284249b64c19bb5b674abdc48a160d415c726",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "corpus_sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                                             "kind":  "legal-query-chunks-v1",
+                                             "freeze_sha256":  "B0E3A4A07B2A6DDAA6FC60B0D1E4808FAC2BFB1704FC42521A53C1306F87882A",
+                                             "max_chars":  500
+                                         }
+                        },
+                        {
+                            "collection":  "molelaw_recall50_kure_v1_c500_e8ec1af6",
+                            "count":  108,
+                            "vectorSize":  1024,
+                            "distance":  "Cosine",
+                            "metadata":  {
+                                             "model_digest":  "8b418a58414668e75532ed045c22d9ca018ae2b2",
+                                             "owner":  "molelaw-legal-retrieval-lab-v1",
+                                             "freeze_sha256":  "e8ec1af69be9ec8ee2248f27869c5785e45325d105aa52ae2e87ecdfa86337a8",
+                                             "corpus_sha256":  "431CE0E1D41EE6894F21E8966E49396387147E788CC8DBF0DB8255990EA5353E",
+                                             "kind":  "recall50-v1",
+                                             "max_rank":  50,
+                                             "max_chars":  500
+                                         }
+                        }
+                    ],
+    "capturedAtUtc":  "2026-10-31T01:34:41.7591793Z",
+    "unchanged":  true
+}
