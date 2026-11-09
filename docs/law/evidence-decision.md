@@ -1,5 +1,7 @@
 # 근거 수집 LLM 판단 계약
 
+2026-11-10: 기본 QDRANT 최초 상담은 [실제 법령 Tool 호출](law-retrieval-tools.md)로 전환했다. 아래 행동 제안 실행 흐름은 명시적 AI_SEARCH 진단 및 이전 구현의 설명이다. 기본 경로는 도구로 검색/수집하고 최종 ANSWER_READY/ANSWER_PARTIAL/INSUFFICIENT 계약만 재사용한다.
+
 `law.dto.retrieval.EvidenceDecision`은 최초 질문의 근거 판단 결과를 표현하는 내부 계약입니다. LegalEvidenceCollector가 최초 상담의 Qdrant 검색·전용 판단 Client·법령 수집·벡터화·재검색 반복에 연결합니다. 후속 상담과 SSE에는 연결하지 않습니다. 현재 실행 상한은 [최초 상담](../chat/initial-consultation.md), 모델은 [역할별 Client](../architecture/role-chat-clients.md)를 따릅니다.
 
 ## 상태와 필드
@@ -35,7 +37,7 @@
 
 모델 응답은 `EvidenceDecision.parse(json, suppliedEvidenceIds, mapper)`로 처리합니다. 상태별 필드 모순, 미등록 ID, 중복·빈 값·과도한 길이, 알 수 없는 필드·상태, 숫자 enum, 중복 JSON 키, 추가 JSON 값은 거절합니다. 오류에는 원문 모델 출력을 포함하지 않습니다. 이 경계를 통과해도 서버의 권한·예산·중복·진행 여부 검사를 통과해야 실행할 수 있습니다.
 
-제한: 근거 ID 15개, 누락 쟁점 8개, 재검색 질의/법령 검색 조건 각각 최대 3개. 질의 최대 200자, 사유 1,000자, 입력 JSON 32,768 Java 문자입니다. 목록은 방어적으로 복사합니다. 더 많은 실행은 후속 판단에서 서버가 조정합니다.
+제한: 근거 ID 15개, 누락 쟁점 8개, 재검색 질의/법령 검색 조건의 고정 개수 제한 없음. 질의 최대 200자, 사유 1,000자, 입력 JSON 32,768 Java 문자입니다. 목록은 방어적으로 복사합니다. 더 많은 실행은 후속 판단에서 서버가 조정합니다.
 
 ## 예산·부하·상태 알림의 별도 경계
 

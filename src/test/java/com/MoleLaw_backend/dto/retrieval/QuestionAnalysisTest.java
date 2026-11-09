@@ -6,6 +6,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class QuestionAnalysisTest {
+    @Test void searchKeywordsAndQueriesAreNotLimitedToThreeOrSix() {
+        var terms=java.util.stream.IntStream.range(0,10).mapToObj(i -> "사건 사실관계 표현 " + i).toList();
+        var issue=new QuestionAnalysis.Issue("Q1","설명","설명",terms,List.of(),List.of(),List.of());
+        assertThat(issue.searchTerms()).hasSize(10);
+        var plan=new QuestionRetrievalPlan(QuestionRetrievalPlan.Type.LAW_EXPLANATION,
+                QuestionRetrievalPlan.ResponseScope.GENERAL_GUIDANCE,terms,List.of(),List.of());
+        assertThat(plan.searchQueries()).containsExactlyElementsOf(terms);
+        var cases=new CaseQueryPlan(terms);
+        assertThat(cases.queries()).containsExactlyElementsOf(terms);
+    }
     @Test void fourIndependentRequestsAreNotReducedToThreeSearchSlots() {
         var issues = List.of(issue("Q1", "첫 조건", "조건 비교"), issue("Q2", "둘째 절차", "절차 안내"),
                 issue("Q3", "셋째 예외", "예외 요건"), issue("Q4", "마지막 적용 시점", "기준 적용 시점"));

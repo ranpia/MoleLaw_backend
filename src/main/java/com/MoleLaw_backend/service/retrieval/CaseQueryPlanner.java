@@ -43,7 +43,7 @@ public class CaseQueryPlanner {
                 input.put("userQuestion", userQuestion).put("requestedScope", requestedScope == null ? "BODY" : requestedScope.name());
                 if (attempt > 0) input.put("repair", "이전 계획 검증 실패: " + validationCode
                         + ". 사용자 질문 또는 issue에 실제 있는 식별어만 targets에 그대로 복사하세요."
-                        + " 대상 사건을 유지하고 서로 다른 1~3개 짧은 질의와 scope를 모두 제공하세요.");
+                        + " 대상 사건을 유지하고 필요한 만큼의 서로 다른 질의와 scope를 모두 제공하세요.");
                 var strings = Map.of("type", "array", "items", Map.of("type", "string"));
                 var schema = Map.<String, Object>of("type", "object", "additionalProperties", false,
                         "required", List.of("queries", "intent", "targets", "scope"), "properties", Map.of(
@@ -57,7 +57,7 @@ public class CaseQueryPlanner {
                 String output = client.prompt().user(mapper.writeValueAsString(input))
                         .options(OpenAiChatOptions.builder().responseFormat(format).build()).call().content();
                 validationCode = "PLAN_CONTRACT";
-                if (output == null || output.length() > 4096) throw new IllegalArgumentException();
+                if (output == null || output.length() > 32768) throw new IllegalArgumentException();
                 CaseQueryPlan result = mapper.readerFor(CaseQueryPlan.class).with(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
                         .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                         .with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)

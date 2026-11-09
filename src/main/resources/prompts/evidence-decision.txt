@@ -10,8 +10,8 @@ action, reason, missingIssues, evidenceIds, searchQueries, lawSearches 필드를
 사용하지 않는 목록은 []이며 JSON 앞뒤 설명이나 코드 펜스를 붙이지 마세요.
 reason은 판단 사유이며 항상 필수입니다.
 반드시 지킬 크기 제한: reason 1000자 이하, missingIssues 최대 8개(항목당 300자), evidenceIds 최대 15개,
-searchQueries 최대 3개(항목당 200자), lawSearches 최대 3개(query당 200자)입니다. 목록 값은 중복·빈 문자열 없이 작성하세요.
-관련 법령이 많아도 lawSearches에는 우선순위가 높은 최대 3개만 제안하고 다음 판단에서 나머지를 검토하세요.
+searchQueries와 lawSearches의 개수를 고정하지 않습니다. 각 질의는 API의 200자 길이 한도를 따릅니다. 목록 값은 중복·빈 문자열 없이 작성하세요.
+관련 법령이 많으면 필요한 검색 조건을 우선순위대로 제안하세요. 개수를 맞추기 위해 의미 있는 표현을 버리지 마세요.
 lawSearches의 ministry는 공식 숫자 코드(1~10자리)를 아는 경우만 문자열로 지정하고 그 외에는 null입니다. 부처명·빈 문자열을 넣지 마세요.
 lawSearches의 field는 TITLE 또는 BODY이며 exactName=true는 TITLE에서만 가능합니다.
 ANSWER_READY: 근거가 질문의 쟁점을 충족합니다. evidenceIds 1개 이상, 다른 목록은 모두 비웁니다.
@@ -73,7 +73,7 @@ DUPLICATE인 벡터 질의는 이미 실행한 동일 질의여서 서버가 재
 EXHAUSTED인 조건을 그대로 반복하지 마세요. hasNext=true인 페이지는 서버가 예산 안에서 이어서 탐색합니다.
 서버가 exactName이나 검색 범위를 임의로 완화하지 않으므로 변경은 lawSearches에 명시하세요.
 
-최대 evidenceIds 15개, missingIssues 8개, searchQueries와 lawSearches 각각 3개입니다.
+evidenceIds는 최대 15개, missingIssues는 최대 8개입니다. 검색 질의/조건의 개수는 고정하지 않으며 실제 실행은 서버 예산을 따릅니다.
 검색 질의는 200자 이하, reason은 1000자 이하, 누락 쟁점 각각 300자 이하입니다.
 lawSearches 항목은 query, field, exactName, ministry를 모두 포함합니다.
 field는 TITLE 또는 BODY이고 exactName은 boolean입니다. exactName=true는 TITLE에서만 가능합니다.

@@ -7,11 +7,11 @@ public record CaseQueryPlan(List<String> queries, Intent intent, List<String> ta
     public enum Intent { SPECIFIC_CASE, SIMILAR_ISSUE }
     public CaseQueryPlan(List<String> queries) { this(queries, Intent.SIMILAR_ISSUE, List.of(), null); }
     public CaseQueryPlan {
-        if (intent == null || targets == null || targets.size() > 4 || targets.stream().anyMatch(t -> t == null || t.isBlank() || t.length() > 80))
+        if (intent == null || targets == null || targets.stream().anyMatch(t -> t == null || t.isBlank() || t.length() > 200))
             throw new IllegalArgumentException("Invalid case search intent");
         targets = targets.stream().map(String::strip).distinct().toList();
         if (intent == Intent.SPECIFIC_CASE && targets.isEmpty()) throw new IllegalArgumentException("Specific case needs observed targets");
-        if (queries == null || queries.isEmpty() || queries.size() > 3 || queries.stream().anyMatch(q -> q == null || q.isBlank() || q.length() > 80))
+        if (queries == null || queries.isEmpty() || queries.stream().anyMatch(q -> q == null || q.isBlank() || q.length() > 200))
             throw new IllegalArgumentException("Invalid case query plan");
         queries = queries.stream().map(String::strip).toList();
         if (queries.stream().map(LawSearchQueryKey::of).distinct().count() != queries.size())

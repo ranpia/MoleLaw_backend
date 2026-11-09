@@ -4,6 +4,8 @@
 
 ## 역할과 옵션
 
+기본 QDRANT 최초 수집은 evidenceCollectionChatClient에 요청별 법령 도구 4개를 등록한다. 이 역할의 모델/추론/완료 토큰을 유지하며 내부 자동 도구 실행은 끄고 서버가 왕복/도구 한도를 검사한다. evidenceReadChatClient는 AI_SEARCH 진단 경로에 유지한다. [법령 도구 계약](../law/law-retrieval-tools.md)을 따른다.
+
 | Bean | 기본 모델 | effort | 완료 토큰 한도 |
 | --- | --- | --- | ---: |
 | questionPlanningChatClient | gpt-5.4-mini | low | 4096 |

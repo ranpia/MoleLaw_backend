@@ -19,6 +19,7 @@ public record QuestionRetrievalPlan(Type type, ResponseScope responseScope, List
         this(type, responseScope, searchQueries, lawSearches, missingFacts, null);
     }
 
+    /** Per-issue coverage suggestions only; the tool model also receives every search term in the full plan. */
     public List<String> initialSearchQueries() {
         return analysis == null || analysis.issues().isEmpty() ? searchQueries
                 : analysis.issues().stream().map(issue -> issue.searchTerms().get(0)).distinct().toList();
@@ -26,9 +27,9 @@ public record QuestionRetrievalPlan(Type type, ResponseScope responseScope, List
 
     public QuestionRetrievalPlan {
         if (type == null || responseScope == null) throw invalid();
-        searchQueries = texts(searchQueries, 3, 200);
+        searchQueries = texts(searchQueries, Integer.MAX_VALUE, 200);
         missingFacts = texts(missingFacts, 6, 200);
-        if (lawSearches == null || lawSearches.size() > 3 || lawSearches.stream().anyMatch(value -> value == null)
+        if (lawSearches == null || lawSearches.stream().anyMatch(value -> value == null)
                 || new HashSet<>(lawSearches).size() != lawSearches.size()) throw invalid();
         lawSearches = List.copyOf(lawSearches);
         if (type == Type.OUT_OF_SCOPE) {

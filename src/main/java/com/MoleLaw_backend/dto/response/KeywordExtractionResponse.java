@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @Schema(name = "KeywordAndTitleResponse")
 public class KeywordExtractionResponse {
-    @Schema(description = "추출한 법률 검색 키워드", example = "[\"퇴직금\", \"근로자퇴직급여 보장법\"]")
+    @Schema(description = "검색 목적에 필요한 키워드. 개수·어휘 유형을 고정하지 않음", example = "[\"퇴직금\", \"근로자퇴직급여 보장법\"]")
     private List<String> keywords;
     @Schema(description = "질문 요약", example = "퇴직금 미지급 대응 방법 문의")
     private String summary;

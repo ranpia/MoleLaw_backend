@@ -32,10 +32,10 @@ public record QuestionAnalysis(String title, String purpose, List<Fact> facts, L
             if (!id.matches("Q[1-8]")) throw invalid();
             request = text(request, 300);
             sourceQuote = text(sourceQuote, 1000);
-            searchTerms = texts(searchTerms, 6, 200);
+            searchTerms = texts(searchTerms, Integer.MAX_VALUE, 200);
             if (searchTerms.isEmpty()) throw invalid();
-            mentionedTargets = texts(mentionedTargets, 8, 100);
-            candidateTargets = texts(candidateTargets, 8, 100);
+            mentionedTargets = texts(mentionedTargets, Integer.MAX_VALUE, 200);
+            candidateTargets = texts(candidateTargets, Integer.MAX_VALUE, 200);
             missingFacts = texts(missingFacts, 6, 200);
         }
     }

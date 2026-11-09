@@ -79,7 +79,8 @@ class EvidenceDecisionTest {
         assertThatThrownBy(() -> decision.evidenceIds().clear()).isInstanceOf(UnsupportedOperationException.class);
         assertThatThrownBy(() -> decision(ANSWER_READY, List.of(), List.of("source-1", " source-1 "), List.of(), List.of()))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> decision(SEARCH_AGAIN, List.of("누락"), List.of(), List.of("a", "b", "c", "d"), List.of()))
+        assertThat(decision(SEARCH_AGAIN, List.of("누락"), List.of(), List.of("a", "b", "c", "d"), List.of()).searchQueries()).hasSize(4);
+        assertThatThrownBy(() -> decision(SEARCH_AGAIN, List.of("누락"), List.of(), List.of("a".repeat(201)), List.of()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

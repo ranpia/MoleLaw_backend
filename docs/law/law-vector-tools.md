@@ -2,7 +2,7 @@
 
 ## 범위와 호출 순서
 
-두 도구는 서버 내부 서비스이며 LLM의 `@Tool`로 자동 등록하지 않습니다. 최초 상담에서는 근거 판단 Client가 제안하고 서버 수집기가 명시적으로 호출합니다. 2026-10-22 Spring AI ETL 단계로 분리했고, 인증·CSRF를 유지한 local 전용 테스트 API와 저장 원문 재색인을 추가했습니다. [실행 방법과 제한](law-etl-local.md)을 따릅니다.
+아래 두 저수준 서비스는 직접 `@Tool`로 등록하지 않습니다. 기본 QDRANT 최초 상담에서는 요청별 LawRetrievalToolSession의 searchLawArticles/searchLaws/collectLaw/readLawArticles를 LLM에 실제 등록하며 수집 도구 내부에서 이 서비스들을 호출합니다. 임베딩·색인·권한·중복 방지는 서버 책임입니다. [현재 도구 흐름](law-retrieval-tools.md), [로컬 ETL 실행 방법과 제한](law-etl-local.md)을 따릅니다.
 
 1. 서버가 사용자 인증·상담방 소유권을 검증하고 `LegalToolContext`를 생성합니다.
 2. `LegalApiToolService`로 법령을 검색하고 상세 원문을 수집합니다.

@@ -1,5 +1,13 @@
 # 검증 현황
 
+## 2026-11-10 법령 수집 Tool 호출·키워드 고정 제한 제거
+
+- PR #14를 dev에 병합한 873abc0를 기준으로 별도 feat/law-retrieval-tools 브랜치에서 작업했다. 기본 QDRANT 최초 상담은 실제 searchLawArticles/searchLaws/collectLaw/readLawArticles 콜백과 제한된 모델 왕복으로 실행한다. 명시적 AI_SEARCH 진단 경로와 후속 판례 경로는 유지한다.
+- 전체 `test bootJar` 성공: 577개, 실패 0·오류 0·건너뜀 0. 기존 행동 JSON 중심 collector 테스트를 실제 Spring ToolCallbacks·세션·진입 경계 테스트로 전환했고 모의 ChatModel의 검색→읽기→확정 및 빈 색인→법령 검색→수집/색인→재검색→본문 읽기 흐름을 검증했다.
+- 읽지 않았거나 조작한 ID, 미완료 전체 페이지 결과의 수집, 알 수 없는 도구 묶음, 고정 색인 모드 외부 도구, 중복·변경 세대·기존 공개 원문 재사용·본문 예산·역할 모델/추론/완료 토큰 보존·공급자 비재시도·취소 전파를 검증했다. 모델 도구 결과 본문도 다음 입력 토큰 예산에 포함한다. 준비 텍스트/도구 JSON은 사용자 delta에 전달하지 않는다.
+- 키워드/질문 분석의 검색 표현·법령 검색 조건·판례 질의/관측 대상의 고정 개수·어휘 제한을 제거했다. 검색어 10개와 자연어 표현의 실제 실행, 3개/6개를 넘는 분석/판례 질의의 수용을 검증했다. API 질의 길이·출력/입력 토큰·실행/읽기 예산·출처 권한·실제 관측 대상 검증은 유지한다.
+- 최초 상담 Postman simulation의 모의 모델도 실제 tool call/ToolResponseMessage 흐름으로 갱신하고 컴파일했다. 해당 외부 simulation 서버를 띄운 전용 실행, 실제 유료 LLM/OpenLaw, 실제 법률 품질 평가 및 외부 MySQL/Qdrant 통합은 이번 작업에서 실행하지 않았다. 기본 테스트의 API/스트림/권한/오류/저장 회귀와 OpenAPI 검증은 통과했다.
+
 ## 2026-11-09 클래스 책임 분리·OAuth 클라이언트 교체
 
 - PR #13을 dev에 병합한 7cc9b4a를 기준으로 SecurityConfig의 CORS 구현/정책·CSRF 쿠키 정책·OAuth 토큰 클라이언트·Swagger 접근 정책을 분리했다. ChatStreamMvcConfig는 쓰기 실행기 생성만 맡고 MVC 비동기 연결은 ChatStreamAsyncConfigurer가 담당한다.

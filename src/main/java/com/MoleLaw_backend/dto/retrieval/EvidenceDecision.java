@@ -32,8 +32,8 @@ public record EvidenceDecision(Action action, String reason, List<String> missin
         reason = text(reason, 1000);
         missingIssues = texts(missingIssues, 8, 300);
         evidenceIds = texts(evidenceIds, 15, 128);
-        searchQueries = texts(searchQueries, 3, 200);
-        if (lawSearches == null || lawSearches.size() > 3 || lawSearches.stream().anyMatch(item -> item == null)) {
+        searchQueries = texts(searchQueries, Integer.MAX_VALUE, 200);
+        if (lawSearches == null || lawSearches.stream().anyMatch(item -> item == null)) {
             throw invalid();
         }
         lawSearches = List.copyOf(lawSearches);

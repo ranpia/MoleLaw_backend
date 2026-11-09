@@ -149,6 +149,7 @@ app:
   law-retrieval:
     backend: ${APP_LAW_RETRIEVAL_BACKEND:QDRANT}
     processing-timeout: ${APP_LAW_RETRIEVAL_PROCESSING_TIMEOUT:3m}
+    max-tool-steps: ${APP_LAW_RETRIEVAL_MAX_TOOL_STEPS:12}
   law-ai-search:
     base-url: ${APP_LAW_AI_SEARCH_BASE_URL:https://www.law.go.kr/DRF}
   ai:
