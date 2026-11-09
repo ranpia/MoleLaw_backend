@@ -38,7 +38,7 @@ try {
     $env:ANSWER_STREAM_DIRECT_URL="http://127.0.0.1:$DirectPort"
     .\gradlew.bat answerStreamSimulationTest
     if($LASTEXITCODE -ne 0){throw 'Answer stream simulation failed; inspect Gradle report.'}
-    Copy-Item -LiteralPath 'build/test-results/answerStreamSimulationTest/TEST-com.MoleLaw_backend.chat.controller.AnswerStreamSimulationTest.xml' -Destination "$runPath/results.xml"
+    Copy-Item -LiteralPath 'build/test-results/answerStreamSimulationTest/TEST-com.MoleLaw_backend.controller.AnswerStreamSimulationTest.xml' -Destination "$runPath/results.xml"
     "Simulation results: $runPath"
 } finally {
     foreach($process in $processes){if(-not $process.HasExited){taskkill /PID $process.Id /T /F | Out-Null}}

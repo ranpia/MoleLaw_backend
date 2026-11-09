@@ -126,7 +126,7 @@ tasks.register('lawEtlSimulationTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform()
-    filter { includeTestsMatching 'com.MoleLaw_backend.law.service.tool.LawVectorPostmanSimulationTest' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.service.tool.LawVectorPostmanSimulationTest' }
     systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
     outputs.upToDateWhen { false }
 }
@@ -138,8 +138,8 @@ tasks.register('aiLawSearchSimulationTest', Test) {
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform { includeTags 'postman-simulation' }
     filter {
-        includeTestsMatching 'com.MoleLaw_backend.law.client.openlaw.AiLawSearchSimulationTest'
-        includeTestsMatching 'com.MoleLaw_backend.common.config.AiSearchConsultationSimulationTest'
+        includeTestsMatching 'com.MoleLaw_backend.service.client.openlaw.AiLawSearchSimulationTest'
+        includeTestsMatching 'com.MoleLaw_backend.config.AiSearchConsultationSimulationTest'
     }
     outputs.upToDateWhen { false }
 }
@@ -150,7 +150,7 @@ tasks.register('initialConsultationSimulationTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform { includeTags 'postman-simulation' }
-    filter { includeTestsMatching 'com.MoleLaw_backend.common.config.InitialConsultationSimulationTest' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.config.InitialConsultationSimulationTest' }
     systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
     outputs.upToDateWhen { false }
 }
@@ -161,7 +161,7 @@ tasks.register('lawEffectiveDateSimulationTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform { includeTags 'postman-simulation' }
-    filter { includeTestsMatching 'com.MoleLaw_backend.law.service.search.LawEffectiveDateSimulationTest' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.service.search.LawEffectiveDateSimulationTest' }
     outputs.upToDateWhen { false }
 }
 
@@ -171,7 +171,7 @@ tasks.register('followUpConsultationSimulationTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform { includeTags 'postman-simulation' }
-    filter { includeTestsMatching 'com.MoleLaw_backend.common.config.FollowUpConsultationSimulationTest' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.config.FollowUpConsultationSimulationTest' }
     outputs.upToDateWhen { false }
 }
 
@@ -181,7 +181,7 @@ tasks.register('initialQuestionSuggestionSimulationTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform { includeTags 'postman-simulation' }
-    filter { includeTestsMatching 'com.MoleLaw_backend.chat.service.answer.InitialQuestionSuggestionSimulationTest' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.service.answer.InitialQuestionSuggestionSimulationTest' }
     outputs.upToDateWhen { false }
 }
 
@@ -191,7 +191,7 @@ tasks.register('answerStreamSimulationTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform { includeTags 'postman-simulation' }
-    filter { includeTestsMatching 'com.MoleLaw_backend.chat.controller.AnswerStreamSimulationTest' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.controller.AnswerStreamSimulationTest' }
     outputs.upToDateWhen { false }
     maxHeapSize = '1g'
 }

@@ -33,7 +33,7 @@
 
 가입 사전 중복 조회만으로 동시 가입을 막을 수 없다. DB unique 위반도 도메인 중복 오류로 변환한다. 새 비밀번호·프로필 요청의 검증, 비밀번호 변경 시 현재 비밀번호/최근 재인증은 별도 API 동작 개선 대상이다. 생성/변경 시각은 감사 목적이 확정되면 추가하며, 근거 없이 역할·상태 테이블을 먼저 만들지 않는다.
 
-근거: [User](../../src/main/java/com/MoleLaw_backend/user/entity/User.java), [UserService](../../src/main/java/com/MoleLaw_backend/user/service/UserService.java), [OAuth 사용자 처리](../../src/main/java/com/MoleLaw_backend/auth/oauth/CustomOAuth2UserService.java), [성공 핸들러](../../src/main/java/com/MoleLaw_backend/auth/oauth/OAuth2SuccessHandler.java).
+근거: [User](../../src/main/java/com/MoleLaw_backend/entity/User.java), [UserService](../../src/main/java/com/MoleLaw_backend/service/UserService.java), [OAuth 사용자 처리](../../src/main/java/com/MoleLaw_backend/service/oauth/CustomOAuth2UserService.java), [성공 핸들러](../../src/main/java/com/MoleLaw_backend/config/security/OAuth2SuccessHandler.java).
 
 ## 2. chat_room
 
@@ -70,7 +70,7 @@ Base64 암호문은 평문보다 커진다. 현재 `TEXT`의 65,535byte 한도�
 
 현재 Repository는 timestamp만 정렬하고 메모리는 추가로 ID 정렬한다. API·preview도 일치시킨다. 재시도 중복 방지와 턴 단위 순서는 향후 `request_id`·턴/실행 식별자 계약으로 해결하며 timestamp를 고유 키로 쓰지 않는다.
 
-근거: [메시지 매핑](../../src/main/java/com/MoleLaw_backend/chat/entity/Message.java), [메모리](../../src/main/java/com/MoleLaw_backend/chat/service/memory/PersistedChatMemory.java), [렌더러](../../src/main/java/com/MoleLaw_backend/chat/service/answer/EvidenceRenderer.java), [암호화](../../src/main/java/com/MoleLaw_backend/chat/util/EncryptUtil.java).
+근거: [메시지 매핑](../../src/main/java/com/MoleLaw_backend/entity/Message.java), [메모리](../../src/main/java/com/MoleLaw_backend/service/memory/PersistedChatMemory.java), [렌더러](../../src/main/java/com/MoleLaw_backend/service/answer/EvidenceRenderer.java), [암호화](../../src/main/java/com/MoleLaw_backend/util/EncryptUtil.java).
 
 ## 4. chat_evidence_snapshot
 
@@ -108,7 +108,7 @@ Base64 암호문은 평문보다 커진다. 현재 `TEXT`의 65,535byte 한도�
 
 `LawSearchService`는 이름+LID로 재사용하지만 DDL unique가 없고 MST·시행일이 없어 개정본을 같은 청크에 갱신할 수 있다. 본문만 갱신해도 벡터는 자동 교체되지 않는다. `LawEmbeddingService`는 모델이 달라도 `existsByLawChunk`에서 건너뛸 수 있고, `LawSimilarityService`는 모델·차원·본문 해시 조건 없이 전체 BLOB을 읽는다. 잘못된 기존 식별 키에 unique만 추가하는 방식으로 해결하지 않는다.
 
-근거: [구 수집·청크 저장](../../src/main/java/com/MoleLaw_backend/law/service/search/LawSearchService.java), 구 LawSimilarityService(삭제됨; Git 이력 참고), 구 LawEmbeddingService(삭제됨; Git 이력 참고).
+근거: [구 수집·청크 저장](../../src/main/java/com/MoleLaw_backend/service/search/LawSearchService.java), 구 LawSimilarityService(삭제됨; Git 이력 참고), 구 LawEmbeddingService(삭제됨; Git 이력 참고).
 
 ## 6. legal_source
 

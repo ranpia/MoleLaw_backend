@@ -19,7 +19,7 @@ description: MoleLaw 컨트롤러와 API DTO를 추가하거나 수정할 때 Sw
 - 응답 DTO 필드에도 설명과 예시를 제공한다. `ApiResponse<T>`의 `success/data/error`, 컬렉션 및 제네릭 내부 데이터가 OpenAPI에 드러나게 한다. 예시만 작성하고 schema를 빈 객체로 남기지 않는다.
 - 응답 본문이 없는 204, 리다이렉트, 파일, 스트리밍은 JSON을 꾸며 넣지 않는다. 실제 content type·헤더·전달 형식을 문서화하고 해당 형식에 적절한 예시를 제공한다. 본문이 없는 요청에는 불필요한 요청 JSON을 만들지 않는다.
 - 인증은 `SecurityConfig`와 `SwaggerConfig`를 확인한다. 보호된 API에는 실제 보안 스키마를 연결하고 공개 API가 전역 보안 요구 때문에 인증 필수로 표시되지 않도록 한다. 쿠키와 Bearer 지원·우선순위, CSRF가 필요한 요청의 헤더와 `/api/auth/csrf` 조회 절차를 명시한다. Swagger Try it out에 필요한 헤더 입력도 제공한다.
-- `GlobalExceptionHandler`와 Spring Security 필터의 응답은 다를 수 있다. 401/403/비즈니스 오류를 모두 `ApiResponse`로 가정하지 말고 실제 상태 코드와 본문을 확인한다.
+- 도메인 컨트롤러의 `@ExceptionHandler`와 `GlobalExceptionHandler`, 보안 필터 연결의 실제 상태·본문을 확인한다. 현재 인증/CSRF/CORS 오류도 ApiResponse JSON으로 통일하며 전송 중 스트림의 error 이벤트와 구분한다. 오류 처리 구현 변경은 [controller-error-handling](../controller-error-handling/SKILL.md)을 따른다.
 - 예시는 가상 이메일·식별자·내용으로 작성한다. 실제 JWT·API 키·개인정보를 넣지 않는다. 예시를 맞추기 위해 API 동작이나 DTO 계약을 변경하지 않는다.
 
 ## 검증과 완료 보고

@@ -69,11 +69,13 @@ Java 17, Spring Boot 3.5.0, Spring AI 1.0.9, Gradle Wrapper, MySQL 8.4.11, Qdran
 
 ```text
 src/main/java/com/MoleLaw_backend/
-  auth/       JWT·OAuth·CSRF·Refresh
-  user/       사용자·계정·프로필
-  chat/       상담방·메시지·답변·근거·메모리
-  law/        법령·판례·수집·ETL·검색
-  common/     공통 응답·예외·설정·AI 호출
+  controller/ HTTP API·오류 응답·전역 핸들러
+  service/    인증·사용자·상담·법령·AI·외부 클라이언트
+  config/     Spring·DB·보안·필터·Swagger·Qdrant 설정
+  dto/        요청·응답·근거·검색·도구·벡터 계약
+  dao/        JPA Repository·Refresh 저장 인터페이스·Redis 구현
+  entity/     JPA 엔티티
+  util/       파싱·암호화·JWT·쿠키·검증·예외 타입
 src/main/resources/  설정·프롬프트·Flyway
 src/test/            테스트·fixture
 docker/              로컬 컨테이너·임베딩
