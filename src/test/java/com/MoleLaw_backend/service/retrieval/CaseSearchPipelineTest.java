@@ -45,7 +45,7 @@ class CaseSearchPipelineTest {
         pipeline.search(context, law, "연차", 1, state, s -> {});
         verify(api).searchCases(any(), argThat(r -> r.search() == 1));
         verify(api, never()).searchCasesForLaw(any(), any(), anyString());
-        var referenceState = new CaseSearchPipeline.State();
+        var referenceState = new CaseSearchState();
         referenceState.scope(com.MoleLaw_backend.dto.retrieval.CaseSearchScope.LAW_REFERENCE);
         when(api.searchCasesForLaw(any(), any(), anyString())).thenReturn(result("102"));
         pipeline.search(context, law, "연차", 1, referenceState, s -> {});
@@ -87,7 +87,7 @@ class CaseSearchPipelineTest {
     private final CaseQueryPlanner queryPlanner = mock(CaseQueryPlanner.class);
     private final CaseSearchPipeline pipeline = new CaseSearchPipeline(api, reader, reranker, properties, queryPlanner);
     private final EvidenceItem law = new EvidenceItem("law-id", "LAW_CHUNK", "285279:61", "근로기준법 제61조(사용 촉진)", "https://www.law.go.kr", "법령 본문");
-    private final CaseSearchPipeline.State state = new CaseSearchPipeline.State();
+    private final CaseSearchState state = new CaseSearchState();
     private final LegalToolContext context = new LegalToolContext(LegalToolContext.Purpose.FOLLOW_UP_CASE, "test-trace",
             Instant.now().plusSeconds(90), 16, Clock.systemUTC());
 

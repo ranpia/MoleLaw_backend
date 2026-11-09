@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.util;
 
+import com.MoleLaw_backend.dto.security.AccessTokenIdentity;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -102,7 +104,6 @@ public class JwtUtil {
         return new AccessTokenIdentity(claims.getId(), claims.getSubject(), claims.getExpiration().toInstant());
     }
 
-    public record AccessTokenIdentity(String tokenId, String subject, Instant expiresAt) {}
 
     public static Long parseUserId(String subject) {
         if (subject == null || !subject.matches("[1-9][0-9]{0,18}")) {

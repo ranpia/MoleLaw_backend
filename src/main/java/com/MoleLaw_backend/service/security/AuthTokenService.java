@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.service.security;
 
+import com.MoleLaw_backend.dto.security.RefreshTokenGrant;
+
 import com.MoleLaw_backend.util.CookieUtil;
 
 import com.MoleLaw_backend.dto.response.AuthResponse;
@@ -33,7 +35,7 @@ public class AuthTokenService {
         cookies.clearJwtCookie(response, "refreshToken");
     }
 
-    private AuthResponse write(String access, RefreshTokenService.Grant refresh, HttpServletResponse response) {
+    private AuthResponse write(String access, RefreshTokenGrant refresh, HttpServletResponse response) {
         cookies.addRefreshCookie(response, refresh.value(), refresh.expiresAt());
         cookies.addJwtCookie(response, "accessToken", access);
         return new AuthResponse(access);

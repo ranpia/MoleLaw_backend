@@ -26,30 +26,9 @@ public class CaseSearchPipeline {
 
     public int maxApiCalls() { return properties.getMaxApiCalls(); }
 
-    public static final class State {
-        private final Long roomId;
-        public State() { this(null); }
-        public State(Long roomId) { this.roomId = roomId; }
-        public Long roomId() { return roomId; }
-        private String userQuestion;
-        private List<EvidenceItem> lawContexts;
-        public void lawContexts(List<EvidenceItem> value) { lawContexts = List.copyOf(value); }
-        private com.MoleLaw_backend.dto.retrieval.CaseQueryPlan searchPlan;
-        public void userQuestion(String value) { userQuestion = value; }
-        public com.MoleLaw_backend.dto.retrieval.CaseQueryPlan searchPlan() { return searchPlan; }
-        private com.MoleLaw_backend.dto.retrieval.CaseSearchScope scope = com.MoleLaw_backend.dto.retrieval.CaseSearchScope.BODY;
-        public void scope(com.MoleLaw_backend.dto.retrieval.CaseSearchScope value) { scope = value == null ? com.MoleLaw_backend.dto.retrieval.CaseSearchScope.BODY : value; }
-        boolean currentSearchComplete = true;
-        boolean currentRouteFailed;
-        final Map<String, EvidenceItem> bodies = new LinkedHashMap<>();
-        final Set<String> attempted = new HashSet<>();
-        final Set<String> searches = new HashSet<>();
-        final Set<String> plannedInputs = new HashSet<>();
-        int rerankCalls;
-    }
 
     public CaseSearchOutcome search(LegalToolContext context, EvidenceItem law, String query, int page,
-            State state, Consumer<String> progress) {
+            CaseSearchState state, Consumer<String> progress) {
         if (state.rerankCalls >= properties.getMaxRerankCalls()) return empty("BUDGET_EXHAUSTED", 0, 0, false, false, false);
         String inputKey = com.MoleLaw_backend.util.LawSearchQueryKey.of(query) + "|"
                 + (state.lawContexts != null ? state.lawContexts.stream().map(EvidenceItem::id).toList()
@@ -82,7 +61,7 @@ public class CaseSearchPipeline {
     }
 
     private CaseSearchOutcome searchQuery(LegalToolContext context, EvidenceItem law, String query, int page,
-            State state, Consumer<String> progress, com.MoleLaw_backend.dto.retrieval.CaseQueryPlan plan) {
+            CaseSearchState state, Consumer<String> progress, com.MoleLaw_backend.dto.retrieval.CaseQueryPlan plan) {
         String lawName = law == null ? "" : law.title().replaceFirst("\\s+제[0-9]+조.*$", "").strip();
         String key = com.MoleLaw_backend.util.LawSearchQueryKey.of(query) + "|" + lawName + "|" + state.scope;
         if (!state.searches.add(key)) {
@@ -197,7 +176,7 @@ public class CaseSearchPipeline {
         return new CaseSearchOutcome(status, selected, selectedBodies, rankings, lawItems.size(), factItems.size(), merged.size(), unavailableLaw, unavailableFact, hasNext);
     }
 
-    private LegalToolContracts.SearchResult route(LegalToolContext context, LegalToolContracts.SearchRequest request, String lawName, String route, State state) {
+    private LegalToolContracts.SearchResult route(LegalToolContext context, LegalToolContracts.SearchRequest request, String lawName, String route, CaseSearchState state) {
         var collected = new LinkedHashMap<String, LegalToolContracts.Candidate>();
         int page = 1, total = 0;
         String fingerprint;

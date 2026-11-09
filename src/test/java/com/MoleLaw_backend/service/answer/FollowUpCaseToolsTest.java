@@ -81,7 +81,7 @@ class FollowUpCaseToolsTest {
         when(pipeline.search(any(), any(), anyString(), anyInt(), any(), any())).thenAnswer(call -> {
             com.MoleLaw_backend.service.tool.LegalToolContext context = call.getArgument(0);
             assertThat(context.executionId()).isEqualTo("shared-stream-trace");
-            com.MoleLaw_backend.service.retrieval.CaseSearchPipeline.State state = call.getArgument(4);
+            com.MoleLaw_backend.service.retrieval.CaseSearchState state = call.getArgument(4);
             assertThat(state.roomId()).isEqualTo(5L);
             java.util.function.Consumer<String> progress = call.getArgument(5);
             progress.accept("CASE_RERANK");
