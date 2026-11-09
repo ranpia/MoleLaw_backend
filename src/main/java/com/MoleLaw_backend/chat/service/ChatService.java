@@ -83,16 +83,11 @@ public class ChatService {
         ChatRoom room = requireOwnedRoom(user, chatRoomId);
         ChatContentLimits.question(request == null ? null : request.getContent());
 
-        try {
-            var prepared = request.getCaseSearchLawEvidenceIds() == null
-                    ? answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch())
-                    : answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch(), request.getCaseSearchLawEvidenceIds());
-            Message botMessage = turns.savePreparedFollowUpTurn(room, request.getContent(), prepared);
-            return MessageResponse.from(botMessage, encryptor.decrypt(botMessage.getContent()));
-        } catch (Exception e) {
-            if (e instanceof MolelawException failure) throw failure;
-            throw new MolelawException(ErrorCode.GPT_API_FAILURE, "GPT 응답 생성 중 오류 발생", e);
-        }
+        var prepared = request.getCaseSearchLawEvidenceIds() == null
+                ? answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch())
+                : answers.prepareFollowUp(user.getId(), chatRoomId, request.getContent(), request.isAllowCaseSearch(), request.getCaseSearchLawEvidenceIds());
+        Message botMessage = turns.savePreparedFollowUpTurn(room, request.getContent(), prepared);
+        return MessageResponse.from(botMessage, encryptor.decrypt(botMessage.getContent()));
     }
 
     public void validateFollowUpAccess(User user, Long roomId, String question) {
@@ -117,16 +112,9 @@ public class ChatService {
         requireAuthenticated(user);
         ChatContentLimits.question(request == null ? null : request.getContent());
 
-        ChatRoom chatRoom;
-        try {
-            var prepared = answers.prepareInitialAnswer(request.getContent());
-            String title = initialTitle(request.getContent(), prepared);
-            chatRoom = turns.saveInitialTurn(user, title, request.getContent(), prepared);
-
-        } catch (Exception e) {
-            if (e instanceof MolelawException failure) throw failure;
-            throw new MolelawException(ErrorCode.GPT_API_FAILURE, "초기 GPT 응답 생성 실패", e);
-        }
+        var prepared = answers.prepareInitialAnswer(request.getContent());
+        String title = initialTitle(request.getContent(), prepared);
+        ChatRoom chatRoom = turns.saveInitialTurn(user, title, request.getContent(), prepared);
 
         return ChatRoomCreationResponse.builder()
                 .id(chatRoom.getId())

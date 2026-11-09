@@ -42,13 +42,11 @@ class AiChatServiceTest {
     }
 
     @Test
-    void mapsMalformedStructuredResponseToCommonError() {
+    void malformedStructuredResponsePropagatesToTheControllerBoundary() {
         when(model.call(any(Prompt.class))).thenReturn(response("invalid-json"));
 
-        GptApiException error = assertThrows(GptApiException.class,
+        assertThrows(RuntimeException.class,
                 () -> service.generateEntity("system", "question", KeywordExtractionResponse.class, 0.3));
-
-        assertEquals(ErrorCode.GPT_API_FAILURE, error.getErrorCode());
         verify(model).call(any(Prompt.class));
     }
 

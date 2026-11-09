@@ -77,6 +77,17 @@ class LawEtlTestControllerTest {
     }
 
     @Test @WithMockUser
+    void controllerMapsPropagatedToolFailuresToThePublicResponse() throws Exception {
+        when(service.search("민법")).thenThrow(new com.MoleLaw_backend.law.exception.LegalToolException(
+                com.MoleLaw_backend.law.exception.LegalToolException.Reason.BUSY, true));
+        mvc.perform(post("/api/local/law-etl/search").with(csrf()).contentType("application/json")
+                        .content("{\"query\":\"민법\"}"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(jsonPath("error.code").value("RETRIEVAL_BUSY"));
+    }
+
+    @Test @WithMockUser
     void csrfIsRequired() throws Exception {
         mvc.perform(post("/api/local/law-etl/search").contentType("application/json")
                 .content("{\"query\":\"민법\"}")).andExpect(status().isForbidden());

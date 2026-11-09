@@ -12,6 +12,4 @@ public final class AuthApiSchemas {
     public static class StringEnvelope extends ApiResponse<String> { }
     @Schema(name = "AuthErrorEnvelope")
     public static class ErrorEnvelope extends ApiResponse<Void> { }
-    @Schema(name = "AuthUnauthorized")
-    public record UnauthorizedSchema(@Schema(description = "Security 인증 실패 메시지", example = "Unauthorized") String error) { }
 }

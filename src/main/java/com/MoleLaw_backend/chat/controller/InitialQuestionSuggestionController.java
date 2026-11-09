@@ -1,5 +1,12 @@
 package com.MoleLaw_backend.chat.controller;
 
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import com.MoleLaw_backend.chat.dto.request.InitialQuestionSuggestionsRequest;
 import com.MoleLaw_backend.chat.dto.response.InitialQuestionSuggestionsResponse;
 import com.MoleLaw_backend.chat.service.answer.InitialQuestionSuggestionService;
@@ -29,12 +36,20 @@ public class InitialQuestionSuggestionController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "추천 질문. 원문은 보존되며 ID는 이번 응답의 표시용 값입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InitialQuestionSuggestionsResponse.class), examples = @ExampleObject(value = "{\"suggestedQuestions\":[{\"id\":\"suggestion-1\",\"label\":\"공동책임 기준\",\"question\":\"시공 하자와 관리 소홀이 함께 사고를 일으킨 경우 책임이 궁금합니다.\\n\\n위 상황에서 공동책임을 인정하는 일반 기준을 설명해 주세요.\"}]}"))),
             @ApiResponse(responseCode = "400", description = "초안 누락·공백·Unicode 2000자 또는 UTF-8 32KiB 초과·잘못된 JSON", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"))),
-            @ApiResponse(responseCode = "401", description = "인증 필요; Security 응답", content = @Content(mediaType = "application/json", schema = @Schema(type = "object"), examples = @ExampleObject(value = "{\"error\":\"Unauthorized\"}"))),
-            @ApiResponse(responseCode = "403", description = "CSRF·Origin 검사 실패. 필터/컨테이너 응답으로 JSON 본문 형식은 보장하지 않습니다.", content = @Content),
+            @ApiResponse(responseCode = "401", description = "인증 필요; Security 응답", content = @Content(mediaType = "application/json", schema = @Schema(type = "object"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"인증이 필요합니다.\"}}"))),
+            @ApiResponse(responseCode = "403", description = "CSRF·Origin 검사 실패. 공통 FORBIDDEN JSON을 반환합니다.", content = @Content),
             @ApiResponse(responseCode = "500", description = "모델 호출·출력 계약 검증 실패. 상담은 생성되지 않습니다.", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"GPT_API_FAILURE\",\"message\":\"GPT 응답 생성 중 오류 발생\"}}")))})
     public InitialQuestionSuggestionsResponse suggest(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = "application/json", schema = @Schema(implementation = InitialQuestionSuggestionsRequest.class), examples = @ExampleObject(value = "{\"query\":\"시공 하자와 관리 소홀이 함께 사고를 일으킨 경우 책임이 궁금합니다.\"}")))
             @Valid @RequestBody InitialQuestionSuggestionsRequest request) {
         return suggestions.suggest(request.query());
+    }
+
+    @ExceptionHandler(MolelawException.class)
+    public ResponseEntity<?> handleDomainException(MolelawException failure) {
+        var code = failure.getErrorCode();
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code, failure.getMessage())));
     }
 }

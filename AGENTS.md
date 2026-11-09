@@ -27,6 +27,8 @@ Unix에서는 `./gradlew`를 사용하세요. 실행 전에 MySQL 연결과 환�
 기본 프로필은 `mysql`이며 MySQL `DataSource`가 `@Primary`입니다. `local` 프로필은 `mysql`과 `qdrant`를 함께 활성화합니다. 실행 설정은 루트 `.env.example`, DB 컨테이너 설정은 `docker/.env.compose.example`과 `docker/README.md`를 참고하세요. Qdrant는 JPA 데이터소스가 아닌 별도 `VectorStore`입니다.
 
 ## 코드 스타일과 이름 규칙
+
+서비스·컨트롤러·보안·스트림 예외 처리를 추가하거나 수정할 때 [controller-error-handling](.agents/skills/controller-error-handling/SKILL.md)을 적용하세요. 서비스는 예외를 전파하고 각 컨트롤러의 `@ExceptionHandler`가 도메인 오류 메시지와 응답을 생성합니다. `GlobalExceptionHandler`는 공통·미처리 오류 및 필터/스트림 연결을 담당합니다. Java 로그는 Lombok `@Slf4j`를 사용하세요.
 새 Java 코드는 공백 4칸으로 들여쓰기하고, 기존 파일 수정 시 주변 스타일을 따르세요. 클래스는 PascalCase, 메서드와 필드는 camelCase, 상수는 UPPER_SNAKE_CASE를 사용하세요. 패키지 루트는 현재 `com.MoleLaw_backend`입니다.
 
 역할에 따라 `Controller`, `Service`, `Repository`, `Request`, `Response` 접미사를 사용하세요. 의존성은 생성자로 주입하고 기존 Lombok `@RequiredArgsConstructor` 패턴을 참고하세요. 현재 자동 포매터나 린트 플러그인은 설정되어 있지 않습니다.

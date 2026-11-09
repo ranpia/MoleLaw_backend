@@ -52,7 +52,7 @@ public class SwaggerConfig {
                         .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.COOKIE).name("accessToken")
                         .description("HttpOnly Access JWT 쿠키. 로그인 응답의 Set-Cookie로 설정되며 브라우저가 자동 전송합니다."))
                         .addSchemas("BusinessErrorResponse", new ObjectSchema()
-                                .description("GlobalExceptionHandler의 오류 응답. null data는 직렬화에서 생략됩니다.")
+                                .description("컨트롤러·전역 핸들러의 공통 오류 응답. null data는 직렬화에서 생략됩니다.")
                                 .addProperty("success", new io.swagger.v3.oas.models.media.BooleanSchema().example(false))
                                 .addProperty("error", new ObjectSchema()
                                         .addProperty("status", new io.swagger.v3.oas.models.media.IntegerSchema().example(400))
@@ -73,21 +73,16 @@ public class SwaggerConfig {
                     || handler.hasMethodAnnotation(org.springframework.web.bind.annotation.PutMapping.class)
                     || handler.hasMethodAnnotation(org.springframework.web.bind.annotation.PatchMapping.class)
                     || handler.hasMethodAnnotation(org.springframework.web.bind.annotation.DeleteMapping.class);
-            if (unsafe) {
-                if (operation.getResponses().get("403") == null) {
-                    operation.getResponses().addApiResponse("403", new ApiResponse().description(
-                            "CSRF 토큰 누락·불일치 또는 허용되지 않은 Origin. 필터에서 거절되며 ApiResponse JSON을 보장하지 않습니다."));
-                } else {
-                    var forbidden = operation.getResponses().get("403");
-                    forbidden.setDescription(forbidden.getDescription()
-                            + " / CSRF·Origin 필터 거절 시 본문 형식은 ApiResponse JSON을 보장하지 않습니다.");
-                }
+            if (unsafe || !publicEndpoint) {
+                var forbidden = operation.getResponses().get("403");
+                operation.getResponses().addApiResponse("403", new ApiResponse().description(
+                        (forbidden == null ? "접근 거절" : forbidden.getDescription())
+                                + " / CSRF·Origin·CORS 거절도 GlobalExceptionHandler의 FORBIDDEN JSON을 반환합니다.")
+                        .content(errorContent(403, "FORBIDDEN", "접근 권한이 없습니다.")));
             }
             if (!publicEndpoint) {
                 operation.getResponses().addApiResponse("401", new ApiResponse().description("Access 인증 누락·만료·서명/용도/버전/issuer/audience 오류 또는 사용자 없음")
-                        .content(new Content().addMediaType("application/json", new MediaType()
-                                .schema(new ObjectSchema().addProperty("error", new StringSchema()))
-                                .example(java.util.Map.of("error", "Unauthorized")))));
+                        .content(errorContent(401, "UNAUTHORIZED", "인증이 필요합니다.")));
             }
             if ((handler.getBeanType().getSimpleName().equals("AuthController") || handler.getBeanType().getSimpleName().equals("UserController"))
                     && java.util.Set.of("signup", "login", "refresh", "logout", "changePassword", "deleteUser").contains(method)) {
@@ -112,4 +107,10 @@ public class SwaggerConfig {
         };
     }
 
+    private Content errorContent(int status, String code, String message) {
+        return new Content().addMediaType("application/json", new MediaType()
+                .schema(new io.swagger.v3.oas.models.media.Schema<>().$ref("#/components/schemas/BusinessErrorResponse"))
+                .example(java.util.Map.of("success", false, "error", java.util.Map.of(
+                        "status", status, "code", code, "message", message))));
+    }
 }

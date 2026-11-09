@@ -1,5 +1,12 @@
 package com.MoleLaw_backend.chat.controller;
 
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import com.MoleLaw_backend.auth.security.CustomUserDetails;
 import com.MoleLaw_backend.chat.dto.response.EvidenceDetailResponse;
 import com.MoleLaw_backend.chat.dto.response.EvidenceSummaryResponse;
@@ -64,5 +71,13 @@ public class ChatEvidenceController {
             @Parameter(description = "본인 소유 방 ID", example = "42", required = true) @PathVariable Long roomId,
             @Parameter(description = "해당 방의 근거 UUID", example = "00000000-0000-0000-0000-000000000001", required = true) @PathVariable String evidenceId) {
         return evidence.detail(user.getUser().getId(), roomId, evidenceId);
+    }
+
+    @ExceptionHandler(MolelawException.class)
+    public ResponseEntity<?> handleDomainException(MolelawException failure) {
+        var code = failure.getErrorCode();
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code, failure.getMessage())));
     }
 }

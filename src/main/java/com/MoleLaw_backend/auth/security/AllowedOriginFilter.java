@@ -1,5 +1,9 @@
 package com.MoleLaw_backend.auth.security;
 
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorCode;
+import org.springframework.security.access.AccessDeniedException;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,9 +20,12 @@ import java.util.List;
 /** Additional origin check; missing Origin still requires the normal CSRF token. */
 public class AllowedOriginFilter extends OncePerRequestFilter {
     private final List<String> allowedOrigins;
+    private final GlobalExceptionHandler errors;
 
-    public AllowedOriginFilter(List<String> allowedOrigins) {
+    public AllowedOriginFilter(List<String> allowedOrigins,
+            GlobalExceptionHandler errors) {
         this.allowedOrigins = List.copyOf(allowedOrigins);
+        this.errors = errors;
     }
 
     public static List<String> parseOrigins(String configuredOrigins) {
@@ -40,9 +47,14 @@ public class AllowedOriginFilter extends OncePerRequestFilter {
         String origin = request.getHeader("Origin");
         if (CsrfFilter.DEFAULT_CSRF_MATCHER.matches(request)
                 && origin != null && CorsUtils.isCorsRequest(request) && !allowedOrigins.contains(origin)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Origin is not allowed");
+            errors.handle(request, response, new AccessDeniedException("Origin rejected"));
             return;
         }
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } catch (Exception failure) {
+            // Filter/OAuth failures occur outside MVC advice; use the same response boundary.
+            errors.writeError(response, failure, ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 }

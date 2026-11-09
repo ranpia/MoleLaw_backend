@@ -1,5 +1,13 @@
 # 검증 현황
 
+## 2026-11-09 컨트롤러 오류 응답·Slf4j 정리
+
+- 최신 origin/dev(`b0b37d8`) 기반 `refactor/centralize-exception-logging`에서 전체 `test bootJar` 성공: 558개, 실패 0·오류 0·건너뜀 0. 외부 AI/OpenLaw는 대역으로 검증했으며 실제 유료 상담이나 운영 배포는 실행하지 않았다.
+- 도메인 컨트롤러 12곳의 오류 핸들러와 GlobalExceptionHandler의 공통 fallback을 구성했다. 서비스 예외의 원래 인스턴스 전달 및 실패 시 메시지 미저장을 확인했다. 법령 통신·ETL 도구 오류의 컨트롤러 상태/메시지 생성, MVC 400/404/405/415와 Allow 헤더, 인증/CSRF/CORS JSON 및 전송 완료 응답의 보존을 검증했다.
+- 오류 로그에서 원시 예외 메시지·외부 응답·키를 출력하지 않는 회귀를 추가했다. Java 로그 클래스 16개 모두 Lombok Slf4j를 사용하며 System.out/err·printStackTrace·LoggerFactory 직접 생성 및 서비스의 HTTP 오류 응답 생성 코드는 발견되지 않았다. common의 업무 도메인 import와 law.util의 서비스/저장소/클라이언트 import도 발견되지 않았다.
+- controller-error-handling 프로젝트 스킬의 형식 검증을 통과했다. AGENTS와 구조/Swagger 스킬에서 이 규칙을 연결했다. 예외 원인 변환·업무 검증·재시도·복구·취소·색인 실패 상태 정리는 실행 위치에 유지한다.
+- 최종 Swagger 설명 보완 후 OpenAPI·로컬 ETL/비교 컨트롤러 테스트 19개와 bootJar도 통과했다. 실제 Swagger UI 브라우저 수동 검증은 수행하지 않았다.
+
 ## 2026-10-29 실제 모델 전체 RAG 1상담
 
 - 인증/CSRF를 거쳐 무저장 NDJSON 1상담을 실제 모델·KURE·Qdrant·후보 15개 리랭킹에 연결했다. 인용 검증 후 completed, 첫 answer_delta 39.002초·완료 42.365초였다. progress 간격은 질문 분석 5.729·초기 검색 15.513·근거 판단 13.188·생성 7.899·검증 0.003초다. 검색 전체를 Qdrant 시간으로 보거나 1건으로 p95/운영 수용량을 선언하지 않았다.

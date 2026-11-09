@@ -1,7 +1,11 @@
 package com.MoleLaw_backend.user.controller;
 
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorResponse;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import com.MoleLaw_backend.user.dto.response.UserApiResponse;
-import com.MoleLaw_backend.auth.dto.response.AuthApiSchemas.UnauthorizedSchema;
 import com.MoleLaw_backend.auth.dto.response.AuthApiSchemas.ErrorEnvelope;
 
 import com.MoleLaw_backend.user.dto.request.ChangeNicknameRequest;
@@ -44,7 +48,7 @@ public class UserController {
     @Operation(summary = "내 정보 조회", description = "Access JWT는 Authorization: Bearer 헤더 또는 accessToken 쿠키로 전달합니다. 둘 다 있으면 Bearer가 우선입니다. JWT subject의 User.id로 현재 사용자의 이메일과 닉네임을 조회합니다. 구형 이메일 subject 토큰은 401로 거절합니다.", security = @SecurityRequirement(name = "AccessCookie"))
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserApiResponse.class), examples = @ExampleObject(value = "{\"success\":true,\"data\":{\"email\":\"user@example.com\",\"nickname\":\"두더지\"}}"))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Security 필터 인증 실패. ApiResponse 래퍼 없이 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UnauthorizedSchema.class), examples = @ExampleObject(value = "{\"error\":\"Unauthorized\"}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패. GlobalExceptionHandler의 ApiResponse JSON을 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"인증이 필요합니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "502", description = "해당 사용자를 찾을 수 없습니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":502,\"code\":\"USER_NOT_FOUND\",\"message\":\"해당 사용자를 찾을 수 없습니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
     })
@@ -59,8 +63,8 @@ public class UserController {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "탈퇴 성공. 본문 없이 JWT 쿠키 삭제", headers = @Header(name = "Set-Cookie", description = "accessToken Path=/ 및 refreshToken Path=/api/auth 삭제. 이전 Path=/ Refresh도 삭제", schema = @Schema(type = "string")), content = @Content),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "502", description = "인증 후 탈퇴 처리 전에 사용자가 삭제된 경우", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":502,\"code\":\"USER_NOT_FOUND\",\"message\":\"해당 사용자를 찾을 수 없습니다.\"}}"))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Security 필터 인증 실패. ApiResponse 래퍼 없이 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UnauthorizedSchema.class), examples = @ExampleObject(value = "{\"error\":\"Unauthorized\"}"))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패. GlobalExceptionHandler의 ApiResponse JSON을 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"인증이 필요합니다.\"}}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. GlobalExceptionHandler의 FORBIDDEN JSON을 반환합니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":403,\"code\":\"FORBIDDEN\",\"message\":\"접근 권한이 없습니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
     })
     @DeleteMapping
@@ -78,8 +82,8 @@ public class UserController {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "비밀번호 변경 성공. 응답 본문 없음", content = @Content),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력 검증 실패·기존 비밀번호 불일치 또는 소셜 계정 비밀번호 변경 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = {@ExampleObject(name = "입력 검증 실패", value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"), @ExampleObject(name = "업무 규칙 실패", value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_PROVIDER\",\"message\":\"잘못된 형식입니다. - 비밀번호 변경은 소셜로그인 대상자에게 제공하지 않습니다.\"}}") })),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Security 필터 인증 실패. ApiResponse 래퍼 없이 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UnauthorizedSchema.class), examples = @ExampleObject(value = "{\"error\":\"Unauthorized\"}"))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패. GlobalExceptionHandler의 ApiResponse JSON을 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"인증이 필요합니다.\"}}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. GlobalExceptionHandler의 FORBIDDEN JSON을 반환합니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":403,\"code\":\"FORBIDDEN\",\"message\":\"접근 권한이 없습니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "502", description = "해당 사용자를 찾을 수 없습니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":502,\"code\":\"USER_NOT_FOUND\",\"message\":\"해당 사용자를 찾을 수 없습니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
     })
@@ -95,8 +99,8 @@ public class UserController {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력 검증 실패 또는 누락·잘못된 JSON", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "닉네임 변경 성공. 응답 본문 없음", content = @Content),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Security 필터 인증 실패. ApiResponse 래퍼 없이 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UnauthorizedSchema.class), examples = @ExampleObject(value = "{\"error\":\"Unauthorized\"}"))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. Security/서블릿 오류 응답은 ApiResponse JSON 계약이 없으며 컨테이너에 따라 본문이 달라집니다.", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패. GlobalExceptionHandler의 ApiResponse JSON을 반환", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"인증이 필요합니다.\"}}"))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "CSRF 누락·불일치 또는 허용되지 않은 Origin. GlobalExceptionHandler의 FORBIDDEN JSON을 반환합니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":403,\"code\":\"FORBIDDEN\",\"message\":\"접근 권한이 없습니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "502", description = "해당 사용자를 찾을 수 없습니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":502,\"code\":\"USER_NOT_FOUND\",\"message\":\"해당 사용자를 찾을 수 없습니다.\"}}"))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류입니다.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEnvelope.class), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":500,\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"서버 내부 오류입니다.\"}}")))
     })
@@ -107,4 +111,12 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+
+    @ExceptionHandler(MolelawException.class)
+    public ResponseEntity<?> handleDomainException(MolelawException failure) {
+        var code = failure.getErrorCode();
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code, failure.getMessage())));
+    }
 }

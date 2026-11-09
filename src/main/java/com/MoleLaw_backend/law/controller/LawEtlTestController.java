@@ -1,5 +1,11 @@
 package com.MoleLaw_backend.law.controller;
 
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+
 import com.MoleLaw_backend.law.dto.request.LawEtlTestRequest;
 import com.MoleLaw_backend.law.dto.request.LawReindexTestRequest;
 import com.MoleLaw_backend.law.dto.vector.LawIndexResult;
@@ -28,8 +34,8 @@ import java.util.List;
     @ApiResponse(responseCode = "400", description = "입력 조건 오류", content = @Content(mediaType = "application/json",
         schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"),
         examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"))),
-    @ApiResponse(responseCode = "401", description = "인증 없음. 보안 필터가 거절하며 JSON 본문을 보장하지 않습니다.", content = @Content),
-    @ApiResponse(responseCode = "403", description = "권한 부족 또는 CSRF 누락/불일치. JSON 본문을 보장하지 않습니다.", content = @Content),
+    @ApiResponse(responseCode = "401", description = "인증 없음. 공통 UNAUTHORIZED JSON을 반환합니다.", content = @Content),
+    @ApiResponse(responseCode = "403", description = "권한 부족 또는 CSRF 누락/불일치. 공통 FORBIDDEN JSON을 반환합니다.", content = @Content),
     @ApiResponse(responseCode = "503", description = "외부 장애·실행 한도 또는 임베딩 대기열 초과. 부분 완료 색인은 유지됩니다.",
         content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"),
         examples = {
@@ -83,5 +89,31 @@ public class LawEtlTestController {
             examples = @ExampleObject(value = "{\"query\":\"신의성실 원칙\"}")))
         @Valid @RequestBody LawQuestionRequest request) {
         return service.search(request.getQuery()).stream().map(LawRagTestResponse::from).toList();
+    }
+
+    @ExceptionHandler(MolelawException.class)
+    public ResponseEntity<?> handleDomainException(MolelawException failure) {
+        var code = failure.getErrorCode();
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code, failure.getMessage())));
+    }
+
+    @ExceptionHandler(com.MoleLaw_backend.law.exception.LegalToolException.class)
+    public ResponseEntity<?> handleToolException(com.MoleLaw_backend.law.exception.LegalToolException failure) {
+        var code = failure.getReason() == com.MoleLaw_backend.law.exception.LegalToolException.Reason.BUSY
+                ? com.MoleLaw_backend.common.exception.ErrorCode.RETRIEVAL_BUSY
+                : com.MoleLaw_backend.common.exception.ErrorCode.RETRIEVAL_UNAVAILABLE;
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code)));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleInvalidInput(IllegalArgumentException failure) {
+        var code = com.MoleLaw_backend.common.exception.ErrorCode.INVALID_REQUEST;
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code)));
     }
 }

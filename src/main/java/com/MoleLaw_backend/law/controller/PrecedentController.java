@@ -1,5 +1,12 @@
 package com.MoleLaw_backend.law.controller;
 
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import com.MoleLaw_backend.law.dto.response.PrecedentSummaryResponse;
 import com.MoleLaw_backend.law.dto.request.PrecedentSearchRequest;
 import com.MoleLaw_backend.law.dto.response.PrecedentDetailResponse;
@@ -58,4 +65,12 @@ public class PrecedentController {
         return caseSearchService.getCaseDetail(id);
     }
 
+
+    @ExceptionHandler(MolelawException.class)
+    public ResponseEntity<?> handleDomainException(MolelawException failure) {
+        var code = failure.getErrorCode();
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code, failure.getMessage())));
+    }
 }

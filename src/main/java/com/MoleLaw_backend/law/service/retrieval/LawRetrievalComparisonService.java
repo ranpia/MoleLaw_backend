@@ -1,7 +1,5 @@
 package com.MoleLaw_backend.law.service.retrieval;
 
-import com.MoleLaw_backend.common.exception.ErrorCode;
-import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.law.dto.response.LawRetrievalComparisonResponse;
 import com.MoleLaw_backend.law.dto.response.LawRetrievalComparisonResponse.BackendResult;
 import com.MoleLaw_backend.law.dto.response.LawRetrievalComparisonResponse.Hit;
@@ -44,9 +42,7 @@ public class LawRetrievalComparisonService {
     }
 
     public LawRetrievalComparisonResponse compare(String query) {
-        AiLawSearchRequest request;
-        try { request = new AiLawSearchRequest(query, 1, 15); }
-        catch (IllegalArgumentException invalid) { throw new MolelawException(ErrorCode.INVALID_REQUEST); }
+        AiLawSearchRequest request = new AiLawSearchRequest(query, 1, 15);
         var api = searchAi(request);
         var vector = searchQdrant(request.query());
         var ids = api.hits().stream().map(Hit::lawId).distinct()

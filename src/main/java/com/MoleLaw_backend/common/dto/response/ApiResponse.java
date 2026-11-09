@@ -31,8 +31,4 @@ public class ApiResponse<T> {
         return new ApiResponse<>(false, null, error);
     }
 
-    // ✅ 문자열 메시지 하나만 넘겨도 처리 가능 (String → ErrorResponse로 변환됨)
-    public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(false, null, new ErrorResponse(message));
-    }
 }

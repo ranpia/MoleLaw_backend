@@ -1,5 +1,16 @@
 # 패키지·DTO·엔드포인트 정리
 
+## 2026-11-09 구조·예외·로그 검토
+
+`auth`, `user`, `chat`, `law`, `common`의 도메인 경계를 유지한다. `common`이 업무 도메인을 import하거나 `law.util`이 서비스·저장소·HTTP 클라이언트를 import하는 의존성은 발견되지 않았다. 상담 흐름과 법령 검색의 큰 서비스는 그대로 두고 이번 변경은 오류 응답 경계를 정리한다.
+
+- 각 도메인 컨트롤러의 `@ExceptionHandler`가 도메인 오류 메시지와 HTTP 응답을 생성한다. `common.exception.GlobalExceptionHandler`는 공통 입력·미처리 오류와 인증·인가·CSRF·Origin·CORS·OAuth 등 MVC 밖의 실패를 처리하고 오류 로그를 공통 제공한다. 전역 핸들러에서 예외를 다시 던지는 순환 대신 Spring이 컨트롤러 핸들러를 먼저 찾는 순서를 사용한다.
+- 일반 HTTP 오류는 `application/json`의 `success:false`와 `error:{status,code,message}`로 통일한다. 405의 Allow 등 Spring MVC가 제공하는 오류 헤더는 보존한다. 이미 응답을 전송한 스트림은 HTTP 상태를 덮어쓰지 않고 같은 분류를 사용해 기존 SSE/NDJSON error 이벤트를 보낸다.
+- `MolelawException`은 오류 코드와 선택적 상세 안내·원인을 운반하는 최소 공통 예외로 유지한다. 별도 상세 메시지 필드·getMessage 재정의 및 사용되지 않는 문자열 오류 응답 생성자는 제거한다. 도메인 예외는 공통 예외를 상속하고 원인 변환·재시도·취소·자원 정리용 catch는 해당 실행 위치에 둔다. 이 catch가 HTTP 응답을 직접 만들지는 않는다.
+- Java 애플리케이션 로그는 Lombok `@Slf4j`의 log를 사용한다. 전역 오류는 4xx WARN·5xx ERROR로 코드·예외 종류·발생 위치를 기록하고, 임의의 예외 메시지·공급자 응답·토큰·질문 본문은 로그에 출력하지 않는다. 기존 처리 단계·traceId 로그는 각 도메인에서 유지한다.
+- 인증 실패가 예전 `{"error":"Unauthorized"}`에서 공통 UNAUTHORIZED JSON으로 변경된다. CSRF/CORS/Origin 실패도 공통 FORBIDDEN JSON이다. 프론트는 `error.code`를 사용하고 Swagger의 실제 응답 샘플도 함께 갱신한다. 인증·쿠키·CSRF·CORS 허용 정책은 유지한다.
+- ChatService·LegalAnswerService·AiChatService의 포괄적 API 오류 wrapper와 LawSearchService의 통신 오류 wrapper를 제거했다. 법령 통신 오류는 LawController, ETL 도구 오류는 LawEtlTestController가 응답으로 변환한다. 서비스는 실제 업무 검증·복구·재시도에 필요한 예외만 다룬다. 재사용 규칙은 [controller-error-handling 스킬](../../.agents/skills/controller-error-handling/SKILL.md)에 있다.
+
 기준: 2026-10-22, dev. 역할이 섞인 TestController와 UserController, 법령 도구 폴더, 서비스 내부 공유 DTO를 정리했다. DB 스키마·LLM 판단·검색 정책은 이 정리에서 변경하지 않았다.
 
 ## 패키지 소유권

@@ -136,11 +136,9 @@ class LegalAnswerInitialTest {
     }
 
     @Test
-    void providerFailureIsMappedWithoutLeakingProviderDetails() {
+    void providerFailurePropagatesToTheControllerBoundary() {
         when(model.call(any(Prompt.class))).thenThrow(new IllegalStateException("secret provider response"));
-        var failure = assertThrows(GptApiException.class, () -> service.prepareInitialAnswer("질문 {literal}"));
-        assertEquals(ErrorCode.GPT_API_FAILURE, failure.getErrorCode());
-        assertFalse(failure.getMessage().contains("secret provider response"));
+        assertThrows(IllegalStateException.class, () -> service.prepareInitialAnswer("질문 {literal}"));
     }
 
     private ChatResponse response(String text) {

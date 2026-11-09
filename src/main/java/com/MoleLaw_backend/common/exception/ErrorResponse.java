@@ -12,16 +12,13 @@ import lombok.NoArgsConstructor;
 public class ErrorResponse {
     @Schema(description = "HTTP 상태 코드", example = "400")
     private int status;
-    @Schema(description = "오류 코드", example = "BAD_REQUEST")
+    @Schema(description = "오류 코드", example = "INVALID_REQUEST")
     private String code;
     @Schema(description = "오류 원인 메시지", example = "잘못된 요청입니다.")
     private String message;
 
-    // ✅ ErrorCode 기반 생성자 (기존)
     public ErrorResponse(ErrorCode errorCode) {
-        this.status = errorCode.getStatus();
-        this.code = errorCode.name();
-        this.message = errorCode.getMessage();
+        this(errorCode, errorCode.getMessage());
     }
 
     public ErrorResponse(ErrorCode errorCode, String errorMessage) {
@@ -30,10 +27,4 @@ public class ErrorResponse {
         this.message = errorMessage;
     }
 
-    // ✅ 단순 메시지로도 생성 가능하도록 오버로드 (추가)
-    public ErrorResponse(String message) {
-        this.status = 400;
-        this.code = "BAD_REQUEST";
-        this.message = message;
-    }
 }

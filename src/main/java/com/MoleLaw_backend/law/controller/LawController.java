@@ -1,5 +1,11 @@
 package com.MoleLaw_backend.law.controller;
 
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorResponse;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import com.MoleLaw_backend.law.dto.request.LawQuestionRequest;
 import com.MoleLaw_backend.law.dto.response.KeywordExtractionResponse;
 import com.MoleLaw_backend.law.dto.response.LawDetailResponse;
@@ -74,4 +80,28 @@ public class LawController {
         return ResponseEntity.ok(result);
     }
 
+
+    @ExceptionHandler(MolelawException.class)
+    public ResponseEntity<?> handleDomainException(MolelawException failure) {
+        var code = failure.getErrorCode();
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code, failure.getMessage())));
+    }
+
+    @ExceptionHandler(org.springframework.web.reactive.function.client.WebClientException.class)
+    public ResponseEntity<?> handleOpenLawTransportException(org.springframework.web.reactive.function.client.WebClientException failure) {
+        var code = com.MoleLaw_backend.common.exception.ErrorCode.OPENLAW_API_FAILURE;
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code)));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleInvalidInput(IllegalArgumentException failure) {
+        var code = com.MoleLaw_backend.common.exception.ErrorCode.INVALID_REQUEST;
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code)));
+    }
 }

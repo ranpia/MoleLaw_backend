@@ -27,6 +27,8 @@ description: MoleLaw 백엔드의 기능 추가, 클래스 배치, 패키지 이
 
 ## 변경과 검증
 
+서비스·컨트롤러의 오류 응답 책임을 변경할 때 [controller-error-handling](../controller-error-handling/SKILL.md)을 함께 적용한다. 도메인 오류의 메시지·HTTP 응답은 해당 컨트롤러가 소유하고 공통·미처리 오류는 GlobalExceptionHandler가 처리한다.
+
 대상 클래스의 호출자와 테스트를 확인하고 소유 도메인을 정한다. 이동 시 package, import, 완전한 클래스명 문자열과 설정의 스캔 경로를 함께 갱신한다. 같은 패키지여서 생략되었던 import도 확인하고 wildcard import는 필요한 클래스의 명시적 import로 정리한다.
 
 테스트는 `src/test/java`에서 대상 구현의 패키지를 따른다. 여러 도메인의 통합 설정 검증은 `common.config`, 애플리케이션 컨텍스트 테스트는 루트에 둔다. 리소스 경로는 Java 패키지에 맞추기 위해 불필요하게 옮기지 않는다. 기본 설정은 application.yml, 프로필 설정은 application-*.yml에 두고 application.properties와 중복 관리하지 않는다. 실행 스키마는 src/main/resources/db/migration, 폐기된 수동 SQL은 docs/archive/sql에 둔다.

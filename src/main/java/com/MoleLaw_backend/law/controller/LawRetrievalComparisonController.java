@@ -1,5 +1,12 @@
 package com.MoleLaw_backend.law.controller;
 
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import com.MoleLaw_backend.law.dto.request.AiLawSearchProbeRequest;
 import com.MoleLaw_backend.law.dto.request.LawQuestionRequest;
 import com.MoleLaw_backend.law.dto.response.LawRetrievalComparisonResponse;
@@ -28,8 +35,8 @@ import org.springframework.web.bind.annotation.RestController;
     @ApiResponse(responseCode = "400", description = "잘못된 검색어·페이지·개수", content = @Content(mediaType = "application/json",
         schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"),
         examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"))),
-    @ApiResponse(responseCode = "401", description = "인증 필요. 보안 필터 응답이며 JSON 본문을 보장하지 않습니다.", content = @Content),
-    @ApiResponse(responseCode = "403", description = "CSRF 누락·권한 오류. JSON 본문을 보장하지 않습니다.", content = @Content)
+    @ApiResponse(responseCode = "401", description = "인증 필요. 공통 UNAUTHORIZED JSON을 반환합니다.", content = @Content),
+    @ApiResponse(responseCode = "403", description = "CSRF 누락·권한 오류. 공통 FORBIDDEN JSON을 반환합니다.", content = @Content)
 })
 public class LawRetrievalComparisonController {
     private final LawRetrievalComparisonService service;
@@ -61,5 +68,21 @@ public class LawRetrievalComparisonController {
                 examples = @ExampleObject(value = "{\"query\":\"공항 높이 제한\"}")))
             @Valid @RequestBody LawQuestionRequest request) {
         return service.compare(request.getQuery());
+    }
+
+    @ExceptionHandler(MolelawException.class)
+    public ResponseEntity<?> handleDomainException(MolelawException failure) {
+        var code = failure.getErrorCode();
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code, failure.getMessage())));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleInvalidInput(IllegalArgumentException failure) {
+        var code = com.MoleLaw_backend.common.exception.ErrorCode.INVALID_REQUEST;
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code)));
     }
 }

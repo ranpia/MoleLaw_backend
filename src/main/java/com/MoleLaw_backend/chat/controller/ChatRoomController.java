@@ -1,5 +1,11 @@
 package com.MoleLaw_backend.chat.controller;
 
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorResponse;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import com.MoleLaw_backend.chat.dto.request.CreateChatRoomRequest;
 import com.MoleLaw_backend.chat.dto.request.CreateMessageRequest;
 import com.MoleLaw_backend.chat.dto.response.ChatRoomResponse;
@@ -103,7 +109,7 @@ public class ChatRoomController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "제목 변경 완료; 응답 본문 없음", content = @Content),
             @ApiResponse(responseCode = "400", description = "누락·빈 제목·길이 초과·잘못된 JSON", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":400,\"code\":\"INVALID_REQUEST\",\"message\":\"잘못된 요청입니다.\"}}"))),
-            @ApiResponse(responseCode = "401", description = "인증 필요; Security 오류 응답", content = @Content(mediaType = "application/json", schema = @Schema(type = "object"), examples = @ExampleObject(value = "{\"error\":\"Unauthorized\"}"))),
+            @ApiResponse(responseCode = "401", description = "인증 필요; Security 오류 응답", content = @Content(mediaType = "application/json", schema = @Schema(type = "object"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"인증이 필요합니다.\"}}"))),
             @ApiResponse(responseCode = "403", description = "타인 방 접근 차단. CSRF·Origin 검사 실패는 필터 응답이며 본문 형식이 다를 수 있습니다.", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":403,\"code\":\"UNAUTHORIZED_CHATROOM_ACCESS\",\"message\":\"본인의 채팅방이 아닙니다.\"}}"))),
             @ApiResponse(responseCode = "404", description = "채팅방 없음", content = @Content(mediaType = "application/json", schema = @Schema(ref = "#/components/schemas/BusinessErrorResponse"), examples = @ExampleObject(value = "{\"success\":false,\"error\":{\"status\":404,\"code\":\"CHATROOM_NOT_FOUND\",\"message\":\"채팅방을 찾을 수 없습니다.\"}}")))})
     public ResponseEntity<Void> changeTitle(@Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails user,
@@ -124,5 +130,13 @@ public class ChatRoomController {
                                                @Parameter(description = "본인 소유 채팅방 ID", required = true, example = "42") @PathVariable Long roomId) {
         chatService.deleteChatRoom(userDetails.getUser(), roomId);
         return ResponseEntity.noContent().build();
+    }
+
+    @ExceptionHandler(MolelawException.class)
+    public ResponseEntity<?> handleDomainException(MolelawException failure) {
+        var code = failure.getErrorCode();
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code, failure.getMessage())));
     }
 }

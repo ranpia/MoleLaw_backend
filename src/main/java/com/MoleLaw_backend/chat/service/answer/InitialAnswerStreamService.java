@@ -1,9 +1,10 @@
 package com.MoleLaw_backend.chat.service.answer;
 
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+
 import com.MoleLaw_backend.chat.dto.response.InitialAnswerStreamResponse;
 import com.MoleLaw_backend.chat.service.ChatService;
 import com.MoleLaw_backend.common.exception.ErrorCode;
-import com.MoleLaw_backend.common.exception.MolelawException;
 import com.MoleLaw_backend.user.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.codec.ServerSentEvent;
@@ -135,8 +136,11 @@ public class InitialAnswerStreamService {
                             case "answer_delta" -> new InitialAnswerStreamResponse("answer_delta", null, null, null, update.text(), null, null, null);
                             default -> throw new IllegalStateException("Unexpected stream state");
                         });
-                    }, 1).timeout(timeout).onErrorResume(failure -> Flux.just(error(
-                            failure instanceof MolelawException legal ? legal.getErrorCode() : ErrorCode.GPT_API_FAILURE)));
+                    }, 1).timeout(timeout).onErrorResume(failure -> {
+                        var error = GlobalExceptionHandler.describe(
+                                failure, ErrorCode.GPT_API_FAILURE);
+                        return Flux.just(error(ErrorCode.valueOf(error.getCode())));
+                    });
             var heartbeat = Flux.interval(Duration.ofSeconds(10)).map(tick ->
                     new InitialAnswerStreamResponse("heartbeat", null, null, null, null, null, null, null));
             return Flux.merge(work, heartbeat).takeUntil(data -> "completed".equals(data.type()) || "error".equals(data.type()))

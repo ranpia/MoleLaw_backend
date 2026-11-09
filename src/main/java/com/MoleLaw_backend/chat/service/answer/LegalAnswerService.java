@@ -64,12 +64,8 @@ public class LegalAnswerService {
         var collected = collector.collectForAnswer(question);
         var sources = collected.evidence();
         String answer = generate(initialAnswers, question, sources, null, collected.plan(), null, collected.unresolvedIssues());
-        try {
-            return new PreparedLegalAnswer(new LegalAnswerResponse(answer, renderer.render(sources)), sources,
-                    collected.plan().analysis() == null ? null : collected.plan().analysis().title());
-        } catch (RuntimeException failure) {
-            throw new GptApiException(ErrorCode.GPT_API_FAILURE);
-        }
+        return new PreparedLegalAnswer(new LegalAnswerResponse(answer, renderer.render(sources)), sources,
+                collected.plan().analysis() == null ? null : collected.plan().analysis().title());
     }
 
     public LegalAnswerResponse getAnswer(String question) {
@@ -298,30 +294,24 @@ public class LegalAnswerService {
 
     private String generate(ChatClient client, String question, List<EvidenceItem> sources, String conversationId,
             QuestionRetrievalPlan plan, FollowUpCaseToolsFactory.Session tools, List<String> unresolvedIssues) {
-        try {
-            String input = tools == null ? prompts.build(question, sources, plan, unresolvedIssues) : prompts.buildFollowUp(question, sources);
-            if (tools != null && tools.preparedSearchCompleted()) input = prompts.buildFollowUpAnswer(question, tools.evidence());
-            if (tools != null) input += tools.preparationData();
-            var request = client.prompt().messages(List.of(new UserMessage(input)));
-            if (conversationId != null) {
-                request.advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId));
-            }
-            if (tools != null && tools.requiresRoomCaseRead()) {
-                var callbacks = java.util.Arrays.stream(org.springframework.ai.support.ToolCallbacks.from(tools))
-                        .filter(callback -> callback.getToolDefinition().name().equals("readRoomCase")).toList();
-                request.toolCallbacks(callbacks);
-            }
-            String answer = request.call().content();
-            if (tools != null && tools.consentRequested()) answer = tools.consentMessage();
-            ChatContentLimits.answer(answer);
-            answer = com.MoleLaw_backend.chat.util.UserFacingAnswerText.normalize(answer);
-            answer = withUnresolvedIssues(answer, unresolvedIssues);
-            return citations.validate(answer, tools == null ? sources : tools.evidence());
-        } catch (GptApiException failure) {
-            throw failure;
-        } catch (Exception failure) {
-            throw new GptApiException(ErrorCode.GPT_API_FAILURE);
+        String input = tools == null ? prompts.build(question, sources, plan, unresolvedIssues) : prompts.buildFollowUp(question, sources);
+        if (tools != null && tools.preparedSearchCompleted()) input = prompts.buildFollowUpAnswer(question, tools.evidence());
+        if (tools != null) input += tools.preparationData();
+        var request = client.prompt().messages(List.of(new UserMessage(input)));
+        if (conversationId != null) {
+            request.advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId));
         }
+        if (tools != null && tools.requiresRoomCaseRead()) {
+            var callbacks = java.util.Arrays.stream(org.springframework.ai.support.ToolCallbacks.from(tools))
+                    .filter(callback -> callback.getToolDefinition().name().equals("readRoomCase")).toList();
+            request.toolCallbacks(callbacks);
+        }
+        String answer = request.call().content();
+        if (tools != null && tools.consentRequested()) answer = tools.consentMessage();
+        ChatContentLimits.answer(answer);
+        answer = com.MoleLaw_backend.chat.util.UserFacingAnswerText.normalize(answer);
+        answer = withUnresolvedIssues(answer, unresolvedIssues);
+        return citations.validate(answer, tools == null ? sources : tools.evidence());
     }
 
     private String validateFollowUpText(String question, String draft, List<EvidenceItem> sources,

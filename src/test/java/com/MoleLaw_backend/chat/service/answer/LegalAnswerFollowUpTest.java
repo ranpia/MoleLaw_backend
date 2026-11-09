@@ -486,7 +486,7 @@ class LegalAnswerFollowUpTest {
         when(messages.findByChatRoomIdOrderByTimestampAscIdAsc(2L)).thenReturn(List.of());
         when(model.call(any(Prompt.class))).thenThrow(new IllegalStateException("provider failure"));
         assertThatThrownBy(() -> service.answerFollowUp(1L, 2L, "question"))
-                .isInstanceOf(GptApiException.class);
+                .isInstanceOf(IllegalStateException.class);
         verify(messages).findByChatRoomIdOrderByTimestampAscIdAsc(2L);
         verifyNoMoreInteractions(messages);
     }

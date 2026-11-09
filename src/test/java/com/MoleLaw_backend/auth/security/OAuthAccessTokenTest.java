@@ -92,7 +92,8 @@ class OAuthAccessTokenTest {
         final MockHttpServletResponse response = new MockHttpServletResponse();
         final RefreshTokenService refresh = new RefreshTokenService(store);
         final OAuth2SuccessHandler handler = new OAuth2SuccessHandler(users,
-                new AuthTokenService(new AccessTokenService(jwt), refresh, cookies));
+                new AuthTokenService(new AccessTokenService(jwt), refresh, cookies),
+                new com.MoleLaw_backend.common.exception.GlobalExceptionHandler());
 
         Fixture() {
             jwt.init();

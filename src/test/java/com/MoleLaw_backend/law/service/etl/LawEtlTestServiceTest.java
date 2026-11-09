@@ -49,13 +49,13 @@ class LawEtlTestServiceTest {
     }
 
     @Test
-    void retryAndSearchDoNotCollectAgainAndBusyIsTranslated() {
+    void retryAndSearchDoNotCollectAgainAndBusyPropagatesToController() {
         service.reindex("ref");
         service.search("신의성실");
         verify(writer).reindexStoredLaw(any(), eq("ref"));
         verify(rag).searchTop15(any(), eq("신의성실"));
         verifyNoInteractions(api);
         when(rag.searchTop15(any(), anyString())).thenThrow(new LegalToolException(LegalToolException.Reason.BUSY, true));
-        assertThatThrownBy(() -> service.search("신의성실")).hasMessageContaining("임베딩 처리량");
+        assertThatThrownBy(() -> service.search("신의성실")).isInstanceOf(LegalToolException.class).hasMessage("BUSY");
     }
 }

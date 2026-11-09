@@ -1,9 +1,16 @@
 package com.MoleLaw_backend.auth.config;
 
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorCode;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.cors.DefaultCorsProcessor;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpResponse;
+
 import com.MoleLaw_backend.auth.oauth.CustomOAuth2UserService;
 import com.MoleLaw_backend.auth.oauth.OAuth2SuccessHandler;
 import com.MoleLaw_backend.auth.security.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,6 +53,7 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final org.springframework.core.env.Environment environment;
+    private final GlobalExceptionHandler errors;
 
     @Value("${security.allowed-origins:${frontend.uri}}")
     private String frontendUri;
@@ -64,8 +72,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
             org.springframework.security.web.context.SecurityContextRepository jwtRequestSecurityContextRepository) throws Exception {
+        var corsFilter = new CorsFilter(corsConfigurationSource());
+        corsFilter.setCorsProcessor(new DefaultCorsProcessor() {
+            @Override
+            protected void rejectRequest(ServerHttpResponse response) throws java.io.IOException {
+                var servletResponse = (ServletServerHttpResponse) response;
+                errors.writeError(servletResponse.getServletResponse(),
+                        new AccessDeniedException("CORS rejected"),
+                        ErrorCode.FORBIDDEN);
+            }
+        });
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.disable())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfTokenRepository())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
@@ -88,18 +106,17 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
+                        .failureHandler((request, response, failure) -> errors.commence(request, response, failure))
                         .tokenEndpoint(token -> token.accessTokenResponseClient(customAccessTokenResponseClient()))
                 )
                 .formLogin(form -> form.disable())
                 .logout(logout -> logout.disable())
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType("application/json");
-                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
-                        })
+                        .authenticationEntryPoint(errors)
+                        .accessDeniedHandler(errors)
                 )
-                .addFilterBefore(new AllowedOriginFilter(allowedOrigins()), CsrfFilter.class)
+                .addFilterBefore(new AllowedOriginFilter(allowedOrigins(), errors), CsrfFilter.class)
+                .addFilterAt(corsFilter, CorsFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

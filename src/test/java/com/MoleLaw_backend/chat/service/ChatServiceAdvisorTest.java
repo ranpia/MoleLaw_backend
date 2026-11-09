@@ -89,8 +89,9 @@ class ChatServiceAdvisorTest {
     @Test
     void failedModelDoesNotPersistCurrentQuestionOrAssistant() throws Exception {
         when(rooms.findById(2L)).thenReturn(Optional.of(room));
-        when(gpt.prepareFollowUp(1L, 2L, "후속 질문", false)).thenThrow(new RuntimeException("provider"));
-        assertThatThrownBy(() -> service.askQuestion(user, 2L, request())).isInstanceOf(MolelawException.class);
+        var failure = new RuntimeException("provider");
+        when(gpt.prepareFollowUp(1L, 2L, "후속 질문", false)).thenThrow(failure);
+        assertThatThrownBy(() -> service.askQuestion(user, 2L, request())).isSameAs(failure);
         verifyNoInteractions(turns, messages);
     }
 

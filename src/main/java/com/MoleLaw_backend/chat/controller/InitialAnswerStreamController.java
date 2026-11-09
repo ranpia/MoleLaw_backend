@@ -1,5 +1,10 @@
 package com.MoleLaw_backend.chat.controller;
 
+import com.MoleLaw_backend.common.exception.MolelawException;
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+import com.MoleLaw_backend.common.exception.ErrorResponse;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import com.MoleLaw_backend.auth.security.CustomUserDetails;
 import com.MoleLaw_backend.chat.dto.request.CreateChatRoomRequest;
 import com.MoleLaw_backend.chat.dto.request.LegalAnswerRequest;
@@ -109,5 +114,13 @@ public class InitialAnswerStreamController {
                 .header("X-Accel-Buffering", "no").body(request.getCaseSearchLawEvidenceIds() == null
                         ? streams.followUp(request.getContent(), principal.getUser(), roomId, request.isAllowCaseSearch())
                         : streams.followUp(request.getContent(), principal.getUser(), roomId, request.isAllowCaseSearch(), request.getCaseSearchLawEvidenceIds()));
+    }
+
+    @ExceptionHandler(MolelawException.class)
+    public ResponseEntity<?> handleDomainException(MolelawException failure) {
+        var code = failure.getErrorCode();
+        GlobalExceptionHandler.logFailure(failure, code);
+        return ResponseEntity.status(code.getStatus()).contentType(MediaType.APPLICATION_JSON)
+                .body(com.MoleLaw_backend.common.dto.response.ApiResponse.error(new ErrorResponse(code, failure.getMessage())));
     }
 }

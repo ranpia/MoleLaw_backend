@@ -70,6 +70,23 @@ class LawControllerTest {
     }
 
     @Test
+    void controllerCreatesTheDomainMessageAndSanitizesTransportFailures() throws Exception {
+        when(laws.searchLawByKeyword("업무 오류")).thenThrow(
+                new MolelawException(ErrorCode.INVALID_REQUEST, "검색 조건을 확인해 주세요"));
+        mvc.perform(get("/api/laws").param("keyword", "업무 오류"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("error.message").value("잘못된 요청입니다. - 검색 조건을 확인해 주세요"));
+        when(laws.searchLawByKeyword("통신 오류")).thenThrow(
+                new org.springframework.web.reactive.function.client.WebClientRequestException(
+                        new IllegalStateException("private-provider-key"), org.springframework.http.HttpMethod.GET,
+                        java.net.URI.create("https://example.invalid/?key=private-provider-key"),
+                        new org.springframework.http.HttpHeaders()));
+        mvc.perform(get("/api/laws").param("keyword", "통신 오류"))
+                .andExpect(status().isBadGateway()).andExpect(jsonPath("error.code").value("OPENLAW_API_FAILURE"))
+                .andExpect(jsonPath("error.message").value(ErrorCode.OPENLAW_API_FAILURE.getMessage()));
+    }
+
+    @Test
     void normalZeroResultsRemainAnEmptyArray() throws Exception {
         when(laws.searchLawByKeyword("없음")).thenReturn("{\"LawSearch\":{\"totalCnt\":\"0\"}}");
         mvc.perform(get("/api/laws").param("keyword", "없음"))

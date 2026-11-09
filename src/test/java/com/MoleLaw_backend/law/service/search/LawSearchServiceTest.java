@@ -164,10 +164,10 @@ class LawSearchServiceTest {
     }
 
     @Test
-    void wrapsApiFailureWithoutContinuingFallbackSearch() {
+    void propagatesApiFailureWithoutContinuingFallbackSearch() {
         responses.add(ClientResponse.create(HttpStatus.SERVICE_UNAVAILABLE).build());
 
-        assertThrows(OpenLawApiException.class, () -> service.searchLawByKeyword("테스트법", "100"));
+        assertThrows(org.springframework.web.reactive.function.client.WebClientResponseException.class, () -> service.searchLawByKeyword("테스트법", "100"));
         assertEquals(1, requests.size());
     }
 

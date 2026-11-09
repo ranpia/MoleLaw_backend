@@ -135,6 +135,24 @@ class BrowserSecurityTest {
     }
 
     @Test
+    void authenticationCsrfAndCorsFailuresShareTheGlobalJsonContract() throws Exception {
+        mvc.perform(get("/api/users/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(jsonPath("success").value(false))
+                .andExpect(jsonPath("error.code").value("UNAUTHORIZED"));
+        mvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(jsonPath("error.code").value("FORBIDDEN"));
+        mvc.perform(options("/api/auth/login").header("Origin", "https://attacker.example")
+                        .header("Access-Control-Request-Method", "POST"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(jsonPath("error.code").value("FORBIDDEN"));
+    }
+
+    @Test
     void originConfigurationRejectsPatternsAndNonOrigins() {
         for (String invalid : new String[]{"*", "https://*.example.com", "null", "https://example.com/path", ""}) {
             assertThrows(IllegalArgumentException.class, () -> AllowedOriginFilter.parseOrigins(invalid));

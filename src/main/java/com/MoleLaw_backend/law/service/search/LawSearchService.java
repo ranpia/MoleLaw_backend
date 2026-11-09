@@ -7,12 +7,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientRequestException;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
@@ -20,7 +17,6 @@ import java.util.List;
 import java.net.URI;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class LawSearchService {
 
@@ -33,38 +29,25 @@ public class LawSearchService {
     private final ObjectMapper objectMapper;
 
     public String searchLawByKeyword(String keyword, String orgCode) {
-        try {
-            // ① 제목 검색 + 소관부처
-            String result = trySearch(keyword, 1, orgCode);
-            if (isNotEmpty(result)) return result;
+        // ① 제목 검색 + 소관부처
+        String result = trySearch(keyword, 1, orgCode);
+        if (isNotEmpty(result)) return result;
 
-            // ② 본문 검색 + 소관부처
-            result = trySearch(keyword, 2, orgCode);
-            if (isNotEmpty(result)) return result;
+        // ② 본문 검색 + 소관부처
+        result = trySearch(keyword, 2, orgCode);
+        if (isNotEmpty(result)) return result;
 
-            return searchLawByKeyword(keyword);
-
-        } catch (WebClientResponseException | WebClientRequestException e) {
-            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, e);
-        } catch (Exception e) {
-            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "알 수 없는 예외 발생", e);
-        }
+        return searchLawByKeyword(keyword);
     }
 
     public String searchLawByKeyword(String keyword) {
-        try {
-            // ③ 제목 검색 (부처 없이)
-            String result = trySearch(keyword, 1, null);
-            if (isNotEmpty(result)) return result;
+        // ③ 제목 검색 (부처 없이)
+        String result = trySearch(keyword, 1, null);
+        if (isNotEmpty(result)) return result;
 
-            // ④ 본문 검색 (부처 없이)
-            result = trySearch(keyword, 2, null);
-            return result;
-        } catch (WebClientResponseException | WebClientRequestException e) {
-            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, e);
-        } catch (Exception e) {
-            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "알 수 없는 예외 발생", e);
-        }
+        // ④ 본문 검색 (부처 없이)
+        result = trySearch(keyword, 2, null);
+        return result;
     }
 
     private String trySearch(String keyword, int searchType, String orgCode) {
@@ -160,45 +143,36 @@ public class LawSearchService {
             try { java.time.LocalDate.parse(effectiveDate, java.time.format.DateTimeFormatter.BASIC_ISO_DATE); }
             catch (java.time.DateTimeException invalid) { throw new IllegalArgumentException("Invalid effective date", invalid); }
         }
-        try {
-            var builder = UriComponentsBuilder.newInstance()
-                    .scheme("https")
-                    .host("www.law.go.kr")
-                    .path("/DRF/lawService.do")
-                    .queryParam("OC", oc)
-                    .queryParam("target", dated ? "eflaw" : "law")
-                    .queryParam("type", "JSON")
-                    .queryParam("MST", mst);
-            if (dated) builder.queryParam("efYd", effectiveDate);
-            URI uri = builder.build(true).toUri();
+        var builder = UriComponentsBuilder.newInstance()
+                .scheme("https")
+                .host("www.law.go.kr")
+                .path("/DRF/lawService.do")
+                .queryParam("OC", oc)
+                .queryParam("target", dated ? "eflaw" : "law")
+                .queryParam("type", "JSON")
+                .queryParam("MST", mst);
+        if (dated) builder.queryParam("efYd", effectiveDate);
+        URI uri = builder.build(true).toUri();
 
-            JsonNode response = webClientBuilder
-                    .codecs(config -> config.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
-                    .build()
-                    .get()
-                    .uri(uri)
-                    .retrieve()
-                    .bodyToMono(JsonNode.class)
-                    .block(java.time.Duration.ofSeconds(10));
+        JsonNode response = webClientBuilder
+                .codecs(config -> config.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+                .build()
+                .get()
+                .uri(uri)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .block(java.time.Duration.ofSeconds(10));
 
-            if (response == null) {
-                throw new OpenLawApiException(ErrorCode.OPENLAW_INVALID_RESPONSE);
-            }
-            JsonNode lawNode = response.path("법령");
-
-            if (lawNode.isMissingNode() || lawNode.isEmpty()) {
-                throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "법령 노드 없음 (MST=" + mst + ")");
-            }
-
-            return lawNode;
-
-        } catch (WebClientResponseException e) {
-            log.warn("법령 상세 조회 실패: status={}", e.getStatusCode().value());
-            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "본문 API 응답 오류", e);
-        } catch (Exception e) {
-            log.warn("법령 상세 조회 실패: errorType={}", e.getClass().getSimpleName());
-            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "본문 API 예외", e);
+        if (response == null) {
+            throw new OpenLawApiException(ErrorCode.OPENLAW_INVALID_RESPONSE);
         }
+        JsonNode lawNode = response.path("법령");
+
+        if (lawNode.isMissingNode() || lawNode.isEmpty()) {
+            throw new OpenLawApiException(ErrorCode.OPENLAW_API_FAILURE, "법령 노드 없음 (MST=" + mst + ")");
+        }
+
+        return lawNode;
     }
 
 }

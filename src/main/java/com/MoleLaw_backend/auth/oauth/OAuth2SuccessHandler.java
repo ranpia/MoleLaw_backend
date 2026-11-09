@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.auth.oauth;
 
+import com.MoleLaw_backend.common.exception.GlobalExceptionHandler;
+
 import com.MoleLaw_backend.user.entity.User;
 import com.MoleLaw_backend.user.repository.UserRepository;
 import com.MoleLaw_backend.auth.security.AuthTokenService;
@@ -23,6 +25,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final UserRepository userRepository;
     private final AuthTokenService authTokens;
+    private final GlobalExceptionHandler errors;
 
     @Value("${frontend.uri}")
     private String frontenduri;
@@ -35,7 +38,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             throws IOException, ServletException {
 
         if (!(authentication.getPrincipal() instanceof OAuth2User principal)) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid OAuth identity");
+            errors.writeError(response, new MolelawException(ErrorCode.UNAUTHORIZED), ErrorCode.UNAUTHORIZED);
             return;
         }
         Object userId = principal.getAttribute("userId");
@@ -45,26 +48,20 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 || !(providerValue instanceof String provider)
                 || !(subjectValue instanceof String subject) || subject.isBlank()
                 || !("google".equals(provider) || "kakao".equals(provider))) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid OAuth identity");
+            errors.writeError(response, new MolelawException(ErrorCode.UNAUTHORIZED), ErrorCode.UNAUTHORIZED);
             return;
         }
         User user = userRepository.findByIdForUpdate(id).orElse(null);
         if (user == null || !provider.equals(user.getProvider())
                 || !subject.equals(user.getProviderSubject())) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid OAuth identity");
+            errors.writeError(response, new MolelawException(ErrorCode.UNAUTHORIZED), ErrorCode.UNAUTHORIZED);
             return;
         }
 
         try {
             authTokens.issue(user.getId(), response);
         } catch (MolelawException e) {
-            if (e.getErrorCode() != ErrorCode.AUTH_STORE_UNAVAILABLE
-                    && e.getErrorCode() != ErrorCode.INVALID_REFRESH_TOKEN) {
-                throw e;
-            }
-            response.setStatus(e.getErrorCode().getStatus());
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"" + e.getErrorCode().name() + "\"}");
+            errors.writeError(response, e, ErrorCode.INTERNAL_SERVER_ERROR);
             return;
         }
         response.sendRedirect(frontenduri);
