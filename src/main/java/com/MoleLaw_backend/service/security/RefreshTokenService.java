@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.service.security;
 
+import com.MoleLaw_backend.dto.security.RefreshTokenGrant;
+
 import com.MoleLaw_backend.dao.RefreshTokenStore;
 import com.MoleLaw_backend.util.JwtUtil;
 
@@ -26,25 +28,25 @@ public class RefreshTokenService {
     private static final Pattern FORMAT = Pattern.compile("r1\\.([1-9][0-9]{0,18})\\.([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\\.([A-Za-z0-9_-]{43})");
     private final RefreshTokenStore store;
 
-    public Grant issue(Long userId) {
+    public RefreshTokenGrant issue(Long userId) {
         JwtUtil.parseUserId(userId == null ? null : userId.toString());
         long generation = store.generation(userId);
         String familyId = UUID.randomUUID().toString();
         String value = token(userId, familyId);
         Instant expiry = Instant.now().plus(Duration.ofDays(7));
         store.create(userId, familyId, hash(value), expiry, generation);
-        return new Grant(value, userId, expiry);
+        return new RefreshTokenGrant(value, userId, expiry);
     }
 
     public Long userId(String value) {
         return parse(value).userId();
     }
 
-    public Grant rotate(String value) {
+    public RefreshTokenGrant rotate(String value) {
         Descriptor previous = parse(value);
         String next = token(previous.userId(), previous.familyId());
         Instant expiry = store.rotate(previous.userId(), previous.familyId(), previous.hash(), hash(next));
-        return new Grant(next, previous.userId(), expiry);
+        return new RefreshTokenGrant(next, previous.userId(), expiry);
     }
 
     public void revoke(String value) {
@@ -89,7 +91,4 @@ public class RefreshTokenService {
 
     private record Descriptor(Long userId, String familyId, String hash) {}
 
-    public record Grant(String value, Long userId, Instant expiresAt) {
-        @Override public String toString() { return "RefreshGrant[userId=" + userId + ", expiresAt=" + expiresAt + "]"; }
-    }
 }

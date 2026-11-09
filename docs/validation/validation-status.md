@@ -1,5 +1,13 @@
 # 검증 현황
 
+## 2026-11-09 클래스 책임 분리·OAuth 클라이언트 교체
+
+- PR #13을 dev에 병합한 7cc9b4a를 기준으로 SecurityConfig의 CORS 구현/정책·CSRF 쿠키 정책·OAuth 토큰 클라이언트·Swagger 접근 정책을 분리했다. ChatStreamMvcConfig는 쓰기 실행기 생성만 맡고 MVC 비동기 연결은 ChatStreamAsyncConfigurer가 담당한다.
+- 판례 도구 생성/실행은 FollowUpCaseToolsFactory/FollowUpCaseSession, 검색 알고리즘/요청별 상태는 CaseSearchPipeline/CaseSearchState로 나눴다. 공유 토큰 결과는 dto.security.RefreshTokenGrant/AccessTokenIdentity로 이동했고 토큰 값이 toString에 포함되지 않는 기존 동작을 유지했다.
+- DefaultAuthorizationCodeTokenResponseClient를 RestClientAuthorizationCodeTokenResponseClient로 교체했다. Google과 Kakao 모두 client_secret_post를 명시해 본문 인증을 유지하고 Kakao의 구형 POST 설정을 교정했다. 모의 HTTP 5개 사례로 두 공급자의 폼 필드·PKCE·redirect URI·토큰 응답·invalid_grant 및 실제 등록 설정을 검증했다.
+- 전체 `test bootJar` 성공: 563개, 실패 0·오류 0·건너뜀 0. 인증·쿠키/CSRF/CORS·Swagger 차단·후속 판례 도구·검색 예산·스트림·오류 및 저장 회귀를 포함한다. 실제 Google/Kakao 로그인, 유료 AI/OpenLaw, 운영 배포는 실행하지 않았다.
+- Java package/실제 경로 일치, System.out/err·printStackTrace·LoggerFactory 직접 출력 및 구형 토큰 클라이언트 참조 0개를 확인했다. 분리한 타입과 유지한 중첩 타입의 근거는 [클래스 책임 검토](../architecture/class-responsibilities.md)를 따른다.
+
 ## 2026-11-09 7개 계층 패키지 통합
 
 - Java 구현 210개와 테스트/보조 클래스 124개의 배치를 controller/service/config/dto/dao/entity/util로 통합했다. 애플리케이션 진입 클래스와 컨텍스트 테스트는 루트에 유지하며, package 선언·실제 경로가 일치하는지 전수 검사했다.

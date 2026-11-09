@@ -1,5 +1,7 @@
 package com.MoleLaw_backend.dao;
 
+import com.MoleLaw_backend.dto.security.RefreshTokenGrant;
+
 import com.MoleLaw_backend.service.security.RefreshTokenService;
 
 import com.MoleLaw_backend.util.exception.ErrorCode;
@@ -90,7 +92,7 @@ class RedisRefreshTokenIntegrationTest {
         var first = service.issue(IDS.incrementAndGet());
         var executor = Executors.newFixedThreadPool(8);
         var start = new CountDownLatch(1);
-        var replacement = new AtomicReference<RefreshTokenService.Grant>();
+        var replacement = new AtomicReference<RefreshTokenGrant>();
         List<Future<Boolean>> results = new ArrayList<>();
         try {
             for (int i = 0; i < 8; i++) results.add(executor.submit(() -> {
@@ -119,7 +121,7 @@ class RedisRefreshTokenIntegrationTest {
             var first = service.issue(IDS.incrementAndGet());
             var executor = Executors.newFixedThreadPool(2);
             var start = new CountDownLatch(1);
-            var replacement = new AtomicReference<RefreshTokenService.Grant>();
+            var replacement = new AtomicReference<RefreshTokenGrant>();
             try {
                 var rotate = executor.submit(() -> {
                     start.await();

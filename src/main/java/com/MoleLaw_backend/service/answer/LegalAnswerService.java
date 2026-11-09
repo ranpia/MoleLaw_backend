@@ -145,7 +145,7 @@ public class LegalAnswerService {
             var sources = evidence.load(userId, roomId);
             String searchQuestion = searchQuestions.resolve(roomId, question, allowCaseSearch);
             var display = new com.MoleLaw_backend.util.StreamCitationDisplay();
-            var sessionRef = new java.util.concurrent.atomic.AtomicReference<FollowUpCaseToolsFactory.Session>();
+            var sessionRef = new java.util.concurrent.atomic.AtomicReference<FollowUpCaseSession>();
             String traceId = context.getOrDefault("consultationTraceId", UUID.randomUUID().toString());
             var tools = caseTools.create(sources, allowCaseSearch, traceId, roomId, stage -> {
                 sink.next(InitialAnswerUpdate.progress(stage));
@@ -288,12 +288,12 @@ public class LegalAnswerService {
     }
 
     private String generate(ChatClient client, String question, List<EvidenceItem> sources, String conversationId,
-            QuestionRetrievalPlan plan, FollowUpCaseToolsFactory.Session tools) {
+            QuestionRetrievalPlan plan, FollowUpCaseSession tools) {
         return generate(client, question, sources, conversationId, plan, tools, List.of());
     }
 
     private String generate(ChatClient client, String question, List<EvidenceItem> sources, String conversationId,
-            QuestionRetrievalPlan plan, FollowUpCaseToolsFactory.Session tools, List<String> unresolvedIssues) {
+            QuestionRetrievalPlan plan, FollowUpCaseSession tools, List<String> unresolvedIssues) {
         String input = tools == null ? prompts.build(question, sources, plan, unresolvedIssues) : prompts.buildFollowUp(question, sources);
         if (tools != null && tools.preparedSearchCompleted()) input = prompts.buildFollowUpAnswer(question, tools.evidence());
         if (tools != null) input += tools.preparationData();

@@ -25,6 +25,7 @@ description: MoleLaw의 기능 추가·패키지 이동·구조 리뷰 시 contr
 - HTTP 계약은 dto.request/response, 공유 내부 계약은 dto.answer/evidence/retrieval/tool/vector, 공통 API 래퍼와 오류 응답은 dto.response에 둔다. 공유 타입을 컨트롤러·서비스 중첩 타입으로 숨기지 않는다. 작은 도구 계약을 한 파일에 묶는 것은 허용한다.
 - util에는 저장소·HTTP 클라이언트 의존성을 넣지 않는다. 실행·트랜잭션 조정은 service가 맡고, 검증 애너테이션은 util.validation, 예외/오류 코드는 util.exception에 둔다. 오류 응답 DTO는 util.exception에 두지 않는다.
 - 오류 응답은 controller-error-handling 스킬을 적용한다. 컨트롤러는 서비스의 공개 메서드로 기능을 호출하고 dao·외부 HTTP 구현을 직접 호출하지 않는다. 구조만 정리할 때는 API 경로·JSON·엔티티 이름·테이블·보안 정책을 바꾸지 않는다.
+- 설정은 Bean 연결과 정책별 설정을 맡는다. 재사용되는 정책/프로토콜 구현·큰 실행 세션·다른 클래스가 공유하는 반환 계약을 설정/서비스의 익명 또는 중첩 클래스로 숨기지 않는다. 반대로 소유 객체의 수명에 결합된 permit/session 핸들·구현 전용 private 상태·짧은 콜백·한 DTO의 enum은 무조건 분리하지 않는다. 현재 분리 기준은 docs/architecture/class-responsibilities.md를 참고한다.
 
 ## 이동과 검증
 
