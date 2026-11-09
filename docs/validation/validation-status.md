@@ -1,5 +1,12 @@
 # 검증 현황
 
+## 2026-11-09 7개 계층 패키지 통합
+
+- Java 구현 210개와 테스트/보조 클래스 124개의 배치를 controller/service/config/dto/dao/entity/util로 통합했다. 애플리케이션 진입 클래스와 컨텍스트 테스트는 루트에 유지하며, package 선언·실제 경로가 일치하는지 전수 검사했다.
+- 이동 후 전체 `test bootJar` 성공: 558개, 실패 0·오류 0·건너뜀 0. JPA/컴포넌트 검색·인증/권한·컨트롤러 오류·OpenAPI·스트림 검증을 포함하며 실제 유료 API나 운영 배포를 실행하지 않았다.
+- 직전 오류 처리 커밋과 Java 본문을 비교해 package/import/완전한 클래스명 참조 이외의 변경이 없음을 확인했다. Gradle 전용 테스트 필터 8개의 대상이 모두 새 테스트 클래스와 일치하며 실행 JAR에 이전 auth/user/chat/law/common 패키지의 클래스가 남지 않았다.
+- 로거 설정·simulation 스크립트·실행 문서의 클래스 경로를 갱신했다. API URL·JSON·JPA 엔티티 이름·DB 스키마·리소스 위치·보안 정책은 패키지 이동으로 바꾸지 않았다. 구조와 오류 처리 스킬의 형식 검증도 통과했다.
+
 ## 2026-11-09 컨트롤러 오류 응답·Slf4j 정리
 
 - 최신 origin/dev(`b0b37d8`) 기반 `refactor/centralize-exception-logging`에서 전체 `test bootJar` 성공: 558개, 실패 0·오류 0·건너뜀 0. 외부 AI/OpenLaw는 대역으로 검증했으며 실제 유료 상담이나 운영 배포는 실행하지 않았다.

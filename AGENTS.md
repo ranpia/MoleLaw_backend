@@ -3,13 +3,15 @@
 ## 프로젝트 구조와 모듈 구성
 MoleLaw는 법률 검색과 AI 채팅을 제공하는 Java 17 / Spring Boot 3.5 백엔드입니다. 소스는 `src/main/java/com/MoleLaw_backend/`에 있습니다.
 
-- `auth`: JWT·OAuth·CSRF·인증 저장소와 보안 설정
-- `user`: 사용자 엔티티·저장소와 계정·프로필 관리 API
-- `chat`: 상담방·메시지·상담 흐름과 메시지 암호화
-- `law`: 법령·판례·원문·검색·임베딩·법령 도구와 Qdrant 설정
-- `common`: 공통 응답·예외, DB·Swagger 설정과 공통 AI 호출
+- `controller`: HTTP API·컨트롤러별 오류 응답·GlobalExceptionHandler
+- `service`: 인증·사용자·상담·법령 기능, AI 호출·외부 클라이언트
+- `config`: Spring·DB·보안·Swagger·Qdrant 설정, 인증 필터·OAuth 핸들러
+- `dto`: 요청·응답·근거·검색·도구·벡터·인증 주체 계약
+- `dao`: JPA Repository·Refresh 토큰 저장 인터페이스와 Redis 구현
+- `entity`: JPA 엔티티
+- `util`: 파싱·암호화·JWT/쿠키 보조 처리·입력 검증·예외 타입
 
-각 도메인 내부에 필요한 `controller`, `service`, `entity`, `repository`, `dto/request`, `dto/response` 등을 둡니다. 최상위 기술 계층 패키지를 새로 만들지 마세요. Java 기능 추가·패키지 이동·구조 리뷰 시 프로젝트 스킬 [domain-structure](.agents/skills/domain-structure/SKILL.md)를 읽고 적용하세요. 테스트 패키지는 구현 패키지를 따르며 여러 도메인의 설정 통합 테스트는 `common.config`에 둡니다.
+2026-11-09 사용자 결정으로 도메인 우선 구조를 위 7개 계층으로 통합했습니다. `auth/user/chat/law/common` 최상위 패키지를 다시 만들지 마세요. 큰 영역은 `service.answer/retrieval/client`, `config.security`, `dto.request/response`, `util.exception/validation` 등 역할별 하위 패키지를 사용합니다. Java 기능 추가·패키지 이동·구조 리뷰 시 [domain-structure](.agents/skills/domain-structure/SKILL.md)를 적용하세요. 테스트 패키지는 구현 패키지를 따르며 공통 설정 통합 테스트는 `config`에 둡니다. 리소스와 문서는 Java 이동만을 이유로 재배치하지 않습니다.
 
 설정 파일은 `src/main/resources`, 테스트는 `src/test/java`, 설계·실행 문서는 [문서 안내](docs/README.md)를 참고하세요. 빌드 결과는 `build/`에 생성됩니다. 배포 설정은 `docker/app.Dockerfile`과 `.github/workflows/deploy.yml`을 확인하세요.
 

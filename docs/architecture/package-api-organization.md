@@ -1,65 +1,39 @@
-# 패키지·DTO·엔드포인트 정리
+# 패키지·DTO·API 배치
 
-## 2026-11-09 구조·예외·로그 검토
+기준: 2026-11-09. 현재 Java 최상위 패키지는 controller/service/config/dto/dao/entity/util이며, 이전 도메인 우선 구조의 규칙을 대체한다. [폴더 트리](folder-structure.md)를 참고한다.
 
-`auth`, `user`, `chat`, `law`, `common`의 도메인 경계를 유지한다. `common`이 업무 도메인을 import하거나 `law.util`이 서비스·저장소·HTTP 클라이언트를 import하는 의존성은 발견되지 않았다. 상담 흐름과 법령 검색의 큰 서비스는 그대로 두고 이번 변경은 오류 응답 경계를 정리한다.
+## 이동 기준
 
-- 각 도메인 컨트롤러의 `@ExceptionHandler`가 도메인 오류 메시지와 HTTP 응답을 생성한다. `common.exception.GlobalExceptionHandler`는 공통 입력·미처리 오류와 인증·인가·CSRF·Origin·CORS·OAuth 등 MVC 밖의 실패를 처리하고 오류 로그를 공통 제공한다. 전역 핸들러에서 예외를 다시 던지는 순환 대신 Spring이 컨트롤러 핸들러를 먼저 찾는 순서를 사용한다.
-- 일반 HTTP 오류는 `application/json`의 `success:false`와 `error:{status,code,message}`로 통일한다. 405의 Allow 등 Spring MVC가 제공하는 오류 헤더는 보존한다. 이미 응답을 전송한 스트림은 HTTP 상태를 덮어쓰지 않고 같은 분류를 사용해 기존 SSE/NDJSON error 이벤트를 보낸다.
-- `MolelawException`은 오류 코드와 선택적 상세 안내·원인을 운반하는 최소 공통 예외로 유지한다. 별도 상세 메시지 필드·getMessage 재정의 및 사용되지 않는 문자열 오류 응답 생성자는 제거한다. 도메인 예외는 공통 예외를 상속하고 원인 변환·재시도·취소·자원 정리용 catch는 해당 실행 위치에 둔다. 이 catch가 HTTP 응답을 직접 만들지는 않는다.
-- Java 애플리케이션 로그는 Lombok `@Slf4j`의 log를 사용한다. 전역 오류는 4xx WARN·5xx ERROR로 코드·예외 종류·발생 위치를 기록하고, 임의의 예외 메시지·공급자 응답·토큰·질문 본문은 로그에 출력하지 않는다. 기존 처리 단계·traceId 로그는 각 도메인에서 유지한다.
-- 인증 실패가 예전 `{"error":"Unauthorized"}`에서 공통 UNAUTHORIZED JSON으로 변경된다. CSRF/CORS/Origin 실패도 공통 FORBIDDEN JSON이다. 프론트는 `error.code`를 사용하고 Swagger의 실제 응답 샘플도 함께 갱신한다. 인증·쿠키·CSRF·CORS 허용 정책은 유지한다.
-- ChatService·LegalAnswerService·AiChatService의 포괄적 API 오류 wrapper와 LawSearchService의 통신 오류 wrapper를 제거했다. 법령 통신 오류는 LawController, ETL 도구 오류는 LawEtlTestController가 응답으로 변환한다. 서비스는 실제 업무 검증·복구·재시도에 필요한 예외만 다룬다. 재사용 규칙은 [controller-error-handling 스킬](../../.agents/skills/controller-error-handling/SKILL.md)에 있다.
-
-기준: 2026-10-22, dev. 역할이 섞인 TestController와 UserController, 법령 도구 폴더, 서비스 내부 공유 DTO를 정리했다. DB 스키마·LLM 판단·검색 정책은 이 정리에서 변경하지 않았다.
-
-## 패키지 소유권
-
-- auth/controller: 가입·로그인·로그아웃·Refresh·CSRF. user/controller: 내 정보·계정 삭제·비밀번호·닉네임.
-- law/controller: 법령·판례·키워드 API. chat/controller: 상담방·메시지와 방을 저장하지 않는 법률 답변 API.
-- law/service/tool: 서버가 호출하는 도구와 실행 권한·예산 컨텍스트. 원문·벡터 HTTP 구현을 이 폴더에 섞지 않는다.
-- law/service/source, retrieval, search, analysis: 각각 원문/색인 기록, 근거 수집/판단, 검색, 키워드 추출.
-- law/util: 외부 I/O·트랜잭션이 없는 JSON 파싱, 부처 코드 매핑, 조문 청킹, 로컬 임베딩 부하 제한. 보조 클래스는 서비스에 섞지 않고 한곳에 둔다.
-- law/client/openlaw, vector: 외부 HTTP 경계. CaseSearchService는 단일 구현에 불필요한 인터페이스를 두지 않는다.
-
-## DTO 구분
-
-HTTP 입력·출력은 각 도메인의 dto/request·response에 둔다. LawDto/PrecedentInfo는 LawDetailResponse/PrecedentSummaryResponse로, 질문·답변 타입은 LawQuestionRequest, CreateChatRoomRequest, CreateMessageRequest, ChatRoomCreationResponse, LegalAnswerResponse로 의미를 명확히 했다. KeywordExtractionResponse는 키워드 분석 결과다.
-
-공유 내부 계약은 law/dto/evidence, retrieval, tool, vector와 chat/dto/answer에 모았다. EvidenceItem/Provenance는 법령 검색이 만들고 상담이 소비하므로 law가 소유한다. LawSearchEvidence/LawIndexResult를 도구 클래스의 중첩 타입에서 분리했다. 페이지 후보·청크처럼 구현에만 필요한 타입은 해당 구현에 유지한다. 생성/후속 메시지 요청은 서로 다른 작업 계약이라 별도 DTO를 유지한다.
-
-컨트롤러 안의 CSRF 문서 전용 DTO는 실제 CsrfResponse로 교체했다. 인증 제네릭 응답의 구체 OpenAPI 스키마는 AuthApiSchemas와 UserApiResponse로 옮겼다. Java 클래스 이름을 바꿔도 기존 OpenAPI component 이름은 @Schema 별칭으로 유지한다.
-
-## 경로 변경표
-
-기존 경로 별칭은 제공하지 않는다. 프론트·클라이언트의 호출 경로를 함께 변경해야 한다. GET 검색의 파라미터와 응답 본문은 유지한다.
-
-| 이전 | 현재 |
+| 이전 배치 | 현재 배치 |
 | --- | --- |
-| POST /api/auth/reissue | POST /api/auth/refresh |
-| GET·DELETE /api/auth/me | GET·DELETE /api/users/me |
-| PATCH /api/auth/password | PATCH /api/users/me/password |
-| PATCH /api/auth/nickname | PATCH /api/users/me/nickname |
-| POST /api/chat-rooms/first-message | POST /api/chat-rooms |
-| GET /api/chat-rooms/{roomId} | GET /api/chat-rooms/{roomId}/messages |
-| GET /api/test/lawsearch | GET /api/laws |
-| POST /api/test/law/keyword | POST /api/laws/search |
-| POST /api/test/keywords | POST /api/law-keywords |
-| GET /api/test/cases | GET /api/precedents |
-| GET /api/test/cases/{id} | GET /api/precedents/{id} |
-| POST /api/test/answer | POST /api/legal-answers |
+| auth/user/chat/law.controller | controller |
+| 각 도메인 service | service 및 역할별 하위 패키지 |
+| 각 도메인 config·common.ai.config | config |
+| auth.security의 필터·OAuth 성공 핸들러 | config.security |
+| auth.security의 인증/토큰 서비스 | service.security |
+| auth.oauth의 사용자 조회 | service.oauth |
+| common.ai | service.ai |
+| law.client | service.client.openlaw/vector |
+| 각 도메인 dto | dto.request/response 및 내부 계약별 하위 패키지 |
+| 각 도메인 repository·Refresh 저장소 | dao |
+| 각 도메인 entity | entity |
+| 파싱·암호화·JWT·쿠키 보조 처리 | util |
+| 예외 타입·오류 코드·입력 validator | util.exception/validation |
+| GlobalExceptionHandler | controller |
+| ErrorResponse·ApiResponse | dto.response |
 
-법령 AI 검색 POST /api/laws/search의 본문은 이전 content 대신 `{"query":"보증금을 돌려받지 못했습니다."}`다. 키워드·무저장 답변도 query를 사용한다. 상담방 생성·후속 메시지는 기존 content를 유지한다.
+같은 패키지에서 생략했던 import도 이동 목적지에 맞췄다. 테스트는 구현 위치를 따르며 여러 기능의 설정 통합 검증은 config에 있다. Gradle 전용 테스트 필터·로거 클래스명·simulation 스크립트·문서의 클래스/소스 참조를 함께 변경했다. 엔티티의 클래스 이름과 테이블, 외부 API/JSON 계약 및 실행 리소스는 유지한다.
 
-가입·로그인·로그아웃·CSRF 경로와 후속 메시지 POST·방 삭제는 유지한다. Refresh 쿠키 Path=/api/auth, Access 인증·소유권 검사·CSRF·CORS 정책도 유지한다. Swagger customizer와 SecurityConfig/JwtAuthenticationFilter의 공개 경로를 새 AuthController·refresh에 맞췄다. 운영 Swagger를 활성화하지 않는다.
+## 컨트롤러와 오류
 
-과거 기준선·보안 감사 문서의 옛 경로는 해당 시점 기록이다. 현재 클라이언트 계약은 이 문서와 local OpenAPI를 우선한다.
+AuthController는 가입·로그인·로그아웃·Refresh를, CsrfController는 토큰 조회를, UserController는 프로필·계정 관리를 맡는다. ChatRoomController·LegalAnswerController·InitialAnswerStreamController는 상담방·무저장 답변·스트림을 담당하고, 법령·판례·키워드·local 진단 API도 controller의 해당 컨트롤러에 둔다. 기능 실행은 service, JPA/Redis 저장은 dao가 담당한다.
+
+- 도메인 컨트롤러 12곳의 @ExceptionHandler가 도메인 오류 메시지·상태·본문을 생성한다. GlobalExceptionHandler는 공통 입력·미처리 오류, 인증/CSRF/CORS/Origin/OAuth 등 MVC 밖의 오류 및 공통 오류 로그를 맡는다.
+- 서비스는 예외를 전파하며 실제 업무 검증·checked exception 변환·복구·재시도·취소·자원 정리용 catch만 유지한다. ChatService·LegalAnswerService·AiChatService의 포괄적 API 오류 포장, LawSearchService의 통신 오류 포장 및 ETL 서비스의 HTTP 오류 변환은 제거했다.
+- 일반 오류는 application/json의 success:false와 error:{status,code,message}를 반환한다. 405의 Allow 같은 프레임워크 오류 헤더를 보존한다. 전송 중인 SSE/NDJSON은 HTTP 상태를 덮어쓰지 않고 공통 분류의 error 이벤트로 종료한다.
+- MolelawException은 오류 코드·선택적 상세 안내·원인을 운반하는 최소 예외다. 별도 메시지 필드와 getMessage 재정의는 제거했다. Java 로그는 @Slf4j이며 예외 메시지·키·토큰·질문·공급자 응답을 그대로 출력하지 않는다.
+- 인증 실패는 예전 {"error":"Unauthorized"} 대신 공통 UNAUTHORIZED JSON, CSRF/CORS/Origin 거절은 FORBIDDEN JSON이다. 이 오류 응답 변경은 패키지 이동 전의 별도 커밋에 포함된다. 패키지 이동 자체는 API 계약을 바꾸지 않는다.
+
 ## 검증
 
-2026-10-22 추가: `LawEtlTestController`는 `local & !test` 및 벡터 활성화 조건에서만 `POST /api/local/law-etl/index`, `/reindex`, `/search`를 제공한다. 공통 20개 API 계약은 유지하며 로컬 검증 경로의 인증·CSRF·요청/응답·OpenAPI는 별도 테스트로 확인한다. [ETL 사용법](../law/law-etl-local.md)을 따른다.
-
-일반 테스트 283개(실패 0, 선택 Postman 실행 1개 건너뜀)와 bootJar를 통과했다. OpenApiDocumentationTest는 새 경로·HTTP 메서드 20개, 인증/CSRF 요구·응답 예시·schema를 확인한다. 법령 AI 검색은 옛 content 본문을 거절하고 query 본문을 처리하는 HTTP 회귀를 추가했다. 사용자 ID·방 소유권·Refresh 회전과 실제 CSRF 쿠키 부트스트랩 회귀도 포함된다. 패키지 이동 후 HTTP 임베딩 클라이언트는 별도 로컬 Postman simulation에서 검증한다. 실제 OpenLaw/OAuth/유료 LLM은 호출하지 않았다.
-
-최종 추가 검증: Swagger 문구 갱신 후 OpenAPI 테스트와 선택 Postman 테스트 총 5 개를 통과했다. simulation 로그에서 실제 클라이언트의 GET /api/tags·POST /api/embed 및 HTTP 200을 확인했고 테스트 서버를 종료했다.
-
-2026-10-23: local 전용 POST /api/local/law-retrieval/ai-search·/compare가 추가됐습니다. 기존 공개 20개 경로와 분리된 진단 경로이며 인증·CSRF를 유지합니다. [AI Search 비교](../law/ai-search-comparison.md)를 따릅니다.
+오류 처리 변경의 전체 테스트 558개 및 최종 OpenAPI/로컬 컨트롤러 19개와 bootJar가 통과했다. 패키지 이동 후의 별도 검증 기록은 [검증 현황](../validation/validation-status.md)을 따른다. Swagger UI 브라우저 수동 검사나 실제 유료 상담 결과를 대역 테스트 결과로 간주하지 않는다.

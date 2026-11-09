@@ -1,0 +1,46 @@
+package com.MoleLaw_backend.util.exception;
+
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
+public enum ErrorCode {
+    INVALID_REQUEST(400, "잘못된 요청입니다."),
+    UNAUTHORIZED(401, "인증이 필요합니다."),
+    FORBIDDEN(403, "접근 권한이 없습니다."),
+    NOT_FOUND(404, "대상을 찾을 수 없습니다."),
+    METHOD_NOT_ALLOWED(405, "지원하지 않는 HTTP 메서드입니다."),
+    NOT_ACCEPTABLE(406, "지원하지 않는 응답 형식입니다."),
+    PAYLOAD_TOO_LARGE(413, "요청 크기가 허용 범위를 초과했습니다."),
+    UNSUPPORTED_MEDIA_TYPE(415, "지원하지 않는 요청 형식입니다."),
+    SERVICE_UNAVAILABLE(503, "서비스를 일시적으로 사용할 수 없습니다."),
+    INTERNAL_SERVER_ERROR(500, "서버 내부 오류입니다."),
+    AUTH_STORE_UNAVAILABLE(503, "인증 저장소를 사용할 수 없습니다. 잠시 후 다시 시도하세요."),
+    OPENLAW_API_FAILURE(HttpStatus.BAD_GATEWAY.value(), "공공법령 API 통신에 실패했습니다"),
+    OPENLAW_INVALID_RESPONSE(HttpStatus.BAD_REQUEST.value(), "공공법령 API 응답이 올바르지 않습니다"),
+    GPT_API_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "GPT 응답 생성 중 오류 발생"),
+    GPT_EMPTY_RESPONSE(HttpStatus.INTERNAL_SERVER_ERROR.value(), "GPT 응답이 비어 있음"),
+    EVIDENCE_INSUFFICIENT(422, "확보한 근거가 충분하지 않습니다. 질문을 구체화해 주세요."),
+    RETRIEVAL_UNAVAILABLE(503, "법령 근거 검색을 사용할 수 없습니다. 잠시 후 다시 시도하세요."),
+    RETRIEVAL_BUSY(503, "임베딩 처리량이 초과되었습니다. 잠시 후 다시 시도하세요."),
+    USER_NOT_FOUND(HttpStatus.BAD_GATEWAY.value(), "해당 사용자를 찾을 수 없습니다."),
+    USER_ID_NULL(HttpStatus.UNAUTHORIZED.value(), "사용자 정보가 유효하지 않습니다."),
+    CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "채팅방을 찾을 수 없습니다."),
+    UNAUTHORIZED_CHATROOM_ACCESS(HttpStatus.FORBIDDEN.value(), "본인의 채팅방이 아닙니다."),
+    KEYWORD_EXTRACTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "키워드 추출에 실패했습니다."),
+    USER_NOT_AUTHENTICATED(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다."),
+    PASSWORD_FAIL(HttpStatus.BAD_REQUEST.value(), "비밀번호가 일치하지 않습니다."),
+    TOKEN_FAIL(HttpStatus.BAD_REQUEST.value(), "유효하지 않은 리프레시 토큰입니다."),
+    INVALID_REFRESH_TOKEN(401, "유효하지 않거나 만료·폐기된 Refresh 토큰입니다."),
+    REFRESH_TOKEN_REUSED(401, "Refresh 토큰 재사용이 감지되어 로그인 세션이 폐기되었습니다."),
+    DUPLICATED_EMAIL(HttpStatus.BAD_REQUEST.value(), "이미 존재하는 이메일입니다."),
+    INVALID_PROVIDER(HttpStatus.BAD_REQUEST.value(), "잘못된 형식입니다.");
+    private final int status;
+    private final String message;
+
+    ErrorCode(int status, String message) {
+        this.status = status;
+        this.message = message;
+    }
+
+}

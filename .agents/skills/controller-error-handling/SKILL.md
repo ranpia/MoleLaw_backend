@@ -9,8 +9,8 @@ description: MoleLaw의 서비스·컨트롤러·보안·스트림 예외 처리
 
 ## 책임과 배치
 
-- 도메인 오류는 해당 `auth/user/chat/law.controller`의 `@ExceptionHandler`에서 처리한다. `MolelawException`은 ErrorCode·선택적 상세 안내·원인을 운반하는 최소 예외로 유지한다. 컨트롤러에서 `ApiResponse.error(new ErrorResponse(...))`와 JSON Content-Type·상태 코드를 설정한다.
-- 공통 입력 검증·바인딩·404·405·415와 미처리 오류는 `common.exception.GlobalExceptionHandler`의 `@RestControllerAdvice`가 처리한다. 컨트롤러 핸들러가 먼저 실행되며 전역 핸들러가 잡은 예외를 다시 던져 컨트롤러로 돌려보내는 구조는 만들지 않는다.
+- 도메인 오류는 `controller`의 해당 API 컨트롤러 `@ExceptionHandler`에서 처리한다. `util.exception.MolelawException`은 ErrorCode·선택적 상세 안내·원인을 운반하는 최소 예외로 유지한다. 컨트롤러에서 `dto.response.ApiResponse.error(new ErrorResponse(...))`와 JSON Content-Type·상태 코드를 설정한다.
+- 공통 입력 검증·바인딩·404·405·415와 미처리 오류는 `controller.GlobalExceptionHandler`의 `@RestControllerAdvice`가 처리한다. 컨트롤러 핸들러가 먼저 실행되며 전역 핸들러가 잡은 예외를 다시 던져 컨트롤러로 돌려보내는 구조는 만들지 않는다.
 - GlobalExceptionHandler는 공통 분류·오류 로그·필터 연결도 제공한다. 인증·인가·CSRF·CORS·Origin·OAuth처럼 MVC 밖에서 발생한 실패는 이 경계로 전달한다. 이미 전송한 HTTP 상태·본문을 덮어쓰지 않는다.
 - SSE/NDJSON은 전송 시작 후의 실패를 공통 분류에 연결한 기존 error 이벤트로 전달한다. 새 JSON 응답을 덧붙이거나 완료·오류 이벤트를 중복 전송하지 않는다.
 
