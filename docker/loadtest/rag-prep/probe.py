@@ -14,7 +14,7 @@ def main():
     parser=argparse.ArgumentParser(); parser.add_argument('--live',action='store_true'); options=parser.parse_args()
     with urlopen('http://rag-model:8080/state',timeout=5) as reply: before=json.load(reply)
     assert before['mode']==('live' if options.live else 'synthetic'),'Model mode mismatch'
-    assert not before['stopped'] and before['reservedUsd']==0
+    assert not before['stopped'] and before.get('activeReservedUsd',before['reservedUsd'])==0
     cookie=http.cookiejar.CookieJar(); client=build_opener(HTTPCookieProcessor(cookie))
     def request(method,path,body=None,csrf=None):
         headers={'Content-Type':'application/json'}
@@ -31,7 +31,7 @@ def main():
     cases=[('빌려준 돈을 돌려받지 못하면 어떻게 하나요?','completed')]
     if not options.live: cases.append(('fixture-collect 추가 법령 수집이 필요한가요?','error'))
     for query,expected in cases:
-        started=time.monotonic(); events=[]; first=None; previous=0; stage=None; stage_times={}; terminal=None
+        started=time.monotonic(); events=[]; first=None; previous=0; stage=None; stage_times={}; terminal=None; answer=[]
         req=Request(HOST+'/api/legal-answers/ndjson',data=json.dumps({'query':query}).encode(),
                     headers={'Content-Type':'application/json','Accept':'application/x-ndjson','X-XSRF-TOKEN':csrf})
         try:
@@ -39,18 +39,20 @@ def main():
                 assert reply.status==200
                 for line in reply:
                     elapsed=time.monotonic()-started
-                    assert elapsed<180,'Overall probe deadline'
                     event=json.loads(line); kind=event['type']; events.append(dict(type=kind,stage=event.get('stage'),code=event.get('code'),atSeconds=elapsed))
                     if kind=='progress':
                         if stage: stage_times[stage]=stage_times.get(stage,0)+elapsed-previous
                         previous=elapsed; stage=event['stage']
                     if kind=='answer_delta' and event.get('delta') and first is None: first=elapsed
+                    if kind=='answer_delta' and event.get('delta'): answer.append(event['delta'])
                     if kind in ('completed','error'):
                         assert terminal is None; terminal=kind
+                    # Retain a late terminal event and its code before enforcing the deadline.
+                    assert elapsed<180,'Overall probe deadline'
         finally:
             elapsed=time.monotonic()-started
             if stage: stage_times[stage]=stage_times.get(stage,0)+elapsed-previous
-            record=dict(expected=expected,terminal=terminal,firstTextSeconds=first,completedSeconds=elapsed,stageSeconds=stage_times,events=events)
+            record=dict(expected=expected,terminal=terminal,firstTextSeconds=first,completedSeconds=elapsed,stageSeconds=stage_times,events=events,answerText=''.join(answer))
             records.append(record)
             result_path.write_text(json.dumps(dict(completed=False,mode=before['mode'],records=records,modelBefore=before),indent=2))
         assert terminal==expected,(expected,events)
@@ -60,7 +62,7 @@ def main():
         if expected=='completed': Path('/results/latest.json').write_text(json.dumps(dict(record,mode=before['mode'])))
         print(f'RAG probe mode={before["mode"]} expected={expected} terminal={terminal} elapsed={elapsed:.3f}s',flush=True)
     with urlopen('http://rag-model:8080/state',timeout=5) as reply: after=json.load(reply)
-    assert after['estimatedUsd']<=5 and after['reservedUsd']==0 and not after['stopped']
+    assert after['estimatedUsd']+after['reservedUsd']<=5 and after.get('activeReservedUsd',after['reservedUsd'])==0 and not after['stopped']
     if not options.live: assert after['estimatedUsd']==0
     result_path.write_text(json.dumps(dict(completed=True,mode=before['mode'],records=records,modelBefore=before,modelAfter=after),indent=2))
 

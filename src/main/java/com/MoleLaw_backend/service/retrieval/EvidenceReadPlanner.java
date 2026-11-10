@@ -35,13 +35,15 @@ public class EvidenceReadPlanner {
     private final ChatClient client;
     private final ObjectMapper mapper;
     private final EvidenceReadToolService reader;
+    private final OpenAiChatOptions options;
     private final int catalogLimit;
     private final int bodyLimit;
     private final JTokkitTokenCountEstimator tokens = new JTokkitTokenCountEstimator(EncodingType.CL100K_BASE);
 
     public EvidenceReadPlanner(@Qualifier("evidenceReadChatClient") ChatClient client, ObjectMapper mapper,
                                EvidenceReadToolService reader, @Value("${app.ai.evidence.catalog-max-input-tokens:8000}") int catalogLimit,
-                               @Value("${app.ai.evidence.body-max-input-tokens:12000}") int bodyLimit) {
+                               @Value("${app.ai.evidence.body-max-input-tokens:12000}") int bodyLimit,
+                               @Qualifier("evidenceReadOptions") OpenAiChatOptions options) {
         if (catalogLimit < 128 || catalogLimit > 16000 || bodyLimit < 128 || bodyLimit > 64000)
             throw new IllegalArgumentException("Invalid evidence read budgets");
         this.client = client;
@@ -49,6 +51,7 @@ public class EvidenceReadPlanner {
         this.reader = reader;
         this.catalogLimit = catalogLimit;
         this.bodyLimit = bodyLimit;
+        this.options = options.copy();
     }
 
     public EvidenceReading read(String question, List<EvidenceItem> candidates, QuestionRetrievalPlan plan) {
@@ -93,8 +96,11 @@ public class EvidenceReadPlanner {
                 var format = ResponseFormat.builder().type(ResponseFormat.Type.JSON_SCHEMA)
                         .jsonSchema(ResponseFormat.JsonSchema.builder().name("evidence_read_selection")
                                 .strict(true).schema(schema).build()).build();
+                // ChatClient.options replaces its defaults; preserve the role before adding the dynamic schema.
+                var requestOptions = options.copy();
+                requestOptions.setResponseFormat(format);
                 String output = client.prompt().user(input.toString())
-                        .options(OpenAiChatOptions.builder().responseFormat(format).build()).call().content();
+                        .options(requestOptions).call().content();
                 if (output == null || output.length() > 4096)
                     throw new IllegalArgumentException("Invalid evidence read selection");
                 stage = "SELECTION_CONTRACT";

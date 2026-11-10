@@ -2,6 +2,7 @@ package com.MoleLaw_backend.service.retrieval;
 import com.MoleLaw_backend.dto.evidence.EvidenceItem;
 import com.MoleLaw_backend.util.exception.GptApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.MoleLaw_backend.config.ReasoningOptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.*;
@@ -38,7 +39,7 @@ class CaseQueryPlannerTest {
         assertThat(options.getResponseFormat().getType()).isEqualTo(org.springframework.ai.openai.api.ResponseFormat.Type.JSON_SCHEMA);
     }
     private final ChatModel model = mock(ChatModel.class);
-    private final CaseQueryPlanner planner = new CaseQueryPlanner(ChatClient.builder(model).build(), new ObjectMapper());
+    private final CaseQueryPlanner planner = new CaseQueryPlanner(ChatClient.builder(model).build(), new ObjectMapper(), ReasoningOptions.create("gpt-5.4-mini", "low", 2048));
     private final EvidenceItem law = new EvidenceItem("law", "LAW_CHUNK", "1:61", "근로기준법 제61조", "https://www.law.go.kr", "사용 촉진 규정");
     @Test void acceptsBoundedDistinctLegalTermsAndRejectsMalformedPlans() {
         when(model.call(any(Prompt.class))).thenReturn(response("{\"queries\":[\"연차휴가\",\"연차수당\",\"사용촉진\"],\"intent\":\"SIMILAR_ISSUE\",\"targets\":[],\"scope\":\"BODY\"}"));

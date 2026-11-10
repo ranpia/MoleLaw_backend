@@ -4,7 +4,7 @@
 
 ## 완료된 기반
 
-기존 데이터 이관 없이 시작하는 정책과 Flyway V1~V5, 기본/local JPA validate를 적용했다. 현재 테이블은 user·chat_room·message·legal_source·legal_source_index·chat_evidence_snapshot·chat_case_evidence이다. 사용자 검증·암호화 LONGTEXT·삭제 cascade·불변 원문·세대 상태·최초 근거 스냅샷을 구현했다.
+기존 데이터 이관 없이 시작하는 정책과 Flyway V1~V8, 기본/local JPA validate를 적용했다. 현재 업무 테이블은 user·chat_room·message·legal_source·legal_source_index·law_chunk_index·chat_evidence_snapshot·chat_case_evidence·chat_evidence_removal이다. Flyway 이력 테이블은 별도다. V6은 색인 중복 제약, V7은 조문 청크 메타데이터, V8은 방별 근거 삭제 표식을 추가한다. 사용자 검증·암호화 LONGTEXT·삭제 cascade·불변 원문·세대 상태·최초 근거 스냅샷을 구현했다.
 
 인증 세션·Refresh MySQL 테이블은 추가하지 않는다. Access는 stateless, Refresh는 Redis가 담당한다. 구 law/law_chunk/law_embedding과 MySQL 벡터 검색 경로는 제거했다.
 

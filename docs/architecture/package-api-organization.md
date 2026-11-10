@@ -2,6 +2,20 @@
 
 기준: 2026-11-09. 현재 Java 최상위 패키지는 controller/service/config/dto/dao/entity/util이며, 이전 도메인 우선 구조의 규칙을 대체한다. [폴더 트리](folder-structure.md)를 참고한다.
 
+## 개편 이후 추가된 현재 API
+
+| 소유 컨트롤러 | 경로·역할 |
+| --- | --- |
+| InitialQuestionSuggestionController | POST /api/legal-answers/suggestions: 최초 질문 방향 추천 |
+| InitialAnswerStreamController | POST /api/legal-answers/stream, /api/chat-rooms/stream: 최초 SSE |
+| InitialAnswerStreamController | POST /api/legal-answers/ndjson, /api/chat-rooms/ndjson: 최초 NDJSON |
+| InitialAnswerStreamController | POST /api/chat-rooms/{roomId}/messages/ndjson: 후속 NDJSON |
+| ChatRoomController | PATCH /api/chat-rooms/{roomId}/title: 상담방 제목 변경 |
+| ChatEvidenceController | GET /api/chat-rooms/{roomId}/evidence 및 /{evidenceId}: 현재 근거 카드·본문 |
+| ChatEvidenceController | DELETE /api/chat-rooms/{roomId}/evidence/{evidenceId}: 방별 근거 제외 |
+
+이 경로들은 인증이 필요하며 POST·PATCH·DELETE는 CSRF를 검사한다. 상세 요청·이벤트·저장 계약은 [상담 문서](../chat/README.md)를 따른다. 과거의 공개 API 20개 검증 수치를 현재 전체 엔드포인트 수로 사용하지 않는다.
+
 ## 이동 기준
 
 | 이전 배치 | 현재 배치 |

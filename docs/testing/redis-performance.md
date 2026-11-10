@@ -1,5 +1,7 @@
 # Redis 직접 부하와 Refresh API 검증
 
+[결과 시각화](visual-results.md)에서 주요 측정값을 그래프로 볼 수 있다.
+
 2026-10-29 중지했던 시험을 재개했다. 계획은 [Redis 시험 계획](redis-performance-plan.md),
 어제 완료한 SET과 중지 지점은 [중지 기록](redis-checkpoint.md)에 보존한다.
 

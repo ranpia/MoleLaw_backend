@@ -40,10 +40,6 @@ spring:
         enabled: ${REDIS_SSL_ENABLED:false}
 
   ai:
-    follow-up-plan:
-      model: ${APP_AI_FOLLOW_UP_PLAN_MODEL:gpt-5.4-mini}
-      reasoning-effort: ${APP_AI_FOLLOW_UP_PLAN_REASONING_EFFORT:low}
-      max-completion-tokens: ${APP_AI_FOLLOW_UP_PLAN_MAX_COMPLETION_TOKENS:2048}
     openai:
       api-key: ${OPENAI_API_KEY:}
       chat:
@@ -153,6 +149,10 @@ app:
   law-ai-search:
     base-url: ${APP_LAW_AI_SEARCH_BASE_URL:https://www.law.go.kr/DRF}
   ai:
+    follow-up-plan:
+      model: ${APP_AI_FOLLOW_UP_PLAN_MODEL:gpt-5.4-mini}
+      reasoning-effort: ${APP_AI_FOLLOW_UP_PLAN_REASONING_EFFORT:low}
+      max-completion-tokens: ${APP_AI_FOLLOW_UP_PLAN_MAX_COMPLETION_TOKENS:2048}
     case-rerank:
       model: ${APP_AI_CASE_RERANK_MODEL:gpt-5.4-mini}
       reasoning-effort: ${APP_AI_CASE_RERANK_REASONING_EFFORT:low}

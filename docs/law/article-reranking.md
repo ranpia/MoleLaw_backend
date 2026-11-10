@@ -56,5 +56,7 @@ GPU 대기·추론 시간은 일반 처리 시간에 포함한다. 현재 3분 �
 단위/HTTP 회귀는 순서 변경·top 15·dense 점수 보존·필터/미완료 세대 차단·응답 오류·늦은 응답 거부를 검증한다.
 실제 모델 smoke는 동작 확인이며 법률 관련성의 품질 합격을 뜻하지 않는다.
 
+실제 부하 결과와 실행 조건은 [리랭커 단독 처리 한계](../testing/reranker-capacity.md), 임베딩과 추론 잠금을 공유하는 동작은 [혼합 RAG 부하](../testing/mixed-rag-capacity.md)를 따른다. 요청 수용량·거부·회복과 검색 관련성 품질은 별도 검증 항목이다.
+
 공식 근거: [모델 카드](https://huggingface.co/BAAI/bge-reranker-v2-m3),
 [Sentence Transformers CrossEncoder](https://sbert.net/docs/cross_encoder/usage/usage.html).

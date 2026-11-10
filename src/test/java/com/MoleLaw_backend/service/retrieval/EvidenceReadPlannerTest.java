@@ -5,6 +5,7 @@ import com.MoleLaw_backend.dto.evidence.EvidenceItem;
 import com.MoleLaw_backend.dto.retrieval.EvidenceReading;
 import com.MoleLaw_backend.service.tool.EvidenceReadToolService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.MoleLaw_backend.config.ReasoningOptions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.ai.chat.client.ChatClient;
@@ -24,7 +25,7 @@ class EvidenceReadPlannerTest {
     private final EvidenceReadToolService reader = mock(EvidenceReadToolService.class);
     private final ObjectMapper mapper = new ObjectMapper();
     private EvidenceReadPlanner planner(int bodyLimit) {
-        return new EvidenceReadPlanner(ChatClient.builder(model).build(), mapper, reader, 4000, bodyLimit);
+        return new EvidenceReadPlanner(ChatClient.builder(model).build(), mapper, reader, 4000, bodyLimit, ReasoningOptions.create("gpt-5.4-mini", "low", 4096));
     }
     private EvidenceItem item(String id, String content) {
         return new EvidenceItem(id, "LAW_AI_SEARCH", "source:" + id, "법령 " + id, "https://www.law.go.kr", content);

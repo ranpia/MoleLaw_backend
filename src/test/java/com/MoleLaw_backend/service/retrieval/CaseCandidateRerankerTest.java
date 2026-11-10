@@ -4,6 +4,7 @@ import com.MoleLaw_backend.config.CaseSearchProperties;
 import com.MoleLaw_backend.dto.evidence.EvidenceItem;
 import com.MoleLaw_backend.util.exception.GptApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.MoleLaw_backend.config.ReasoningOptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
@@ -21,7 +22,7 @@ class CaseCandidateRerankerTest {
     private final ChatModel model = mock(ChatModel.class);
     private final ObjectMapper mapper = new ObjectMapper();
     private final CaseSearchProperties properties = new CaseSearchProperties();
-    private final CaseCandidateReranker reranker = new CaseCandidateReranker(ChatClient.builder(model).build(), mapper, properties);
+    private final CaseCandidateReranker reranker = new CaseCandidateReranker(ChatClient.builder(model).build(), mapper, properties, ReasoningOptions.create("gpt-5.4-mini", "low", 4096));
     private final EvidenceItem law = new EvidenceItem("law", "LAW_CHUNK", "1:61", "근로기준법 제61조", "https://www.law.go.kr", "법령 본문");
 
     @Test void ranksParsedJudgmentContentWithBoundedExcerptAndExactCandidateMembership() throws Exception {

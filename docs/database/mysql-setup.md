@@ -18,11 +18,13 @@
 
 Flyway가 `Communications link failure`와 `Connection refused`로 실패하면 SQL 적용 전 DB 연결 실패다. 먼저 MySQL 컨테이너 상태와 `.env`의 호스트·포트를 확인한다. 이 경우 이력을 repair하거나 DB를 초기화하지 않는다. 2026-10-22 로컬 재현에서는 중지된 기존 MySQL·Redis·Qdrant를 시작한 뒤 `.env`만 사용한 실행에서 V1~V4 검증·현재 버전 4·JPA validate·서버 기동을 확인했다. 기존 스키마나 migration 이력은 변경하지 않았다.
 
-`flyway_schema_history`에 버전 1·2·3·4 성공 이력이 남고 서버가 기동되면 초기화 완료다. 재기동 시 적용한 버전을 다시 실행하지 않는다. 테이블은 `user`, `chat_room`, `message`, `legal_source`, `legal_source_index`, `chat_evidence_snapshot`이다. User 숫자 PK는 IDENTITY로 생성한다. V2는 이전 방의 근거를 자동 생성하지 않으며 스냅샷 없는 방의 후속 상담은 실패한다. V3는 사용자 필수값·로컬/OAuth 자격증명 조합·provider별 subject 유일성을 적용하고 비밀번호 컬럼을 `password_hash`로 명시한다. 기존 데이터가 제약을 만족하지 않으면 실패하며 자동 삭제하지 않는다.
+`flyway_schema_history`에 V1~V8 성공 이력이 남고 서버가 기동되면 현재 코드의 초기화 완료다. 재기동 시 적용한 버전을 다시 실행하지 않는다. 업무 테이블은 `user`, `chat_room`, `message`, `legal_source`, `legal_source_index`, `chat_evidence_snapshot`, `chat_case_evidence`, `law_chunk_index`, `chat_evidence_removal`이다. User 숫자 PK는 IDENTITY로 생성한다. V2는 이전 방의 근거를 자동 생성하지 않으며 스냅샷 없는 방의 후속 상담은 실패한다. V3는 사용자 필수값·로컬/OAuth 자격증명 조합·provider별 subject 유일성을 적용하고 비밀번호 컬럼을 `password_hash`로 명시한다. 기존 데이터가 제약을 만족하지 않으면 실패하며 자동 삭제하지 않는다.
 
-이전 `001-legal-source.sql`은 참고용이며 실행하지 않는다. 수집 작업·상담 근거 테이블은 후속 migration으로 추가한다. 로그인 세션·Refresh는 Redis에 구현하며 MySQL 인증 테이블은 추가하지 않는다. V4는 legal_source_index와 상담 제약·LONGTEXT·삭제 cascade·근거 schema_version을 추가하고 law_embedding/law_chunk/law를 제거한다.
+이전 `001-legal-source.sql`은 참고용이며 실행하지 않는다. 로그인 세션·Refresh는 Redis에 구현하며 MySQL 인증 테이블은 추가하지 않는다. V4는 legal_source_index와 상담 제약·LONGTEXT·삭제 cascade·근거 schema_version을 추가하고 law_embedding/law_chunk/law를 제거한다. V5는 방별 판례 참조, V6은 색인 dedup_key, V7은 본문 없는 청크 메타데이터, V8은 방별 근거 제외 기록을 추가한다. 영속 수집 작업 큐는 아직 없다.
 
 ## 테스트
+
+현재 스키마 대조 기준은 `b0b37d8`이다. `c99d9a2`에서 MySQL 통합 테스트의 신규 적용·재시작 기대 버전을 V8로 맞췄다. 아래 날짜별 V1~V4/V5 적용 기록은 당시 실행 증거이며 현재 버전이나 이번 문서 작업의 재실행 결과를 뜻하지 않는다.
 
 ```powershell
 # Docker·외부 API 키 없이 H2와 모킹으로 회귀 확인

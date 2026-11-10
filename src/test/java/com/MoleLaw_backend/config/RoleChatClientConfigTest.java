@@ -14,8 +14,12 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
+import org.springframework.core.io.ClassPathResource;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -106,6 +110,61 @@ class RoleChatClientConfigTest {
                     assertReasoning(prompts.getAllValues().get(0), "gpt-5.4", "high", 8192);
                     assertReasoning(prompts.getAllValues().get(1), "gpt-5.4-mini", "medium", 16384);
                 });
+    }
+
+    @Test
+    void followUpPlanningEnvironmentOverridesReachTheModelThroughApplicationYaml() {
+        when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage("ok")))));
+        context.withInitializer(application -> {
+            var sources = application.getEnvironment().getPropertySources();
+            sources.addFirst(new SystemEnvironmentPropertySource("followUpPlanningEnvironment", Map.of(
+                    "APP_AI_FOLLOW_UP_PLAN_MODEL", "gpt-5.4",
+                    "APP_AI_FOLLOW_UP_PLAN_REASONING_EFFORT", "high",
+                    "APP_AI_FOLLOW_UP_PLAN_MAX_COMPLETION_TOKENS", "3072")));
+            try {
+                for (var source : new YamlPropertySourceLoader().load("applicationYaml", new ClassPathResource("application.yml"))) {
+                    sources.addLast(source);
+                }
+            } catch (java.io.IOException exception) {
+                throw new java.io.UncheckedIOException(exception);
+            }
+        }).run(application -> {
+            assertThat(application).hasNotFailed();
+            application.getBean("followUpCasePlanningChatClient", ChatClient.class)
+                    .prompt().user("관련 판례를 찾아줘").call().content();
+            application.getBean("legalAnswerChatClient", ChatClient.class)
+                    .prompt().user("확정 근거").call().content();
+            ArgumentCaptor<Prompt> prompts = ArgumentCaptor.forClass(Prompt.class);
+            verify(model, times(2)).call(prompts.capture());
+            assertReasoning(prompts.getAllValues().get(0), "gpt-5.4", "high", 3072);
+            assertReasoning(prompts.getAllValues().get(1), "gpt-5.4-mini", "medium", 16384);
+            verifyNoInteractions(memory);
+        });
+    }
+
+    @Test
+    void lawToolsDisableReasoningWithoutChangingStructuredDecisionOptions() {
+        when(model.call(any(Prompt.class))).thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage("ok")))));
+        context.withPropertyValues("app.ai.evidence.model=gpt-5.4", "app.ai.evidence.reasoning-effort=high",
+                "app.ai.evidence.max-completion-tokens=4321").run(application -> {
+            assertThat(application).hasNotFailed();
+            application.getBean("lawToolChatClient", ChatClient.class).prompt().user("tool request")
+                    .tools(new EchoTool()).call().content();
+            application.getBean("evidenceCollectionChatClient", ChatClient.class).prompt().user("decision").call().content();
+            var prompts = ArgumentCaptor.forClass(Prompt.class);
+            verify(model, times(2)).call(prompts.capture());
+            assertReasoning(prompts.getAllValues().get(0), "gpt-5.4", "none", 4321);
+            var options = (org.springframework.ai.openai.OpenAiChatOptions) prompts.getAllValues().get(0).getOptions();
+            assertThat(options.getInternalToolExecutionEnabled()).isFalse();
+            assertThat(options.getToolCallbacks()).hasSize(1);
+            assertReasoning(prompts.getAllValues().get(1), "gpt-5.4", "high", 4321);
+            verifyNoInteractions(memory);
+        });
+    }
+
+    static class EchoTool {
+        @org.springframework.ai.tool.annotation.Tool(description = "Local transport regression fixture")
+        public String echo(String value) { return value; }
     }
 
     @Test

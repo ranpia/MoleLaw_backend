@@ -13,7 +13,7 @@
 
 현재 테스트 서비스 9개에서 CPU·메모리·네트워크를 확인했고 디스크 I/O는 지원되는 5개 서비스에서 확인했다.
 tmpfs·장치 I/O가 없는 컨테이너의 누락을 0으로 임의 대체하지 않는다. 종료한 Locust는 나타나지 않으며 다음 시험 때 자동으로 수집한다.
-Qdrant/KURE도 같은 프로젝트의 rag 서비스로 실행하면 표시된다. 해당 서비스가 아직 실행되었다는 뜻은 아니다.
+Qdrant/KURE도 같은 프로젝트의 rag 서비스로 실행하면 표시된다. 이 문서의 초기 9서비스 확인 이후 [RAG 관측](rag-monitoring.md)에서 Qdrant/KURE를, [전체 RAG 준비](full-rag-preparation.md)에서 별도 앱/게이트웨이를 연결했다. 표본 당시 서비스 수를 현재 실행 수로 해석하지 않는다.
 
 ```powershell
 docker compose --env-file docker/loadtest/.env -f docker/loadtest/compose.yml --profile monitoring up -d --no-deps cadvisor

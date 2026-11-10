@@ -54,7 +54,7 @@ python scripts/backfill-law-chunk-index.py
 python scripts/backfill-law-chunk-index.py --apply
 ```
 
-현재 COMPLETE 3개/495포인트는 기대 개수와 모두 일치하며 동일 원문·설정의 완료 중복과
+2026-10-24 보강 당시 COMPLETE 3개/495포인트는 기대 개수와 모두 일치했으며 동일 원문·설정의 완료 중복과
 COMPLETE 밖 포인트가 각각 0이었다. 메타데이터 495행과 완료 색인 예약 3개를 등록했다.
 회귀는 반복 upsert, DB 고유/FK 제약, 조문 2개 중 1개 변경 시 임베딩 1개,
 입력/세대가 다른 벡터의 재사용 거부를 검증한다.

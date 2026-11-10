@@ -49,14 +49,13 @@ public class ChatService {
         if (page < 0 || size < 1 || size > 100) {
             throw new MolelawException(ErrorCode.INVALID_REQUEST, "page는 0 이상, size는 1–100이어야 합니다");
         }
-        return chatRoomRepository.findByUserOrderByCreatedAtDescIdDesc(user, PageRequest.of(page, size)).stream()
-                .map(room -> {
-                    String preview = messageRepository
-                            .findFirstByChatRoomIdOrderByTimestampAscIdAsc(room.getId())
-                            .map(m -> encryptor.decrypt(m.getContent()))
-                            .orElse("(메시지 없음)");
-                    return ChatRoomResponse.from(room, preview);
-                })
+        var rooms = chatRoomRepository.findByUserOrderByCreatedAtDescIdDesc(user, PageRequest.of(page, size));
+        if (rooms.isEmpty()) return List.of();
+        var previews = messageRepository.findFirstMessagePreviews(rooms.stream().map(ChatRoom::getId).toList())
+                .stream().collect(Collectors.toMap(MessageRepository.FirstMessagePreview::getRoomId,
+                        preview -> encryptor.decrypt(preview.getContent())));
+        return rooms.stream()
+                .map(room -> ChatRoomResponse.from(room, previews.getOrDefault(room.getId(), "(메시지 없음)")))
                 .collect(Collectors.toList());
     }
 

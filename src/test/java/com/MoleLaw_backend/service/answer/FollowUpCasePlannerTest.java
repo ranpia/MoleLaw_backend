@@ -4,6 +4,7 @@ import com.MoleLaw_backend.dto.answer.FollowUpCasePlan;
 import com.MoleLaw_backend.util.exception.GptApiException;
 import com.MoleLaw_backend.dto.evidence.EvidenceItem;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.MoleLaw_backend.config.ReasoningOptions;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
@@ -25,10 +26,10 @@ class FollowUpCasePlannerTest {
 
     @Test void routingClientHasNoHistoryAdvisorAndReceivesOnlyLatestRequestAndLawCatalog() {
         var client = new com.MoleLaw_backend.config.AnswerChatClientConfig().followUpCasePlanningChatClient(
-                ChatClient.builder(model), "gpt-5.4-mini", "low", 2048);
+                ChatClient.builder(model), ReasoningOptions.create("gpt-5.4-mini", "low", 2048));
         respond("{\"action\":\"ANSWER_FROM_ROOM\",\"lawEvidenceId\":null,\"query\":\"\",\"reason\":\"현재 요약 요청\"}");
         var oldCase = new EvidenceItem("old-id", "CASE_BODY", "99", "과거 사건", "https://www.law.go.kr", "이전 검색 요구가 들어 있는 본문");
-        new FollowUpCasePlanner(client, new ObjectMapper()).plan("정리해줘", List.of(law, oldCase), "1:2");
+        new FollowUpCasePlanner(client, new ObjectMapper(), ReasoningOptions.create("gpt-5.4-mini", "low", 2048)).plan("정리해줘", List.of(law, oldCase), "1:2");
         var captured = org.mockito.ArgumentCaptor.forClass(Prompt.class);
         verify(model).call(captured.capture());
         assertThat(captured.getValue().getInstructions()).hasSize(2);
@@ -36,7 +37,7 @@ class FollowUpCasePlannerTest {
                 .doesNotContain("roomCases", "과거 사건", "이전 검색 요구");
     }
     private final ChatModel model = mock(ChatModel.class);
-    private final FollowUpCasePlanner planner = new FollowUpCasePlanner(ChatClient.builder(model).build(), new ObjectMapper());
+    private final FollowUpCasePlanner planner = new FollowUpCasePlanner(ChatClient.builder(model).build(), new ObjectMapper(), ReasoningOptions.create("gpt-5.4-mini", "low", 2048));
     private final EvidenceItem law = new EvidenceItem("law-id", "LAW_CHUNK", "1:48", "건축법", "https://www.law.go.kr", "법령 본문");
 
     @Test void acceptsModelSearchDecisionAndValidatesAnchorMembership() {

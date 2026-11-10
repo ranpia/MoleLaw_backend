@@ -36,11 +36,12 @@ class Ledger:
         with temporary.open('w') as out:
             json.dump(self.data,out); out.flush(); os.fsync(out.fileno())
         temporary.replace(self.path)
-        SPENT.set(self.data['spent']); HELD.set(sum(self.data['pending'].values())); ATTEMPTS.set(self.data['attempts'])
+        SPENT.set(self.data['spent']); HELD.set(sum(self.data['pending'].values())+sum(item['amount'] for item in self.data.get('unresolved',{}).values())); ATTEMPTS.set(self.data['attempts'])
 
     def reserve(self,cost):
         with self.lock:
-            if self.data['stopped'] or self.data['attempts']>=self.limit or self.data['spent']+sum(self.data['pending'].values())+cost>self.budget:
+            unresolved=sum(item['amount'] for item in self.data.get('unresolved',{}).values())
+            if self.data['stopped'] or self.data['attempts']>=self.limit or self.data['spent']+unresolved+sum(self.data['pending'].values())+cost>self.budget:
                 raise ValueError('budget_or_stopped')
             self.data['attempts']+=1; key=str(self.data['attempts']); self.data['pending'][key]=cost; self.save(); return key
 
@@ -53,11 +54,26 @@ class Ledger:
     def fail(self):
         with self.lock: self.data['stopped']=True; self.save()
 
+    def authorize_retry(self,reason):
+        """Explicit operator retry; retain unknown costs against the same cumulative budget."""
+        if not reason: raise ValueError('retry_reason_required')
+        with self.lock:
+            unresolved=self.data.setdefault('unresolved',{})
+            for key,amount in self.data['pending'].items(): unresolved[key]={'amount':amount,'reason':reason}
+            self.data['pending']={}
+            self.data['stopped']=False
+            self.save()
+
     def state(self):
-        with self.lock: return dict(attempts=self.data['attempts'],estimatedUsd=self.data['spent'],reservedUsd=sum(self.data['pending'].values()),stopped=self.data['stopped'])
+        with self.lock:
+            active=sum(self.data['pending'].values())
+            unresolved=sum(item['amount'] for item in self.data.get('unresolved',{}).values())
+            return dict(attempts=self.data['attempts'],estimatedUsd=self.data['spent'],reservedUsd=active+unresolved,
+                activeReservedUsd=active,unresolvedReservedUsd=unresolved,stopped=self.data['stopped'])
 
 
 def role(body):
+    if body.get('tools'): return 'law-tools'
     system='\n'.join(str(m.get('content','')) for m in body.get('messages',[]) if m.get('role') in ('system','developer'))
     if body.get('stream'): return 'answer'
     if '법률 질문의 유형' in system: return 'question'
@@ -68,6 +84,23 @@ def role(body):
 
 def synthetic(body,kind):
     user=str([m['content'] for m in body['messages'] if m['role']=='user'][-1])
+    if kind=='law-tools':
+        payload=json.loads(user)
+        results=[m for m in body['messages'] if m['role']=='tool']
+        if not results:
+            name='searchLawArticles'; args={'searchQueries':payload['suggestedQueries']}
+        else:
+            result=json.loads(results[-1]['content'])
+            if 'candidates' in result:
+                name='readLawArticles'; args={'evidenceIds':[e['id'] for e in result['candidates'][:2]]}
+            else:
+                ids=[e['id'] for e in result.get('evidence',[])][:2]
+                force='fixture-collect' in payload.get('question','')
+                return json.dumps(dict(action='INSUFFICIENT' if force or not ids else 'ANSWER_READY',reason='synthetic',
+                    missingIssues=['fixed-index restriction'] if force or not ids else [],evidenceIds=[] if force else ids,
+                    searchQueries=[],lawSearches=[]))
+        return dict(role='assistant',content=None,tool_calls=[dict(id='synthetic-'+str(len(results)),type='function',
+            function=dict(name=name,arguments=json.dumps(args)))])
     if kind=='question':
         return json.dumps(dict(type='LAW_EXPLANATION',responseScope='GENERAL_GUIDANCE',searchQueries=[user[:200]],lawSearches=[],missingFacts=[],
             analysis=dict(title='합성 배선 검증',purpose='고정 색인 배선 확인',facts=[],issues=[dict(id='Q1',request='배선 확인',sourceQuote=user[:1000],
@@ -103,7 +136,7 @@ class Gateway(BaseHTTPRequestHandler):
         self.responded=False
         if self.path!='/v1/chat/completions': return self.reply(403,{'error':{'message':'endpoint_denied'}})
         if self.headers.get('Authorization')!='Bearer rag-internal-dummy': return self.reply(401,{'error':{'message':'unauthorized'}})
-        key=None; kind='unknown'; status='failed'; started=time.monotonic(); usage=None; applied_ceiling=False
+        key=None; kind='unknown'; status='failed'; started=time.monotonic(); usage=None; applied_ceiling=False; tool_calls=[]; provider_error=None
         try:
             if self.headers.get('Transfer-Encoding','').lower()=='chunked':
                 if self.headers.get('Content-Length'): raise ValueError('body_limit')
@@ -121,7 +154,12 @@ class Gateway(BaseHTTPRequestHandler):
                 if not 1<=length<=256*1024: raise ValueError('body_limit')
                 raw=self.rfile.read(length)
             body=json.loads(raw); kind=role(body); model=body['model']
-            if model not in PRICES or body.get('tools') or body.get('n') not in (None,1): raise ValueError('model_or_tools_denied')
+            if kind=='law-tools' and self.mode=='synthetic' and self.records:
+                (self.records.parent/'diagnostic-tool-request.json').write_text(json.dumps(body,ensure_ascii=False))
+            tools=body.get('tools',[])
+            if model not in PRICES or body.get('n') not in (None,1): raise ValueError('model_or_tools_denied')
+            if tools and (len(tools)>2 or any(t.get('type')!='function' or t.get('function',{}).get('name') not in
+                    ('searchLawArticles','readLawArticles') for t in tools)): raise ValueError('model_or_tools_denied')
             maximum=body.get('max_completion_tokens')
             if maximum is None:
                 # Schema-only per-request Spring AI options can omit the role default.
@@ -130,7 +168,7 @@ class Gateway(BaseHTTPRequestHandler):
                 applied_ceiling=True
                 print(f'Gateway applied missing completion ceiling role={kind}',flush=True)
             if type(maximum)!=int or not 1<=maximum<=16384: raise ValueError('completion_limit')
-            input_bound=sum(len(str(m.get('content','')).encode())+1024 for m in body['messages'])+1024
+            input_bound=len(json.dumps(body,ensure_ascii=False).encode())+1024*len(body['messages'])+1024
             if input_bound>100000: raise ValueError('input_limit')
             rates=PRICES[model]; reservation=(input_bound*rates[0]+maximum*rates[1])/1e6
             key=self.ledger.reserve(reservation if self.mode=='live' else 0.)
@@ -145,8 +183,11 @@ class Gateway(BaseHTTPRequestHandler):
                         self.wfile.write(('data: '+json.dumps(data,ensure_ascii=False)+'\n\n').encode()); self.wfile.flush()
                     chunk({'role':'assistant'}); chunk({'content':content[:12]}); chunk({'content':content[12:]}); chunk({},'stop'); chunk({},final_usage=usage)
                     self.wfile.write(b'data: [DONE]\n\n'); self.wfile.flush()
-                else: self.reply(200,dict(id='rag-synthetic',object='chat.completion',created=0,model=model,
-                    choices=[dict(index=0,message=dict(role='assistant',content=content),finish_reason='stop')],usage=usage))
+                else:
+                    message=content if isinstance(content,dict) else dict(role='assistant',content=content)
+                    tool_calls=[c['function']['name'] for c in message.get('tool_calls',[])]
+                    self.reply(200,dict(id='rag-synthetic',object='chat.completion',created=0,model=model,
+                        choices=[dict(index=0,message=message,finish_reason='tool_calls' if tool_calls else 'stop')],usage=usage))
                 self.ledger.settle(key,0.)
             else:
                 body['store']=False
@@ -163,12 +204,23 @@ class Gateway(BaseHTTPRequestHandler):
                                 event=json.loads(line[6:]); usage=event.get('usage') or usage
                             self.wfile.write(line); self.wfile.flush()
                     else:
-                        raw=upstream.read(4*1024*1024); usage=json.loads(raw).get('usage'); self.wfile.write(raw)
+                        raw=upstream.read(4*1024*1024); response=json.loads(raw); usage=response.get('usage')
+                        tool_calls=[c['function']['name'] for c in response['choices'][0]['message'].get('tool_calls',[])]
+                        self.wfile.write(raw)
                 if not usage: raise ValueError('missing_usage')
                 if type(usage.get('prompt_tokens'))!=int or type(usage.get('completion_tokens'))!=int or not 0<usage['prompt_tokens']<=input_bound or not 0<=usage['completion_tokens']<=maximum: raise ValueError('invalid_usage')
                 self.ledger.settle(key,(usage['prompt_tokens']*rates[0]+usage['completion_tokens']*rates[1])/1e6)
             status='ok'
         except Exception as failure:
+            if isinstance(failure,HTTPError):
+                provider_error={'status':failure.code}
+                try:
+                    error=json.loads(failure.read(65536)).get('error',{})
+                    for field in ('type','code','param'):
+                        value=error.get(field)
+                        if isinstance(value,str) and re.fullmatch(r'[A-Za-z0-9_.\[\]-]{1,100}',value): provider_error[field]=value
+                except (ValueError,OSError): pass
+                print('Provider rejection '+json.dumps(provider_error),flush=True)
             known={'budget_or_stopped','body_limit','unknown_role','model_or_tools_denied','completion_limit','input_limit','missing_citation_fixture','missing_provider_key','missing_usage','invalid_usage','usage_exceeds_reservation'}
             reason=str(failure) if str(failure) in known else type(failure).__name__
             print(f'Gateway rejected role={kind} reason={reason}',flush=True)
@@ -183,7 +235,7 @@ class Gateway(BaseHTTPRequestHandler):
                 with self.ledger.lock:
                     with self.records.open('a') as out: out.write(json.dumps(dict(attempt=key,role=kind,model=model,
                         reasoningEffort=body.get('reasoning_effort'),maxCompletionTokens=maximum,appliedCompletionCeiling=applied_ceiling,
-                        inputTokenUpperBound=input_bound,status=status,elapsedSeconds=time.monotonic()-started,usage=usage,mode=self.mode))+'\n')
+                        inputTokenUpperBound=input_bound,toolCalls=tool_calls,providerError=provider_error,status=status,elapsedSeconds=time.monotonic()-started,usage=usage,mode=self.mode))+'\n')
 
 
 def main():

@@ -5,6 +5,8 @@ from pathlib import Path
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
+import io
 from model_gateway import Ledger,Gateway,ThreadingHTTPServer,NoRedirect
 from urllib.error import HTTPError
 from urllib.request import build_opener
@@ -37,6 +39,23 @@ class BudgetTests(unittest.TestCase):
         restored=Ledger(self.path,limit=2,budget=1); restored.reserve(.5)
         self.assertAlmostEqual(restored.state()['estimatedUsd'],.2)
         with self.assertRaises(ValueError): restored.reserve(0)
+
+    def test_explicit_retry_keeps_unknown_costs_against_the_same_budget(self):
+        ledger=Ledger(self.path,limit=3,budget=1)
+        key=ledger.reserve(.7)
+        ledger.fail()
+        ledger.authorize_retry('User requested a diagnostic retry')
+        restored=Ledger(self.path,limit=3,budget=1)
+        self.assertFalse(restored.state()['stopped'])
+        self.assertEqual(restored.state()['reservedUsd'],.7)
+        self.assertEqual(restored.state()['activeReservedUsd'],0)
+        self.assertEqual(restored.data['unresolved'][key]['amount'],.7)
+        with self.assertRaises(ValueError): restored.reserve(.4)
+        second=restored.reserve(.2)
+        restored.settle(second,.1)
+        self.assertEqual(restored.state()['reservedUsd'],.7)
+        self.assertEqual(restored.state()['estimatedUsd'],.1)
+        self.assertEqual(restored.state()['attempts'],2)
 
     def test_usage_outside_reservation_stops_without_releasing_hold(self):
         ledger=Ledger(self.path); key=ledger.reserve(.2)
@@ -80,6 +99,44 @@ class HttpTests(unittest.TestCase):
         status,raw=self.post('/v1/chat/completions',body)
         self.assertEqual(status,200); self.assertIn(b'data: [DONE]',raw); self.assertIn(b'prompt_tokens',raw)
         self.assertEqual(self.handler.ledger.state()['estimatedUsd'],0)
+
+    def test_fixed_index_tool_round_trips_and_schema_cost_are_recorded(self):
+        body=dict(model='gpt-5.4',max_completion_tokens=4096,
+            tools=[dict(type='function',function=dict(name=name,parameters={'type':'object'}))
+                   for name in ('searchLawArticles','readLawArticles')],
+            messages=[dict(role='user',content=json.dumps({'question':'fixture','suggestedQueries':['loan']}))])
+        def call():
+            status,raw=self.post('/v1/chat/completions',body)
+            self.assertEqual(status,200)
+            return json.loads(raw)['choices'][0]['message']
+        first=call()
+        self.assertEqual(first['tool_calls'][0]['function']['name'],'searchLawArticles')
+        body['messages'] += [first,dict(role='tool',tool_call_id='synthetic-0',content=json.dumps({'candidates':[{'id':'a'}]}))]
+        second=call()
+        self.assertEqual(json.loads(second['tool_calls'][0]['function']['arguments']),{'evidenceIds':['a']})
+        body['messages'] += [second,dict(role='tool',tool_call_id='synthetic-1',content=json.dumps({'evidence':[{'id':'a'}]}))]
+        self.assertEqual(json.loads(call()['content'])['evidenceIds'],['a'])
+        self.assertEqual(self.handler.ledger.state()['attempts'],3)
+        self.assertEqual(self.handler.ledger.state()['reservedUsd'],0)
+
+    def test_provider_rejection_retains_reservation_and_only_safe_error_metadata(self):
+        self.handler.mode='live'
+        self.handler.records=Path(self.temp.name)/'requests.jsonl'
+        error=HTTPError('https://api.openai.com/v1/chat/completions',400,'Bad Request',{},
+            io.BytesIO(json.dumps({'error':{'type':'invalid_request_error','code':'unsupported_parameter',
+                'param':'tools[0].function','message':'private upstream message'}}).encode()))
+        with patch('model_gateway.Path.read_text',return_value='test-secret-key-not-a-real-key'), \
+                patch('model_gateway.build_opener') as opener:
+            opener.return_value.open.side_effect=error
+            self.assertEqual(self.post('/v1/chat/completions',self.question())[0],502)
+        self.server.shutdown()
+        self.server.server_close() # Join the request thread, including its finally/record write.
+        record=json.loads(self.handler.records.read_text())
+        self.assertEqual(record['providerError'],{'status':400,'type':'invalid_request_error',
+            'code':'unsupported_parameter','param':'tools[0].function'})
+        self.assertNotIn('private upstream message',self.handler.records.read_text())
+        self.assertTrue(self.handler.ledger.state()['stopped'])
+        self.assertGreater(self.handler.ledger.state()['reservedUsd'],0)
 
     def test_paid_transport_refuses_redirects(self):
         from http.server import BaseHTTPRequestHandler

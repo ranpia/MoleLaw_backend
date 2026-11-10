@@ -26,7 +26,7 @@
 
 cl100k_base의 로컬 추정치이며 공급자의 실제 청구량이 아니다. 본문량은 출처 메타데이터를 포함해 보수적으로 계산하고, 결합 입력은 실제 evidence view 전체를 다시 검사한다. 시스템 프롬프트·출력·숨은 추론 토큰은 별도다. 요청 전체 실제 usage 정산·예약·비용 차단은 P03의 미구현 작업이다.
 
-본문 읽기 선택 모델은 gpt-5.4-mini/low, 완료 토큰 한도 4096이다. APP_AI_READ_MODEL·APP_AI_READ_REASONING_EFFORT·APP_AI_READ_MAX_COMPLETION_TOKENS로 바꾼다. 자동 모델 승격이나 무한 읽기 반복은 없다.
+본문 읽기 선택의 설정 기본값은 gpt-5.4-mini/low, 완료 토큰 한도 4096이다. APP_AI_READ_MODEL·APP_AI_READ_REASONING_EFFORT·APP_AI_READ_MAX_COMPLETION_TOKENS로 바꾼다. 자동 모델 승격이나 무한 읽기 반복은 없다. 다만 2026-10-29 [전체 RAG 실호출](../testing/full-rag-first-live.md)에서는 schema-only 요청 옵션에서 역할 옵션이 보존되지 않아 실제 effort가 none으로 전송됐고 시험 게이트웨이가 누락된 완료 토큰 한도를 4096으로 보충했다. 설정값을 실제 공급자 요청에서 검증된 값으로 간주하지 않는다.
 
 ## 근거와 실패 경계
 

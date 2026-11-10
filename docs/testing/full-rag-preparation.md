@@ -2,7 +2,7 @@
 
 2026-10-29. **유료 AI 호출 없이 준비와 배선 검사를 완료했다.** 합성 AI와 실제 KURE·Qdrant·앱/DB·인증·NDJSON을 연결해 정상 완료 및 추가 수집 차단을 확인했다. 유료 전체 RAG의 성능·품질을 측정한 결과는 아니다.
 
-이후 [실제 모델 1상담](full-rag-first-live.md)을 5 공급자 호출로 완료했다. 현재는 다시 synthetic 모드이며 live ledger는 유지한다. 최초 30회 계획의 잔여 공급자 시도는 3회여서 아래 실제 모드 명령을 반복하기 전에 호출 예산을 정리해야 한다.
+이후 [실제 모델 1상담](full-rag-first-live.md)을 5 공급자 호출로 완료했다. 첫 실제 상담 종료 당시 다시 synthetic 모드로 전환했고 live ledger를 유지했다. 현재 실행 모드는 재조회하지 않았다. 최초 30회 계획의 잔여 공급자 시도는 3회여서 아래 실제 모드 명령을 반복하기 전에 호출 예산을 정리해야 한다.
 
 ## 준비된 환경
 
@@ -54,7 +54,7 @@ LID는 고정 MST의 공식 원문 페이지 hidden `lsId`를 확인했다: 민�
 
 자료: `build/rag-dataset/legal-perf-v1/app-rag-v2/manifest.json`, `seed.sql`, `build/rag-prep/probe/preflight.json`, `latest.json`, `build/rag-prep/model/synthetic-requests.jsonl`. 모두 Git 제외다. 유료 모드 ledger/기록은 별도 `live-*` 파일이며 자동 삭제/초기화하지 않는다.
 
-검증은 전체 JUnit 547건·Java 자료 계약 1건·게이트웨이 8건 모두 통과했다. 별도 게이트웨이 프로세스가 같은 ledger 잠금을 획득하지 못하는 것도 확인했다. 실제 공급자 전달·청구/RPM/TPM 한도는 아직 실호출로 검증하지 않았다.
+검증은 전체 JUnit 547건·Java 자료 계약 1건·게이트웨이 8건 모두 통과했다. 별도 게이트웨이 프로세스가 같은 ledger 잠금을 획득하지 못하는 것도 확인했다. 이 준비 단계에서는 실제 공급자 전달·청구/RPM/TPM 한도를 실호출로 검증하지 않았다. 이후 [첫 실제 상담](full-rag-first-live.md)에서 공급자 5호출을 관측했으나 청구 대조·RPM/TPM 상한 검증은 수행하지 않았다.
 
 ## 이후 실제 모델 1상담 실행 방법
 

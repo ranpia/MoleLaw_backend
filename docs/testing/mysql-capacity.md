@@ -1,5 +1,7 @@
 # MySQL 직접 부하 시험
 
+[결과 시각화](visual-results.md)에서 주요 측정값을 그래프로 볼 수 있다.
+
 API를 거치지 않고 sysbench로 MySQL의 읽기·읽기/쓰기·락 경합을 구분한다.
 애플리케이션의 쿼리나 API 처리량을 재현하는 시험은 아니다. Redis와 Refresh API는
 [별도 계획](redis-performance-plan.md)에 따른다.

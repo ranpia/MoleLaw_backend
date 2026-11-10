@@ -45,7 +45,7 @@ public class LawToolCallingPlanner {
     private final String prompt;
     private final JTokkitTokenCountEstimator tokens = new JTokkitTokenCountEstimator(EncodingType.CL100K_BASE);
 
-    public LawToolCallingPlanner(@Qualifier("evidenceCollectionChatClient") ChatClient client, ObjectMapper mapper,
+    public LawToolCallingPlanner(@Qualifier("lawToolChatClient") ChatClient client, ObjectMapper mapper,
             @Value("${app.law-retrieval.max-tool-steps:12}") int maxSteps,
             @Value("${app.ai.evidence.decision-max-input-tokens:32000}") int inputLimit,
             @Value("classpath:prompts/law-retrieval-tools.txt") Resource prompt) throws IOException {

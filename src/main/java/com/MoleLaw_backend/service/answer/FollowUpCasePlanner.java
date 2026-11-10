@@ -20,8 +20,11 @@ import org.springframework.stereotype.Service;
 public class FollowUpCasePlanner {
     private final ChatClient client;
     private final ObjectMapper mapper;
-    public FollowUpCasePlanner(@Qualifier("followUpCasePlanningChatClient") ChatClient client, ObjectMapper mapper) {
+    private final OpenAiChatOptions options;
+    public FollowUpCasePlanner(@Qualifier("followUpCasePlanningChatClient") ChatClient client, ObjectMapper mapper,
+            @Qualifier("followUpCasePlanningOptions") OpenAiChatOptions options) {
         this.client = client; this.mapper = mapper;
+        this.options = options.copy();
     }
 
     public FollowUpCasePlan plan(String question, List<EvidenceItem> sources, String conversationId) {
@@ -35,8 +38,10 @@ public class FollowUpCasePlanner {
                             "query", Map.of("type", "string"), "reason", Map.of("type", "string")));
             var format = ResponseFormat.builder().type(ResponseFormat.Type.JSON_SCHEMA)
                     .jsonSchema(ResponseFormat.JsonSchema.builder().name("follow_up_case_plan").strict(true).schema(schema).build()).build();
+            var requestOptions = options.copy();
+            requestOptions.setResponseFormat(format);
             String output = client.prompt().user(input.toString())
-                    .options(OpenAiChatOptions.builder().responseFormat(format).build()).call().content();
+                    .options(requestOptions).call().content();
             if (output == null || output.length() > 4096) throw new IllegalArgumentException();
             var plan = mapper.readerFor(FollowUpCasePlan.class).with(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
                     .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)

@@ -21,11 +21,11 @@ flowchart LR
 | 준비/용량 | 모델 로드 여부·사용 중/대기 요청·큐 포화/대기 만료·배치/큐 설정 | scrape UP은 모델 준비 완료와 다름 |
 | 자원 | Qdrant·KURE 컨테이너 CPU 코어·working set | 모델 파일 매핑·페이지 캐시와 메모리 지표의 의미를 구분 |
 | 전체 RAG | 기존 백엔드 HTTP/JVM/Hikari 지표 | 질문 분석·검색 조립·원문 조회·전체 파이프라인의 구간별 전용 계측은 아직 없음 |
-| AI 답변 | 이번 범위에서 보류 | 생성 모델 호출·첫 토큰/완료·비용은 측정하지 않음 |
+| AI 답변 | 초기 구성요소 관측에서는 보류. 이후 별도 시험 게이트웨이/대시보드 추가 | 역할별 호출/시간·예약/추정 비용과 마지막 probe 첫 답변/완료·단계 간격 제공. 상담 부하의 p95나 분산 trace는 아님 |
 
 현재 최소 백엔드는 `LT_RAG_ENABLED=false`를 유지한다. Qdrant/KURE 구성요소를 실제로 실행해
 계측을 확인했지만, 이를 백엔드 전체 RAG 흐름을 검증한 결과로 표시하지 않는다.
-다음 임베딩 성능 시험은 짧은/긴 입력·배치·동시성에 따라 진행하고 생성 답변 시험은 그 결과로 판단한다.
+이후 [임베딩 생성](rag-generation.md), [임베딩 한계](embedding-capacity.md), [리랭커](reranker-capacity.md), [혼합 부하](mixed-rag-capacity.md), [최종 생성](answer-generation-results.md)을 진행했다. 별도 앱의 [전체 RAG 준비](full-rag-preparation.md)와 [실제 1상담](full-rag-first-live.md)은 이 초기 구성요소 관측과 구분한다. `rag_ai_requests_total`, `rag_ai_seconds`, `rag_ai_estimated_usd`, `rag_ai_reserved_usd`, `rag_probe_first_text_seconds`, `rag_probe_completed_seconds`, `rag_probe_stage_seconds`는 시험 게이트웨이 범위의 후속 관측이다.
 
 ## 실행
 

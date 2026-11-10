@@ -20,7 +20,7 @@
 
 이벤트 종류·근거 교체·검증 전 임시 답변·완료/오류·heartbeat·인증/CSRF·저장 계약은 두 형식이 같다. 프론트 예제는 `format: "ndjson"`을 지정하면 기본 경로와 Accept를 함께 선택하고 줄 단위 파서로 수신한다. 기존 SSE 클라이언트는 기본 `format: "sse"`를 사용한다.
 
-모든 경로에 Access 쿠키 인증과 `X-XSRF-TOKEN` 헤더가 필요하다. `/api/auth/csrf`에서 JSON 토큰을 받아 사용한다. 형식에 맞는 `Accept`, `Content-Type: application/json`, `credentials: include`로 **POST fetch**를 사용한다. 브라우저 `EventSource`는 POST·CSRF 헤더를 지원하지 않으므로 사용하지 않는다. 기존 후속 JSON 질문 API는 유지한다.
+모든 경로에 Access 쿠키 또는 Bearer 인증과 `X-XSRF-TOKEN` 헤더가 필요하다. `/api/auth/csrf`에서 JSON 토큰을 받아 사용한다. 형식에 맞는 `Accept`, `Content-Type: application/json`, 쿠키 사용 시 `credentials: include`로 **POST fetch**를 사용한다. 브라우저 `EventSource`는 POST·CSRF 헤더를 지원하지 않으므로 사용하지 않는다. 기존 후속 JSON 질문 API는 유지한다.
 
 각 SSE 프레임은 `event: 종류`와 `data: JSON`이며 빈 줄로 구분한다. `data.type`은 event 이름과 같다.
 
@@ -87,3 +87,7 @@ JWT 필터는 검증한 인증 정보를 `RequestAttributeSecurityContextReposit
 후속 답변의 최종 인용 검증에서 표기 누락·알 수 없는 ID·잘못된 표식·모델 URL이 발견되면 `progress`의 `stage=ANSWER_REPAIR`로 알리고 이미 읽은 동일 근거와 초안으로 1회 교정한다. 검색·수집·본문 읽기 도구나 대화 메모리는 교정 호출에 제공하지 않는다. 교정 답변은 기존 검증 규칙을 다시 통과해야 저장한다. `completed.response.answer`는 앞서 받은 delta와 달라질 수 있으므로 프론트는 전체 교체해야 한다. 재검증 실패 시 기존처럼 `error`로 끝내고 메시지를 저장하지 않는다. 손상된 근거 목록은 교정으로 우회하지 않는다.
 
 인용 검증 실패 로그는 traceId와 `MISSING_CITATION`, `UNKNOWN_ID`, `MALFORMED_MARKER`, `MODEL_URL` 등 사유 코드만 기록한다. 질문·생성 답변·본문·원시 모델 출력은 기록하지 않는다.
+
+2026-10-30 코드 기준 후속 시작은 `CONVERSATION_LOADING` → `FOLLOW_UP_PREPARATION` → 기존 근거의 evidence/info → `FOLLOW_UP_ROUTING` 순서다. 준비가 끝난 뒤 `ANSWER_GENERATION`과 답변 조각, `ANSWER_VALIDATION`을 전달하고 필요하면 `ANSWER_REPAIR`를 보낸다. 도구·교정 진행 이벤트와 완료 결과는 하나의 직렬화된 큐로 전달해 해당 작업의 진행 알림이 완료 뒤로 밀리지 않게 한다(`2354626`). 저장형의 끝은 `SAVING` → `evidence.state=SAVED` → `completed`이며 heartbeat는 사이에 들어올 수 있다.
+
+회귀 검증은 `InitialAnswerStreamIntegrationTest`와 실제 HTTP 모의 모델을 사용하는 `answerStreamSimulationTest`로 구분한다. 선택 실행과 실제 모델 측정 결과는 [답변 생성 결과](../testing/answer-generation-results.md), 고정 색인에서 실제 검색·판단까지 포함한 무저장 1상담은 [전체 RAG 첫 상담](../testing/full-rag-first-live.md)에 기록했다. 이 문서 최신화에서는 스트림이나 유료 모델을 다시 실행하지 않았다.

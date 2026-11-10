@@ -4,6 +4,8 @@
 법령 목록과 조문 검색 두 단계의 리랭커를 함께 검토한다.
 브랜치는 `environment/alternate-development`이며 장치명이나 특정 GPU 제품에 결합하지 않는다.
 
+2026-10-30 대조: 이 문서의 선택·로컬 60점/3개 관측은 10/24 기록이다. 조문 cross-encoder와 자원 대기열은 현재 구현됐으며 [조문 리랭크](../law/article-reranking.md), [단독 부하](../testing/reranker-capacity.md), [혼합 부하](../testing/mixed-rag-capacity.md)를 기준으로 실행한다. 아래 후보 30/50/100 비교는 평가 제안이며 현재 기본 후보 50개→상위 15개와 구분한다.
+
 ## 단일 벡터 기준선
 
 KURE-v1 고정 revision, 1024차원 float32, Cosine, 300 코드포인트 청크와 64 중첩을 유지한다.

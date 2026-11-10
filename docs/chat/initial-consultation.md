@@ -1,6 +1,6 @@
 # 최초 상담 실행
 
-기준일: 2026-10-23. 기존 POST /api/chat-rooms에 질문을 보내면 검색부터 답변·방 저장까지 동기로 진행한다. 단계를 보기 위해 ETL 테스트 API를 미리 호출할 필요는 없다.
+코드 대조 기준: 2026-10-30 (`b0b37d8`). 기존 POST /api/chat-rooms에 질문을 보내면 검색부터 답변·방 저장까지 동기로 진행한다. 실시간 단계는 [SSE·NDJSON](initial-answer-stream.md) 경로로 받는다. ETL 테스트 API를 미리 호출할 필요는 없다.
 
 ## 준비와 요청
 
@@ -25,10 +25,10 @@ X-XSRF-TOKEN: <csrf-token>
 3. 충분성 Client가 답변·재검색·법령 수집·부족을 제안한다.
 4. 수집이면 검색 조건의 모든 페이지를 리랭크하고 기준 통과 후보 중 상위 2개를 보관한다.
 5. 승인한 모든 수집 조건을 대기열에 유지한다. 조건별 법령 한 건의 상세·MySQL 원문·ETL·Qdrant 저장 검증과 재검색을 마치고 다음 승인 조건을 처리한 뒤 충분성 판단으로 돌아간다. 질문별 후보 묶음과 법령별 분산을 고려해 최대 15개 조문을 유지한다.
-6. ANSWER_READY가 지정한 실제 근거로 답변하고 UUID 인용·출처를 검증한다.
+6. ANSWER_READY가 지정한 실제 근거로 답변하고 UUID 인용·출처를 검증한다. ANSWER_PARTIAL은 확인한 근거로 일반 안내를 생성하고 미확인 쟁점을 최종 답변에 덧붙인다.
 7. 성공한 방·근거 스냅샷·암호화 USER/BOT을 원자적으로 저장한다. INFO는 스냅샷에서 재구성한다.
 
-후속 질문은 POST /api/chat-rooms/{roomId}/messages로 보내며 Advisor와 최초 고정 근거만 사용한다. 새로운 검색·법령 수집·색인은 실행하지 않는다.
+후속 질문은 POST /api/chat-rooms/{roomId}/messages로 보낸다. Advisor와 남아 있는 방 근거를 사용하며, 이번 요청에 명시적으로 동의한 경우 새 판례를 검색·읽을 수 있다. 새 법령 수집·색인은 실행하지 않는다. [후속 상담 계약](follow-up-consultation.md)을 따른다.
 
 ## 한도와 실패
 
@@ -44,7 +44,9 @@ X-XSRF-TOKEN: <csrf-token>
 | 임베딩 과부하 | 503 RETRIEVAL_BUSY |
 | 모델·계약 오류 | 기존 GPT 오류 경로. 정상 빈 검색 결과와 구분 |
 
-전체 페이지 검토로 첫 응답이 길어질 수 있다. timeout은 경계 검사이며 원격 추론의 즉시 취소·연결 종료 후 중단·서버 재시작 복구를 보장하지 않는다. 실제 usage 비용 상한과 SSE는 미구현이다.
+전체 페이지 검토로 첫 응답이 길어질 수 있다. timeout은 경계 검사이며 원격 추론의 즉시 취소·서버 재시작 복구를 보장하지 않는다. 스트리밍 연결 종료는 모델 구독을 취소하고 수집은 다음 진행 알림에서 중단하지만, 진행 중인 동기 HTTP는 타임아웃까지 걸릴 수 있다. 운영 요청 전체의 실제 usage 정산·비용 차단은 미구현이다. 시험용 공통 게이트웨이 예산은 [고정 색인 전체 RAG 준비](../testing/full-rag-preparation.md)의 별도 경계다.
+
+시험 환경에서 `app.law-retrieval.fixed-index-only=true`를 지정하면 기존 QDRANT 색인 검색·재검색·판단·답변만 허용한다. `COLLECT_LAW` 제안은 `EVIDENCE_INSUFFICIENT`로 종료하며 다른 backend 조합은 `RETRIEVAL_UNAVAILABLE`이다. 기본값은 false이며 추가 수집을 일반 환경에서 일괄 차단하는 설정은 아니다.
 
 ## 진단과 검증
 
@@ -52,7 +54,7 @@ executionId로 QUESTION_PLANNING·INITIAL_SEARCH·DECIDING·LAW_SEARCH·CANDIDAT
 
 ETL 저장 누락은 Law index verification과 POINT_COUNT expected/stored로 확인한다. 법령 API 날짜·파서·임베딩 실패와 충분성 부족을 구분한다. 로그에 토큰·상담 원문·원시 모델 출력을 추가하지 않는다.
 
-모의 통합은 initialConsultationSimulationTest, 실제 임베딩은 embeddingLiveTest로 구분한다. scripts/Test-InitialConsultation.ps1은 실제 API·모델을 사용하는 별도 검증이다. 최신 실행 범위는 [검증 현황](../validation/validation-status.md)을 따른다.
+모의 통합은 initialConsultationSimulationTest, 실제 임베딩은 embeddingLiveTest로 구분한다. scripts/Test-InitialConsultation.ps1은 실제 API·모델을 사용하는 별도 검증이다. 2026-10-29에는 고정 색인의 실제 모델 무저장 NDJSON 1상담이 인용 검증 후 완료했다. [실행 기록](../testing/full-rag-first-live.md)은 저장형·추가 수집·후속 상담·법률 정확도 검증을 포함하지 않는다. 최신 실행 범위는 [검증 현황](../validation/validation-status.md)을 따른다.
 
 AI_SEARCH는 별도 경로이며 위 전체 페이지 리랭크·ETL을 사용하지 않는다. 기본 전환과 실 API 재시도는 [AI Search 비교](../law/ai-search-comparison.md)의 보류 상태를 따른다.
 

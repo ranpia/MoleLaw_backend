@@ -18,8 +18,11 @@ import java.util.Map;
 public class CaseQueryPlanner {
     private final ChatClient client;
     private final ObjectMapper mapper;
-    public CaseQueryPlanner(@Qualifier("caseQueryPlanningChatClient") ChatClient client, ObjectMapper mapper) {
+    private final OpenAiChatOptions options;
+    public CaseQueryPlanner(@Qualifier("caseQueryPlanningChatClient") ChatClient client, ObjectMapper mapper,
+            @Qualifier("caseQueryPlanningOptions") OpenAiChatOptions options) {
         this.client = client; this.mapper = mapper;
+        this.options = options.copy();
     }
     public CaseQueryPlan plan(String issue, EvidenceItem law) {
         return plan(issue, law, null, null);
@@ -54,8 +57,10 @@ public class CaseQueryPlanner {
                 var format = ResponseFormat.builder().type(ResponseFormat.Type.JSON_SCHEMA)
                         .jsonSchema(ResponseFormat.JsonSchema.builder().name("case_query_plan").strict(true).schema(schema).build()).build();
                 validationCode = "MODEL_CALL";
+                var requestOptions = options.copy();
+                requestOptions.setResponseFormat(format);
                 String output = client.prompt().user(mapper.writeValueAsString(input))
-                        .options(OpenAiChatOptions.builder().responseFormat(format).build()).call().content();
+                        .options(requestOptions).call().content();
                 validationCode = "PLAN_CONTRACT";
                 if (output == null || output.length() > 32768) throw new IllegalArgumentException();
                 CaseQueryPlan result = mapper.readerFor(CaseQueryPlan.class).with(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)

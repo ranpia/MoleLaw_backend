@@ -10,7 +10,7 @@
 - `LawQdrantDocumentWriter`: 기존 로컬 임베딩 HTTP 서버를 배치 호출하고 Qdrant REST로 기록. `VectorStore.add()`로 다시 임베딩하지 않는다.
 - `LawVectorizationToolService`: 원문/설정별 완료 색인 재사용, WRITING → COMPLETE/FAILED 상태 관리. 기존 최초 질문 수집기도 같은 파이프라인을 사용한다.
 
-임베딩 응답 검증·Qdrant 쓰기·저장 결과 재조회 검증까지 성공한 후에만 완료 세대를 검색에 공개한다. 실패하면 이전 완료 세대를 유지하며 부분 적재는 검색에서 제외한다. 재시도는 새 세대로 전체 원문을 재처리한다. 동일 완료 원문·설정은 저장 포인트 검증도 통과한 경우에만 재임베딩 없이 재사용한다. 외부 호출 중 DB 트랜잭션은 유지하지 않는다.
+임베딩 응답 검증·Qdrant 쓰기·저장 결과 재조회 검증까지 성공한 후에만 완료 세대를 검색에 공개한다. 실패하면 이전 완료 세대를 유지하며 부분 적재는 검색에서 제외한다. 재시도는 새 세대로 전체 원문을 재처리하며 검증 가능한 이전 완료 세대가 있으면 [증분 색인](incremental-law-indexing.md)으로 같은 입력의 벡터를 재사용한다. 동일 완료 원문·설정은 저장 포인트 검증도 통과한 경우에만 재임베딩 없이 재사용한다. 외부 호출 중 DB 트랜잭션은 유지하지 않는다.
 
 ## 실행과 요청
 
@@ -52,7 +52,7 @@ Postman 모의 계약은 저장소의 기존 Ollama 호환 임베딩 계약을 �
 
 기존 COMPLETE 색인도 재사용 전에 동일 검증을 한다. 포인트 누락·불일치가 확인되면 해당 기록을 FAILED로 전환하고 저장된 원문을 새 generation으로 한 번 재처리한다. 검증 통신 장애는 누락으로 취급하지 않으며 재임베딩을 시작하지 않는다. 새 시도도 실패하면 종료하며 무한 재시도하지 않는다. 삭제나 변조된 점을 자동 복구할 수 있지만 이전 세대의 물리 정리는 하지 않는다.
 
-최초 상담은 법령 한 건을 검증·공개한 직후 재검색하고 LLM 충분성 판단으로 돌아간다. 충분하면 답변하고 부족할 때 다음 수집 행동을 선택한다. 서버의 호출·시간·행동 예산은 그대로 적용되며 검증 HTTP는 별도 색인 호출 예산에 포함된다. 로그의 Law index verification expectedChunks/verified와 POINT_COUNT expected/stored로 누락을 확인한다.
+최초 상담은 법령 한 건을 검증·공개한 직후 재검색한다. 이미 승인된 다른 수집 조건도 대기열에서 처리한 뒤 LLM 충분성 판단으로 돌아가며 상세 6건 한도를 넘는 조건은 보류로 기록한다. 충분하면 답변하고 부족할 때 다음 수집 행동을 선택한다. 서버의 호출·시간·행동 예산은 그대로 적용되며 검증 HTTP는 별도 색인 호출 예산에 포함된다. 로그의 Law index verification expectedChunks/verified와 POINT_COUNT expected/stored로 누락을 확인한다.
 
 프로세스 재시작·클라이언트 연결 종료 후 작업을 복원하는 영속 작업 큐나 SSE는 이번 변경 범위가 아니다. 실패한 저장 원문은 기존 reindex API로 다시 실행할 수 있다. 저장 검증은 Qdrant [정확한 포인트 수 조회](https://api.qdrant.tech/api-reference/points/count-points)와 [포인트 재조회](https://api.qdrant.tech/api-reference/points/get-points)를 사용한다.
 

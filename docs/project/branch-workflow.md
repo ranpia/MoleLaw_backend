@@ -1,8 +1,10 @@
 # 브랜치와 로컬 파일 관리
 
-기준일: 2026-10-23. 서비스 개발은 `dev`, 검증된 배포 반영은 `main`, 임베딩 평가 자료는 `experiment/legal-embedding-evaluation`에서 관리한다. `main` 통합과 배포는 별도 요청 범위다.
+기준일: 2026-10-30. 서비스 개발은 `dev`, 검증된 배포 반영은 `main`, 임베딩 평가 자료는 `experiment/legal-embedding-evaluation`에서 관리한다. `main` 통합과 배포는 별도 요청 범위다.
 
-## 이번 동기화
+현재 로컬 dev와 main은 PR #12 병합 커밋 b0b37d8을 포함한다. 이는 Git 이력 확인이며 EC2 배포 확인은 아니다. 아래 파일 수·백업 설명은 2026-10-23 당시 기록이다.
+
+## 2026-10-23 동기화 기록
 
 - 법령 PR #8은 `dev`에 병합됐다.
 - 후속 상담 PR #9는 `feat/law-retrieval-pipeline`에 병합됐으므로 해당 브랜치의 병합 결과를 `dev`에도 통합했다.

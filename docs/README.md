@@ -1,6 +1,10 @@
 # 문서 안내
 
-기준일: **2026-10-27**, 현재 dev 작업 코드 기준. 기능 구현과 실제 법률 품질·운영 검증은 구분한다.
+기준일: **2026-10-30**, `b0b37d8`까지의 커밋과 현재 코드 기준. 기능 구현과 실제 법률 품질·운영 검증은 구분한다. [문서 대조 기록](validation/documentation-review.md)에서 검토 범위와 남은 제한을 확인한다.
+
+MoleLaw는 인증·사용자 관리, 암호화 상담 기록과 스트리밍, 법령·판례 수집 및 RAG 검색을 제공한다. MySQL은 업무·원문·근거, Qdrant는 벡터, Redis는 Refresh 상태를 맡는다. 현재 실제 모델 시험은 최종 생성 단독과 고정 색인 전체 RAG 1상담까지 확인했으며, 운영 수용량·사건별 법률 품질·전체 RAG 동시 부하는 남아 있다.
+
+현재까지의 성능·실제 모델 결과는 [1차 테스트](testing/first-round.md)로 보존한다. 후속 변경과 검토 사항은 [개선·리팩토링](plans/first-round-refactoring.md)에서 확인한다.
 
 ## 먼저 읽기
 
@@ -26,10 +30,4 @@
 | [사용자 결정](decisions/README.md) | 판단 대기·확정 방향 | [확정 결정](decisions/confirmed.md) |
 | [과거 기록](archive/README.md) | 폐기·변경된 기준과 SQL | 현재 동작의 근거로 사용하지 않음 |
 
-## 문서 배치 원칙
-
-- 현재 기능은 해당 기능 폴더에 두고, 추가 작업은 plans/, 정책 선택은 decisions/, 과거 기록은 archive/에 둔다.
-- 각 폴더의 README에서 상세 문서를 선택한다. 새 문서를 추가하면 해당 목차도 갱신한다.
-- 문서를 이동할 때 상대 링크·코드·스크립트의 경로를 함께 바꾼다.
-- 코드 예시는 [examples/initial-answer-stream.js](examples/initial-answer-stream.js), 실행 환경은 [Docker](../docker/README.md)를 따른다.
-- 문서 정리는 외부 API·법률 품질 재검증이나 원격 배포 완료를 의미하지 않는다.
+테스트의 주요 수치는 [시각화 모음](testing/visual-results.md), 문서 작성·검증·시각화 갱신 방법은 [agent.md](agent.md)를 참고한다.

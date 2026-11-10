@@ -16,8 +16,15 @@
 | AI Search 모의 | aiLawSearchSimulationTest | 정상·빈·잘못된 응답·404, Qdrant 경로 독립성 |
 | 실제 임베딩 | embeddingLiveTest | 실행 중 KURE와 격리 Qdrant. 법률 품질 평가와 별개 |
 | 실제 판단 모델 | evidenceDecisionLiveTest | 합성 입력의 판단 계약·usage. 모델 접근·옵션 먼저 확인 |
+| 추천 질문 모의 | initialQuestionSuggestionSimulationTest | 합성 HTTP 모델의 추천 질문·옵션·실패 계약 |
+| 후속 상담 모의 | followUpConsultationSimulationTest | 요청별 동의·판례 도구·저장·근거 API |
+| 스트림 모의 | answerStreamSimulationTest | 실제 HTTP 모델 대역·조기 delta·인용·저장·취소·슬롯 회복 |
+| 실제 최종 생성 | answerGenerationLiveTest | 유료 opt-in, 고정 근거 writer 단독·시도/비용 제한. 전체 RAG와 별개 |
+| 고정 RAG 자료 계약 | ragPreparationContractTest | 생성 자료의 실제 fingerprint·조문 청커 일치, 네트워크 미사용 |
 
 선택 태스크는 Docker·대역 URL·실 API 키 등이 필요할 수 있으며 일반 test 통과로 실행 완료를 대신하지 않는다. 실제 AI Search 재시도는 보류 상태다. 외부 유료 호출·실 데이터 삭제·운영 배포를 검증 편의로 묶지 않는다.
+
+CI는 dev push와 dev/main PR에서 `test bootJar` → `mysqlIntegrationTest` → `redisIntegrationTest`를 실행한다. 실패 시 `build/test-results/`와 `build/reports/tests/`를 7일 보존한다. 설정 근거는 [test.yml](../../.github/workflows/test.yml)이며, 워크플로 정의만으로 특정 실행의 성공을 의미하지 않는다.
 
 ## 품질 평가
 

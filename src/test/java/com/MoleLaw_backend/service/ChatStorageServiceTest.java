@@ -17,7 +17,6 @@ import com.MoleLaw_backend.service.analysis.KeywordExtractionService;
 import com.MoleLaw_backend.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -60,9 +59,11 @@ class ChatStorageServiceTest {
     @Test
     void pagesRoomListAndUsesStableFirstMessagePreviewQuery() {
         PageRequest page = PageRequest.of(1, 10);
-        when(rooms.findByUserOrderByCreatedAtDescIdDesc(user, page)).thenReturn(new PageImpl<>(List.of(room)));
-        when(messages.findFirstByChatRoomIdOrderByTimestampAscIdAsc(2L))
-                .thenReturn(Optional.of(message(1L, Message.Sender.USER, "첫 질문", LocalDateTime.now())));
+        when(rooms.findByUserOrderByCreatedAtDescIdDesc(user, page)).thenReturn(List.of(room));
+        var preview = mock(MessageRepository.FirstMessagePreview.class);
+        when(preview.getRoomId()).thenReturn(2L);
+        when(preview.getContent()).thenReturn(TestEncryption.create().encrypt("첫 질문"));
+        when(messages.findFirstMessagePreviews(List.of(2L))).thenReturn(List.of(preview));
         assertThat(service.getMyChatRooms(user, 1, 10)).hasSize(1)
                 .first().extracting(value -> value.getPreview()).isEqualTo("첫 질문");
         verify(rooms).findByUserOrderByCreatedAtDescIdDesc(user, page);
