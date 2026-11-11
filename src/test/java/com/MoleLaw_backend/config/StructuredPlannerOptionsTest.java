@@ -1,17 +1,17 @@
 package com.MoleLaw_backend.config;
 
-import com.MoleLaw_backend.config.AnswerChatClientConfig;
-import com.MoleLaw_backend.service.answer.FollowUpCasePlanner;
-import com.MoleLaw_backend.service.ai.AiPrompts;
-import com.MoleLaw_backend.config.AiConfig;
+import com.MoleLaw_backend.config.agents.AnswerChatClientConfig;
+import com.MoleLaw_backend.service.agents.answer.FollowUpCasePlanner;
+import com.MoleLaw_backend.service.agents.ai.AiPrompts;
+import com.MoleLaw_backend.config.agents.AiConfig;
 import com.MoleLaw_backend.config.CaseSearchProperties;
-import com.MoleLaw_backend.config.EvidenceChatClientConfig;
+import com.MoleLaw_backend.config.agents.EvidenceChatClientConfig;
 import com.MoleLaw_backend.dto.evidence.EvidenceItem;
 import com.MoleLaw_backend.dto.tool.LegalToolContracts.Candidate;
-import com.MoleLaw_backend.service.retrieval.CaseCandidateReranker;
-import com.MoleLaw_backend.service.retrieval.CaseQueryPlanner;
-import com.MoleLaw_backend.service.retrieval.EvidenceReadPlanner;
-import com.MoleLaw_backend.service.tool.EvidenceReadToolService;
+import com.MoleLaw_backend.service.agents.retrieval.CaseCandidateReranker;
+import com.MoleLaw_backend.service.agents.retrieval.CaseQueryPlanner;
+import com.MoleLaw_backend.service.agents.retrieval.EvidenceReadPlanner;
+import com.MoleLaw_backend.service.agents.tool.EvidenceReadToolService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

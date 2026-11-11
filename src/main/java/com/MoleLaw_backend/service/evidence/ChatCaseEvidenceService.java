@@ -6,7 +6,7 @@ import com.MoleLaw_backend.dao.ChatCaseEvidenceRepository;
 import com.MoleLaw_backend.dao.ChatRoomRepository;
 import com.MoleLaw_backend.dto.evidence.EvidenceItem;
 import com.MoleLaw_backend.service.source.LegalSourceService;
-import com.MoleLaw_backend.service.tool.CaseEvidenceReader;
+import com.MoleLaw_backend.service.agents.tool.CaseEvidenceReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

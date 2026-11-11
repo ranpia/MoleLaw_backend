@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
-import com.MoleLaw_backend.service.tool.LegalToolContext;
+import com.MoleLaw_backend.service.agents.tool.LegalToolContext;
 import com.MoleLaw_backend.util.exception.LegalToolException;
 import lombok.extern.slf4j.Slf4j;
 

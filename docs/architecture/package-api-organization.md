@@ -22,11 +22,11 @@
 | --- | --- |
 | auth/user/chat/law.controller | controller |
 | 각 도메인 service | service 및 역할별 하위 패키지 |
-| 각 도메인 config·common.ai.config | config |
+| 각 도메인 config·common.ai.config | config (Spring AI ChatClient·추론 옵션은 config.agents) |
 | auth.security의 필터·OAuth 성공 핸들러 | config.security |
 | auth.security의 인증/토큰 서비스 | service.security |
 | auth.oauth의 사용자 조회 | service.oauth |
-| common.ai | service.ai |
+| common.ai | service.agents.ai |
 | law.client | service.client.openlaw/vector |
 | 각 도메인 dto | dto.request/response 및 내부 계약별 하위 패키지 |
 | 각 도메인 repository·Refresh 저장소 | dao |

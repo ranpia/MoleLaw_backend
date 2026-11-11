@@ -20,7 +20,7 @@ description: MoleLaw의 기능 추가·패키지 이동·구조 리뷰 시 contr
 ## 배치
 
 - 위 계층을 최상위로 사용하고 auth/user/chat/law/common 또는 repository/client/exception 최상위 폴더를 다시 만들지 않는다. 애플리케이션 진입 클래스는 루트에 유지한다.
-- 필요한 역할별 하위 패키지만 사용한다. 상담 답변은 service.answer, 근거는 service.evidence, 메모리는 service.memory, 법령 수집/검색/도구는 service.retrieval/search/tool/source/etl/analysis, 외부 HTTP는 service.client.openlaw/vector에 둔다. 공통 AI 호출은 service.ai다.
+- 필요한 역할별 하위 패키지만 사용한다. 상담 답변은 service.agents.answer, 근거는 service.evidence, 메모리는 service.agents.memory, 법령 수집/검색/도구는 service.agents.retrieval/tool/analysis, service.search/source/etl, 외부 HTTP는 service.client.openlaw/vector에 둔다. 공통 AI 호출은 service.agents.ai다. Spring AI ChatClient·추론 옵션 설정은 config.agents에 둔다.
 - 인증 기능은 service.security/oauth, 필터와 OAuth 성공 핸들러는 config.security, 토큰 저장소는 dao, CustomUserDetails는 dto.security에 둔다.
 - HTTP 계약은 dto.request/response, 공유 내부 계약은 dto.answer/evidence/retrieval/tool/vector, 공통 API 래퍼와 오류 응답은 dto.response에 둔다. 공유 타입을 컨트롤러·서비스 중첩 타입으로 숨기지 않는다. 작은 도구 계약을 한 파일에 묶는 것은 허용한다.
 - util에는 저장소·HTTP 클라이언트 의존성을 넣지 않는다. 실행·트랜잭션 조정은 service가 맡고, 검증 애너테이션은 util.validation, 예외/오류 코드는 util.exception에 둔다. 오류 응답 DTO는 util.exception에 두지 않는다.

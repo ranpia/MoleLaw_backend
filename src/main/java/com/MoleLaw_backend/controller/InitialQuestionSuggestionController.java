@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.MoleLaw_backend.dto.request.InitialQuestionSuggestionsRequest;
 import com.MoleLaw_backend.dto.response.InitialQuestionSuggestionsResponse;
-import com.MoleLaw_backend.service.answer.InitialQuestionSuggestionService;
+import com.MoleLaw_backend.service.agents.answer.InitialQuestionSuggestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;

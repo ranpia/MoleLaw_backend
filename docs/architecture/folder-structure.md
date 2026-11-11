@@ -1,22 +1,26 @@
 # 폴더 구조
 
-기준: 2026-11-09. 사용자 결정에 따라 Java 소스와 테스트를 도메인 우선 구조에서 7개 계층으로 통합했다. Java 클래스·package·실제 경로는 일치해야 한다.
+기준: 2026-11-11. Java 소스와 테스트의 7개 계층을 유지하고, Spring AI 실행 로직은 service.agents, ChatClient 설정은 config.agents로 모았다. Java 클래스·package·실제 경로는 일치해야 한다.
 
 ```text
 src/main/java/com/MoleLaw_backend/
   MoleLawBackendApplication.java
   controller/             HTTP API·오류 응답·전역 핸들러
   service/                사용자·상담·법령 기능
-    ai/                   공통 AI 호출·프롬프트 제공
-    answer/               상담 답변·스트림
+    agents/               Spring AI 기반 상담·검색 실행
+      ai/                 공통 AI 호출·프롬프트 제공
+      answer/             상담 답변·스트림
+      retrieval/          근거 수집·판단
+      tool/               법령·판례 실행 도구
+      memory/             영속 대화 메모리
+      analysis/           AI 키워드 추출
     client/openlaw/       OpenLaw HTTP
     client/vector/        Qdrant·임베딩·리랭커 HTTP
     security/             인증·토큰 기능
     oauth/                OAuth 사용자 조회
-    retrieval/            근거 수집·판단
-    tool/                 법령·판례 실행 도구
-    ...                   analysis/etl/evidence/memory/search/source
+    ...                   etl/evidence/search/source
   config/                 Spring·DB·Swagger·벡터 설정
+    agents/               ChatClient·모델 추론 옵션 설정
     security/             인증 필터·OAuth 성공 핸들러
   dto/                    request/response/answer/evidence/retrieval/tool/vector/security
   dao/                    JPA Repository·Refresh 저장소

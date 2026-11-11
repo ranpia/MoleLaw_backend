@@ -6,6 +6,8 @@ MoleLaw는 인증·사용자 관리, 암호화 상담 기록과 스트리밍, �
 
 현재까지의 성능·실제 모델 결과는 [1차 테스트](testing/first-round.md)로 보존한다. 후속 변경과 검토 사항은 [개선·리팩토링](plans/first-round-refactoring.md)에서 확인한다.
 
+2026-11-11 Spring AI agents 패키지 개편과 JSON 응답 처리 현황은 [역할별 ChatClient](architecture/role-chat-clients.md), 회귀 586건 결과는 [검증 현황](validation/validation-status.md)에 반영했다.
+
 ## 먼저 읽기
 
 1. [구현 기능과 질문 처리 다이어그램](project/features-and-question-flow.md)

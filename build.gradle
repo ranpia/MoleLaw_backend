@@ -123,7 +123,7 @@ tasks.register('lawEtlSimulationTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform()
-    filter { includeTestsMatching 'com.MoleLaw_backend.service.tool.LawVectorPostmanSimulationTest' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.service.agents.tool.LawVectorPostmanSimulationTest' }
     systemProperty 'api.version', providers.gradleProperty('dockerApiVersion').getOrElse('1.44')
     outputs.upToDateWhen { false }
 }
@@ -178,7 +178,7 @@ tasks.register('initialQuestionSuggestionSimulationTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform { includeTags 'postman-simulation' }
-    filter { includeTestsMatching 'com.MoleLaw_backend.service.answer.InitialQuestionSuggestionSimulationTest' }
+    filter { includeTestsMatching 'com.MoleLaw_backend.service.agents.answer.InitialQuestionSuggestionSimulationTest' }
     outputs.upToDateWhen { false }
 }
 

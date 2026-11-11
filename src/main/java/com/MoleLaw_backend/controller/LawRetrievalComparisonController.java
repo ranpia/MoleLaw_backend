@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.MoleLaw_backend.dto.request.AiLawSearchProbeRequest;
 import com.MoleLaw_backend.dto.request.LawQuestionRequest;
 import com.MoleLaw_backend.dto.response.LawRetrievalComparisonResponse;
-import com.MoleLaw_backend.service.retrieval.LawRetrievalComparisonService;
+import com.MoleLaw_backend.service.agents.retrieval.LawRetrievalComparisonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;

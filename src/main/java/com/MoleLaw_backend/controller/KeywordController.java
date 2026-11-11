@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.MoleLaw_backend.dto.request.LawQuestionRequest;
 import com.MoleLaw_backend.dto.response.KeywordExtractionResponse;
-import com.MoleLaw_backend.service.analysis.KeywordExtractionService;
+import com.MoleLaw_backend.service.agents.analysis.KeywordExtractionService;
 import com.MoleLaw_backend.service.ChatContentLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

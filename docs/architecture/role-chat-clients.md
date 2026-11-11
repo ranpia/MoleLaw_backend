@@ -1,6 +1,6 @@
 # 역할별 ChatClient와 모델
 
-코드 대조 기준: `b0b37d8` (2026-10-30 검토). 실제 호출 기록은 [답변 생성 결과](../testing/answer-generation-results.md)와 [전체 RAG 첫 실호출](../testing/full-rag-first-live.md)을 함께 읽는다. 일부 실호출 성공을 모델 전반의 품질 검증으로 확대하지 않는다.
+코드 대조 기준: `d45fa2f` 이후 agents 패키지 리팩토링 작업본 (2026-11-11 검토). 실제 호출 기록은 [답변 생성 결과](../testing/answer-generation-results.md)와 [전체 RAG 첫 실호출](../testing/full-rag-first-live.md)을 함께 읽는다. 일부 실호출 성공을 모델 전반의 품질 검증으로 확대하지 않는다.
 
 ## 역할과 옵션
 
@@ -30,13 +30,35 @@
 
 구조화 호출의 본문 읽기·판례 질의·판례 후보 선정·후속 실행계획은 역할별 옵션 Bean을 Client와 planner가 공유한다. 요청마다 옵션 복사본에 동적 JSON schema만 결합해 모델·effort·완료 한도를 보존하며, 허용 ID enum과 요청별 범위를 유지한다. 1차 전체 RAG에서 관측한 READ effort=none은 수정 전 기록이며 이후 실호출 재검증과 구분한다.
 
+## agents 패키지와 JSON 응답 처리
+
+Spring AI 실행 로직은 `service.agents` 아래 `ai/answer/retrieval/tool/memory/analysis`에 두고, ChatClient Bean과 추론 옵션은 `config.agents`에 둔다. 외부 HTTP 클라이언트·ETL·근거 저장과 공유 DTO는 기존 계층을 유지한다. [폴더 구조](folder-structure.md)를 따른다.
+
+현재 JSON 응답 처리는 다음 세 방식을 사용한다. 이번 패키지 이동은 응답 처리 방식을 변경하지 않았다.
+
+| 역할·구현 | 모델 출력 형식 지정 | 응답 변환 |
+| --- | --- | --- |
+| 키워드 추출 / AiChatService | `.entity(type)`의 DTO 변환 경로 사용, 별도 strict responseFormat 설정 없음 | `.call().entity(type)` 후 필수 값 검증 |
+| 추천 질문 / InitialQuestionSuggestionService | 설정 Bean에 `JSON_SCHEMA`, `strict(true)` | `.content()` 후 Jackson 파싱·계약 검증 |
+| 후속 판례 계획 / FollowUpCasePlanner | 요청별 `JSON_SCHEMA`, `strict(true)` | `.content()` 후 Jackson 파싱·계약 검증 |
+| 판례 질의 계획 / CaseQueryPlanner | 요청별 `JSON_SCHEMA`, `strict(true)` | `.content()` 후 Jackson 파싱·원문 및 범위 검증 |
+| 근거 읽기 / EvidenceReadPlanner | 허용 ID를 담은 요청별 `JSON_SCHEMA`, `strict(true)` | `.content()` 후 Jackson 파싱·선택 검증 |
+| 판례 읽기 선택 / CaseCandidateReranker.selectForReading | 허용 후보 ID를 담은 요청별 `JSON_SCHEMA`, `strict(true)` | `.content()` 후 Jackson 파싱·선택 검증 |
+| 질문 분석 / QuestionRetrievalPlanner | 프롬프트 JSON 계약 | `.chatResponse()`에서 텍스트를 꺼내 QuestionRetrievalPlan.parse 및 원문 검증 |
+| 법령 후보 선정 / LawCandidateSelector | BeanOutputConverter 형식 안내를 프롬프트에 추가 | `.content()` 후 Jackson 파싱·후보 검증 |
+| 판례 순위 평가 / CaseCandidateReranker.rank | BeanOutputConverter 형식 안내를 프롬프트에 추가 | `.content()` 후 Jackson 파싱·후보 검증 |
+| 근거 판단 / EvidenceDecisionPlanner | BeanOutputConverter 형식 안내를 프롬프트에 추가 | `.content()` 후 EvidenceDecision.parse 및 실행 계약 검증 |
+| 법령 도구 수집 / LawToolCallingPlanner | 함수 도구 스키마 및 최종 판단 JSON 스키마를 프롬프트에 추가 | `.chatResponse()`로 도구 호출을 처리하고 최종 텍스트를 EvidenceDecision.parse로 검증 |
+
+`.entity(Dto.class)`를 사용한다는 사실만으로 공급자 측 strict JSON Schema를 적용했다고 보지 않는다. 현재 명시적 형식 강제는 `ResponseFormat.Type.JSON_SCHEMA`와 `strict(true)` 설정으로 구분한다. 스키마를 적용한 호출도 허용 ID·원문 근거·권한·예산 등 서버의 의미 검증을 유지한다. 답변 작성 및 스트림의 자연어 출력은 이 JSON 변환 목록에 포함하지 않는다.
+
 ## 환경변수
 
 .env의 APP_AI_{QUESTION,CANDIDATE,READ,EVIDENCE,ANSWER}_MODEL, APP_AI_*_REASONING_EFFORT, APP_AI_*_MAX_COMPLETION_TOKENS로 값을 바꾼다. 추천 질문·판례 질의·판례 리랭크는 각각 QUESTION_SUGGESTION·CASE_QUERY·CASE_RERANK 접두사를 쓴다. `ReasoningOptions`는 none/low/medium/high를 허용하며 후속 답변과 법령 도구 전용 클라이언트는 none으로 고정한다. 전체 환경변수 예제는 [.env.example](../../.env.example)을 따른다.
 
 완료 토큰 한도는 내부 추론과 실제 출력의 합계다. 예약 비용·고정 사용량·요청 전체 예산이 아니다. APP_AI_EVIDENCE_MAX_INPUT_TOKENS=8000은 질문·검색 이력 등 판단 기본 JSON의 상한이다. 후보 목록·본문·결합 입력은 [본문 읽기](../law/evidence-reading.md)의 별도 예산을 적용한다. usage 기반 비용 정산은 미구현이다.
 
-추론 요청에는 reasoning_effort와 max_completion_tokens를 사용한다. 기존 역할별 temperature·max-tokens는 사용하지 않으며 Spring AI 1.0.9의 암묵적 전역 temperature=0.7도 모델 생성 전에 제거한다. 본문 읽기 선택은 요청별 JSON Schema Structured Outputs로 미시도 후보 ID enum과 최대 8개를 제한한다. 서버 ID·중복·크기 검증도 유지한다. 다른 역할의 스키마는 프롬프트/서버 검증 방식이다.
+추론 요청에는 reasoning_effort와 max_completion_tokens를 사용한다. 기존 역할별 temperature·max-tokens는 사용하지 않으며 Spring AI 1.0.9의 암묵적 전역 temperature=0.7도 모델 생성 전에 제거한다. 본문 읽기 선택은 요청별 JSON Schema Structured Outputs로 미시도 후보 ID enum과 최대 8개를 제한한다. 서버 ID·중복·크기 검증도 유지한다. 역할별 JSON 처리 방식은 아래 표를 따른다.
 
 APP_AI_READ_TIMEOUT_MS 기본값은 120000이다. 수집기의 전체 시간·호출 한도는 그대로이며 호출 경계에서 확인한다. 진행 중인 모델 HTTP를 전체 deadline에 맞춰 즉시 취소하는 기능은 없다.
 

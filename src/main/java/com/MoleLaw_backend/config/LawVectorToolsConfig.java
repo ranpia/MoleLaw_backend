@@ -1,8 +1,8 @@
 package com.MoleLaw_backend.config;
 
 import com.MoleLaw_backend.service.client.vector.LawVectorClient;
-import com.MoleLaw_backend.service.tool.LawVectorizationToolService;
-import com.MoleLaw_backend.service.tool.LawRagSearchToolService;
+import com.MoleLaw_backend.service.agents.tool.LawVectorizationToolService;
+import com.MoleLaw_backend.service.agents.tool.LawRagSearchToolService;
 import com.MoleLaw_backend.service.source.LegalSourceService;
 import com.MoleLaw_backend.service.source.LegalSourceIndexService;
 import com.fasterxml.jackson.databind.ObjectMapper;

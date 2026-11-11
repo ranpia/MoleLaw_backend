@@ -2,8 +2,8 @@ package com.MoleLaw_backend.controller;
 
 import com.MoleLaw_backend.controller.GlobalExceptionHandler;
 import com.MoleLaw_backend.service.search.CaseSearchService;
-import com.MoleLaw_backend.service.analysis.KeywordExtractionService;
-import com.MoleLaw_backend.service.answer.LegalAnswerService;
+import com.MoleLaw_backend.service.agents.analysis.KeywordExtractionService;
+import com.MoleLaw_backend.service.agents.answer.LegalAnswerService;
 import com.MoleLaw_backend.service.search.LawSearchService;
 import com.MoleLaw_backend.service.client.openlaw.OpenLawCaseClient;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -70,7 +70,7 @@ Base64 암호문은 평문보다 커진다. 현재 `TEXT`의 65,535byte 한도�
 
 현재 Repository는 timestamp만 정렬하고 메모리는 추가로 ID 정렬한다. API·preview도 일치시킨다. 재시도 중복 방지와 턴 단위 순서는 향후 `request_id`·턴/실행 식별자 계약으로 해결하며 timestamp를 고유 키로 쓰지 않는다.
 
-근거: [메시지 매핑](../../src/main/java/com/MoleLaw_backend/entity/Message.java), [메모리](../../src/main/java/com/MoleLaw_backend/service/memory/PersistedChatMemory.java), [렌더러](../../src/main/java/com/MoleLaw_backend/service/answer/EvidenceRenderer.java), [암호화](../../src/main/java/com/MoleLaw_backend/util/EncryptUtil.java).
+근거: [메시지 매핑](../../src/main/java/com/MoleLaw_backend/entity/Message.java), [메모리](../../src/main/java/com/MoleLaw_backend/service/agents/memory/PersistedChatMemory.java), [렌더러](../../src/main/java/com/MoleLaw_backend/service/agents/answer/EvidenceRenderer.java), [암호화](../../src/main/java/com/MoleLaw_backend/util/EncryptUtil.java).
 
 ## 4. chat_evidence_snapshot
 

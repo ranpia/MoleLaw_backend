@@ -11,8 +11,8 @@ import com.MoleLaw_backend.dao.MessageRepository;
 import com.MoleLaw_backend.util.EncryptUtil;
 import com.MoleLaw_backend.util.exception.MolelawException;
 import com.MoleLaw_backend.util.exception.ErrorCode;
-import com.MoleLaw_backend.service.analysis.KeywordExtractionService;
-import com.MoleLaw_backend.service.answer.LegalAnswerService;
+import com.MoleLaw_backend.service.agents.analysis.KeywordExtractionService;
+import com.MoleLaw_backend.service.agents.answer.LegalAnswerService;
 import com.MoleLaw_backend.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class ChatServiceAdvisorTest {
     private final ChatTurnService turns = mock(ChatTurnService.class);
     private final ChatService service = new ChatService(rooms, messages, gpt, turns,
             mock(KeywordExtractionService.class), mock(com.MoleLaw_backend.service.evidence.ChatEvidenceService.class),
-            new com.MoleLaw_backend.service.answer.EvidenceRenderer(), TestEncryption.create());
+            new com.MoleLaw_backend.service.agents.answer.EvidenceRenderer(), TestEncryption.create());
     private final User user = User.builder().id(1L).build();
     private final ChatRoom room = ChatRoom.builder().id(2L).user(user).build();
 

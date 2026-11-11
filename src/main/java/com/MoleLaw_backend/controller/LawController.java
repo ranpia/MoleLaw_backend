@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.MoleLaw_backend.dto.request.LawQuestionRequest;
 import com.MoleLaw_backend.dto.response.KeywordExtractionResponse;
 import com.MoleLaw_backend.dto.response.LawDetailResponse;
-import com.MoleLaw_backend.service.analysis.KeywordExtractionService;
+import com.MoleLaw_backend.service.agents.analysis.KeywordExtractionService;
 import com.MoleLaw_backend.service.ChatContentLimits;
 import com.MoleLaw_backend.service.search.LawSearchService;
 import com.MoleLaw_backend.util.LawParseUtil;

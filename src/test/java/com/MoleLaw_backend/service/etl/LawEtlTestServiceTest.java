@@ -1,9 +1,9 @@
 package com.MoleLaw_backend.service.etl;
 
 import com.MoleLaw_backend.dto.request.LawEtlTestRequest;
-import com.MoleLaw_backend.service.tool.LawRagSearchToolService;
-import com.MoleLaw_backend.service.tool.LawVectorizationToolService;
-import com.MoleLaw_backend.service.tool.LegalApiToolService;
+import com.MoleLaw_backend.service.agents.tool.LawRagSearchToolService;
+import com.MoleLaw_backend.service.agents.tool.LawVectorizationToolService;
+import com.MoleLaw_backend.service.agents.tool.LegalApiToolService;
 
 
 import com.MoleLaw_backend.dto.tool.LegalToolContracts.*;

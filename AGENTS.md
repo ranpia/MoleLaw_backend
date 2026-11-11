@@ -11,7 +11,7 @@ MoleLaw는 법률 검색과 AI 채팅을 제공하는 Java 17 / Spring Boot 3.5 
 - `entity`: JPA 엔티티
 - `util`: 파싱·암호화·JWT/쿠키 보조 처리·입력 검증·예외 타입
 
-2026-11-09 사용자 결정으로 도메인 우선 구조를 위 7개 계층으로 통합했습니다. `auth/user/chat/law/common` 최상위 패키지를 다시 만들지 마세요. 큰 영역은 `service.answer/retrieval/client`, `config.security`, `dto.request/response`, `util.exception/validation` 등 역할별 하위 패키지를 사용합니다. Java 기능 추가·패키지 이동·구조 리뷰 시 [domain-structure](.agents/skills/domain-structure/SKILL.md)를 적용하세요. 테스트 패키지는 구현 패키지를 따르며 공통 설정 통합 테스트는 `config`에 둡니다. 리소스와 문서는 Java 이동만을 이유로 재배치하지 않습니다.
+2026-11-09 사용자 결정으로 도메인 우선 구조를 위 7개 계층으로 통합했습니다. `auth/user/chat/law/common` 최상위 패키지를 다시 만들지 마세요. 큰 영역은 `service.agents.answer/retrieval/tool, service.client`, `config.security`, `dto.request/response`, `util.exception/validation` 등 역할별 하위 패키지를 사용합니다. Java 기능 추가·패키지 이동·구조 리뷰 시 [domain-structure](.agents/skills/domain-structure/SKILL.md)를 적용하세요. 테스트 패키지는 구현 패키지를 따르며 공통 설정 통합 테스트는 `config`에 둡니다. 리소스와 문서는 Java 이동만을 이유로 재배치하지 않습니다.
 
 설정 파일은 `src/main/resources`, 테스트는 `src/test/java`, 설계·실행 문서는 [문서 안내](docs/README.md)를 참고하세요. 빌드 결과는 `build/`에 생성됩니다. 배포 설정은 `docker/app.Dockerfile`과 `.github/workflows/deploy.yml`을 확인하세요.
 

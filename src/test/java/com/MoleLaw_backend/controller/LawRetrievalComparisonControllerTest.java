@@ -3,7 +3,7 @@ package com.MoleLaw_backend.controller;
 import com.MoleLaw_backend.config.TestRefreshTokenStoreConfig;
 import com.MoleLaw_backend.dto.response.LawRetrievalComparisonResponse;
 import com.MoleLaw_backend.dto.retrieval.RetrievalBackend;
-import com.MoleLaw_backend.service.retrieval.LawRetrievalComparisonService;
+import com.MoleLaw_backend.service.agents.retrieval.LawRetrievalComparisonService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.model.ChatModel;

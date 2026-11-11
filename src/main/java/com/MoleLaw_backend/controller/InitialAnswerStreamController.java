@@ -10,7 +10,7 @@ import com.MoleLaw_backend.dto.request.CreateChatRoomRequest;
 import com.MoleLaw_backend.dto.request.LegalAnswerRequest;
 import com.MoleLaw_backend.dto.response.InitialAnswerStreamResponse;
 import com.MoleLaw_backend.service.ChatContentLimits;
-import com.MoleLaw_backend.service.answer.InitialAnswerStreamService;
+import com.MoleLaw_backend.service.agents.answer.InitialAnswerStreamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

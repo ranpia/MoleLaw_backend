@@ -1,9 +1,9 @@
 package com.MoleLaw_backend.config;
 
-import com.MoleLaw_backend.config.AnswerChatClientConfig;
-import com.MoleLaw_backend.config.AiConfig;
-import com.MoleLaw_backend.service.ai.AiPrompts;
-import com.MoleLaw_backend.config.EvidenceChatClientConfig;
+import com.MoleLaw_backend.config.agents.AnswerChatClientConfig;
+import com.MoleLaw_backend.config.agents.AiConfig;
+import com.MoleLaw_backend.service.agents.ai.AiPrompts;
+import com.MoleLaw_backend.config.agents.EvidenceChatClientConfig;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.ai.chat.client.ChatClient;

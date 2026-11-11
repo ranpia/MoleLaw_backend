@@ -12,8 +12,8 @@
 | SecurityConfig | OAuth2ClientConfig | OAuth 토큰 클라이언트 Bean |
 | SecurityConfig | config.security.SwaggerAccessPolicy | 개발/테스트 프로필과 문서 활성화 여부에 따른 접근 판단 |
 | ChatStreamMvcConfig | ChatStreamAsyncConfigurer | 비동기 MVC 타임아웃·쓰기 실행기 연결 |
-| FollowUpCaseToolsFactory.Session | service.answer.FollowUpCaseSession | 한 상담 턴의 동의·판례 도구 실행·읽은 근거·예산 |
-| CaseSearchPipeline.State | service.retrieval.CaseSearchState | 한 검색 턴의 중복 방지·본문 캐시·진행/호출 상태 |
+| FollowUpCaseToolsFactory.Session | service.agents.answer.FollowUpCaseSession | 한 상담 턴의 동의·판례 도구 실행·읽은 근거·예산 |
+| CaseSearchPipeline.State | service.agents.retrieval.CaseSearchState | 한 검색 턴의 중복 방지·본문 캐시·진행/호출 상태 |
 | RefreshTokenService.Grant | dto.security.RefreshTokenGrant | 발급 결과 계약. toString은 토큰 값을 숨김 |
 | JwtUtil.AccessTokenIdentity | dto.security.AccessTokenIdentity | JWT에서 검증한 식별 정보 계약 |
 

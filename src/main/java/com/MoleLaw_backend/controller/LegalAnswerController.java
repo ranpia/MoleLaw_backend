@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.MoleLaw_backend.dto.request.LegalAnswerRequest;
 
 import com.MoleLaw_backend.dto.response.LegalAnswerResponse;
-import com.MoleLaw_backend.service.answer.LegalAnswerService;
+import com.MoleLaw_backend.service.agents.answer.LegalAnswerService;
 import com.MoleLaw_backend.service.ChatContentLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

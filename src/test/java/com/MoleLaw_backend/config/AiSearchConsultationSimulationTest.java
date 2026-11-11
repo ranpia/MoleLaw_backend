@@ -3,7 +3,7 @@ package com.MoleLaw_backend.config;
 import com.MoleLaw_backend.dto.security.CustomUserDetails;
 import com.MoleLaw_backend.dao.ChatEvidenceSnapshotRepository;
 import com.MoleLaw_backend.dao.ChatRoomRepository;
-import com.MoleLaw_backend.service.tool.LawRagSearchToolService;
+import com.MoleLaw_backend.service.agents.tool.LawRagSearchToolService;
 import com.MoleLaw_backend.entity.User;
 import com.MoleLaw_backend.dao.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

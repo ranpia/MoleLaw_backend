@@ -1,5 +1,12 @@
 # 검증 현황
 
+## 2026-11-11 Spring AI agents 패키지 정리
+
+- `d45fa2f` 이후 작업본에서 서비스 34개를 `service.agents.ai/answer/retrieval/tool/memory/analysis`, 설정 4개를 `config.agents`로 이동했다. 관련 테스트·보조 클래스 38개, import·Gradle 전용 테스트 필터·로거 설정·구조 지침을 함께 갱신했다. API·JSON·보안 정책과 실행 동작은 유지했다.
+- JDK 17에서 `.\gradlew.bat test --console=plain` 성공. 이번 실행의 JUnit XML 합계 **586건·실패 0·오류 0·건너뜀 0**을 확인했다. `git diff --check`와 이전 완전한 패키지명 참조 검색도 통과했다.
+- [역할별 ChatClient 문서](../architecture/role-chat-clients.md)에 entity 변환, strict JSON Schema, 프롬프트와 직접 파싱 방식을 구분해 기록했다. 응답 형식 강제의 통일이나 기능 변경은 하지 않았다.
+- 기본 test에서 제외하는 실제 AI/OpenLaw·Docker 통합·Postman simulation 전용 태스크와 배포는 이번 검증에 포함하지 않았다.
+
 ## 2026-11-10 법령 수집 Tool 호출·키워드 고정 제한 제거
 
 - PR #14를 dev에 병합한 873abc0를 기준으로 별도 feat/law-retrieval-tools 브랜치에서 작업했다. 기본 QDRANT 최초 상담은 실제 searchLawArticles/searchLaws/collectLaw/readLawArticles 콜백과 제한된 모델 왕복으로 실행한다. 명시적 AI_SEARCH 진단 경로와 후속 판례 경로는 유지한다.
